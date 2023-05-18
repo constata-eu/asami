@@ -27,6 +27,8 @@ We have chosen RSK as the smart contract platform for Nostr due to its popularit
 
 Our team has experience with the RSK ecosystem and decentralized technology, and we have been eager to work with Nostr for some time. We plan to fund campaigns for popular RSK projects at no charge, and in the future, we may provide technology for advertisers for a fee and participate in their campaigns.
 
+Our account "appraisal" algorithm will consist of mapping and weighting the entire nostr social graph. This kind of large dataset is costly to build and maintain, and can possibly be rented out in several ways to continue funding the project.
+
 This is the first step of a deeper integration between Nostr and RSK, with the ultimate goal of building a bridge that allows anyone to use natural language messages in a decentralized network to interact with RSK, rather than relying on centralized http and browsers.
 
 ## THE SMART CONTRACT
@@ -124,7 +126,7 @@ Additionally, the advertiser can monitor all accounts that have requested an app
 
 Finally, Constata will provide a web frontend that allows any user to claim rewards on any campaign from their own wallet. The participant only needs to enter their pubkey, and the tool will scan for rewards they may be ready to claim.
 
-### ADVERTISERS DELEGATING IT WORK
+### ADVERTISERS DELEGATING I.T. WORK
 
 The advertiser may choose to delegate administration of the smart contract to a third party, which creates a new trust relationship. To mitigate trust issues, potential solutions include a deposit made by the service provider, a reputation system for both parties, or involvement of an arbitration court. However, these solutions are not part of the initial version of this proposal. Nevertheless, the contract will assume the advertiser is not a single RSK account and allow appraisals to be done by pre-approved third parties. Additionally, tools will be provided to allow advertisers to run their own infrastructure to avoid the need for delegation.
 
