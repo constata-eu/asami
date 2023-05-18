@@ -5,9 +5,15 @@ _And a general in-bound data service for RSK from NOSTR._
 
 Nostr is a messaging network like Twitter, supporting various use cases, but with a focus on micro-blogging. Unlike Twitter or Facebook, Nostr doesn't use a centralized algorithm to boost specific content or ads. Instead, peers donate to quality content using Lightning Network through a protocol extension called Zaps.
 
-This direct economic reward for quality content, and the absense of a centralized ad network, means that bot armies that fake engagement and discourse are unnecessary. Follower counts and impressions become less important, making it harder for a few users to hoard followers. But as Nostr grows, the scattered attention it captures becomes valuable for advertising.
+This direct economic reward for quality content, and the absense of a centralized ad network, means that bot armies that fake engagement and discourse are unnecessary. Follower counts and impressions become less important, making it harder for a few users to hoard followers.
+
+But as Nostr grows, the scattered attention it captures becomes valuable for advertising.
 
 We plan to use transparent market mechanisms to drive attention where it's most valuable and build a decentralized ad network. Anyone can advertise or boost their content by paying peers to post, like, or repost.
+
+Nostriches can take on the role of advertisers of various sizes, they decide which product gets the spotlight and how often they want to participate in ads. The rewards they receive are public, which may help with holding people accountable for what they advertise.
+
+## PRIOR ART
 
 Some users have created robots to send zaps to users who post something or comment on a specific post. However, these interactions are not seen as a contractual obligation, and there is no guarantee of payment if a bot breaks, runs out of money, or misses a message.
 
@@ -106,7 +112,6 @@ A successful campaign may receive claims in excess of its funding, if so, partic
 At the end date the contract pays the participants in the same order the claims were received, and they may delete their post.
 
 
-
 ### IMPROVED UX FOR NOSTR USERS
 
 Both Constata and Advertisers will work on improving the Nostr User user experience.
@@ -125,4 +130,11 @@ The advertiser may choose to delegate administration of the smart contract to a 
 
 ### CAVEATS AND OPEN QUESTIONS
 
-The Nostr events are not optimized for smart contracts, but they are the native format for Nostr clients. The proposed protocols prioritize usability and compatibility, allowing Nostriches to use their existing clients and event types. This could result in higher costs and a less attractive appearance. Using type 1 Nostr events for appraisals may create unnecessary noise in the advertiser and participant's timeline. Private direct messages cannot be used for smart contract validation. We are exploring ways to make these public messages less noisy, possibly through a new Nostr Improvement Proposal.
+##### We'll try to make do with current nostr event types, but may need to implement new ones.
+The Nostr events are not optimized for smart contracts, but they are the native format for Nostr clients. The proposed protocols prioritize usability and compatibility, allowing Nostriches to use their existing clients and event types. This could result in higher costs and a less attractive appearance. Using type 1 Nostr events for appraisals may create unnecessary noise in the advertiser and participant's timeline. Private direct messages cannot be used for smart contract validation. We are exploring ways to make these public messages less noisy, possibly through a new NIP.
+
+##### On-chain verification of nostr messages is expensive. We may need to build an oracle.
+Nostr signs using Schnorr Signatures, which are expensive to verify on-chain. Our (yet naive) implementation spends 2300801 gas for a single message verification, which is currently around 60 USD. That cost is prohibitive for micro payment campaigns. If we can't get the on-chain verification cost significantly down, we will need to create a distributed oracle for nostr messages. The interactions with the oracle will still resemble the protocol described above for the on-chain contract.
+
+#### Nostr uses Schnorr signatures, we can have MuSig chatbots from the start.
+At the protocol level, Nostr supports multisig, so whenever we mention a chatbot, we can work on making them multi-sig and run by a federation. But nostr does not provide other types of signature scripting, timelocks and key rotation or recovery, which call for a new NIP.
