@@ -1212,6 +1212,7 @@ dependencies = [
  "serde_json",
  "sqlx",
  "sqlx-models-orm",
+ "thiserror",
  "tokio",
  "tungstenite",
  "url",

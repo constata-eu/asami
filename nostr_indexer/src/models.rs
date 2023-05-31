@@ -1,8 +1,20 @@
-use sqlx::postgres::{PgPoolOptions, PgConnectOptions};
+use sqlx::{
+  postgres::{PgPoolOptions, PgConnectOptions},
+  types::chrono::{DateTime, Utc, TimeZone},
+};
 pub use sqlx_models_orm::{Db, model};
 use std::str::FromStr;
-
-pub use sqlx::types::chrono::{DateTime, Utc, TimeZone};
+use serde::{Serialize, Deserialize};
+use tungstenite::{
+  connect,
+  protocol::WebSocket,
+  stream::MaybeTlsStream,
+  Message as WsMessage,
+};
+use std::net::TcpStream;
+use url::Url;
+use tokio::time::{sleep, Duration};
+use anyhow::Context;
 pub type UtcDateTime = DateTime<Utc>;
 
 use nostr_sdk::nostr::{
@@ -12,9 +24,41 @@ use nostr_sdk::nostr::{
   EventId,
   Tag,
   Kind,
+  ClientMessage,
+  Filter,
+  RelayMessage,
+  SubscriptionId,
 };
-use url::Url;
-use tokio::time::{sleep, Duration};
+
+#[derive(Debug, thiserror::Error)]
+pub enum EventProcessingError {
+  #[error(transparent)]
+  Database(#[from] sqlx::Error),
+  #[error(transparent)]
+  Generic(#[from] anyhow::Error),
+  #[error(transparent)]
+  Websocket(#[from] tungstenite::Error),
+  #[error(transparent)]
+  Secp256k1(#[from] nostr_sdk::secp256k1::Error),
+  #[error(transparent)]
+  Serde(#[from] serde_json::Error),
+}
+
+impl EventProcessingError {
+  pub fn text_and_json(&self) -> (&'static str, serde_json::Value) {
+    match self {
+      Self::Database(err) => ("database_error", serde_json::json!{err.to_string()}),
+      Self::Generic(err) => ("generic_anyhow_error", serde_json::json!{err.to_string()}),
+      Self::Websocket(tungstenite::Error::Http(response)) => 
+        ("tungstenite_connect_http_error", serde_json::json!{{"error": response.body().as_ref().map(|b| String::from_utf8_lossy(&b) )}}),
+      Self::Websocket(err) => ("tungstenite_other_error", serde_json::json!(err.to_string())),
+      Self::Secp256k1(err) => ("invalid_pubkey", serde_json::json!(err.to_string())),
+      Self::Serde(err) => ("serialize_deserialize", serde_json::json!(err.to_string())),
+    }
+  }
+}
+
+type ProcessingResult<T> = Result<T, EventProcessingError>;
 
 #[derive(Clone)]
 pub struct Site {
@@ -27,7 +71,7 @@ impl Site {
     let options = PgConnectOptions::from_str(&conn_string)?;
     //let mut options = PgConnectOptions::from_str(&conn_string)?;
     //options.disable_statement_logging();
-    let pool_options = PgPoolOptions::new().max_connections(100);
+    let pool_options = PgPoolOptions::new().max_connections(2);
     let pool = pool_options.connect_with(options).await?;
     let db = Db{ pool, transaction: None };
 
@@ -51,23 +95,27 @@ model!{
 }
 
 impl DbPubkeyHub {
-  pub async fn create_if_missing(&self, id: String) -> sqlx::Result<DbPubkey> {
-    if let Some(existing) = self.find_optional(&id).await? {
-      return Ok(existing)
-    };
-
-    self.insert(InsertDbPubkey{ id }).save().await
+  pub async fn create_if_missing(&self, pk: &XOnlyPublicKey) -> sqlx::Result<DbPubkey> {
+    let id = pk.to_string();
+    self.state.db.execute(sqlx::query!("INSERT INTO pubkeys (id) VALUES ($1) ON CONFLICT DO NOTHING", id)).await?;
+    self.find(&id).await
   }
 
-  pub async fn add(&self, event_id: &EventId, id: &XOnlyPublicKey) -> anyhow::Result<DbPubkey> {
-    let db_pubkey = self.create_if_missing(id.to_string()).await?;
-
-    self.state.db_pubkey_source().insert(InsertDbPubkeySource{
-      pubkey_id: db_pubkey.attrs.id.clone(),
-      event_id: event_id.to_string(),
-    }).save().await?;
-
+  pub async fn add(&self, event_id: &EventId, pk: &XOnlyPublicKey) -> sqlx::Result<DbPubkey> {
+    let db_pubkey = self.create_if_missing(pk).await?;
+    let db_event = self.state.db_event().find(&event_id.to_string()).await?;
+    db_pubkey.register_source(&db_event).await?;
     Ok(db_pubkey)
+  }
+}
+
+impl DbPubkey {
+  pub async fn register_source(&self, event: &DbEvent) -> sqlx::Result<()> {
+    self.state.db_pubkey_source().insert(InsertDbPubkeySource{
+      pubkey_id: self.attrs.id.clone(),
+      event_id: event.attrs.id.clone(),
+    }).save().await?;
+    Ok(())
   }
 }
 
@@ -94,24 +142,35 @@ model!{
 }
 
 impl DbEventHub {
-  pub async fn add(&self, event: Event, relay_id: &str) -> anyhow::Result<(DbEvent, Vec<EventId>)> {
+  pub async fn add(&self, event: Event, relay_id: &str) -> ProcessingResult<(DbEvent, Vec<EventId>)> {
     let mut other_event_ids = vec![];
 
-    if let Some(existing) = self.find_optional(&event.id.to_string()).await? {
-      return Ok((existing, other_event_ids));
-    }
-
-    let db_pubkey = self.state.db_pubkey().add(&event.id, &event.pubkey).await?;
+    let db_pubkey = self.state.db_pubkey().create_if_missing(&event.pubkey).await?;
 
     let created_at = Utc.timestamp_millis_opt(event.created_at.as_i64()).single()
       .ok_or_else(|| anyhow::anyhow!("Invalid creation date for event {}", event.id))?;
 
-    let db_event = self.insert(InsertDbEvent{
+    let db_event_result = self.insert(InsertDbEvent{
       id: event.id.to_string(),
       payload: serde_json::to_string(&event)?,
       created_at: created_at,
-      pubkey_id: db_pubkey.attrs.id,
-    }).save().await?;
+      pubkey_id: db_pubkey.attrs.id.clone(),
+    }).save().await;
+
+    let db_event = match db_event_result {
+      Ok(event) => event,
+      Err(error) => {
+        if let Some(db_error) = error.as_database_error() {
+          if db_error.code().map(|c| &c == "23505").unwrap_or(false) { // Uniqueness validation error.
+            let existing = self.find(&event.id.to_string()).await?;
+            return Ok((existing, other_event_ids));
+          }
+        }
+        return Err(error)?;
+      }
+    };
+
+    db_pubkey.register_source(&db_event).await?;
 
     self.state.db_event_source().insert(InsertDbEventSource{
       event_id: db_event.attrs.id.clone(),
@@ -188,7 +247,7 @@ model!{
     banned_until: Option<UtcDateTime>,
   },
   queries {
-    relays_found_after("first_found_at > $1 limit 10", d: UtcDateTime)
+    relays_found_after("first_found_at > $1", d: UtcDateTime)
   },
   has_many{
     DbRelaySource(relay_id), // All the events that mentioned this relay.
@@ -199,15 +258,19 @@ model!{
 
 impl DbRelayHub {
   pub async fn create_if_missing(&self, id: String) -> sqlx::Result<DbRelay> {
-    if let Some(existing) = self.find_optional(&id).await? {
-      return Ok(existing);
-    }
-
-    Ok(self.insert(InsertDbRelay{ id }).save().await?)
+    self.state.db.execute(sqlx::query!("INSERT INTO relays (id) VALUES ($1) ON CONFLICT DO NOTHING", id)).await?;
+    self.find(&id).await
   }
 
-  pub async fn add(&self, event_id: &EventId, unchecked_url: &UncheckedUrl) -> anyhow::Result<DbRelay> {
-    let url = Url::try_from(unchecked_url.clone())?.to_string();
+  pub async fn add(&self, event_id: &EventId, unchecked_url: &UncheckedUrl) -> anyhow::Result<()> {
+    if unchecked_url.to_string() == "" {
+      return Ok(())
+    }
+
+    let url = Url::try_from(unchecked_url.clone())
+      .with_context(|| format!("Failed adding relay {unchecked_url:?}"))?
+      .to_string();
+
     let db_relay = self.create_if_missing(url).await?;
 
     self.state.db_relay_source().insert(InsertDbRelaySource{
@@ -215,102 +278,104 @@ impl DbRelayHub {
       event_id: event_id.to_string(),
     }).save().await?;
 
-    Ok(db_relay)
+    Ok(())
   }
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum EventProcessingError {
-  /*
-  #[error(transparent)]
-  IntoInner(#[from] std::io::IntoInnerError<std::io::BufWriter<Vec<u8>>>),
-    /*
-    {
-      Ok(x) => x,
-      Err(tungstenite::Error::Http(response)) => {
-        self.log("tungstenite_connect_http_error", response.body.map(|b| String::from_utf8_lossy(b) ) ).await?;
-      },
-      e => self.log("other_connect_error", format!("{e:?}") ).await?,
-    };
-    */
-      let Ok(msg) = socket.read_message() else {
-        log_short(&site, &relay, "error_reading_socket_message", None).await?;
-        continue
-      };
-      let Ok(msg_text) = msg.to_text() else {
-        log_short(&site, &relay, "error_converting_message_to_text", None).await?;
-        continue
-      };
-
-  */
 }
 
 impl DbRelay {
   pub async fn run(relay_id: String) {
     loop {
-      let Ok(site) = Site::new().await else {
-        println!("{relay_id}: Could not establish db connection. Retrying soon.");
-        sleep(Duration::from_secs(60 * 5)).await;
-        continue;
-      }
-
-      let Ok(relay) = site.db_relay().find(&relay_id).await? else {
-        println!("{relay_id}: Relay not found! That's super strange. I'm out.");
-        break;
-      }
-
-      let result = relay.process_events().await;
-      println!("{relay_id}: Work in websocket needs to start over because {result:?}");
-
-      if let Err(e) = result {
-        let logging = site.db_relay_log_entry().log(Severity::Error, &relay_id, e.text(), e.json()).await;
-        if let Err(oops) = logging {
-          println!("{relay_id}: Oops, could not log error because of {oops:?}");
+      let site = match Site::new().await {
+        Ok(s) => s,
+        Err(e) => {
+          println!("{relay_id}: Could not establish db connection. {e:?}.");
+          sleep(Duration::from_secs(60 * 5)).await;
+          continue
         }
-      }
+      };
 
-      sleep(Duration::from_secs(60 * 5)).await;
+      let Ok(relay) = site.db_relay().find(&relay_id).await else {
+        println!("{relay_id}: Relay not found! That's super strange. I'm out.");
+        break
+      };
+
+      let result = relay.using_websocket().await;
+      println!("{relay_id}: Retrying with new DB because of {result:?}");
+      site.db.pool.close().await;
     }
   }
 
-  async fn process_events(self) -> Result<(), EventProcessingError> {
-    if self.is_banned() {
+  async fn using_websocket(self) -> ProcessingResult<()> {
+    loop {
+      let relay_id = self.id().clone();
+      let result = self.process_events().await;
+
+      if let Err(e) = &result {
+        let (text, json) = e.text_and_json();
+        if let Err(oops) = self.log_err(text, Some(json)).await {
+          println!("{relay_id}: Oops, could not log error because of {oops:?}");
+        }
+
+        if matches!(e, EventProcessingError::Database(_)) {
+          return result;
+        }
+      }
+
+      let errors: Vec<DbRelayLogEntry> = self.state.db_relay_log_entry()
+        .extract_for( self.attrs.id.clone(), Utc::now() - chrono::Duration::minutes(5) )
+        .all().await?
+        .into_iter()
+        .filter(|e| e.summary().starts_with("tungstenite_") )
+        .collect();
+
+      if errors.len() > 3 {
+        self.log("banning","").await?;
+        self.clone().update().banned_until(Some(Utc::now() + chrono::Duration::minutes(30))).save().await?;
+      }
+      sleep(Duration::from_secs(5)).await;
+    }
+  }
+
+  async fn process_events(&self) -> ProcessingResult<()> {
+    if self.reloaded().await?.is_banned() {
+      self.log("waiting_until_unbanned", self.banned_until().as_ref()).await?;
       while self.reloaded().await?.is_banned() {
-        self.log("waiting_until_unbanned", self.banned_until());
-        sleep(Duration::from_secs(60 * 15)).await;
+        sleep(Duration::from_secs(20)).await;
       }
     }
 
-    let (mut socket, response) = match connect(&relay)?;
+    let (mut socket, _) = connect(self.id())?;
 
-    self.log("connected", None).await?;
+    self.log("connected", "").await?;
 
     let main_subscription = SubscriptionId::new("main_subscription");
-    socket.write_message(WsMessage::Text(
-      ClientMessage::new_req(main_subscription.clone(), vec![Filter::new().limit(1000)]).as_json()
-    ))?;
+    self.suscribe(&mut socket, main_subscription.clone(), Filter::new().limit(1000))?;
 
     let pubkeys_limit = 50;
     let mut pubkeys_offset = 0;
     let mut fetch_pubkeys = true;
 
     loop {
+      if self.reloaded().await?.is_banned() {
+        Err(anyhow::anyhow!("banned_while_working"))?;
+      }
+
       if fetch_pubkeys {
         let pubkeys = self.state.db_pubkey().select()
           .order_by(DbPubkeyOrderBy::FirstFoundAt)
           .limit(pubkeys_limit)
           .offset(pubkeys_offset)
-          .all().await?;
+          .all().await?
+          .into_iter().map(|p| XOnlyPublicKey::from_str(&p.attrs.id)  )
+          .collect::<Result<Vec<XOnlyPublicKey>, _>>()?;
 
         if !pubkeys.is_empty() {
-          self.log("suscribing_for_pubkey_catch_up", pubkey_offset).await?;
-
-          socket.write_message(WsMessage::Text(
-            ClientMessage::new_req(
-              SubscriptionId::new(&format!("pubkeys_from_{pubkeys_offset}")),
-              vec![Filter::new().pubkeys(pubkeys)]
-            ).as_json()
-          ))?;
+          self.log("suscribing_for_pubkey_catch_up", pubkeys_offset).await?;
+          self.suscribe(
+            &mut socket,
+            SubscriptionId::new(&format!("pubkeys_from_{pubkeys_offset}")),
+            Filter::new().pubkeys(pubkeys)
+          )?;
         }
 
         pubkeys_offset += pubkeys_limit;
@@ -323,39 +388,45 @@ impl DbRelay {
       match RelayMessage::from_json(msg_text) {
         Ok(handled_message) => match handled_message {
           RelayMessage::Event { event, .. } => {
-            (_, other_event_id) = site.db_event().add(*event, &relay).await?;
+            let (_, other_event_ids) = self.state.db_event().add(*event, self.id()).await?;
             if !other_event_ids.is_empty() {
-              self.suscribe(SubscriptionId::generate(), Filter::new().events(other_event_ids))?;
+              self.suscribe(&mut socket, SubscriptionId::generate(), Filter::new().events(other_event_ids))?;
             }
           },
           RelayMessage::EndOfStoredEvents(subscription_id) => {
             if subscription_id != main_subscription {
-              socket.write_message(WsMessage::Text(ClientMessage::close(subscription_id).as_json()))?;
               if subscription_id.to_string().starts_with("pubkeys") {
-                fetch_pubkeys = false;
+                fetch_pubkeys = true;
               }
-              self.log("closing_subscription", Some(subscription_id)).await;
+              self.log("closing_subscription", Some(&subscription_id)).await?;
+              socket.write_message(WsMessage::Text(ClientMessage::close(subscription_id).as_json()))?;
             }
           },
-          RelayMessage::Notice{ message } => println!("{relay} Relay: Message {message}"),
-          RelayMessage::Ok { event_id, status, message } => println!("{relay} Relay: OK {event_id} {status} {message}"),
-          RelayMessage::Auth {..} => println!("{relay} Relay: Unexpected auth message"),
-          RelayMessage::Count {..} => println!("{relay} Relay: Unexpected count message"),
-          RelayMessage::Empty {..} => println!("{relay} Relay: Empty message"),
+          RelayMessage::Notice{ message } => { self.log("notice", message).await?; },
+          RelayMessage::Ok { event_id, status, message } => { self.log("ok", (event_id, status, message)).await?; },
+          other => { self.log("other_message", other).await?; },
         },
         Err(e) => {
-          self.log("got_unexpected_message", e).await?;
+          self.log("unparseable_message", e.to_string()).await?;
         }
       }
     }
   }
 
-  fn suscribe(socket: i32, id: SubscriptionId, filter: Filter) -> anyhow::Result<()> {
-    socket.write_message(WsMessage::Text( ClientMessage::new_req(id, vec![filter]).as_json() ))?;
+  fn suscribe(&self, socket: &mut WebSocket<MaybeTlsStream<TcpStream>>, id: SubscriptionId, filter: Filter) -> anyhow::Result<()> {
+    Ok(socket.write_message(WsMessage::Text( ClientMessage::new_req(id, vec![filter]).as_json() ))?)
   }
 
-  async fn log<S: Serialize>(&self, text: &str, json: Option<S>) -> anyhow::Result<LogEntry> {
-    self.state.db_relay_log_entry().log(Severity::Debug, relay_id, text, json).await
+  async fn log<S: Serialize>(&self, text: &str, json: S) -> anyhow::Result<DbRelayLogEntry> {
+    self.state.db_relay_log_entry().log(Severity::Debug, self.id(), text, Some(json)).await
+  }
+
+  async fn log_err<S: Serialize>(&self, text: &str, json: S) -> anyhow::Result<DbRelayLogEntry> {
+    self.state.db_relay_log_entry().log(Severity::Error, self.id(), text, Some(json)).await
+  }
+
+  fn is_banned(&self) -> bool {
+    self.banned_until().map(|date| date > Utc::now() ).unwrap_or(false)
   }
 }
 
@@ -422,20 +493,23 @@ model!{
 // Log entries with relay activity, connection, disconnection, etc.
 model!{
   state: Site,
-  table: event_sources,
-  struct DbRelayLogEntries {
+  table: relay_log_entries,
+  struct DbRelayLogEntry {
     #[sqlx_model_hints(int4, default)]
     id: i32,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
     #[sqlx_model_hints(varchar)]
     relay_id: String,
-    #[sqlx_model_hints(varchar)]
+    #[sqlx_model_hints(severity)]
     severity: Severity,
     #[sqlx_model_hints(varchar)]
     summary: String,
     #[sqlx_model_hints(text)]
     json: String,
+  },
+  queries {
+    extract_for("relay_id = $1 AND created_at > $2", relay_id: String, since: UtcDateTime)
   },
   belongs_to{
     DbRelay(relay_id),
@@ -446,10 +520,11 @@ impl DbRelayLogEntryHub {
   pub async fn log<S: Serialize>(&self, severity: Severity, relay_id: &str, summary: &str, json: Option<S>) -> anyhow::Result<DbRelayLogEntry> {
     Ok(
       self.insert(InsertDbRelayLogEntry{
+        severity,
         relay_id: relay_id.to_string(),
         summary: summary.to_string(),
-        json: serde_json::to_string(json)?
-      }).await?
+        json: serde_json::to_string(&json)?
+      }).save().await?
     )
   }
 }
@@ -462,5 +537,11 @@ pub enum Severity {
   Info,
   Warning,
   Error,
+}
+
+impl sqlx::postgres::PgHasArrayType for Severity {
+  fn array_type_info() -> sqlx::postgres::PgTypeInfo {
+    sqlx::postgres::PgTypeInfo::with_name("_severity")
+  }
 }
 
