@@ -10,13 +10,13 @@ async fn main() {
   env_logger::init();
 
   loop {
-    let result = spawn_for_new_relays().await;
+    let result = spawn_relay_workers().await;
     println!("Relay watcher got result {result:?}. Retrying in 60 seconds...");
     sleep(Duration::from_secs(60)).await;
   }
 }
 
-async fn spawn_for_new_relays() -> anyhow::Result<()> {
+async fn spawn_relay_workers() -> anyhow::Result<()> {
   let site = Site::new().await?;
 
   site.db_relay().create_if_missing("wss://nos.lol/".to_string()).await?;
@@ -32,15 +32,22 @@ async fn spawn_for_new_relays() -> anyhow::Result<()> {
 
     for relay in newer_relays {
       spawn(DbRelay::run(relay.attrs.id.clone()));
+      sleep(Duration::from_millis(0)).await;
+      print_stats(&site).await?;
     }
 
-    print!(
-      "\rTime: {}. Relays: {:>5}. Never banned: {:>5}. Events: {:>5}. Pubkeys: {:>5}",
-      Utc::now(),
-      site.db_relay().select().count().await?,
-      site.db_relay().select().banned_until_is_set(false).count().await?,
-      site.db_event().select().count().await?,
-      site.db_pubkey().select().count().await?,
-    );
+    print_stats(&site).await?;
   }
+}
+
+async fn print_stats(site: &Site) -> anyhow::Result<()> {
+  print!(
+    "\rTime: {}. Relays: {:>4}. Never banned: {:>4}. Events: {:>10}. Pubkeys: {:>10}",
+    Utc::now(),
+    site.db_relay().select().count().await?,
+    site.db_relay().select().banned_until_is_set(false).count().await?,
+    site.db_event().select().count().await?,
+    site.db_pubkey().select().count().await?,
+  );
+  Ok(())
 }

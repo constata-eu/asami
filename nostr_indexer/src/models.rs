@@ -42,6 +42,8 @@ pub enum EventProcessingError {
   Secp256k1(#[from] nostr_sdk::secp256k1::Error),
   #[error(transparent)]
   Serde(#[from] serde_json::Error),
+  #[error(transparent)]
+  Event(#[from] nostr_sdk::event::Error),
 }
 
 impl EventProcessingError {
@@ -54,6 +56,7 @@ impl EventProcessingError {
       Self::Websocket(err) => ("tungstenite_other_error", serde_json::json!(err.to_string())),
       Self::Secp256k1(err) => ("invalid_pubkey", serde_json::json!(err.to_string())),
       Self::Serde(err) => ("serialize_deserialize", serde_json::json!(err.to_string())),
+      Self::Event(err) => ("event_verification_error", serde_json::json!(err.to_string())),
     }
   }
 }
@@ -69,8 +72,6 @@ impl Site {
   pub async fn new() -> anyhow::Result<Self> {
     let conn_string = std::env::var("DATABASE_URL")?;
     let options = PgConnectOptions::from_str(&conn_string)?;
-    //let mut options = PgConnectOptions::from_str(&conn_string)?;
-    //options.disable_statement_logging();
     let pool_options = PgPoolOptions::new().max_connections(2);
     let pool = pool_options.connect_with(options).await?;
     let db = Db{ pool, transaction: None };
@@ -388,6 +389,7 @@ impl DbRelay {
       match RelayMessage::from_json(msg_text) {
         Ok(handled_message) => match handled_message {
           RelayMessage::Event { event, .. } => {
+            event.verify()?;
             let (_, other_event_ids) = self.state.db_event().add(*event, self.id()).await?;
             if !other_event_ids.is_empty() {
               self.suscribe(&mut socket, SubscriptionId::generate(), Filter::new().events(other_event_ids))?;
