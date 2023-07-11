@@ -18,7 +18,7 @@ Key featuers:
   - Vamos a estar pagandoles a ellos en DoC (cosa que con LN no se puede).
   - Te vamos a dar un reporte de campaña con todos los mensajes que se enviaron.
   - Vamos a gastar 200 DoC. Los ponemos nosotros por anticipado. solo nos pagás si te gusta el resultado.
-    * 1000 DoC.
+    * Tenemos 1000 DoC de presupuesto total.
 
 Outreach Influencers:
   - Buscamos cuentas notables.
