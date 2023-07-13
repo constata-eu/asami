@@ -7,7 +7,9 @@ edition = "2021"
 
 [dependencies]
 nostr-sdk = "0.22.0"
-tungstenite = { version = "0.19", features = ["rustls-tls-webpki-roots"] }
+
+tokio-tungstenite = { version = "0.19", features = ["rustls-tls-webpki-roots"] }
+
 sqlx = "0.6.0"
 sqlx-models-orm = "0.1.6"
 csv = "1.1.5"
@@ -23,5 +25,6 @@ chrono = { version = "0.4", features = ["serde"] }
 chrono-tz = "0.8"
 url = { version = "2", features = ["serde"] }
 futures = "*"
+futures-util = "*"
 itertools = "*"
 

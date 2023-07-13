@@ -5,13 +5,15 @@ use sqlx::{
 pub use sqlx_models_orm::{Db, model};
 use std::str::FromStr;
 use serde::{Serialize, Deserialize};
-use tungstenite::{
-  connect,
-  protocol::WebSocket,
-  stream::MaybeTlsStream,
-  Message as WsMessage,
+
+use futures_util::{SinkExt, StreamExt};
+use tokio_tungstenite::{
+  WebSocketStream,
+  MaybeTlsStream,
+  connect_async,
+  tungstenite::{ Result, Message as WsMessage, },
 };
-use std::net::TcpStream;
+use tokio::net::TcpStream;
 use url::Url;
 use tokio::time::{sleep, Duration};
 use anyhow::Context;
@@ -37,7 +39,7 @@ pub enum EventProcessingError {
   #[error(transparent)]
   Generic(#[from] anyhow::Error),
   #[error(transparent)]
-  Websocket(#[from] tungstenite::Error),
+  Websocket(#[from] tokio_tungstenite::tungstenite::Error),
   #[error(transparent)]
   Secp256k1(#[from] nostr_sdk::secp256k1::Error),
   #[error(transparent)]
@@ -51,7 +53,7 @@ impl EventProcessingError {
     match self {
       Self::Database(err) => ("database_error", serde_json::json!{err.to_string()}),
       Self::Generic(err) => ("generic_anyhow_error", serde_json::json!{err.to_string()}),
-      Self::Websocket(tungstenite::Error::Http(response)) => 
+      Self::Websocket(tokio_tungstenite::tungstenite::Error::Http(response)) => 
         ("tungstenite_connect_http_error", serde_json::json!{{"error": response.body().as_ref().map(|b| String::from_utf8_lossy(&b) )}}),
       Self::Websocket(err) => ("tungstenite_other_error", serde_json::json!(err.to_string())),
       Self::Secp256k1(err) => ("invalid_pubkey", serde_json::json!(err.to_string())),
@@ -72,7 +74,7 @@ impl Site {
   pub async fn new() -> anyhow::Result<Self> {
     let conn_string = std::env::var("DATABASE_URL")?;
     let options = PgConnectOptions::from_str(&conn_string)?;
-    let pool_options = PgPoolOptions::new().max_connections(2);
+    let pool_options = PgPoolOptions::new().max_connections(150);
     let pool = pool_options.connect_with(options).await?;
     let db = Db{ pool, transaction: None };
 
@@ -132,6 +134,8 @@ model!{
     created_at: UtcDateTime,
     #[sqlx_model_hints(varchar)]
     pubkey_id: String,
+    #[sqlx_model_hints(int4)]
+    kind: i32,
   },
   belongs_to{
     DbPubkey(pubkey_id), // The pubkey that authored the event.
@@ -155,6 +159,7 @@ impl DbEventHub {
       id: event.id.to_string(),
       payload: serde_json::to_string(&event)?,
       created_at: created_at,
+      kind: event.kind.as_u32() as i32,
       pubkey_id: db_pubkey.attrs.id.clone(),
     }).save().await;
 
@@ -284,29 +289,7 @@ impl DbRelayHub {
 }
 
 impl DbRelay {
-  pub async fn run(relay_id: String) {
-    loop {
-      let site = match Site::new().await {
-        Ok(s) => s,
-        Err(e) => {
-          println!("{relay_id}: Could not establish db connection. {e:?}.");
-          sleep(Duration::from_secs(60 * 5)).await;
-          continue
-        }
-      };
-
-      let Ok(relay) = site.db_relay().find(&relay_id).await else {
-        println!("{relay_id}: Relay not found! That's super strange. I'm out.");
-        break
-      };
-
-      let result = relay.using_websocket().await;
-      println!("{relay_id}: Retrying with new DB because of {result:?}");
-      site.db.pool.close().await;
-    }
-  }
-
-  async fn using_websocket(self) -> ProcessingResult<()> {
+  pub async fn run(self) -> ProcessingResult<()> {
     loop {
       let relay_id = self.id().clone();
       let result = self.process_events().await;
@@ -345,63 +328,59 @@ impl DbRelay {
       }
     }
 
-    let (mut socket, _) = connect(self.id())?;
-
+    let (mut socket, _) = connect_async(self.id()).await?;
     self.log("connected", "").await?;
 
     let main_subscription = SubscriptionId::new("main_subscription");
-    self.suscribe(&mut socket, main_subscription.clone(), Filter::new().limit(1000))?;
+    self.suscribe(&mut socket, main_subscription.clone(), Filter::new().limit(1000)).await?;
 
     let pubkeys_limit = 50;
     let mut pubkeys_offset = 0;
-    let mut fetch_pubkeys = true;
 
     loop {
-      if self.reloaded().await?.is_banned() {
-        Err(anyhow::anyhow!("banned_while_working"))?;
-      }
+      let pubkeys = self.state.db_pubkey().select()
+        .order_by(DbPubkeyOrderBy::FirstFoundAt)
+        .limit(pubkeys_limit)
+        .offset(pubkeys_offset)
+        .all().await?
+        .into_iter().map(|p| XOnlyPublicKey::from_str(&p.attrs.id)  )
+        .collect::<Result<Vec<XOnlyPublicKey>, _>>()?;
 
-      if fetch_pubkeys {
-        let pubkeys = self.state.db_pubkey().select()
-          .order_by(DbPubkeyOrderBy::FirstFoundAt)
-          .limit(pubkeys_limit)
-          .offset(pubkeys_offset)
-          .all().await?
-          .into_iter().map(|p| XOnlyPublicKey::from_str(&p.attrs.id)  )
-          .collect::<Result<Vec<XOnlyPublicKey>, _>>()?;
+      if pubkeys.is_empty() { break; }
 
-        if !pubkeys.is_empty() {
-          self.log("suscribing_for_pubkey_catch_up", pubkeys_offset).await?;
-          self.suscribe(
-            &mut socket,
-            SubscriptionId::new(&format!("pubkeys_from_{pubkeys_offset}")),
-            Filter::new().pubkeys(pubkeys)
-          )?;
-        }
+      self.log("suscribing_for_pubkey_catch_up", pubkeys_offset).await?;
+      self.suscribe(
+        &mut socket,
+        SubscriptionId::new(&format!("pubkeys_from_{pubkeys_offset}")),
+        Filter::new().pubkeys(pubkeys)
+      ).await?;
+      pubkeys_offset += pubkeys_limit;
+    }
 
-        pubkeys_offset += pubkeys_limit;
-        fetch_pubkeys = false;
-      }
-
-      let msg = socket.read_message()?;
+    while let Some(raw_msg) = socket.next().await {
+      let msg = raw_msg?;
       let msg_text = msg.to_text()?;
 
       match RelayMessage::from_json(msg_text) {
         Ok(handled_message) => match handled_message {
           RelayMessage::Event { event, .. } => {
             event.verify()?;
-            let (_, other_event_ids) = self.state.db_event().add(*event, self.id()).await?;
+            let (_, other_event_ids) = self.state.db_event()
+              .add(*event, self.id()).await?;
             if !other_event_ids.is_empty() {
-              self.suscribe(&mut socket, SubscriptionId::generate(), Filter::new().events(other_event_ids))?;
+              self.suscribe(
+                &mut socket,
+                SubscriptionId::generate(),
+                Filter::new().events(other_event_ids)
+              ).await?;
             }
           },
           RelayMessage::EndOfStoredEvents(subscription_id) => {
             if subscription_id != main_subscription {
-              if subscription_id.to_string().starts_with("pubkeys") {
-                fetch_pubkeys = true;
-              }
               self.log("closing_subscription", Some(&subscription_id)).await?;
-              socket.write_message(WsMessage::Text(ClientMessage::close(subscription_id).as_json()))?;
+              socket
+                .send(WsMessage::Text(ClientMessage::close(subscription_id).as_json()))
+                .await?;
             }
           },
           RelayMessage::Notice{ message } => { self.log("notice", message).await?; },
@@ -413,10 +392,12 @@ impl DbRelay {
         }
       }
     }
+
+    Ok(())
   }
 
-  fn suscribe(&self, socket: &mut WebSocket<MaybeTlsStream<TcpStream>>, id: SubscriptionId, filter: Filter) -> anyhow::Result<()> {
-    Ok(socket.write_message(WsMessage::Text( ClientMessage::new_req(id, vec![filter]).as_json() ))?)
+  async fn suscribe(&self, socket: &mut WebSocketStream<MaybeTlsStream<TcpStream>>, id: SubscriptionId, filter: Filter) -> anyhow::Result<()> {
+    Ok(socket.send(WsMessage::Text( ClientMessage::new_req(id, vec![filter]).as_json() )).await?)
   }
 
   async fn log<S: Serialize>(&self, text: &str, json: S) -> anyhow::Result<DbRelayLogEntry> {

@@ -1205,6 +1205,7 @@ dependencies = [
  "dotenv",
  "env_logger",
  "futures",
+ "futures-util",
  "itertools",
  "nostr-sdk",
  "num_cpus",
@@ -1214,7 +1215,7 @@ dependencies = [
  "sqlx-models-orm",
  "thiserror",
  "tokio",
- "tungstenite",
+ "tokio-tungstenite",
  "url",
 ]
 
@@ -2324,7 +2325,6 @@ dependencies = [
  "url",
  "utf-8",
  "webpki",
- "webpki-roots 0.23.0",
 ]
 
 [[package]]

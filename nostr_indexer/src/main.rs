@@ -4,7 +4,7 @@ use sqlx::types::chrono::{Utc, TimeZone};
 mod models;
 use models::*;
 
-#[tokio::main(flavor = "multi_thread", worker_threads = 100)]
+#[tokio::main]
 async fn main() {
   dotenv::dotenv().expect("dotenv to load");
   env_logger::init();
@@ -30,24 +30,10 @@ async fn spawn_relay_workers() -> anyhow::Result<()> {
       .map(|p| p.first_found_at().clone() )
       .unwrap_or(newest_relay_date);
 
-    for relay in newer_relays {
-      spawn(DbRelay::run(relay.attrs.id.clone()));
-      sleep(Duration::from_millis(0)).await;
-      print_stats(&site).await?;
+    for relay in newer_relays.into_iter() {
+      spawn(async move { relay.run().await });
     }
 
-    print_stats(&site).await?;
+    print!("\rTime: {}", Utc::now());
   }
-}
-
-async fn print_stats(site: &Site) -> anyhow::Result<()> {
-  print!(
-    "\rTime: {}. Relays: {:>4}. Never banned: {:>4}. Events: {:>10}. Pubkeys: {:>10}",
-    Utc::now(),
-    site.db_relay().select().count().await?,
-    site.db_relay().select().banned_until_is_set(false).count().await?,
-    site.db_event().select().count().await?,
-    site.db_pubkey().select().count().await?,
-  );
-  Ok(())
 }
