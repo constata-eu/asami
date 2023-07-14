@@ -12,11 +12,9 @@ CREATE TABLE events (
   id VARCHAR PRIMARY KEY NOT NULL,
   payload TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL,
-  pubkey_id VARCHAR NOT NULL REFERENCES pubkeys(id),
-  kind INTEGER NOT NULL
+  pubkey_id VARCHAR NOT NULL REFERENCES pubkeys(id)
 );
 CREATE INDEX events_pubkey_id ON events (pubkey_id);
-CREATE INDEX events_kind ON events (kind);
 
 CREATE TABLE relays (
   id VARCHAR PRIMARY KEY NOT NULL,
