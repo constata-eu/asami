@@ -19,6 +19,8 @@ use tokio::time::{sleep, Duration};
 use anyhow::Context;
 pub type UtcDateTime = DateTime<Utc>;
 
+type Wss = WebSocketStream<MaybeTlsStream<TcpStream>>;
+
 use nostr_sdk::nostr::{
   UncheckedUrl,
   key::XOnlyPublicKey,
@@ -40,6 +42,8 @@ pub enum EventProcessingError {
   Generic(#[from] anyhow::Error),
   #[error(transparent)]
   Websocket(#[from] tokio_tungstenite::tungstenite::Error),
+  #[error("Error connecting to relay {0}")]
+  RelayConnect(String),
   #[error(transparent)]
   Secp256k1(#[from] nostr_sdk::secp256k1::Error),
   #[error(transparent)]
@@ -54,7 +58,8 @@ impl EventProcessingError {
       Self::Database(err) => ("database_error", serde_json::json!{err.to_string()}),
       Self::Generic(err) => ("generic_anyhow_error", serde_json::json!{err.to_string()}),
       Self::Websocket(tokio_tungstenite::tungstenite::Error::Http(response)) => 
-        ("tungstenite_connect_http_error", serde_json::json!{{"error": response.body().as_ref().map(|b| String::from_utf8_lossy(&b) )}}),
+        ("tungstenite_http_error", serde_json::json!{{"error": response.body().as_ref().map(|b| String::from_utf8_lossy(&b) )}}),
+      Self::RelayConnect(err) => ("tungstenite_relay_connect", serde_json::json!{{"error": err}}),
       Self::Websocket(err) => ("tungstenite_other_error", serde_json::json!(err.to_string())),
       Self::Secp256k1(err) => ("invalid_pubkey", serde_json::json!(err.to_string())),
       Self::Serde(err) => ("serialize_deserialize", serde_json::json!(err.to_string())),
@@ -74,7 +79,7 @@ impl Site {
   pub async fn new() -> anyhow::Result<Self> {
     let conn_string = std::env::var("DATABASE_URL")?;
     let options = PgConnectOptions::from_str(&conn_string)?;
-    let pool_options = PgPoolOptions::new().max_connections(150);
+    let pool_options = PgPoolOptions::new().max_connections(50);
     let pool = pool_options.connect_with(options).await?;
     let db = Db{ pool, transaction: None };
 
@@ -251,9 +256,11 @@ model!{
     first_found_at: UtcDateTime,
     #[sqlx_model_hints(timestamptz, default)]
     banned_until: Option<UtcDateTime>,
+    #[sqlx_model_hints(boolean, default)]
+    banned_forever: bool,
   },
   queries {
-    relays_found_after("first_found_at > $1", d: UtcDateTime)
+    relays_found_after("NOT banned_forever AND first_found_at > $1", d: UtcDateTime)
   },
   has_many{
     DbRelaySource(relay_id), // All the events that mentioned this relay.
@@ -289,8 +296,15 @@ impl DbRelayHub {
 }
 
 impl DbRelay {
-  pub async fn run(self) -> ProcessingResult<()> {
+  pub async fn run(&self) -> ProcessingResult<()> {
     loop {
+      if self.reloaded().await?.is_temporarily_banned() {
+        self.log("waiting_until_unbanned", self.banned_until().as_ref()).await?;
+        while self.reloaded().await?.is_temporarily_banned() {
+          sleep(Duration::from_secs(20)).await;
+        }
+      }
+
       let relay_id = self.id().clone();
       let result = self.process_events().await;
 
@@ -300,62 +314,46 @@ impl DbRelay {
           println!("{relay_id}: Oops, could not log error because of {oops:?}");
         }
 
-        if matches!(e, EventProcessingError::Database(_)) {
-          return result;
+        match e {
+          EventProcessingError::Database(_) => return result,
+          EventProcessingError::RelayConnect(_) => {
+            self.clone().ban_forever().await?;
+            return Ok(());
+          },
+          _ => {}
         }
       }
 
       let errors: Vec<DbRelayLogEntry> = self.state.db_relay_log_entry()
-        .extract_for( self.attrs.id.clone(), Utc::now() - chrono::Duration::minutes(5) )
+        .extract_for( self.attrs.id.clone(), Utc::now() - chrono::Duration::minutes(30) )
         .all().await?
         .into_iter()
         .filter(|e| e.summary().starts_with("tungstenite_") )
         .collect();
 
-      if errors.len() > 3 {
-        self.log("banning","").await?;
+      if errors.len() > 15 {
+        self.log("banning forever","").await?;
+        self.clone().ban_forever().await?;
+        return Ok(())
+      } else if errors.len() > 3 {
+        self.log("banning temporarily","").await?;
         self.clone().update().banned_until(Some(Utc::now() + chrono::Duration::minutes(30))).save().await?;
       }
-      sleep(Duration::from_secs(5)).await;
     }
   }
 
   async fn process_events(&self) -> ProcessingResult<()> {
-    if self.reloaded().await?.is_banned() {
-      self.log("waiting_until_unbanned", self.banned_until().as_ref()).await?;
-      while self.reloaded().await?.is_banned() {
-        sleep(Duration::from_secs(20)).await;
-      }
-    }
+    let (mut socket, _) = connect_async(self.id()).await
+      .map_err(|e| EventProcessingError::RelayConnect(format!("{:?}", e)) )?;
 
-    let (mut socket, _) = connect_async(self.id()).await?;
     self.log("connected", "").await?;
 
     let main_subscription = SubscriptionId::new("main_subscription");
     self.suscribe(&mut socket, main_subscription.clone(), Filter::new().limit(1000)).await?;
 
-    let pubkeys_limit = 50;
-    let mut pubkeys_offset = 0;
+    let mut pubkeys_offset = 1;
 
-    loop {
-      let pubkeys = self.state.db_pubkey().select()
-        .order_by(DbPubkeyOrderBy::FirstFoundAt)
-        .limit(pubkeys_limit)
-        .offset(pubkeys_offset)
-        .all().await?
-        .into_iter().map(|p| XOnlyPublicKey::from_str(&p.attrs.id)  )
-        .collect::<Result<Vec<XOnlyPublicKey>, _>>()?;
-
-      if pubkeys.is_empty() { break; }
-
-      self.log("suscribing_for_pubkey_catch_up", pubkeys_offset).await?;
-      self.suscribe(
-        &mut socket,
-        SubscriptionId::new(&format!("pubkeys_from_{pubkeys_offset}")),
-        Filter::new().pubkeys(pubkeys)
-      ).await?;
-      pubkeys_offset += pubkeys_limit;
-    }
+    self.subscribe_to_pubkeys(&mut socket, pubkeys_offset).await?;
 
     while let Some(raw_msg) = socket.next().await {
       let msg = raw_msg?;
@@ -382,6 +380,8 @@ impl DbRelay {
                 .send(WsMessage::Text(ClientMessage::close(subscription_id).as_json()))
                 .await?;
             }
+            pubkeys_offset += 1;
+            self.subscribe_to_pubkeys(&mut socket, pubkeys_offset).await?;
           },
           RelayMessage::Notice{ message } => { self.log("notice", message).await?; },
           RelayMessage::Ok { event_id, status, message } => { self.log("ok", (event_id, status, message)).await?; },
@@ -396,7 +396,30 @@ impl DbRelay {
     Ok(())
   }
 
-  async fn suscribe(&self, socket: &mut WebSocketStream<MaybeTlsStream<TcpStream>>, id: SubscriptionId, filter: Filter) -> anyhow::Result<()> {
+  async fn subscribe_to_pubkeys(&self, socket: &mut Wss, offset: i64) -> anyhow::Result<()> {
+    let per_page = 50;
+
+    let pubkeys = self.state.db_pubkey().select()
+      .order_by(DbPubkeyOrderBy::FirstFoundAt)
+      .limit(per_page)
+      .offset(offset * per_page)
+      .all().await?
+      .into_iter().map(|p| XOnlyPublicKey::from_str(&p.attrs.id)  )
+      .collect::<Result<Vec<XOnlyPublicKey>, _>>()?;
+
+    if !pubkeys.is_empty() {
+      self.log("suscribing_for_pubkey_catch_up", offset).await?;
+      self.suscribe(
+        socket,
+        SubscriptionId::new(&format!("pubkeys_group_{offset}")),
+        Filter::new().pubkeys(pubkeys)
+      ).await?;
+    }
+
+    return Ok(());
+  }
+
+  async fn suscribe(&self, socket: &mut Wss, id: SubscriptionId, filter: Filter) -> anyhow::Result<()> {
     Ok(socket.send(WsMessage::Text( ClientMessage::new_req(id, vec![filter]).as_json() )).await?)
   }
 
@@ -408,8 +431,12 @@ impl DbRelay {
     self.state.db_relay_log_entry().log(Severity::Error, self.id(), text, Some(json)).await
   }
 
-  fn is_banned(&self) -> bool {
+  fn is_temporarily_banned(&self) -> bool {
     self.banned_until().map(|date| date > Utc::now() ).unwrap_or(false)
+  }
+
+  async fn ban_forever(self) -> sqlx::Result<Self> {
+    self.update().banned_forever(true).save().await
   }
 }
 

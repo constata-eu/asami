@@ -31,7 +31,11 @@ async fn spawn_relay_workers() -> anyhow::Result<()> {
       .unwrap_or(newest_relay_date);
 
     for relay in newer_relays.into_iter() {
-      spawn(async move { relay.run().await });
+      spawn(async move {
+        loop {
+          if relay.run().await.is_ok() { break; }
+        }
+      });
     }
 
     print!("\rTime: {}", Utc::now());
