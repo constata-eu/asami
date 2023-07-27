@@ -1,3 +1,7 @@
+<style type="text/css">
+  h1#asami{ color: red };
+</style>
+
 # ASAMI
 Autonomous Social Ads Marketplace Initiative
 > It's also a japanese girl name meaninig 'future'.
