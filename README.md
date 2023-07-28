@@ -33,7 +33,7 @@ A unique feature of SSSNetworks like NOSTR is that you can prove you have publis
 RSK is relatively cheap for this use case, and features the most resilient and decentralized stablecoin: Dollar on Chain.
 
 > Status:
-> * On track to staging before may.
+> * On track to staging before september.
 > * Verifying a nostr message costs 4 USD in fees which renders smaller campaigns useless. We're exploring optimizing the cryptographic verification routines or making proof verification optional.
 
 ## A marketplace of brands and content creators.
