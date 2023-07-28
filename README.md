@@ -1,6 +1,5 @@
 # ASAMI
 Autonomous Social Ads Marketplace Initiative
-> It's also a japanese girl name meaninig 'future'.
 
 Learn more about the project at https://asami.club
 
