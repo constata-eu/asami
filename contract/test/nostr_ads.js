@@ -4,6 +4,17 @@ const SchnorrLib = artifacts.require("Schnorr");
 const schnorr = require('bip-schnorr');
 const assert = require('assert');
 
+// - Let advertisers submit challenges and proof of deletion.
+// - Let creators pile up rewards and cash out with a single transaction.
+// - Emit events:
+//    - When a campaign has been created: So Asami can contact the creators with the all clear to post, and include a link to verify.
+//    - When a challenge has been submitted: So Asami can contact the creators requesting proof.
+//    - When a challenge has been resolved: So Asamai can contact the brand manager (and post the message herself).
+//    
+// - Add Collaborators bear the cost of claiming their rewards.
+//   As it does not make sense to Payouts are not done from the campaign, instead each collaborator has a list of campaigns
+//    they've collaborated with.
+
 contract("NostrAds", function (accounts) {
   const admin = accounts[0];
   const campaignCreator = accounts[1];
@@ -107,7 +118,8 @@ contract("NostrAds", function (accounts) {
   });
 
   it("Validates schnorr signature on nostr event", async function () {
-    const sample = {
+    const sample = 
+    {
       "content": "Remember: If anyone cancels any plan on you this weekend, they're playing the new zelda.",
       "created_at": 1683916923,
       "id": "34c7b3ba61e984bb370b98d67bd224c68cf6c7866837fdbf81f3b16c9b2ceee2",

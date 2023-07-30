@@ -9,12 +9,12 @@ pragma solidity >=0.4.22 <0.9.0;
 */
 library Schnorr {
     // Curve parameters for secp256k1
-    uint256 constant N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141; // Group order
-    uint256 constant A = 0x0000000000000000000000000000000000000000000000000000000000000000; // Curve coefficient 'a'
-    uint256 constant B = 0x0000000000000000000000000000000000000000000000000000000000000007; // Curve coefficient 'b'
+    uint256 constant N =  0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141; // Group order
+    uint256 constant A =  0x0000000000000000000000000000000000000000000000000000000000000000; // Curve coefficient 'a'
+    uint256 constant B =  0x0000000000000000000000000000000000000000000000000000000000000007; // Curve coefficient 'b'
     uint256 constant Gx = 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798; // x-coordinate of generator point G
     uint256 constant Gy = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8; // y-coordinate of generator point G
-    uint256 constant P = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f; // prime modulus for secp256k1 curve.
+    uint256 constant P =  0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f; // prime modulus for secp256k1 curve.
 
     function verify(
         bytes32 message,
