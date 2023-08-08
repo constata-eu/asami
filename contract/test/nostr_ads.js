@@ -1,21 +1,15 @@
-const NostrAds = artifacts.require("NostrAds");
+const Asami = artifacts.require("Asami");
 const MockDoc = artifacts.require("MockDoc");
 const SchnorrLib = artifacts.require("Schnorr");
 const schnorr = require('bip-schnorr');
 const assert = require('assert');
 
-// - Let advertisers submit challenges and proof of deletion.
-// - Let creators pile up rewards and cash out with a single transaction.
 // - Emit events:
 //    - When a campaign has been created: So Asami can contact the creators with the all clear to post, and include a link to verify.
 //    - When a challenge has been submitted: So Asami can contact the creators requesting proof.
 //    - When a challenge has been resolved: So Asamai can contact the brand manager (and post the message herself).
-//    
-// - Add Collaborators bear the cost of claiming their rewards.
-//   As it does not make sense to Payouts are not done from the campaign, instead each collaborator has a list of campaigns
-//    they've collaborated with.
 
-contract("NostrAds", function (accounts) {
+contract("Asami", function (accounts) {
   const admin = accounts[0];
   const campaignCreator = accounts[1];
   const aliceCollaborator = accounts[2];
@@ -33,7 +27,7 @@ contract("NostrAds", function (accounts) {
     const transferAmount = web3.utils.toWei("100", "ether"); // Transfer 100 stablecoin units
     await mockDoc.transfer(campaignCreator, transferAmount, { from: admin });
 
-    const nostrAds = await NostrAds.deployed();
+    const nostrAds = await Asami.deployed();
 
     // We will forward the blockchain time in these tests to target these timeframes.
     // Just keep in mind submissions end in 100 seconds. Payouts are in 200 seconds.
@@ -54,21 +48,16 @@ contract("NostrAds", function (accounts) {
       "Remember: If anyone cancels any plan on you this weekend, they're playing the new zelda.",
       transferAmount,
       submissionDeadline,
-      payoutDate,
       [
         {
-          "nostrHexPubkey": "e729580aba7b4d601c94f1d9c9ba5f37e6066c22d1351ef5d49a851de81211b9",
+          "nostrHexPubkey": alicePubkey,
           "rewardAmount": rewardAmount,
           "rewardAddress": aliceCollaborator,
-          "nostrAffineX": alicePx,
-          "nostrAffineY": alicePy
         },
         {
-          "nostrHexPubkey": "e729580aba7b4d601c94f1d9c9ba5f37e6066c22d1351ef5d49a851de81211b9",
+          "nostrHexPubkey": alicePubkey,
           "rewardAmount": rewardAmount,
           "rewardAddress": aliceCollaborator,
-          "nostrAffineX": alicePx,
-          "nostrAffineY": alicePy
         }
       ],
       { from: campaignCreator }
