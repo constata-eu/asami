@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.16",
     "bip-schnorr": "0.6.7"
   },
   "dependencies": {

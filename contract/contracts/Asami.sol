@@ -36,20 +36,40 @@ Any rewards that are not awarded to collaborators can be refunded to the Adverti
 */
 
 contract Asami is Ownable {
+    event DebugLog(string message, uint256 number);
+
     /*
       The NewOffer struct is meant to be used by an advertiser when creating a campaign,
       to set the reward amount, the account it will be paid to, and the nostr address of who can claim the content.
       There's a separate representation for the offer once the campaign is created.
     */
     struct NewOffer {
-        string nostrHexPubkey;
         uint256 rewardAmount;
         address rewardAddress;
+        string nostrHexPubkey;
+        uint256 nostrAffineX; // The signer's pubkey X coord, must match their nostr pubkey.
+        uint256 nostrAffineY; // The signer's pubkey Y.
     }
 
+    /* An offer pointer represents a specific offer made in a campaign */
     struct OfferPointer {
         uint campaignId;
         uint offerId;
+    }
+
+    /* The message proof has the required values to rebuild a Nostr message and check its signature */
+    struct MessageProof {
+      uint256 createdAt;
+      uint256 sigR; // The first 32 bytes of the signature.
+      uint256 sigS; // The other 32 bytes of the signature.
+    }
+
+    struct DeletionProof {
+      string content;
+      string tags;
+      uint256 createdAt;
+      uint256 sigR; // The first 32 bytes of the signature.
+      uint256 sigS; // The other 32 bytes of the signature.
     }
 
     /* Represents the offer's state within a stored campaign */
@@ -121,8 +141,8 @@ contract Asami is Ownable {
                 rewardAddress: payable(source.rewardAddress),
                 collected: false,
                 awarded: true,
-                nostrAffineX: 0,
-                nostrAffineY: 0,
+                nostrAffineX: source.nostrAffineX,
+                nostrAffineY: source.nostrAffineY,
                 messageId: bytes32(0),
                 renounced: false
             });
@@ -155,11 +175,7 @@ contract Asami is Ownable {
     // The r value is the first 32 bytes of the signature, and the s value are the remaining 32,
     function submitProof(
       OfferPointer calldata _p,
-      uint256 _createdAt,
-      uint256 _r,
-      uint256 _s,
-      uint256 _affineX,
-      uint256 _affineY
+      MessageProof calldata _proof
     ) 
       public
     {
@@ -174,11 +190,9 @@ contract Asami is Ownable {
         bytes32 messageId = verifyCampaignMessage(
           campaign.content,
           offer.nostrHexPubkey,
-          _createdAt,
-          _r,
-          _s,
-          _affineX,
-          _affineY
+          _proof,
+          offer.nostrAffineX,
+          offer.nostrAffineY
         );
 
         offer.awarded = true;
@@ -192,13 +206,7 @@ contract Asami is Ownable {
     // The r value is the first 32 bytes of the signature, and the s value are the remaining 32,
     function submitDeletionProof(
         OfferPointer calldata _p,
-        string calldata _content,
-        string calldata _tags,
-        uint256 _createdAt,
-        uint256 _r, 
-        uint256 _s,
-        uint256 _affineX,
-        uint256 _affineY
+        DeletionProof calldata _deletionProof
     )
         public
     {
@@ -210,17 +218,14 @@ contract Asami is Ownable {
         Offer storage offer = campaign.offers[_p.offerId];
         require(offer.awarded, "no_need_as_offer_is_not_awarded");
         require(offer.messageId > bytes32(0), "offer_proof_has_not_been_submitted");
-        require(strFind(offer.messageId, _tags), "message_id_not_found_in_tags");
+
+        require(idInTags(offer.messageId, _deletionProof.tags), "message_id_not_found_in_tags");
 
         verifyDeletionMessage(
           offer.nostrHexPubkey,
-          _content,
-          _tags,
-          _createdAt,
-          _r,
-          _s,
-          _affineX,
-          _affineY
+          _deletionProof,
+          offer.nostrAffineX,
+          offer.nostrAffineY
         );
 
         offer.awarded = false;
@@ -231,16 +236,8 @@ contract Asami is Ownable {
 
     function submitProofAndDeletionProof (
         OfferPointer calldata _p,
-        uint256 _msgCreatedAt,
-        uint256 _msgR,
-        uint256 _msgS,
-        string calldata _deletionContent,
-        string calldata _deletionTags,
-        uint256 _deletionCreatedAt,
-        uint256 _deletionR, 
-        uint256 _deletionS,
-        uint256 _affineX,
-        uint256 _affineY
+        MessageProof calldata _messageProof,
+        DeletionProof calldata _deletionProof
     )
         public 
     {
@@ -253,28 +250,22 @@ contract Asami is Ownable {
         require(offer.awarded, "no_need_as_offer_is_not_awarded");
 
         bytes32 messageId = verifyCampaignMessage(
-          campaign.content,
-          offer.nostrHexPubkey,
-          _msgCreatedAt,
-          _msgR,
-          _msgS,
-          _affineX,
-          _affineY
+            campaign.content,
+            offer.nostrHexPubkey,
+            _messageProof,
+            offer.nostrAffineX,
+            offer.nostrAffineY
         );
 
         offer.messageId = messageId;
 
-        require(strFind(messageId, _deletionTags), "message_id_not_found_in_tags");
+        require(idInTags(offer.messageId, _deletionProof.tags), "message_id_not_found_in_tags");
 
         verifyDeletionMessage(
           offer.nostrHexPubkey,
-          _deletionContent,
-          _deletionTags,
-          _deletionCreatedAt,
-          _deletionR,
-          _deletionS,
-          _affineX,
-          _affineY
+          _deletionProof,
+          offer.nostrAffineX,
+          offer.nostrAffineY
         );
 
         offer.awarded = false;
@@ -324,7 +315,7 @@ contract Asami is Ownable {
             Offer storage offer = campaign.offers[p.offerId];
             require(offer.rewardAmount > 0, "no_such_offer");
             require(offer.awarded, "this_offers_reward_was_not_awarded");
-            require(offer.rewardAddress == _collaborator, "this_offer_is_not_for_collaborator");
+            require(offer.rewardAddress == _collaborator, "that_offer_is_not_for_this_collaborator");
 
             require(!offer.collected, "already_collected");
             totalRewards = offer.rewardAmount;
@@ -342,12 +333,13 @@ contract Asami is Ownable {
     */
     function collectRefunds(address payable _advertiser, OfferPointer[] calldata _offers) public {
         uint256 totalRefund = 0;
+
         for (uint i = 0; i < _offers.length; i++) {
             OfferPointer memory p = _offers[i];
 
             Campaign storage campaign = campaigns[p.campaignId];
             require(campaign.funding > 0, "no_such_campaign");
-            require(campaign.creator == _advertiser, "non_advertiser_campaign");
+            require(campaign.creator == _advertiser, "this_campaign_does_not_belong_to_that_advertiser");
 
             require(block.timestamp >= (campaign.deadline + proofWindow), "not_refundable_yet");
 
@@ -356,7 +348,7 @@ contract Asami is Ownable {
             require(!offer.awarded, "awarded_offers_are_not_refundable");
 
             require(!offer.collected, "already_collected");
-            totalRefund = offer.rewardAmount;
+            totalRefund += offer.rewardAmount;
             offer.collected = true;
         }
 
@@ -397,17 +389,10 @@ contract Asami is Ownable {
         offer.renounced = true;
     }
 
-
-    function getCampaignOffers(uint _a, uint _b) public view returns (Offer memory) {
-        return campaigns[_a].offers[_b];
-    }
-
     function verifyCampaignMessage(
         string memory _content,
         string memory _pubkey,
-        uint256 _createdAt,
-        uint256 _r,
-        uint256 _s,
+        MessageProof memory _proof,
         uint256 _affineX,
         uint256 _affineY
     )
@@ -417,7 +402,7 @@ contract Asami is Ownable {
             "[0,\"",
             _pubkey,
             "\",",
-            Strings.toString(_createdAt),
+            Strings.toString(_proof.createdAt),
             ",1,[],\"",
             _content,
             "\"]"
@@ -429,8 +414,8 @@ contract Asami is Ownable {
             messageId,
             _affineX,
             _affineY,
-            _r,
-            _s
+            _proof.sigR,
+            _proof.sigS
         ), "invalid_proof");
 
         return messageId;
@@ -438,11 +423,7 @@ contract Asami is Ownable {
 
     function verifyDeletionMessage(
         string memory _pubkey,
-        string memory _content,
-        string memory _tags,
-        uint256 _createdAt,
-        uint256 _r, 
-        uint256 _s,
+        DeletionProof memory _proof,
         uint256 _affineX,
         uint256 _affineY
     )
@@ -452,11 +433,11 @@ contract Asami is Ownable {
             "[0,\"",
             _pubkey,
             "\",",
-            Strings.toString(_createdAt),
-            ",3,",
-            _tags,
+            Strings.toString(_proof.createdAt),
+            ",5,",
+            _proof.tags,
             ",\"",
-            _content,
+            _proof.content,
             "\"]"
         );
 
@@ -464,8 +445,8 @@ contract Asami is Ownable {
             sha256(message),
             _affineX,
             _affineY,
-            _r,
-            _s
+            _proof.sigR,
+            _proof.sigS
         ), "invalid_deletion_proof");
     }
 
@@ -478,16 +459,81 @@ contract Asami is Ownable {
     }
 
     function setFeesAddress(address _feesAddress) public onlyOwner {
-      feesAddress = _feesAddress;
+        feesAddress = _feesAddress;
     }
 
     function collectFees() public {
-      require(fees > 0, "no_fee_to_collect");
-      require(rewardToken.transferFrom(address(this), feesAddress, fees), "could_not_pay_fees");
-      fees = 0;
+        require(fees > 0, "no_fee_to_collect");
+        require(rewardToken.transferFrom(address(this), feesAddress, fees), "could_not_pay_fees");
+        fees = 0;
     }
 
-    function strFind(
+    function getCampaignOffer(OfferPointer memory _p) public view returns (Offer memory) {
+        return campaigns[_p.campaignId].offers[_p.offerId];
+    }
+
+    function getRewardsPendingCollection(address _collaborator)
+        public view returns (OfferPointer[] memory) 
+    {
+        OfferPointer[] memory pointers = new OfferPointer[](0);
+
+        for(uint i = 0; i < campaignCount; i++) {
+          for(uint j = 0; j < campaigns[i].offerCount; j++) {
+            Offer memory offer = campaigns[i].offers[j];
+            if(offer.rewardAddress == _collaborator && offer.awarded && !offer.collected) {
+              OfferPointer[] memory tmp = new OfferPointer[](pointers.length + 1);
+              for (uint k = 0; k < pointers.length; k++) {
+                  tmp[k] = pointers[k];
+              }
+              tmp[pointers.length] = OfferPointer(i,j);
+              pointers = tmp;
+            }
+          }
+        }
+        return pointers;
+    }
+
+    function getRefundableOffers(address _advertiser)
+        public view returns (OfferPointer[] memory) 
+    {
+        OfferPointer[] memory pointers = new OfferPointer[](0);
+
+        for(uint i = 0; i < campaignCount; i++) {
+          if( campaigns[1].creator != _advertiser ){
+            continue;
+          }
+          for(uint j = 0; j < campaigns[i].offerCount; j++) {
+            Offer memory offer = campaigns[i].offers[j];
+            if(!offer.awarded && !offer.collected) {
+              OfferPointer[] memory tmp = new OfferPointer[](pointers.length + 1);
+              for (uint k = 0; k < pointers.length; k++) {
+                  tmp[k] = pointers[k];
+              }
+              tmp[pointers.length] = OfferPointer(i,j);
+              pointers = tmp;
+            }
+          }
+        }
+        return pointers;
+    }
+
+    function getCampaignCost(NewOffer[] memory _offers) public view returns (uint256) {
+        uint256 totalRewards = 0;
+        uint256 totalFees = 0;
+
+        for (uint i = 0; i < _offers.length; i++) {
+            totalRewards += _offers[i].rewardAmount;
+            totalFees += feePerOffer;
+        }
+
+        if (totalFees > maxFeePerCampaign) {
+          totalFees = maxFeePerCampaign;
+        }
+
+        return totalFees + totalRewards;
+    }
+
+    function idInTags(
         bytes32 needle,
         string memory haystack
     )
@@ -499,8 +545,8 @@ contract Asami is Ownable {
 
         for(uint i = 0; i < haystackBytes.length - needleHexBytes.length + 1; i++) {
             bool found = true;
-            for(uint j = 0; j < needleHexBytes.length; j++) {
-                if(haystackBytes[i + j] != needleHexBytes[j]) {
+            for(uint j = 0; j < needleHexBytes.length - 2; j++) {
+                if(haystackBytes[i + j] != needleHexBytes[j+2]) {
                     found = false;
                     break;
                 }
