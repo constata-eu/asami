@@ -38,12 +38,30 @@ Any rewards that are not awarded to collaborators can be refunded to the Adverti
 contract Asami is Ownable {
     event DebugLog(string message, uint256 number);
 
+    enum NostrOfferState {
+      // The offer is assumed to be published.
+      Assumed,
+      // The advertiser has challenged the message publication.
+      Challenged, 
+      // The collaborator has submitted proof of the message.
+      Confirmed,
+      // The collaborator has renounced the reward, probably intending to delete the message.
+      Renounced,
+      // The advertiser has reported the publication has been deleted before the campaign ended.
+      DeletionConfirmed,
+    }
+
+    modifier inNostrState(NostrOfferState _state) {
+        require(state == _state, "Invalid state for this action");
+        _;
+    }
+
     /*
-      The NewOffer struct is meant to be used by an advertiser when creating a campaign,
+      The NewNostrOffer struct is meant to be used by an advertiser when creating a campaign,
       to set the reward amount, the account it will be paid to, and the nostr address of who can claim the content.
       There's a separate representation for the offer once the campaign is created.
     */
-    struct NewOffer {
+    struct NewNostrOffer {
         uint256 rewardAmount;
         address rewardAddress;
         string nostrHexPubkey;
@@ -58,22 +76,22 @@ contract Asami is Ownable {
     }
 
     /* The message proof has the required values to rebuild a Nostr message and check its signature */
-    struct MessageProof {
-      uint256 createdAt;
-      uint256 sigR; // The first 32 bytes of the signature.
-      uint256 sigS; // The other 32 bytes of the signature.
+    struct NostrMessageProof {
+        uint256 createdAt;
+        uint256 sigR; // The first 32 bytes of the signature.
+        uint256 sigS; // The other 32 bytes of the signature.
     }
 
-    struct DeletionProof {
-      string content;
-      string tags;
-      uint256 createdAt;
-      uint256 sigR; // The first 32 bytes of the signature.
-      uint256 sigS; // The other 32 bytes of the signature.
+    struct NostrDeletionProof {
+        string content;
+        string tags;
+        uint256 createdAt;
+        uint256 sigR; // The first 32 bytes of the signature.
+        uint256 sigS; // The other 32 bytes of the signature.
     }
 
     /* Represents the offer's state within a stored campaign */
-    struct Offer {
+    struct NostrOffer {
         string nostrHexPubkey;
         uint256 rewardAmount;
         address rewardAddress;
@@ -85,13 +103,72 @@ contract Asami is Ownable {
         bool renounced;
     }
 
-    struct Campaign {
+    struct NostrCampaign {
         string content;
         uint256 funding;
         address creator;
         uint256 deadline;
         uint offerCount;
-        mapping(uint => Offer) offers;
+        mapping(uint => NostrOffer) offers;
+    }
+
+    enum LegacyOfferState {
+      // The offer is assumed to be published.
+      Assumed,
+      // The advertiser has challenged the message publication.
+      Challenged, 
+      // The collaborator (or someone else) has paid the oracle to confirm publication.
+      ConfirmationRequested,
+      // The oracle has confirmed the message has been published.
+      Confirmed,
+      // The oracle could not confirm the message publication. The offer will be refunded.
+      Refuted,
+      // The oracle failed to respond to the confirmation request.
+      // The Collaborator gets his money back from the oracle, but the reward is not awarded.
+      // Anyone can trigger the transition to this state.
+      OracleConfirmationDefaulted,
+      // The collaborator has renounced 
+      Renounced,
+      // The advertiser has reported the publication has been deleted before the campaign ended.
+      DeletionReported,
+      // The oracle has confirmed the publication was deleted early. The reward will not be paid. The collaborator will be penalized.
+      DeletionConfirmed,
+      // The oracle did not respond to the deletion request.
+      // The payment is prorated, up to the date when the deletion was reported.
+      OracleDeletionConfirmationDefaulted,
+    }
+
+    modifier inLegacyState(LegacyOfferState _state) {
+        require(state == _state, "Invalid state for this action");
+        _;
+    }
+
+    struct NewLegacyOffer {
+        uint256 rewardAmount;
+        address rewardAddress;
+        string username;
+    }
+
+    struct LegacyOffer {
+        string username;
+        uint256 rewardAmount;
+        address rewardAddress;
+        bool awarded;
+        bool collected;
+        string publicationId;
+        bool renounced;
+    }
+
+    struct LegacyCampaign {
+        uint socialNetworkId;
+        string description;
+        address oracleAddress;
+        uint256 oracleFee;
+        uint256 funding;
+        address creator;
+        uint256 deadline;
+        uint offerCount;
+        mapping(uint => NostrOffer) offers;
     }
 
     uint constant challengeWindow = 60 * 60 * 24; // A day
@@ -103,8 +180,14 @@ contract Asami is Ownable {
     uint256 public fees = 0;
     address public feesAddress;
 
-    uint public campaignCount;
-    mapping(uint => Campaign) public campaigns;
+    uint public nostrCampaignCount;
+    mapping(uint => NostrCampaign) public nostrCampaigns;
+
+    uint public legacySocialNetworksCount;
+    mapping(uint => string) public legacySocialNetworks;
+
+    uint public legacyCampaignCount;
+    mapping(uint => LegacyCampaign) public legacyCampaigns;
 
     struct DeletionPenalty {
         address payable creditor;
@@ -118,11 +201,52 @@ contract Asami is Ownable {
         rewardToken = IERC20(_dollarOnChainAddress);
     }
 
-    function createCampaign(string memory _content, uint256 _funding, uint256 _deadline, NewOffer[] memory _offers) public returns (uint) {
+    function createLegacyCampaign(string memory _description, uint256 _funding, uint256 _deadline, NewLegacyOffer[] memory _offers) public returns (uint) {
         require(_funding > 0, "amount_must_be_greater_than_zero");
         require(_offers.length > 0, "must_set_offers");
 
-        Campaign storage campaign = campaigns[campaignCount];
+        LegacyCampaign storage campaign = legacyCampaigns[legacyCampaignCount];
+        campaign.description = _description;
+        campaign.funding = _funding;
+        campaign.creator = payable(msg.sender);
+        campaign.deadline = _deadline;
+
+        uint256 totalRewards = 0;
+        uint256 totalFees = 0;
+        for (uint i = 0; i < _offers.length; i++) {
+            NewLegacyOffer memory source = _offers[i];
+            require(source.rewardAmount > 0, "collaborator_must_get_paid");
+            totalRewards += source.rewardAmount;
+            totalFees += feePerOffer;
+            campaign.offers[i] = NostrOffer({
+                username: source.username,
+                rewardAmount: source.rewardAmount,
+                rewardAddress: payable(source.rewardAddress),
+                collected: false,
+                awarded: true,
+                publicationId: source.publicationId,
+                renounced: false
+            });
+            campaign.offerCount = i + 1;
+        }
+
+        if (totalFees > maxFeePerCampaign) {
+          totalFees = maxFeePerCampaign;
+        }
+
+        fees += totalFees;
+
+        require((totalRewards + totalFees) == _funding, "funding_must_match_rewards_amount_exactly");
+        require(rewardToken.transferFrom(msg.sender, address(this), _funding), "contract_reward_funding_failed");
+        
+        return legacyCampaignCount++;
+    }
+
+    function createNostrCampaign(string memory _content, uint256 _funding, uint256 _deadline, NewNostrOffer[] memory _offers) public returns (uint) {
+        require(_funding > 0, "amount_must_be_greater_than_zero");
+        require(_offers.length > 0, "must_set_offers");
+
+        NostrCampaign storage campaign = nostrCampaigns[nostrCampaignCount];
         campaign.content = _content;
         campaign.funding = _funding;
         campaign.creator = payable(msg.sender);
@@ -131,11 +255,11 @@ contract Asami is Ownable {
         uint256 totalRewards = 0;
         uint256 totalFees = 0;
         for (uint i = 0; i < _offers.length; i++) {
-            NewOffer memory source = _offers[i];
+            NewNostrOffer memory source = _offers[i];
             require(source.rewardAmount > 0, "collaborator_must_get_paid");
             totalRewards += source.rewardAmount;
             totalFees += feePerOffer;
-            campaign.offers[i] = Offer({
+            campaign.offers[i] = NostrOffer({
                 nostrHexPubkey: source.nostrHexPubkey,
                 rewardAmount: source.rewardAmount,
                 rewardAddress: payable(source.rewardAddress),
@@ -158,36 +282,69 @@ contract Asami is Ownable {
         require((totalRewards + totalFees) == _funding, "funding_must_match_rewards_amount_exactly");
         require(rewardToken.transferFrom(msg.sender, address(this), _funding), "contract_reward_funding_failed");
         
-        return campaignCount++;
+        return nostrCampaignCount++;
     }
 
-    function challenge(OfferPointer calldata _p) public {
-        Campaign storage campaign = campaigns[_p.campaignId];
+    function legacyChallenge(OfferPointer calldata _p) public {
+        LegacyCampaign storage campaign = legacyCampaigns[_p.campaignId];
         require(campaign.creator == msg.sender, "only_campaign_owner_can_challenge");
 
         require(block.timestamp <= (campaign.deadline + challengeWindow), "cannot_challenge_after_24_of_deadline");
-        Offer storage offer = campaign.offers[_p.offerId];
+        NostrOffer storage offer = campaign.offers[_p.offerId];
         require(offer.rewardAmount > 0, "no_such_offer");
         offer.awarded = false;
     }
 
+    function nostrChallenge(OfferPointer calldata _p) public {
+        NostrCampaign storage campaign = nostrCampaigns[_p.campaignId];
+        require(campaign.creator == msg.sender, "only_campaign_owner_can_challenge");
+
+        require(block.timestamp <= (campaign.deadline + challengeWindow), "cannot_challenge_after_24_of_deadline");
+        NostrOffer storage offer = campaign.offers[_p.offerId];
+        require(offer.rewardAmount > 0, "no_such_offer");
+        offer.awarded = false;
+    }
+
+    function requestPostAttestation(OfferPointer calldata _p) public {
+        LegacyCampaign storage campaign = legacyCampaigns[_p.campaignId];
+        require(block.timestamp <= (campaign.deadline + campaignDuration), "campaign_already_ended");
+        require(rewardToken.transferFrom(msg.sender, address(this), campaign.oracleFee), "could_not_pay_oracle_fee");
+        NostrOffer storage offer = campaign.offers[_p.offerId];
+        require(offer.rewardAmount > 0, "no_such_offer");
+        offer.attestationRequested = true
+    }
+
+    function submitPostAttestation(OfferPointer calldata _p, bool found) public {
+        // Can only be called by the proposed oracle.
+        // Gets paid.
+    }
+
+    function requestPostDeletionAttestation(OfferPointer calldata _p) public {
+        // Can be called by anyone.
+        // Pays the oracle fee.
+    }
+
+    function submitPostDeletionAttestation(OfferPointer calldata _p) public {
+        // ...
+    }
+
     // Anyone can submit proof of a message being published, likely a Collaborator or someone on their behalf.
     // The r value is the first 32 bytes of the signature, and the s value are the remaining 32,
-    function submitProof(
+    function submitNostrProof(
       OfferPointer calldata _p,
-      MessageProof calldata _proof
+      NostrMessageProof calldata _proof
     ) 
       public
     {
-        Campaign storage campaign = campaigns[_p.campaignId];
+        NostrCampaign storage campaign = nostrCampaigns[_p.campaignId];
         require(block.timestamp <= (campaign.deadline + proofWindow), "cannot_send_proof_48_hs_after_deadline");
 
-        Offer storage offer = campaign.offers[_p.offerId];
+        NostrOffer storage offer = campaign.offers[_p.offerId];
         require(offer.rewardAmount > 0, "no_such_offer");
 
         require(!offer.awarded, "offer_will_be_paid_no_need_for_proof_yet");
 
-        bytes32 messageId = verifyCampaignMessage(
+        bytes32 messageId = verifyNostrCampaignMessage(
           campaign.content,
           offer.nostrHexPubkey,
           _proof,
@@ -204,18 +361,18 @@ contract Asami is Ownable {
     // To reduce gas usage, this method does not parse the tags json, it just does a raw string search,
     // which initially may be enough.
     // The r value is the first 32 bytes of the signature, and the s value are the remaining 32,
-    function submitDeletionProof(
+    function submitNostrDeletionProof(
         OfferPointer calldata _p,
-        DeletionProof calldata _deletionProof
+        NostrDeletionProof calldata _deletionProof
     )
         public
     {
         uint256 startGas = gasleft();
 
-        Campaign storage campaign = campaigns[_p.campaignId];
+        NostrCampaign storage campaign = nostrCampaigns[_p.campaignId];
         require(block.timestamp <= (campaign.deadline + campaignDuration), "campaign_already_ended");
 
-        Offer storage offer = campaign.offers[_p.offerId];
+        NostrOffer storage offer = campaign.offers[_p.offerId];
         require(offer.awarded, "no_need_as_offer_is_not_awarded");
         require(offer.messageId > bytes32(0), "offer_proof_has_not_been_submitted");
 
@@ -234,22 +391,22 @@ contract Asami is Ownable {
         deletionPenalties[offer.rewardAddress].push(DeletionPenalty(payable(msg.sender), refund));
     }
 
-    function submitProofAndDeletionProof (
+    function submitNostrProofAndDeletionProof (
         OfferPointer calldata _p,
-        MessageProof calldata _messageProof,
-        DeletionProof calldata _deletionProof
+        NostrMessageProof calldata _messageProof,
+        NostrDeletionProof calldata _deletionProof
     )
         public 
     {
         uint256 startGas = gasleft();
 
-        Campaign storage campaign = campaigns[_p.campaignId];
+        NostrCampaign storage campaign = nostrCampaigns[_p.campaignId];
         require(block.timestamp <= (campaign.deadline + campaignDuration), "campaign_already_ended");
 
-        Offer storage offer = campaign.offers[_p.offerId];
+        NostrOffer storage offer = campaign.offers[_p.offerId];
         require(offer.awarded, "no_need_as_offer_is_not_awarded");
 
-        bytes32 messageId = verifyCampaignMessage(
+        bytes32 messageId = verifyNostrCampaignMessage(
             campaign.content,
             offer.nostrHexPubkey,
             _messageProof,
@@ -308,11 +465,11 @@ contract Asami is Ownable {
         for (uint i = 0; i < _offers.length; i++) {
             OfferPointer memory p = _offers[i];
 
-            Campaign storage campaign = campaigns[p.campaignId];
+            NostrCampaign storage campaign = nostrCampaigns[p.campaignId];
             require(campaign.funding > 0, "no_such_campaign");
             require(block.timestamp >= (campaign.deadline + campaignDuration), "campaign_is_not_over_yet");
 
-            Offer storage offer = campaign.offers[p.offerId];
+            NostrOffer storage offer = campaign.offers[p.offerId];
             require(offer.rewardAmount > 0, "no_such_offer");
             require(offer.awarded, "this_offers_reward_was_not_awarded");
             require(offer.rewardAddress == _collaborator, "that_offer_is_not_for_this_collaborator");
@@ -337,13 +494,13 @@ contract Asami is Ownable {
         for (uint i = 0; i < _offers.length; i++) {
             OfferPointer memory p = _offers[i];
 
-            Campaign storage campaign = campaigns[p.campaignId];
+            NostrCampaign storage campaign = nostrCampaigns[p.campaignId];
             require(campaign.funding > 0, "no_such_campaign");
             require(campaign.creator == _advertiser, "this_campaign_does_not_belong_to_that_advertiser");
 
             require(block.timestamp >= (campaign.deadline + proofWindow), "not_refundable_yet");
 
-            Offer storage offer = campaign.offers[p.offerId];
+            NostrOffer storage offer = campaign.offers[p.offerId];
             require(offer.rewardAmount > 0, "no_such_offer");
             require(!offer.awarded, "awarded_offers_are_not_refundable");
 
@@ -363,9 +520,9 @@ contract Asami is Ownable {
      This works unless the reward has been collected or refunded.
     */
     function forceReward(OfferPointer calldata _p) public {
-        Campaign storage campaign = campaigns[_p.campaignId];
+        NostrCampaign storage campaign = nostrCampaigns[_p.campaignId];
         require(campaign.creator == msg.sender, "only_campaign_owner_can_force_rewards");
-        Offer storage offer = campaign.offers[_p.offerId];
+        NostrOffer storage offer = campaign.offers[_p.offerId];
         require(offer.rewardAmount > 0, "no_such_offer");
         require(!offer.renounced, "offer_was_renounced_by_collaborator");
         offer.awarded = true;
@@ -381,18 +538,18 @@ contract Asami is Ownable {
      voluntarily before deleting the message.
     */
     function renonuce(OfferPointer calldata _p) public {
-        Campaign storage campaign = campaigns[_p.campaignId];
-        Offer storage offer = campaign.offers[_p.offerId];
+        NostrCampaign storage campaign = nostrCampaigns[_p.campaignId];
+        NostrOffer storage offer = campaign.offers[_p.offerId];
         require(offer.rewardAmount > 0, "no_such_offer");
         require(offer.rewardAddress == msg.sender, "only_collaborator_can_force_rewards");
         offer.awarded = false;
         offer.renounced = true;
     }
 
-    function verifyCampaignMessage(
+    function verifyNostrCampaignMessage(
         string memory _content,
         string memory _pubkey,
-        MessageProof memory _proof,
+        NostrMessageProof memory _proof,
         uint256 _affineX,
         uint256 _affineY
     )
@@ -423,7 +580,7 @@ contract Asami is Ownable {
 
     function verifyDeletionMessage(
         string memory _pubkey,
-        DeletionProof memory _proof,
+        NostrDeletionProof memory _proof,
         uint256 _affineX,
         uint256 _affineY
     )
@@ -468,8 +625,8 @@ contract Asami is Ownable {
         fees = 0;
     }
 
-    function getCampaignOffer(OfferPointer memory _p) public view returns (Offer memory) {
-        return campaigns[_p.campaignId].offers[_p.offerId];
+    function getNostrCampaignOffer(OfferPointer memory _p) public view returns (NostrOffer memory) {
+        return nostrCampaigns[_p.campaignId].offers[_p.offerId];
     }
 
     function getRewardsPendingCollection(address _collaborator)
@@ -477,9 +634,9 @@ contract Asami is Ownable {
     {
         OfferPointer[] memory pointers = new OfferPointer[](0);
 
-        for(uint i = 0; i < campaignCount; i++) {
-          for(uint j = 0; j < campaigns[i].offerCount; j++) {
-            Offer memory offer = campaigns[i].offers[j];
+        for(uint i = 0; i < nostrCampaignCount; i++) {
+          for(uint j = 0; j < nostrCampaigns[i].offerCount; j++) {
+            NostrOffer memory offer = nostrCampaigns[i].offers[j];
             if(offer.rewardAddress == _collaborator && offer.awarded && !offer.collected) {
               OfferPointer[] memory tmp = new OfferPointer[](pointers.length + 1);
               for (uint k = 0; k < pointers.length; k++) {
@@ -498,12 +655,12 @@ contract Asami is Ownable {
     {
         OfferPointer[] memory pointers = new OfferPointer[](0);
 
-        for(uint i = 0; i < campaignCount; i++) {
-          if( campaigns[1].creator != _advertiser ){
+        for(uint i = 0; i < nostrCampaignCount; i++) {
+          if( nostrCampaigns[1].creator != _advertiser ){
             continue;
           }
-          for(uint j = 0; j < campaigns[i].offerCount; j++) {
-            Offer memory offer = campaigns[i].offers[j];
+          for(uint j = 0; j < nostrCampaigns[i].offerCount; j++) {
+            NostrOffer memory offer = nostrCampaigns[i].offers[j];
             if(!offer.awarded && !offer.collected) {
               OfferPointer[] memory tmp = new OfferPointer[](pointers.length + 1);
               for (uint k = 0; k < pointers.length; k++) {
@@ -517,20 +674,14 @@ contract Asami is Ownable {
         return pointers;
     }
 
-    function getCampaignCost(NewOffer[] memory _offers) public view returns (uint256) {
-        uint256 totalRewards = 0;
-        uint256 totalFees = 0;
-
-        for (uint i = 0; i < _offers.length; i++) {
-            totalRewards += _offers[i].rewardAmount;
-            totalFees += feePerOffer;
-        }
+    function getCampaignFees(uint _offerCount) public view returns (uint256) {
+        uint256 totalFees = _offerCount * feePerOffer;
 
         if (totalFees > maxFeePerCampaign) {
           totalFees = maxFeePerCampaign;
         }
 
-        return totalFees + totalRewards;
+        return totalFees;
     }
 
     function idInTags(

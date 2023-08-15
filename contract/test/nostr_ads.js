@@ -8,7 +8,7 @@ const { expectRevert, } = require('@openzeppelin/test-helpers');
 const oneDay = 60 * 60 * 24;
 const rewardAmount = web3.utils.toWei("50", "ether");
 
-contract("Asami", function (accounts) {
+contract("Asami Nostr", function (accounts) {
   it("Pays everyone after campaign is over if no challenges were submitted", async () => {
     const { 
       asami,
@@ -17,9 +17,9 @@ contract("Asami", function (accounts) {
       advertiser,
       aliceAddress,
       firstOffer
-    } = await makeCampaign(accounts);
+    } = await makeNostrCampaign(accounts);
 
-    let offer = await asami.getCampaignOffer(firstOffer);
+    let offer = await asami.getNostrCampaignOffer(firstOffer);
     assert.equal(offer.rewardAddress, aliceAddress, "Offer address mismatch");
     assert(offer.awarded, "Offer should be able to collect");
     assert(!offer.collected, "Offer should not be collected");
@@ -42,24 +42,24 @@ contract("Asami", function (accounts) {
     assert(!offer.collected, "Offer should not be collected");
 
     await asami.collectRewards(aliceAddress, pointers, { from: admin } );
-    offer = await asami.getCampaignOffer(firstOffer);
+    offer = await asami.getNostrCampaignOffer(firstOffer);
     assert(offer.collected, "Offer should be collected");
     assert.equal( (await mockDoc.balanceOf(aliceAddress)), rewardAmount, "Alice should have received the money.");
   });
 });
 
-contract("Asami", function (accounts) {
+contract("Asami Nostr", function (accounts) {
   it("A collaborator is challenged so the reward will be refunded", async () => {
-    const { asami, mockDoc, admin, aliceAddress, advertiser, firstOffer } = await makeCampaign(accounts);
-    await makeCampaign(accounts);
-    await makeCampaign(accounts);
+    const { asami, mockDoc, admin, aliceAddress, advertiser, firstOffer } = await makeNostrCampaign(accounts);
+    await makeNostrCampaign(accounts);
+    await makeNostrCampaign(accounts);
 
     const refundables = [[0,1], [1,0], [1,1]];
 
     for( p of refundables) {
       const o = {campaignId: p[0], offerId: p[1]};
-      await asami.challenge(o, { from: advertiser });
-      const offer = await asami.getCampaignOffer(o);
+      await asami.nostrChallenge(o, { from: advertiser });
+      const offer = await asami.getNostrCampaignOffer(o);
       assert(!offer.awarded, "Offer should not be awarded");
       assert(!offer.collected, "Offer should not have been collected");
     }
@@ -92,7 +92,7 @@ contract("Asami", function (accounts) {
     await asami.collectRefunds(advertiser, pointers, { from: admin });
 
     for( p of refundables) {
-      const offer = await asami.getCampaignOffer(
+      const offer = await asami.getNostrCampaignOffer(
         {campaignId: p[0], offerId: p[1]}
       );
       assert(offer.collected, "Offer should have been collected");
@@ -106,7 +106,7 @@ contract("Asami", function (accounts) {
   });
 });
 
-contract("Asami", function (accounts) {
+contract("Asami Nostr", function (accounts) {
   it("Submitting proof after a challenge awards the reward again", async () => {
     const { 
       asami,
@@ -114,9 +114,9 @@ contract("Asami", function (accounts) {
       admin,
       advertiser,
       firstOffer
-    } = await makeCampaign(accounts);
+    } = await makeNostrCampaign(accounts);
 
-    await asami.challenge(firstOffer, { from: advertiser });
+    await asami.nostrChallenge(firstOffer, { from: advertiser });
 
     const signature = Buffer.from("7aa5f6c2cd24f6fd63475fca4d632bf37ef13eb44140f11fcc52f0daabdd6f9e5054148ae0a27315eb0da4642b59ac4e9c83748136751773bf95c7992ea5d570", "hex");
     const messageProof = {
@@ -124,50 +124,50 @@ contract("Asami", function (accounts) {
       sigR: signature.slice(0, 32),
       sigS: signature.slice(32, 64)
     };
-    await asami.submitProof(firstOffer, messageProof, { from: admin });
+    await asami.submitNostrProof(firstOffer, messageProof, { from: admin });
 
-    offer = await asami.getCampaignOffer(firstOffer);
+    offer = await asami.getNostrCampaignOffer(firstOffer);
     assert(offer.awarded, "Offer should be awarded");
   });
 });
 
-contract("Asami", function (accounts) {
+contract("Asami Nostr", function (accounts) {
   it("Only campaign owner can challenge", async () => {
     const { 
       asami,
       admin,
       advertiser,
       firstOffer
-    } = await makeCampaign(accounts);
+    } = await makeNostrCampaign(accounts);
 
     await expectRevert(
-      asami.challenge(firstOffer, { from: admin }),
+      asami.nostrChallenge(firstOffer, { from: admin }),
       "only_campaign_owner_can_challenge"
     );
 
-    await asami.challenge(firstOffer, { from: advertiser });
+    await asami.nostrChallenge(firstOffer, { from: advertiser });
   });
 });
 
-contract("Asami", function (accounts) {
+contract("Asami Nostr", function (accounts) {
   it("Submits deletion proof for a previously challenged offer", async () => {
     const { 
       asami,
       admin,
       advertiser,
       firstOffer
-    } = await makeCampaign(accounts);
+    } = await makeNostrCampaign(accounts);
 
-    await asami.challenge(firstOffer, { from: advertiser });
+    await asami.nostrChallenge(firstOffer, { from: advertiser });
     const msgSig = Buffer.from("7aa5f6c2cd24f6fd63475fca4d632bf37ef13eb44140f11fcc52f0daabdd6f9e5054148ae0a27315eb0da4642b59ac4e9c83748136751773bf95c7992ea5d570", "hex");
     const messageProof = {
       createdAt: 1683916923,
       sigR: msgSig.slice(0, 32),
       sigS: msgSig.slice(32, 64)
     };
-    await asami.submitProof(firstOffer, messageProof, { from: admin });
+    await asami.submitNostrProof(firstOffer, messageProof, { from: admin });
 
-    let offer = await asami.getCampaignOffer(firstOffer);
+    let offer = await asami.getNostrCampaignOffer(firstOffer);
     assert(offer.awarded, "Offer should be awarded");
 
     await forwardTime(oneDay * 5);
@@ -181,35 +181,41 @@ contract("Asami", function (accounts) {
       sigS: deletionSig.slice(32, 64)
     };
 
-    await asami.submitDeletionProof(firstOffer, deletionProof, { from: admin });
+    await asami.submitNostrDeletionProof(firstOffer, deletionProof, { from: admin });
 
-    offer = await asami.getCampaignOffer(firstOffer);
+    offer = await asami.getNostrCampaignOffer(firstOffer);
     assert(!offer.awarded, "Offer should not be rewarded");
   });
 });
 
-contract("Asami", function (accounts) {
+contract("Asami Nostr", function (accounts) {
   it("Submits deletion proof for a previously unchallenged offer", async () => {
     const { 
       asami,
       admin,
       advertiser,
       firstOffer
-    } = await makeCampaign(accounts);
+    } = await makeNostrCampaign(accounts);
 
     await forwardTime(oneDay * 5);
 
-    let offer = await asami.getCampaignOffer(firstOffer);
+    let offer = await asami.getNostrCampaignOffer(firstOffer);
     assert(offer.awarded, "Offer should be awarded");
 
-    const msgSig = Buffer.from("7aa5f6c2cd24f6fd63475fca4d632bf37ef13eb44140f11fcc52f0daabdd6f9e5054148ae0a27315eb0da4642b59ac4e9c83748136751773bf95c7992ea5d570", "hex");
+    const msgSig = Buffer.from(
+      "7aa5f6c2cd24f6fd63475fca4d632bf37ef13eb44140f11fcc52f0daabdd6f9e5054148ae0a27315eb0da4642b59ac4e9c83748136751773bf95c7992ea5d570",
+      "hex"
+    );
     const messageProof = {
       createdAt: 1683916923,
       sigR: msgSig.slice(0, 32),
       sigS: msgSig.slice(32, 64)
     };
 
-    const deletionSig = Buffer.from("a5d2005d919780615df0f3a964188dc2da17ac23e0e20df0d432bb1d628655531f26140f5456cd136aab3d24bcfcd6e8e73048a166dadcfd5fcb1051fe3478e7", "hex");
+    const deletionSig = Buffer.from(
+      "a5d2005d919780615df0f3a964188dc2da17ac23e0e20df0d432bb1d628655531f26140f5456cd136aab3d24bcfcd6e8e73048a166dadcfd5fcb1051fe3478e7",
+      "hex"
+    );
     const deletionProof = {
       content: "deleted",
       tags: '[["e","34c7b3ba61e984bb370b98d67bd224c68cf6c7866837fdbf81f3b16c9b2ceee2"]]',
@@ -218,13 +224,25 @@ contract("Asami", function (accounts) {
       sigS: deletionSig.slice(32, 64)
     };
 
-    await asami.submitProofAndDeletionProof(firstOffer, messageProof, deletionProof, { from: admin });
+    await asami.submitNostrProofAndDeletionProof(firstOffer, messageProof, deletionProof, { from: admin });
 
-    offer = await asami.getCampaignOffer(firstOffer);
+    offer = await asami.getNostrCampaignOffer(firstOffer);
     assert(!offer.awarded, "Offer should not be rewarded");
   });
 });
 
+contract("Asami Legacy", function(accounts) {
+  it("runs a legacy social network campaign with mixed results", async () => {
+    // 4 offers.
+    // 1: pasa derecho.
+    // 2: Se hace challenge, y responde bien.
+    // 3: Se hace challenge, no responde.
+    // 4: Se hace challenge, responde bien, después lo borra.
+    // cobran: 1 y 2.
+    // Refund: 3 y 4.
+    // Penalty: 4.
+  });
+});
 
 // -> Cannot challenge out of date.
 //
@@ -237,8 +255,25 @@ contract("Asami", function (accounts) {
 //  -> So now they can collect rewards.
 //
 // -> Testear el renounce y el forceReward... (o esperamos a tener el state machine?)
+//
+// -> Can create a campaign for LSS.
+//   -> Sets oracle addresses.
+//   -> advertiser challenges.
+//   -> Collaborator requests (and pays for) publication check.
+//      -> Oracles reply yay or nay.
+//      -> When the oracle threshold is met the challenge is responded.
+//
+//   -> somebody requests deletion check.
+//      -> Esto lo paga el advertiser.
+//      -> Si el oráculo resuelve que el mensaje se borró, se le pone un penalty al collab.
+//      -> El penalty + 10% es a favor de quien haya pedido el deletion check.
+//
+// -> Asami Legacy: Múltiples oráculos.
+// -> Asami Legacy: Los oráculos no responden a tiempo.
+//    -> En el challenge, se resuelve para el advertiser.
+//    -> En el deletion: Se cancela la campaña y se proratea.
 
-async function makeCampaign(accounts) {
+async function makeNostrCampaign(accounts) {
   const admin = accounts[0];
   const advertiser = accounts[1];
   const aliceAddress = accounts[2];
@@ -273,15 +308,15 @@ async function makeCampaign(accounts) {
     }
   ];
 
-  const campaignAmount = await asami.getCampaignCost(offers);
-
+  const fees = await asami.getCampaignFees(offers.length);
+  const campaignAmount = fees.add(web3.utils.toBN(rewardAmount * offers.length));
   await mockDoc.transfer(advertiser, campaignAmount, { from: admin });
 
   // Create and fund a campaign.
   // We trick the campaign into thinking it has 2 collaborators, while it's just the same.
   // But only one of these instances will claim the payout, that way we test the refund to advertiser.
   await mockDoc.approve(asami.address, campaignAmount, { from: advertiser });
-  const campaignIndex = await asami.createCampaign(
+  const campaignIndex = await asami.createNostrCampaign(
     "Remember: If anyone cancels any plan on you this weekend, they're playing the new zelda.",
     campaignAmount,
     submissionDeadline,
@@ -297,7 +332,7 @@ async function makeCampaign(accounts) {
   assert.equal( (await mockDoc.balanceOf(aliceAddress)), 0, "Alice balance should be empty.");
 
   const firstOffer = {campaignId: 0, offerId: 0};
-  let offer = await asami.getCampaignOffer(firstOffer);
+  let offer = await asami.getNostrCampaignOffer(firstOffer);
   assert(offer.awarded, "Offer should start awarded");
 
   return {
