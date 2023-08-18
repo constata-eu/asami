@@ -22,7 +22,7 @@ library Schnorr {
         uint256 Py,
         uint256 r,
         uint256 s
-    ) public pure returns (bool) {
+    ) internal pure returns (bool) {
         // Ensure r and s are within the valid range
         if (r >= N || s >= N)
             return false;
@@ -37,7 +37,7 @@ library Schnorr {
         return Rx == r && (Ry % 2 == 0) && isOnCurve(Rx, Ry, A, B, P);
     }
 
-    function getE( uint256 Rx, uint256 Px, bytes32 m) public pure returns (uint256) {
+    function getE( uint256 Rx, uint256 Px, bytes32 m) internal pure returns (uint256) {
         bytes memory encoded = abi.encodePacked(Rx,Px,m);
         bytes32 tagHash = sha256(bytes("BIP0340/challenge"));
         bytes32 hash = sha256(abi.encodePacked(tagHash, tagHash, encoded));
