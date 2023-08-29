@@ -66,6 +66,25 @@ library AsamiNostr {
         Offer[] offers;
     }
 
+    function collaboratorCanCollect(
+        Offer storage _offer
+    ) internal view returns (bool) {
+        return (!_offer.collected) && (
+          _offer.state == OfferState.Assumed ||
+          _offer.state == OfferState.Confirmed 
+        );
+    }
+
+    function advertiserCanCollect(
+        Offer storage _offer
+    ) internal view returns (bool) {
+        return (!_offer.collected) && (
+          _offer.state == OfferState.Challenged ||
+          _offer.state == OfferState.Renounced ||
+          _offer.state == OfferState.ReportedDeletion  
+        );
+    }
+
     function verifyCampaignMessage(
         string memory _content,
         string memory _pubkey,

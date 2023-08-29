@@ -6,32 +6,21 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./AsamiClassic.sol";
 import "./AsamiNostr.sol";
 
-/*
-   Asami methods are like "controllers", all public.
-   Libraries are models, fully internal.
-   Common structs and checks in campaigns may stay in asami or go to a Campaigns library.
-      (getCampaignForChallenge -> get campaign in challenge window.)
-      (getCampaignForChallenge -> get campaign in confirmation window.)
-      (getActiveCampaign -> not expired).
-      (always get active campaign).
-   Penalize classic collaborators that delete without renouncing.
-*/
-
 contract Asami is Ownable {
-    uint constant aDay = 60 * 60 * 24; // A day
-    uint constant challengeWindow = 60 * 60 * 24; // A day
-    uint constant proofWindow = challengeWindow * 2;
-    uint constant campaignDuration = challengeWindow * 14;
+    uint constant oneDay = 60 * 60 * 24;
+    uint constant campaignDuration = oneDay * 14;
 
-    uint256 internal feePerOffer = 1e18;
-    uint256 internal maxFeePerCampaign = 50e18 ;
-    uint256 internal fees = 0;
+    uint internal feePerOffer = 1e18;
+    uint internal maxFeePerCampaign = 50e18 ;
+    uint internal fees = 0;
     address internal feesAddress;
+
+    event DebugEvent(string);
 
     struct Campaign {
         uint256 funding;
         address advertiser;
-        uint256 deadline;
+        uint256 startDate;
         AsamiNostr.Terms nostrTerms;
         AsamiClassic.Terms classicTerms;
     }
@@ -62,27 +51,27 @@ contract Asami is Ownable {
 
     function nostrCreateCampaign(
       uint256 _funding,
-      uint256 _deadline,
+      uint256 _startDate,
       string calldata _requestedContent,
       AsamiNostr.NewOffer[] calldata _newOffers
-    ) public {
-        require(_newOffers.length > 0, "1");
-        require(_funding > 0, "2");
-        require(bytes(_requestedContent).length > 0, "3");
+    ) external {
+        require(_newOffers.length > 0);
+        require(_funding > 0);
+        require(bytes(_requestedContent).length > 0);
 
         Campaign storage campaign = campaigns.push();
         campaign.funding = _funding;
-        campaign.deadline = _deadline;
+        campaign.startDate = _startDate;
         campaign.advertiser = payable(msg.sender);
         campaign.nostrTerms.requestedContent = _requestedContent;
 
         uint256 totalRewards = 0;
         uint256 totalFees = 0;
         for (uint i = 0; i < _newOffers.length; i++) {
-            require(_newOffers[i].rewardAmount > 0, "4");
+            require(_newOffers[i].rewardAmount > 0);
             totalRewards += _newOffers[i].rewardAmount;
             totalFees += feePerOffer;
-            AsamiNostr.Offer storage offer = campaign.nostrTerms.offers[i];
+            AsamiNostr.Offer storage offer = campaign.nostrTerms.offers.push();
             offer.state = AsamiNostr.OfferState.Assumed;
             offer.collected = false;
             offer.nostrHexPubkey = _newOffers[i].nostrHexPubkey;
@@ -97,13 +86,13 @@ contract Asami is Ownable {
           totalFees = maxFeePerCampaign;
         }
 
-        require((totalRewards + totalFees) == _funding, "5");
-        require(rewardToken.transferFrom(msg.sender, address(this), _funding), "6");
+        require((totalRewards + totalFees) == _funding);
+        require(rewardToken.transferFrom(msg.sender, address(this), _funding));
     }
 
     struct NewClassicCampaign{
       uint256 funding;
-      uint256 deadline;
+      uint256 startDate;
       uint socialNetworkId;
       string rulesUrl;
       bytes32 rulesHash;
@@ -114,18 +103,18 @@ contract Asami is Ownable {
 
     function classicCreateCampaign(
       NewClassicCampaign calldata _c
-    ) public {
-        require(_c.newOffers.length > 0, "1");
-        require(_c.funding > 0, "2");
-        require(bytes(_c.rulesUrl).length > 5, "3");
-        require(_c.rulesHash != bytes32(0), "4");
-        require(_c.oracleAddress != address(0), "5");
-        require(_c.oracleFee > 0, "6");
-        require(_c.socialNetworkId < socialNetworks.length, "7");
+    ) external {
+        require(_c.newOffers.length > 0);
+        require(_c.funding > 0);
+        require(bytes(_c.rulesUrl).length > 5);
+        require(_c.rulesHash != bytes32(0));
+        require(_c.oracleAddress != address(0));
+        require(_c.oracleFee > 0);
+        require(_c.socialNetworkId < socialNetworks.length);
 
         Campaign storage campaign = campaigns.push();
         campaign.funding = _c.funding;
-        campaign.deadline = _c.deadline;
+        campaign.startDate = _c.startDate;
         campaign.advertiser = payable(msg.sender);
 
         AsamiClassic.Terms storage terms = campaign.classicTerms;
@@ -138,7 +127,7 @@ contract Asami is Ownable {
         uint256 totalRewards = 0;
         uint256 totalFees = 0;
         for (uint i = 0; i < _c.newOffers.length; i++) {
-            require(_c.newOffers[i].rewardAmount > 0, "8");
+            require(_c.newOffers[i].rewardAmount > 0);
             totalRewards += _c.newOffers[i].rewardAmount;
             totalFees += feePerOffer;
 
@@ -153,21 +142,14 @@ contract Asami is Ownable {
           totalFees = maxFeePerCampaign;
         }
 
-        require((totalRewards + totalFees) == _c.funding, "8");
-        require(rewardToken.transferFrom(msg.sender, address(this), _c.funding), "9");
-    }
-
-    function getCampaignForChallenge(OfferPointer calldata _p) internal view returns (Campaign storage) {
-        Campaign storage campaign = campaigns[_p.campaignId];
-        require(campaign.classicTerms.offers.length > 0, "1");
-
-        require(campaign.advertiser == msg.sender, "2");
-        require(block.timestamp <= (campaign.deadline + challengeWindow), "3");
-        return campaign;
+        require((totalRewards + totalFees) == _c.funding);
+        require(rewardToken.transferFrom(msg.sender, address(this), _c.funding));
     }
 
     function nostrChallenge(OfferPointer calldata _p) public {
-        Campaign storage campaign = getCampaignForChallenge(_p);
+        Campaign storage campaign = getCampaignInTimeWindow(_p, 0, oneDay);
+        require(campaign.advertiser == msg.sender);
+
         AsamiNostr.Offer storage offer = campaign.nostrTerms.offers[_p.offerId];
         require(offer.state == AsamiNostr.OfferState.Assumed, "1");
         offer.state = AsamiNostr.OfferState.Challenged;
@@ -178,12 +160,11 @@ contract Asami is Ownable {
     function nostrConfirm(
         OfferPointer calldata _p,
         AsamiNostr.MessageProof calldata _proof
-    ) public {
-        Campaign storage campaign = campaigns[_p.campaignId];
-        require(block.timestamp <= (campaign.deadline + proofWindow), "1");
+    ) external {
+        Campaign storage campaign = getCampaignInTimeWindow(_p, 0, oneDay * 2);
 
         AsamiNostr.Offer storage offer = campaign.nostrTerms.offers[_p.offerId];
-        require(offer.state == AsamiNostr.OfferState.Challenged, "2");
+        require(offer.state == AsamiNostr.OfferState.Challenged);
 
         bytes32 messageId = AsamiNostr.verifyCampaignMessage(
           campaign.nostrTerms.requestedContent,
@@ -206,39 +187,40 @@ contract Asami is Ownable {
      To prevent this penalty, the collaborator may forfeit the reward
      voluntarily before deleting the message.
     */
-    function nostrRenounce(OfferPointer calldata _p) public {
-        Campaign storage campaign = campaigns[_p.campaignId];
-
+    function nostrRenounce(OfferPointer calldata _p) external {
+        Campaign storage campaign = getCampaignInTimeWindow(_p, 0, campaignDuration);
         AsamiNostr.Offer storage offer = campaign.nostrTerms.offers[_p.offerId];
-        require(offer.rewardAddress == msg.sender, "1");
+
+        require(offer.rewardAddress == msg.sender);
 
         require(
-          offer.state != AsamiNostr.OfferState.Renounced &&
-          offer.state != AsamiNostr.OfferState.ReportedDeletion,
-          "2"
+          offer.state == AsamiNostr.OfferState.Assumed ||
+          offer.state == AsamiNostr.OfferState.Challenged ||
+          offer.state == AsamiNostr.OfferState.Confirmed
         );
 
         offer.state = AsamiNostr.OfferState.Renounced;
     }
 
-    // Submitting a deletion proof is very costly on the advertiser, so if it comes to that,
-    // the collaborator gets penalized and is banned from the system until he pays for the penalties.
-    // To reduce gas usage, this method does not parse the tags json, it just does a raw string search,
-    // which initially may be enough.
-    // The r value is the first 32 bytes of the signature, and the s value are the remaining 32,
+    /*
+      Submitting a deletion proof is very costly on the advertiser, so if it comes to that,
+      the collaborator gets penalized and is banned from the system until he pays for the penalties.
+      To reduce gas usage, this method does not parse the tags json, it just does a raw string search,
+      which initially may be enough.
+      The r value is the first 32 bytes of the signature, and the s value are the remaining 32,
+    */
     function nostrReportConfirmed(
         OfferPointer calldata _p,
         AsamiNostr.DeletionProof calldata _deletionProof
-    ) public {
+    ) external {
         uint256 startGas = gasleft();
 
-        Campaign storage campaign = campaigns[_p.campaignId];
-        require(block.timestamp <= (campaign.deadline + campaignDuration), "1");
+        Campaign storage campaign = getCampaignInTimeWindow(_p, 0, campaignDuration);
 
         AsamiNostr.Offer storage offer = campaign.nostrTerms.offers[_p.offerId];
-        require(offer.state == AsamiNostr.OfferState.Confirmed, "2");
+        require(offer.state == AsamiNostr.OfferState.Confirmed);
 
-        require(AsamiNostr.idInTags(offer.messageId, _deletionProof.tags), "3");
+        require(AsamiNostr.idInTags(offer.messageId, _deletionProof.tags));
 
         AsamiNostr.verifyDeletionMessage(
           offer.nostrHexPubkey,
@@ -258,15 +240,14 @@ contract Asami is Ownable {
         AsamiNostr.MessageProof calldata _messageProof,
         AsamiNostr.DeletionProof calldata _deletionProof
     )
-        public 
+        external 
     {
         uint256 startGas = gasleft();
 
-        Campaign storage campaign = campaigns[_p.campaignId];
-        require(block.timestamp <= (campaign.deadline + campaignDuration), "1");
+        Campaign storage campaign = getCampaignInTimeWindow(_p, 0, campaignDuration);
 
         AsamiNostr.Offer storage offer = campaign.nostrTerms.offers[_p.offerId];
-        require(offer.state == AsamiNostr.OfferState.Assumed, "2");
+        require(offer.state == AsamiNostr.OfferState.Assumed);
 
         bytes32 messageId = AsamiNostr.verifyCampaignMessage(
             campaign.nostrTerms.requestedContent,
@@ -278,7 +259,7 @@ contract Asami is Ownable {
 
         offer.messageId = messageId;
 
-        require(AsamiNostr.idInTags(offer.messageId, _deletionProof.tags), "3");
+        require(AsamiNostr.idInTags(offer.messageId, _deletionProof.tags));
 
         AsamiNostr.verifyDeletionMessage(
           offer.nostrHexPubkey,
@@ -293,34 +274,40 @@ contract Asami is Ownable {
         deletionPenalties[offer.rewardAddress].push(DeletionPenalty(payable(msg.sender), refund));
     }
 
-    function classicChallenge(OfferPointer calldata _p) public {
-        Campaign storage campaign = getCampaignForChallenge(_p);
-        AsamiClassic.Offer storage offer = campaign.classicTerms.offers[_p.offerId];
+    function classicChallenge(
+      OfferPointer calldata _p
+    ) external {
+        Campaign storage campaign = getCampaignInTimeWindow(_p, 0, oneDay);
+        require(campaign.advertiser == msg.sender);
 
-        require(offer.state == AsamiClassic.OfferState.Assumed, "1");
+        AsamiClassic.Offer storage offer = campaign.classicTerms.offers[_p.offerId];
+        require(offer.state == AsamiClassic.OfferState.Assumed);
+
         offer.state = AsamiClassic.OfferState.Challenged;
     }
 
-    function classicRequestConfirmation(OfferPointer calldata _p) public {
-        Campaign storage campaign = campaigns[_p.campaignId];
-        require(block.timestamp <= (campaign.deadline + proofWindow), "1");
+    function classicRequestConfirmation(
+      OfferPointer calldata _p
+    ) external {
+        Campaign storage campaign = getCampaignInTimeWindow(_p, 0, oneDay * 2 );
 
         AsamiClassic.Offer storage offer = campaign.classicTerms.offers[_p.offerId];
-        require(offer.state == AsamiClassic.OfferState.Challenged, "2");
+        require(offer.state == AsamiClassic.OfferState.Challenged);
 
-        require(rewardToken.transferFrom(msg.sender, address(this), campaign.classicTerms.oracleFee), "3");
+        require(rewardToken.transferFrom(msg.sender, address(this), campaign.classicTerms.oracleFee));
 
         offer.state = AsamiClassic.OfferState.ConfirmationRequested;
     }
 
-    function classicConfirm(OfferPointer calldata _p, bool _found) public {
-        Campaign storage campaign = campaigns[_p.campaignId];
-        require(campaign.classicTerms.oracleAddress == msg.sender, "1");
-
-        require(block.timestamp <= (campaign.deadline + proofWindow + aDay), "2");
+    function classicConfirm(
+      OfferPointer calldata _p,
+      bool _found
+    ) external {
+        Campaign storage campaign = getCampaignInTimeWindow(_p, 0, oneDay * 3 );
+        require(campaign.classicTerms.oracleAddress == msg.sender);
 
         AsamiClassic.Offer storage offer = campaign.classicTerms.offers[_p.offerId];
-        require(offer.state == AsamiClassic.OfferState.ConfirmationRequested, "3");
+        require(offer.state == AsamiClassic.OfferState.ConfirmationRequested);
         
         oracleFees[campaign.classicTerms.oracleAddress] += campaign.classicTerms.oracleFee;
 
@@ -331,14 +318,16 @@ contract Asami is Ownable {
         }
     }
 
-    function classicConfirmFree(OfferPointer calldata _p, bool _found) public {
-        Campaign storage campaign = campaigns[_p.campaignId];
-        require(campaign.classicTerms.oracleAddress == msg.sender, "1");
+    function classicConfirmFree(
+      OfferPointer calldata _p,
+      bool _found
+    ) external {
+        Campaign storage campaign = getCampaignInTimeWindow(_p, 0, oneDay * 3 );
 
-        require(block.timestamp <= (campaign.deadline + proofWindow + aDay), "2");
+        require(campaign.classicTerms.oracleAddress == msg.sender);
 
         AsamiClassic.Offer storage offer = campaign.classicTerms.offers[_p.offerId];
-        require(offer.state == AsamiClassic.OfferState.Challenged, "3");
+        require(offer.state == AsamiClassic.OfferState.Challenged);
         
         if (_found) {
           offer.state = AsamiClassic.OfferState.Confirmed;
@@ -347,49 +336,51 @@ contract Asami is Ownable {
         }
     }
 
-    function classicRenounce(OfferPointer calldata _p) public {
-        Campaign storage campaign = campaigns[_p.campaignId];
-
+    function classicRenounce(
+      OfferPointer calldata _p
+    ) external {
+        Campaign storage campaign = getCampaignInTimeWindow(_p, 0, campaignDuration);
         AsamiClassic.Offer storage offer = campaign.classicTerms.offers[_p.offerId];
-        require(offer.rewardAddress == msg.sender, "1");
+
+        require(offer.rewardAddress == msg.sender);
 
         require(
           offer.state == AsamiClassic.OfferState.Assumed ||
           offer.state == AsamiClassic.OfferState.Challenged ||
-          offer.state == AsamiClassic.OfferState.ConfirmationRequested ||
-          offer.state == AsamiClassic.OfferState.Confirmed,
-          "2"
+          offer.state == AsamiClassic.OfferState.Confirmed
         );
 
         offer.state = AsamiClassic.OfferState.Renounced;
     }
 
-    function classicReportDeletion(OfferPointer calldata _p) public {
-        Campaign storage campaign = campaigns[_p.campaignId];
-        require(block.timestamp <= (campaign.deadline + proofWindow), "1");
+    function classicReportDeletion(
+      OfferPointer calldata _p
+    ) external {
+        Campaign storage campaign = getCampaignInTimeWindow(_p, 0, campaignDuration);
+        require(campaign.advertiser == msg.sender);
 
         AsamiClassic.Offer storage offer = campaign.classicTerms.offers[_p.offerId];
 
         require(
           offer.state == AsamiClassic.OfferState.Assumed ||
-          offer.state == AsamiClassic.OfferState.Confirmed,
-          "2"
+          offer.state == AsamiClassic.OfferState.Confirmed
         );
 
-        require(rewardToken.transferFrom(msg.sender, address(this), campaign.classicTerms.oracleFee), "3");
+        require(rewardToken.transferFrom(msg.sender, address(this), campaign.classicTerms.oracleFee));
 
         offer.deletionReportedAt = block.timestamp;
         offer.state = AsamiClassic.OfferState.DeletionReported;
     }
 
-    function classicConfirmDeletion(OfferPointer calldata _p, bool _wasDeleted) public {
-        Campaign storage campaign = campaigns[_p.campaignId];
-        require(campaign.classicTerms.oracleAddress == msg.sender, "1");
-        require(block.timestamp <= (campaign.deadline + campaignDuration), "2");
+    function classicConfirmDeletion(
+      OfferPointer calldata _p,
+      bool _wasDeleted
+    ) external {
+        Campaign storage campaign = getCampaignInTimeWindow(_p, 0, campaignDuration);
+        require(campaign.classicTerms.oracleAddress == msg.sender);
 
         AsamiClassic.Offer storage offer = campaign.classicTerms.offers[_p.offerId];
-
-        require(offer.state == AsamiClassic.OfferState.DeletionReported, "3");
+        require(offer.state == AsamiClassic.OfferState.DeletionReported);
 
         oracleFees[campaign.classicTerms.oracleAddress] += campaign.classicTerms.oracleFee;
 
@@ -400,54 +391,32 @@ contract Asami is Ownable {
         }
     }
 
-    function payDeletionPenalties(address _debtor) public payable {
-        DeletionPenalty[] storage penalties = deletionPenalties[_debtor];
-        uint256 total = 0;
-
-        for (uint256 i = 0; i < penalties.length; i++) {
-            total += penalties[i].amount;
-        }
-
-        require(total > 0, "1");
-
-        require(msg.value != total, "2");
-
-        for (uint256 i = 0; i < penalties.length; i++) {
-            payable(penalties[i].creditor).transfer(penalties[i].amount);
-        }
-
-        delete deletionPenalties[_debtor];
-    }
-
     /*
       Collects pointers to all offers which are interesting for a collaborator.
       It could be because the collaborator has a reward to receive or a refund of oracle fees.
     */
-    function getActiveCollaboratorOffers(address _collaborator)
-        public view returns (OfferPointer[] memory, OfferPointer[] memory) 
+    function getCollectableCollaboratorOffers(
+        address _collaborator
+    )
+        external view returns (OfferPointer[] memory, OfferPointer[] memory) 
     {
         OfferPointer[] memory nostrPointers = new OfferPointer[](0);
         OfferPointer[] memory classicPointers = new OfferPointer[](0);
 
         for(uint i = 0; i < campaigns.length; i++) {
-          Campaign memory campaign = campaigns[i];
+          Campaign storage campaign = campaigns[i];
+          if( block.timestamp < (campaign.startDate + campaignDuration) ) {
+            continue;
+          }
 
           if (campaign.nostrTerms.offers.length > 0) {
             for(uint j = 0; j < campaign.nostrTerms.offers.length; j++) {
-              AsamiNostr.Offer memory offer = campaign.nostrTerms.offers[j];
+              AsamiNostr.Offer storage offer = campaign.nostrTerms.offers[j];
               if(
                 offer.rewardAddress == _collaborator && 
-                !offer.collected &&
-                offer.state != AsamiNostr.OfferState.Challenged &&
-                offer.state != AsamiNostr.OfferState.Renounced &&
-                offer.state != AsamiNostr.OfferState.ReportedDeletion
+                AsamiNostr.collaboratorCanCollect(offer)
               ) {
-                OfferPointer[] memory tmp = new OfferPointer[](nostrPointers.length + 1);
-                for (uint k = 0; k < nostrPointers.length; k++) {
-                    tmp[k] = nostrPointers[k];
-                }
-                tmp[nostrPointers.length] = OfferPointer(i,j);
-                nostrPointers = tmp;
+                nostrPointers = pushPointer(nostrPointers, i, j);
               }
             }
           } else {
@@ -461,12 +430,7 @@ contract Asami is Ownable {
                 offer.state != AsamiClassic.OfferState.Renounced &&
                 offer.state != AsamiClassic.OfferState.DeletionConfirmed
               ) {
-                OfferPointer[] memory tmp = new OfferPointer[](classicPointers.length + 1);
-                for (uint k = 0; k < classicPointers.length; k++) {
-                    tmp[k] = classicPointers[k];
-                }
-                tmp[classicPointers.length] = OfferPointer(i,j);
-                classicPointers = tmp;
+                classicPointers = pushPointer(classicPointers, i, j);
               }
             }
           }
@@ -475,33 +439,25 @@ contract Asami is Ownable {
     }
 
     /*
-      This function can be called by anyone to settle offers for a collaborator.
+      This function can be called by anyone to collect offers for a collaborator.
     */
-    function settleCollaboratorOffers(
+    function collectCollaboratorOffers(
         address _collaborator,
         OfferPointer[] calldata _nostrPointers,
         OfferPointer[] calldata _classicPointers
-    ) public {
-        require(deletionPenalties[_collaborator].length == 0, "1");
+    ) external {
+        require(deletionPenalties[_collaborator].length == 0);
 
         uint256 total = 0;
 
         for (uint i = 0; i < _nostrPointers.length; i++) {
             Campaign storage campaign = campaigns[_nostrPointers[i].campaignId];
-            require(campaign.funding > 0, "2");
-            require(block.timestamp >= (campaign.deadline + campaignDuration), "3");
+            require(block.timestamp >= (campaign.startDate + campaignDuration), "1"); // Campaign not ended.
 
             AsamiNostr.Offer storage offer = campaign.nostrTerms.offers[_nostrPointers[i].offerId];
 
-            require(offer.rewardAddress == _collaborator, "4");
-            require(!offer.collected, "5");
-
-            require(
-              offer.state != AsamiNostr.OfferState.Challenged &&
-              offer.state != AsamiNostr.OfferState.Renounced &&
-              offer.state != AsamiNostr.OfferState.ReportedDeletion,
-              "6"
-            );
+            require(offer.rewardAddress == _collaborator, "2"); // Wrong collaborator.
+            require(AsamiNostr.collaboratorCanCollect(offer));
 
             total = offer.rewardAmount;
             offer.collected = true;
@@ -509,56 +465,51 @@ contract Asami is Ownable {
 
         for (uint i = 0; i < _classicPointers.length; i++) {
             Campaign storage campaign = campaigns[_classicPointers[i].campaignId];
-            require(campaign.funding > 0, "7");
-            require(block.timestamp >= (campaign.deadline + campaignDuration), "8");
+            require(block.timestamp >= (campaign.startDate + campaignDuration));
 
             AsamiClassic.Offer storage offer = campaign.classicTerms.offers[_classicPointers[i].offerId];
 
-            require(offer.rewardAddress == _collaborator, "9");
-            require(!offer.collaboratorCollected, "10");
+            require(offer.rewardAddress == _collaborator);
+            require(!offer.collaboratorCollected);
 
             if( offer.state == AsamiClassic.OfferState.Assumed || offer.state == AsamiClassic.OfferState.Confirmed) {
               total += offer.rewardAmount;
             } else if( offer.state == AsamiClassic.OfferState.ConfirmationRequested ) {
               total += campaign.classicTerms.oracleFee;
             } else if( offer.state == AsamiClassic.OfferState.DeletionReported ) {
-              total += (offer.deletionReportedAt - campaign.deadline) * offer.rewardAmount / campaignDuration;
+              total += (offer.deletionReportedAt - campaign.startDate) * offer.rewardAmount / campaignDuration;
             } else {
-              revert("11");
+              revert();
             }
             offer.collaboratorCollected = true;
         }
 
-        require(rewardToken.transfer(_collaborator, total), "12");
+        require(rewardToken.transfer(_collaborator, total));
     }
 
-    function getActiveAdvertiserOffers(address _advertiser)
-        public view returns (OfferPointer[] memory, OfferPointer[] memory) 
+    function getCollectableAdvertiserOffers(
+      address _advertiser
+    )
+        external view returns (OfferPointer[] memory, OfferPointer[] memory) 
     {
         OfferPointer[] memory nostrPointers = new OfferPointer[](0);
         OfferPointer[] memory classicPointers = new OfferPointer[](0);
 
         for(uint i = 0; i < campaigns.length; i++) {
-          Campaign memory campaign = campaigns[i];
+          Campaign storage campaign = campaigns[i];
 
-          if( campaign.advertiser != _advertiser ){
+          if( 
+            campaign.advertiser != _advertiser ||
+            block.timestamp < (campaign.startDate + campaignDuration)
+          ){
             continue;
           }
 
           if (campaign.nostrTerms.offers.length > 0) {
             for(uint j = 0; j < campaign.nostrTerms.offers.length; j++) {
-              AsamiNostr.Offer memory offer = campaign.nostrTerms.offers[j];
-              if(
-                !offer.collected &&
-                offer.state != AsamiNostr.OfferState.Assumed &&
-                offer.state != AsamiNostr.OfferState.Confirmed
-              ) {
-                OfferPointer[] memory tmp = new OfferPointer[](nostrPointers.length + 1);
-                for (uint k = 0; k < nostrPointers.length; k++) {
-                    tmp[k] = nostrPointers[k];
-                }
-                tmp[nostrPointers.length] = OfferPointer(i,j);
-                nostrPointers = tmp;
+              AsamiNostr.Offer storage offer = campaign.nostrTerms.offers[j];
+              if( AsamiNostr.advertiserCanCollect(offer) ) {
+                nostrPointers = pushPointer(nostrPointers, i, j);
               }
             }
           } else {
@@ -569,12 +520,7 @@ contract Asami is Ownable {
                 offer.state != AsamiClassic.OfferState.Assumed &&
                 offer.state != AsamiClassic.OfferState.Confirmed
               ) {
-                OfferPointer[] memory tmp = new OfferPointer[](classicPointers.length + 1);
-                for (uint k = 0; k < classicPointers.length; k++) {
-                    tmp[k] = classicPointers[k];
-                }
-                tmp[classicPointers.length] = OfferPointer(i,j);
-                classicPointers = tmp;
+                nostrPointers = pushPointer(nostrPointers, i, j);
               }
             }
           }
@@ -588,28 +534,24 @@ contract Asami is Ownable {
       The Advertiser must provide a known list of offers that are ready to be refunded.
       The list can be built by calling the getCollectableRefunds function in the contract.
     */
-    function settleAdvertiserOffers(
+    function collectAdvertiserOffers(
       address payable _advertiser,
       OfferPointer[] calldata _nostrOffers,
       OfferPointer[] calldata _classicOffers
-    ) public {
+    ) external {
         uint256 total = 0;
 
         for (uint i = 0; i < _nostrOffers.length; i++) {
             OfferPointer memory p = _nostrOffers[i];
 
             Campaign storage campaign = campaigns[p.campaignId];
-            require(campaign.advertiser == _advertiser, "1");
-            require(block.timestamp >= (campaign.deadline + proofWindow), "2");
+            require(campaign.advertiser == _advertiser);
+            require(block.timestamp >= (campaign.startDate + campaignDuration));
 
             AsamiNostr.Offer storage offer = campaign.nostrTerms.offers[p.offerId];
-            require(!offer.collected, "3");
 
-            require(
-              offer.state != AsamiNostr.OfferState.Assumed &&
-              offer.state != AsamiNostr.OfferState.Confirmed,
-              "4"
-            );
+            require(AsamiNostr.advertiserCanCollect(offer));
+
             total += offer.rewardAmount;
             offer.collected = true;
         }
@@ -618,11 +560,11 @@ contract Asami is Ownable {
             OfferPointer memory p = _classicOffers[i];
 
             Campaign storage campaign = campaigns[p.campaignId];
-            require(campaign.advertiser == _advertiser, "5");
-            require(block.timestamp >= (campaign.deadline + proofWindow), "6");
+            require(campaign.advertiser == _advertiser);
+            require(block.timestamp >= (campaign.startDate + campaignDuration));
 
             AsamiClassic.Offer storage offer = campaign.classicTerms.offers[p.offerId];
-            require(!offer.advertiserCollected, "7");
+            require(!offer.advertiserCollected);
 
             if(
               offer.state == AsamiClassic.OfferState.Challenged ||
@@ -633,54 +575,99 @@ contract Asami is Ownable {
             ) {
               total += offer.rewardAmount;
             } else if( offer.state == AsamiClassic.OfferState.DeletionReported ) {
-              total += (campaignDuration - (offer.deletionReportedAt - campaign.deadline)) * offer.rewardAmount / campaignDuration;
+              total += (campaignDuration - (offer.deletionReportedAt - campaign.startDate)) * offer.rewardAmount / campaignDuration;
             } else {
-              revert("8");
+              revert();
             }
             offer.advertiserCollected = true;
         }
 
-        require(rewardToken.transfer(_advertiser, total), "9");
+        require(rewardToken.transfer(_advertiser, total));
     }
 
-    function setAsamiFeePerOffer(uint256 _fee) public onlyOwner {
+    function payDeletionPenalties(
+      address _debtor
+    ) external payable {
+        DeletionPenalty[] storage penalties = deletionPenalties[_debtor];
+        uint256 total = 0;
+
+        for (uint256 i = 0; i < penalties.length; i++) {
+            total += penalties[i].amount;
+        }
+
+        require(total > 0);
+        require(msg.value == total);
+
+        for (uint256 i = 0; i < penalties.length; i++) {
+            payable(penalties[i].creditor).transfer(penalties[i].amount);
+        }
+
+        delete deletionPenalties[_debtor];
+    }
+
+
+    function setAsamiFeePerOffer(uint256 _fee) external onlyOwner {
         feePerOffer = _fee;
     }
 
-    function setAsamiMaxFeePerCampaign(uint256 _fee) public onlyOwner {
+    function setAsamiMaxFeePerCampaign(uint256 _fee) external onlyOwner {
         maxFeePerCampaign = _fee;
     }
 
-    function setAsamiFeesAddress(address _feesAddress) public onlyOwner {
+    function setAsamiFeesAddress(address _feesAddress) external onlyOwner {
         feesAddress = _feesAddress;
     }
 
-    function addSocialNetwork(string calldata _name) public onlyOwner {
+    function addSocialNetwork(string calldata _name) external onlyOwner {
         socialNetworks.push(_name);
     }
 
-    function collectAsamiFees() public {
-        require(fees > 0, "1");
-        require(rewardToken.transferFrom(address(this), feesAddress, fees), "2");
+    function collectAsamiFees() external {
+        require(fees > 0);
+        require(rewardToken.transferFrom(address(this), feesAddress, fees));
         fees = 0;
     }
 
-    function collectOracleFees(address _oracle) public {
-        require(oracleFees[_oracle] > 0, "1");
-        require(rewardToken.transferFrom(address(this), _oracle, oracleFees[_oracle]), "2");
+    function collectOracleFees(address _oracle) external {
+        require(oracleFees[_oracle] > 0);
+        require(rewardToken.transferFrom(address(this), _oracle, oracleFees[_oracle]));
         oracleFees[_oracle] = 0;
     }
 
-    function nostrGetCampaignOffer(OfferPointer memory _p) public view returns (AsamiNostr.Offer memory) {
+    function nostrGetCampaignOffer(OfferPointer memory _p) external view returns (AsamiNostr.Offer memory) {
         return campaigns[_p.campaignId].nostrTerms.offers[_p.offerId];
     }
 
-    function classicGetCampaignOffer(OfferPointer memory _p) public view returns (AsamiClassic.Offer memory) {
+    function classicGetCampaignOffer(OfferPointer memory _p) external view returns (AsamiClassic.Offer memory) {
         return campaigns[_p.campaignId].classicTerms.offers[_p.offerId];
     }
 
-    function calculateCampaignFees(uint _offerCount) public view returns (uint256) {
+    function calculateCampaignFees(uint _offerCount) external view returns (uint256) {
         uint256 total = _offerCount * feePerOffer;
         return total > maxFeePerCampaign ? maxFeePerCampaign : total;
+    }
+
+    function getCampaignInTimeWindow(
+      OfferPointer calldata _p,
+      uint256 _offset,
+      uint256 _duration
+    ) internal view returns (Campaign storage) {
+        Campaign storage campaign = campaigns[_p.campaignId];
+        require(block.timestamp >= (campaign.startDate + _offset), "99");
+        require(block.timestamp <= (campaign.startDate + _offset + _duration), "99");
+        return campaign;
+    }
+
+    function pushPointer(
+      OfferPointer[] memory _pointers,
+      uint256 _campaignId,
+      uint256 _offerId
+    ) internal pure returns (OfferPointer[] memory) {
+      OfferPointer[] memory tmp = new OfferPointer[](_pointers.length + 1);
+      for (uint k = 0; k < _pointers.length; k++) {
+          tmp[k] = _pointers[k];
+      }
+      tmp[_pointers.length] = OfferPointer(_campaignId, _offerId);
+      return tmp;
     }
 }
