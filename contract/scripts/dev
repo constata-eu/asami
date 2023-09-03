@@ -1,0 +1,11 @@
+#!/bin/bash 
+
+rm -rf build scripts/ganache.log
+INSTANCE=$(ganache -D --logging.file=scripts/ganache.log)
+truffle compile
+truffle compile test/MockDoc.sol
+truffle migrate
+truffle exec scripts/local_blockchain_state.js
+echo "All set, starting log output, Ctrl+C to kill and quit"
+echo stop with ganache instances stop $INSTANCE
+echo see log with tail -f -n 100 scripts/ganache.log

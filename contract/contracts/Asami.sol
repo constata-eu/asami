@@ -27,7 +27,7 @@ contract Asami is Ownable {
 
     Campaign[] internal campaigns;
 
-    string[] internal socialNetworks;
+    string[] public socialNetworks;
 
     struct DeletionPenalty {
         address payable creditor;
