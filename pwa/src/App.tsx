@@ -14,10 +14,7 @@ import asamiTheme from './components/theme';
 import { AsamiLayout } from './views/layout';
 
 import CampaignWizard from "./views/advertiser/campaign_wizard";
-
-const Dashboard = () => {
-  return <CampaignWizard />;
-}
+import Dashboard from "./views/advertiser/dashboard";
 
 export const App = () => <Admin
     authProvider={authProvider}
@@ -28,6 +25,6 @@ export const App = () => <Admin
     layout={AsamiLayout}
   >
     <CustomRoutes>
-      <Route path="/help" element={<Dashboard/>}/>
+      <Route path="/advertiser/campaign_wizard" element={<CampaignWizard/>}/>
     </CustomRoutes>
   </Admin>;

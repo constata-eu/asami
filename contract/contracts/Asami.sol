@@ -27,7 +27,7 @@ contract Asami is Ownable {
 
     Campaign[] internal campaigns;
 
-    string[] public socialNetworks;
+    string[] internal socialNetworks;
 
     struct DeletionPenalty {
         address payable creditor;
@@ -104,13 +104,13 @@ contract Asami is Ownable {
     function classicCreateCampaign(
       NewClassicCampaign calldata _c
     ) external {
-        require(_c.newOffers.length > 0);
-        require(_c.funding > 0);
-        require(bytes(_c.rulesUrl).length > 5);
-        require(_c.rulesHash != bytes32(0));
-        require(_c.oracleAddress != address(0));
-        require(_c.oracleFee > 0);
-        require(_c.socialNetworkId < socialNetworks.length);
+        require(_c.newOffers.length > 0, "0");
+        require(_c.funding > 0, "1");
+        require(bytes(_c.rulesUrl).length > 5, "2");
+        require(_c.rulesHash != bytes32(0), "3");
+        require(_c.oracleAddress != address(0), "4");
+        require(_c.oracleFee > 0, "5");
+        require(_c.socialNetworkId < socialNetworks.length, "6");
 
         Campaign storage campaign = campaigns.push();
         campaign.funding = _c.funding;
@@ -131,7 +131,7 @@ contract Asami is Ownable {
             totalRewards += _c.newOffers[i].rewardAmount;
             totalFees += feePerOffer;
 
-            AsamiClassic.Offer storage offer = campaign.classicTerms.offers[i];
+            AsamiClassic.Offer storage offer = campaign.classicTerms.offers.push();
             offer.state = AsamiClassic.OfferState.Assumed;
             offer.username = _c.newOffers[i].username;
             offer.rewardAmount = _c.newOffers[i].rewardAmount;
@@ -142,8 +142,8 @@ contract Asami is Ownable {
           totalFees = maxFeePerCampaign;
         }
 
-        require((totalRewards + totalFees) == _c.funding);
-        require(rewardToken.transferFrom(msg.sender, address(this), _c.funding));
+        require((totalRewards + totalFees) == _c.funding, "7");
+        require(rewardToken.transferFrom(msg.sender, address(this), _c.funding), "8");
     }
 
     function nostrChallenge(OfferPointer calldata _p) public {
@@ -645,6 +645,14 @@ contract Asami is Ownable {
     function calculateCampaignFees(uint _offerCount) external view returns (uint256) {
         uint256 total = _offerCount * feePerOffer;
         return total > maxFeePerCampaign ? maxFeePerCampaign : total;
+    }
+
+    function getCampaigns() external view returns (Campaign[] memory) {
+        return campaigns;
+    }
+
+    function getSocialNetworks() external view returns (string[] memory) {
+        return socialNetworks;
     }
 
     function getCampaignInTimeWindow(

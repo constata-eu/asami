@@ -15,7 +15,7 @@
     "absolutePath": "project:/contracts/AsamiClassic.sol",
     "exportedSymbols": {
       "AsamiClassic": [
-        4832
+        4860
       ],
       "Math": [
         1919
@@ -27,12 +27,12 @@
         1053
       ]
     },
-    "id": 4833,
+    "id": 4861,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 4779,
+        "id": 4807,
         "literals": [
           "solidity",
           "^",
@@ -45,10 +45,10 @@
       {
         "absolutePath": "@openzeppelin/contracts/utils/Strings.sol",
         "file": "@openzeppelin/contracts/utils/Strings.sol",
-        "id": 4780,
+        "id": 4808,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 4833,
+        "scope": 4861,
         "sourceUnit": 1054,
         "src": "56:51:9",
         "symbolAliases": [],
@@ -61,9 +61,9 @@
         "contractDependencies": [],
         "contractKind": "library",
         "fullyImplemented": true,
-        "id": 4832,
+        "id": 4860,
         "linearizedBaseContracts": [
-          4832
+          4860
         ],
         "name": "AsamiClassic",
         "nameLocation": "117:12:9",
@@ -71,59 +71,59 @@
         "nodes": [
           {
             "canonicalName": "AsamiClassic.OfferState",
-            "id": 4789,
+            "id": 4817,
             "members": [
               {
-                "id": 4781,
+                "id": 4809,
                 "name": "Assumed",
                 "nameLocation": "207:7:9",
                 "nodeType": "EnumValue",
                 "src": "207:7:9"
               },
               {
-                "id": 4782,
+                "id": 4810,
                 "name": "Challenged",
                 "nameLocation": "287:10:9",
                 "nodeType": "EnumValue",
                 "src": "287:10:9"
               },
               {
-                "id": 4783,
+                "id": 4811,
                 "name": "ConfirmationRequested",
                 "nameLocation": "395:21:9",
                 "nodeType": "EnumValue",
                 "src": "395:21:9"
               },
               {
-                "id": 4784,
+                "id": 4812,
                 "name": "Confirmed",
                 "nameLocation": "491:9:9",
                 "nodeType": "EnumValue",
                 "src": "491:9:9"
               },
               {
-                "id": 4785,
+                "id": 4813,
                 "name": "Refuted",
                 "nameLocation": "600:7:9",
                 "nodeType": "EnumValue",
                 "src": "600:7:9"
               },
               {
-                "id": 4786,
+                "id": 4814,
                 "name": "Renounced",
                 "nameLocation": "657:9:9",
                 "nodeType": "EnumValue",
                 "src": "657:9:9"
               },
               {
-                "id": 4787,
+                "id": 4815,
                 "name": "DeletionReported",
                 "nameLocation": "877:16:9",
                 "nodeType": "EnumValue",
                 "src": "877:16:9"
               },
               {
-                "id": 4788,
+                "id": 4816,
                 "name": "DeletionConfirmed",
                 "nameLocation": "1036:17:9",
                 "nodeType": "EnumValue",
@@ -137,16 +137,16 @@
           },
           {
             "canonicalName": "AsamiClassic.NewOffer",
-            "id": 4796,
+            "id": 4824,
             "members": [
               {
                 "constant": false,
-                "id": 4791,
+                "id": 4819,
                 "mutability": "mutable",
                 "name": "rewardAmount",
                 "nameLocation": "1099:12:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4796,
+                "scope": 4824,
                 "src": "1091:20:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -155,7 +155,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4790,
+                  "id": 4818,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1091:7:9",
@@ -168,12 +168,12 @@
               },
               {
                 "constant": false,
-                "id": 4793,
+                "id": 4821,
                 "mutability": "mutable",
                 "name": "rewardAddress",
                 "nameLocation": "1129:13:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4796,
+                "scope": 4824,
                 "src": "1121:21:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -182,7 +182,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 4792,
+                  "id": 4820,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "1121:7:9",
@@ -196,12 +196,12 @@
               },
               {
                 "constant": false,
-                "id": 4795,
+                "id": 4823,
                 "mutability": "mutable",
                 "name": "username",
                 "nameLocation": "1159:8:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4796,
+                "scope": 4824,
                 "src": "1152:15:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -210,7 +210,7 @@
                   "typeString": "string"
                 },
                 "typeName": {
-                  "id": 4794,
+                  "id": 4822,
                   "name": "string",
                   "nodeType": "ElementaryTypeName",
                   "src": "1152:6:9",
@@ -225,46 +225,46 @@
             "name": "NewOffer",
             "nameLocation": "1072:8:9",
             "nodeType": "StructDefinition",
-            "scope": 4832,
+            "scope": 4860,
             "src": "1065:109:9",
             "visibility": "public"
           },
           {
             "canonicalName": "AsamiClassic.Offer",
-            "id": 4816,
+            "id": 4844,
             "members": [
               {
                 "constant": false,
-                "id": 4799,
+                "id": 4827,
                 "mutability": "mutable",
                 "name": "state",
                 "nameLocation": "1214:5:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4816,
+                "scope": 4844,
                 "src": "1203:16:9",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_enum$_OfferState_$4789",
+                  "typeIdentifier": "t_enum$_OfferState_$4817",
                   "typeString": "enum AsamiClassic.OfferState"
                 },
                 "typeName": {
-                  "id": 4798,
+                  "id": 4826,
                   "nodeType": "UserDefinedTypeName",
                   "pathNode": {
-                    "id": 4797,
+                    "id": 4825,
                     "name": "OfferState",
                     "nameLocations": [
                       "1203:10:9"
                     ],
                     "nodeType": "IdentifierPath",
-                    "referencedDeclaration": 4789,
+                    "referencedDeclaration": 4817,
                     "src": "1203:10:9"
                   },
-                  "referencedDeclaration": 4789,
+                  "referencedDeclaration": 4817,
                   "src": "1203:10:9",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_enum$_OfferState_$4789",
+                    "typeIdentifier": "t_enum$_OfferState_$4817",
                     "typeString": "enum AsamiClassic.OfferState"
                   }
                 },
@@ -272,12 +272,12 @@
               },
               {
                 "constant": false,
-                "id": 4801,
+                "id": 4829,
                 "mutability": "mutable",
                 "name": "username",
                 "nameLocation": "1236:8:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4816,
+                "scope": 4844,
                 "src": "1229:15:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -286,7 +286,7 @@
                   "typeString": "string"
                 },
                 "typeName": {
-                  "id": 4800,
+                  "id": 4828,
                   "name": "string",
                   "nodeType": "ElementaryTypeName",
                   "src": "1229:6:9",
@@ -299,12 +299,12 @@
               },
               {
                 "constant": false,
-                "id": 4803,
+                "id": 4831,
                 "mutability": "mutable",
                 "name": "rewardAmount",
                 "nameLocation": "1262:12:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4816,
+                "scope": 4844,
                 "src": "1254:20:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -313,7 +313,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4802,
+                  "id": 4830,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1254:7:9",
@@ -326,12 +326,12 @@
               },
               {
                 "constant": false,
-                "id": 4805,
+                "id": 4833,
                 "mutability": "mutable",
                 "name": "rewardAddress",
                 "nameLocation": "1292:13:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4816,
+                "scope": 4844,
                 "src": "1284:21:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -340,7 +340,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 4804,
+                  "id": 4832,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "1284:7:9",
@@ -354,12 +354,12 @@
               },
               {
                 "constant": false,
-                "id": 4807,
+                "id": 4835,
                 "mutability": "mutable",
                 "name": "publicationUrl",
                 "nameLocation": "1322:14:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4816,
+                "scope": 4844,
                 "src": "1315:21:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -368,7 +368,7 @@
                   "typeString": "string"
                 },
                 "typeName": {
-                  "id": 4806,
+                  "id": 4834,
                   "name": "string",
                   "nodeType": "ElementaryTypeName",
                   "src": "1315:6:9",
@@ -381,12 +381,12 @@
               },
               {
                 "constant": false,
-                "id": 4809,
+                "id": 4837,
                 "mutability": "mutable",
                 "name": "deletionReportedAt",
                 "nameLocation": "1351:18:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4816,
+                "scope": 4844,
                 "src": "1346:23:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -395,7 +395,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4808,
+                  "id": 4836,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
                   "src": "1346:4:9",
@@ -408,12 +408,12 @@
               },
               {
                 "constant": false,
-                "id": 4811,
+                "id": 4839,
                 "mutability": "mutable",
                 "name": "advertiserCollected",
                 "nameLocation": "1384:19:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4816,
+                "scope": 4844,
                 "src": "1379:24:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -422,7 +422,7 @@
                   "typeString": "bool"
                 },
                 "typeName": {
-                  "id": 4810,
+                  "id": 4838,
                   "name": "bool",
                   "nodeType": "ElementaryTypeName",
                   "src": "1379:4:9",
@@ -435,12 +435,12 @@
               },
               {
                 "constant": false,
-                "id": 4813,
+                "id": 4841,
                 "mutability": "mutable",
                 "name": "collaboratorCollected",
                 "nameLocation": "1418:21:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4816,
+                "scope": 4844,
                 "src": "1413:26:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -449,7 +449,7 @@
                   "typeString": "bool"
                 },
                 "typeName": {
-                  "id": 4812,
+                  "id": 4840,
                   "name": "bool",
                   "nodeType": "ElementaryTypeName",
                   "src": "1413:4:9",
@@ -462,12 +462,12 @@
               },
               {
                 "constant": false,
-                "id": 4815,
+                "id": 4843,
                 "mutability": "mutable",
                 "name": "oracleCollected",
                 "nameLocation": "1454:15:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4816,
+                "scope": 4844,
                 "src": "1449:20:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -476,7 +476,7 @@
                   "typeString": "bool"
                 },
                 "typeName": {
-                  "id": 4814,
+                  "id": 4842,
                   "name": "bool",
                   "nodeType": "ElementaryTypeName",
                   "src": "1449:4:9",
@@ -491,22 +491,22 @@
             "name": "Offer",
             "nameLocation": "1187:5:9",
             "nodeType": "StructDefinition",
-            "scope": 4832,
+            "scope": 4860,
             "src": "1180:296:9",
             "visibility": "public"
           },
           {
             "canonicalName": "AsamiClassic.Terms",
-            "id": 4831,
+            "id": 4859,
             "members": [
               {
                 "constant": false,
-                "id": 4818,
+                "id": 4846,
                 "mutability": "mutable",
                 "name": "socialNetworkId",
                 "nameLocation": "1510:15:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4831,
+                "scope": 4859,
                 "src": "1505:20:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -515,7 +515,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4817,
+                  "id": 4845,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
                   "src": "1505:4:9",
@@ -528,12 +528,12 @@
               },
               {
                 "constant": false,
-                "id": 4820,
+                "id": 4848,
                 "mutability": "mutable",
                 "name": "rulesUrl",
                 "nameLocation": "1542:8:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4831,
+                "scope": 4859,
                 "src": "1535:15:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -542,7 +542,7 @@
                   "typeString": "string"
                 },
                 "typeName": {
-                  "id": 4819,
+                  "id": 4847,
                   "name": "string",
                   "nodeType": "ElementaryTypeName",
                   "src": "1535:6:9",
@@ -555,12 +555,12 @@
               },
               {
                 "constant": false,
-                "id": 4822,
+                "id": 4850,
                 "mutability": "mutable",
                 "name": "rulesHash",
                 "nameLocation": "1568:9:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4831,
+                "scope": 4859,
                 "src": "1560:17:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -569,7 +569,7 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 4821,
+                  "id": 4849,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
                   "src": "1560:7:9",
@@ -582,12 +582,12 @@
               },
               {
                 "constant": false,
-                "id": 4824,
+                "id": 4852,
                 "mutability": "mutable",
                 "name": "oracleAddress",
                 "nameLocation": "1595:13:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4831,
+                "scope": 4859,
                 "src": "1587:21:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -596,7 +596,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 4823,
+                  "id": 4851,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "1587:7:9",
@@ -610,12 +610,12 @@
               },
               {
                 "constant": false,
-                "id": 4826,
+                "id": 4854,
                 "mutability": "mutable",
                 "name": "oracleFee",
                 "nameLocation": "1626:9:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4831,
+                "scope": 4859,
                 "src": "1618:17:9",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -624,7 +624,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4825,
+                  "id": 4853,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1618:7:9",
@@ -637,45 +637,45 @@
               },
               {
                 "constant": false,
-                "id": 4830,
+                "id": 4858,
                 "mutability": "mutable",
                 "name": "offers",
                 "nameLocation": "1653:6:9",
                 "nodeType": "VariableDeclaration",
-                "scope": 4831,
+                "scope": 4859,
                 "src": "1645:14:9",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_Offer_$4816_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_Offer_$4844_storage_$dyn_storage_ptr",
                   "typeString": "struct AsamiClassic.Offer[]"
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 4828,
+                    "id": 4856,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 4827,
+                      "id": 4855,
                       "name": "Offer",
                       "nameLocations": [
                         "1645:5:9"
                       ],
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 4816,
+                      "referencedDeclaration": 4844,
                       "src": "1645:5:9"
                     },
-                    "referencedDeclaration": 4816,
+                    "referencedDeclaration": 4844,
                     "src": "1645:5:9",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Offer_$4816_storage_ptr",
+                      "typeIdentifier": "t_struct$_Offer_$4844_storage_ptr",
                       "typeString": "struct AsamiClassic.Offer"
                     }
                   },
-                  "id": 4829,
+                  "id": 4857,
                   "nodeType": "ArrayTypeName",
                   "src": "1645:7:9",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_Offer_$4816_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_Offer_$4844_storage_$dyn_storage_ptr",
                     "typeString": "struct AsamiClassic.Offer[]"
                   }
                 },
@@ -685,12 +685,12 @@
             "name": "Terms",
             "nameLocation": "1489:5:9",
             "nodeType": "StructDefinition",
-            "scope": 4832,
+            "scope": 4860,
             "src": "1482:184:9",
             "visibility": "public"
           }
         ],
-        "scope": 4833,
+        "scope": 4861,
         "src": "109:1559:9",
         "usedErrors": []
       }
@@ -703,7 +703,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.15",
-  "updatedAt": "2023-09-03T21:26:31.430Z",
+  "updatedAt": "2023-09-04T08:56:50.967Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

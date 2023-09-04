@@ -4,6 +4,7 @@ const SchnorrLib = artifacts.require("Schnorr");
 const schnorr = require('bip-schnorr');
 const assert = require('assert');
 const { expectRevert, } = require('@openzeppelin/test-helpers');
+const crypto = require('crypto');
 
 const oneHour = 60 * 60;
 const oneDay = oneHour * 24;
@@ -246,6 +247,74 @@ contract("Asami Nostr", function (accounts) {
 
 contract("Asami Legacy", function(accounts) {
   it("runs a legacy social network campaign with mixed results", async () => {
+    const admin = accounts[0];
+    const advertiser = accounts[1];
+    const aliceAddress = accounts[2];
+
+    const asami = await Asami.deployed()
+    for (let s of ["Instagram", "Twitter", "Youtube", "Facebook", "TikTok"]) {
+      await asami.addSocialNetwork(s);
+    }
+
+    const mockDoc = await MockDoc.deployed()
+
+    // We will forward the blockchain time in these tests to target these timeframes.
+    // Just keep in mind submissions end in 100 seconds. Payouts are in 200 seconds.
+    const startDate = Math.floor(new Date().getTime() / 1000) + 100;
+    const payoutDate = startDate + 100;
+
+    const offers = [
+      {
+        "rewardAmount": rewardAmount,
+        "rewardAddress": aliceAddress,
+        "username": "@alice_alison",
+      },
+      {
+        "rewardAmount": rewardAmount,
+        "rewardAddress": aliceAddress,
+        "username": "@bob_bobson",
+      }
+    ];
+
+    const fees = await asami.calculateCampaignFees(offers.length);
+    const campaignAmount = fees.add(web3.utils.toBN(rewardAmount * offers.length));
+    await mockDoc.transfer(advertiser, campaignAmount, { from: admin });
+
+    // Create and fund a campaign.
+    // We trick the campaign into thinking it has 2 collaborators, while it's just the same.
+    // But only one of these instances will claim the payout, that way we test the refund to advertiser.
+    await mockDoc.approve(asami.address, campaignAmount, { from: advertiser });
+    const rulesUrl = "tbd";
+    const hash = crypto.createHash("sha256");
+    hash.update(rulesUrl);
+    const buffer = Buffer.from(hash.digest(), "hex");
+
+    await asami.classicCreateCampaign({
+      funding: campaignAmount.toString(),
+      startDate: startDate,
+      socialNetworkId: 1,
+      rulesUrl: "a_long_rules_url",
+      rulesHash: buffer,
+      oracleAddress: "0xF78A30A396738Ce1a7ea520F707477F8430b9D51",
+      oracleFee: web3.utils.toWei("50", "ether"),
+      newOffers: offers
+    }, { from: advertiser });
+
+    assert.equal( (await mockDoc.balanceOf(advertiser)), 0, "creator balance should be empty.");
+    assert.equal( (await mockDoc.balanceOf(aliceAddress)), 0, "Alice balance should be empty.");
+
+    const firstOffer = {campaignId: 0, offerId: 0};
+    let offer = await asami.classicGetCampaignOffer(firstOffer);
+    assert(offer.state == 0, "Offer should start awarded");
+
+    return {
+      firstOffer,
+      asami,
+      mockDoc,
+      advertiser,
+      aliceAddress,
+      admin
+    };
     // 4 offers.
     // 1: pasa derecho.
     // 2: Se hace challenge, y responde bien.
@@ -256,35 +325,6 @@ contract("Asami Legacy", function(accounts) {
     // Penalty: 4.
   });
 });
-
-// -> Cannot challenge out of date.
-//
-// -> Can collect fees for admin.
-// -> Can change the fees address.
-// -> Can change the fees amount (per offer and per campaign)
-//
-// -> Cannot collect if it has unpaid penalties.
-//  -> Anyone can pay their penalties.
-//  -> So now they can collect rewards.
-//
-// -> Testear el renounce y el forceReward... (o esperamos a tener el state machine?)
-//
-// -> Can create a campaign for LSS.
-//   -> Sets oracle addresses.
-//   -> advertiser challenges.
-//   -> Collaborator requests (and pays for) publication check.
-//      -> Oracles reply yay or nay.
-//      -> When the oracle threshold is met the challenge is responded.
-//
-//   -> somebody requests deletion check.
-//      -> Esto lo paga el advertiser.
-//      -> Si el oráculo resuelve que el mensaje se borró, se le pone un penalty al collab.
-//      -> El penalty + 10% es a favor de quien haya pedido el deletion check.
-//
-// -> Asami Legacy: Múltiples oráculos.
-// -> Asami Legacy: Los oráculos no responden a tiempo.
-//    -> En el challenge, se resuelve para el advertiser.
-//    -> En el deletion: Se cancela la campaña y se proratea.
 
 async function makeNostrCampaign(accounts) {
   const admin = accounts[0];

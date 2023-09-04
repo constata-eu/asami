@@ -10,8 +10,9 @@ const useContracts = async () => {
   // const docAddress = "0xcb46c0ddc60d18efeb0e586c17af6ea36452dae0";
   // const asamiAddress = "0x16039AB4E9b0BF3b79F9a221898d152151026034";
   // development
-  const docAddress = "0x02DD036B7D0AF40B2b85DE802BfdF4ba2FE4e789";
-  const asamiAddress = '0xC63459e67f94f1f7055aa7ae988980D81E5374E4';
+  const asamiAddress = "0x7f96b3050d42b1F51294d029bAA959D1E5d2a4cb";
+  const docAddress = "0xd31C3320e2ACD74BE43c26645D5e1C0FAfE09B96";
+
 
   const provider = new ethers.BrowserProvider(window.ethereum);
   const signer = await provider.getSigner();

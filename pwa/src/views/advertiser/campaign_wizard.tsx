@@ -70,7 +70,6 @@ const CampaignWizard = () => {
     "AllDone": 4,
   };
 
-
   const { step, classic, nostrTerms, classicTerms } = state;
   const params = { state, setState };
 
@@ -316,11 +315,11 @@ const ClassicBase = ({state, setState}) => {
           onChange={(e) => updateValue("socialNetwork", e.target.value)}
           value={values.socialNetwork || "" }
         >
-          <MenuItem value={1}>Instagram</MenuItem>
-          <MenuItem value={2}>Twitter</MenuItem>
-          <MenuItem value={3}>Youtube</MenuItem>
-          <MenuItem value={4}>Facebook</MenuItem>
-          <MenuItem value={5}>TikTok</MenuItem>
+          <MenuItem value={0}>Instagram</MenuItem>
+          <MenuItem value={1}>Twitter</MenuItem>
+          <MenuItem value={2}>Youtube</MenuItem>
+          <MenuItem value={3}>Facebook</MenuItem>
+          <MenuItem value={4}>TikTok</MenuItem>
         </Select>
         <FormHelperText>
           { (values.isDirty && values.socialNetworkError) || "Choose a social network" }
@@ -651,10 +650,8 @@ const SummaryAndPay = ({state, setState}) => {
   async function sha256(input) {
     const msgBuffer = new TextEncoder().encode(input);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-
-    const myArray = new Uint8Array(32);
-    myArray.set(hashBuffer);
-    return myArray;
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return `0x${hashArray.map(b => b.toString(16).padStart(2, '0')).join('')}`;
   }
 
   const submitClassicCampaign = async () => {
@@ -675,16 +672,14 @@ const SummaryAndPay = ({state, setState}) => {
     const approval = await doc.approve(asamiAddress, campaignAmount, signer);
     await approval.wait();
 
-    debugger;
-
     const creation = await asami.connect(signer).classicCreateCampaign({
-      funding: campaignAmount,
+      funding: campaignAmount.toString(),
       startDate: state.startDate,
       socialNetworkId: terms.socialNetwork,
-      rulesUrl: "tbd",
+      rulesUrl: "a_long_rules_url",
       rulesHash,
       oracleAddress: terms.oracleAddress,
-      oracleFee: parseUnits(terms.oracleFee.toString(), 18),
+      oracleFee: parseUnits(terms.oracleFee.toString(), 18).toString(),
       newOffers: offers
     });
 
@@ -722,7 +717,7 @@ const AllDone = ({state, setState}) => {
       <BulletPoint label="Follow its progress in your dashboard." />
     </CardContent>
     <CardActions>
-      <Button fullWidth size="large" variant="contained">Go to dashboard.</Button>
+      <Button href="#/" fullWidth size="large" variant="contained">Go to dashboard.</Button>
     </CardActions>
   </Card>
 }

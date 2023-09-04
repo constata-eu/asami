@@ -33,22 +33,16 @@ const ResponsiveAppBar = ({loggedIn}) => {
           <CloseIcon />
         </IconButton>
 
-        <Button size="large"sx={{ fontSize: 40, mb: 2, textTransform: "uppercase"}} color="inverted" href="mailto:hola@constata.eu" target="_blank" id="help-mobile-menu-item">
-          { translate("certos.menu.help") }
-        </Button>
         <Button size="large" sx={{ fontSize: 40, mb: 2, textTransform: "uppercase" }} color="inverted" onClick={() => logout() } id="logout-mobile-menu-item">
-          { translate("certos.menu.logout") }
+          Logout
         </Button>
       </Box>
     </Backdrop>
   </Box>
 
   const ComputerMenu = () => <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent:"end" }} id="desktop-menu">
-    <Button sx={{ ml: 1, textTransform: "uppercase" }} color="highlight" href="mailto:hola@constata.eu" target="_blank" id="help-menu-item">
-      { translate("certos.menu.help") }
-    </Button>
     <Button sx={{ ml: 1, textTransform: "uppercase" }} variant="outlined" color="highlight" onClick={() => logout() } id="logout-menu-item">
-      { translate("certos.menu.logout") }
+      Logout
     </Button>
   </Box>
 
