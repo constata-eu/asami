@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 export class Campaign {
   terms: ClassicTerms | NostrTerms;
   startDate: number;

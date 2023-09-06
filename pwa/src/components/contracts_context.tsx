@@ -1,5 +1,3 @@
-import asamiABI from "./abi/Asami.json";
-import docABI from "./abi/Doc.json";
 import { createContext } from "react";
 import { ethers } from "ethers";
 import asamiABI from "../abi/Asami.json";

@@ -1,22 +1,22 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
+
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
 import nodePolyfills from 'rollup-plugin-polyfill-node';
 import cjs from '@rollup/plugin-commonjs';
 
 // https://vitejs.dev/config/
-export default defineConfig(async ({ mode }) => {
-  return {
+export default defineConfig({
+    plugins: [react()],
+    define: {
+      global: {},
+      'process.env': process.env,
+    },
     server: {
       https: false,
-      fs: {
-        allow: ['../'],
-      },
     },
-    // envDir: "./env_web",
-    plugins: [],
     build: {
       // minify: false,
       // target: "es2015",
@@ -28,7 +28,7 @@ export default defineConfig(async ({ mode }) => {
           // Enable rollup polyfills plugin
           // used during production bundling
           nodePolyfills({
-            include: ['node_modules/**/*.js', '../../node_modules/**/*.js'],
+            include: ['node_modules/** / *.js', '../../node_modules/** / *.js'],
           }),
           cjs(),
         ],
@@ -42,6 +42,7 @@ export default defineConfig(async ({ mode }) => {
         events: 'rollup-plugin-node-polyfills/polyfills/events',
         util: 'rollup-plugin-node-polyfills/polyfills/util',
         sys: 'util',
+        assert: 'rollup-plugin-node-polyfills/polyfills/assert',
         stream: 'rollup-plugin-node-polyfills/polyfills/stream',
         _stream_duplex:
           'rollup-plugin-node-polyfills/polyfills/readable-stream/duplex',
@@ -70,6 +71,6 @@ export default defineConfig(async ({ mode }) => {
           NodeModulesPolyfillPlugin(),
         ],
       },
-    },
-  };
+    }
 });
+
