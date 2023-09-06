@@ -34,6 +34,7 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
+        working-directory: './pwa'
       - name: Install dependencies
         run: yarn
         working-directory: './pwa'
