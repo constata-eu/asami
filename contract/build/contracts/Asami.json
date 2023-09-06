@@ -63395,15 +63395,54 @@
     "version": "0.8.19+commit.7dd6d404.Emscripten.clang"
   },
   "networks": {
-    "1693817805784": {
+    "31": {
       "events": {},
       "links": {},
-      "address": "0x7f96b3050d42b1F51294d029bAA959D1E5d2a4cb",
-      "transactionHash": "0x625b90df7f3e0709ddb6395bdb8e7ef38c9e702f975873dca2504a6159b108de"
+      "address": "0x0E8033f453775AE150c5c6643b1691d2B07B3bAa",
+      "transactionHash": "0x79d38f6f1a5e0de79a6a25ca6d754d5d6802a8d354e6b38a8e3ca136bbc1e2ba"
+    },
+    "1693817805784": {
+      "events": {
+        "0x56f074d292557f2e3c567d982816e0fb5b72100ff196892f8fbd23b8a9073679": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "string",
+              "name": "",
+              "type": "string"
+            }
+          ],
+          "name": "DebugEvent",
+          "type": "event"
+        },
+        "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "previousOwner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnershipTransferred",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0xCD6d24339c542d4D1E0503BBa8A5829a22e19F2F",
+      "transactionHash": "0x4b0f2900193e0210c58b5664347bd4a733e2672424f152dd480b48d993f6927a"
     }
   },
   "schemaVersion": "3.4.15",
-  "updatedAt": "2023-09-04T08:56:56.210Z",
+  "updatedAt": "2023-09-06T09:16:25.356Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",

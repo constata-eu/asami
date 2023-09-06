@@ -1,11 +1,12 @@
 {
   "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.16",
-    "bip-schnorr": "0.6.7"
-  },
-  "dependencies": {
-    "@openzeppelin/contracts": "^4.9.2",
+    "bip-schnorr": "0.6.7",
+    "@truffle/hdwallet-provider": "^2.1.14",
     "truffle": "^5.11.2",
     "truffle-contract-size": "^2.0.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.2"
   }
 }

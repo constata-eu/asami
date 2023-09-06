@@ -16,15 +16,15 @@ import dayjs from 'dayjs';
 import { nip19 } from 'nostr-tools'
 
 const CampaignWizard = () => {
-  /*
   const [state, setState] = useSafeSetState({
     step: "CampaignType",
     classic: true,
     nostrTerms: null,
     classicTerms: null,
   });
-  */
 
+  // Not sure who: rewardAddress: "0xF78A30A396738Ce1a7ea520F707477F8430b9D51",
+  /*
   const [state, setState] = useSafeSetState({
     step: "SummaryAndPay",
     classic: false,
@@ -34,12 +34,13 @@ const CampaignWizard = () => {
       offers: [
         {
           rewardAmount: 10,
-          rewardAddress: "0xF78A30A396738Ce1a7ea520F707477F8430b9D51",
+          rewardAddress: "0x68aC79AE5D9C9eaf6c783836C35bbcbaCAe7C771",
           nostrNpub: "npub1sg6plzptd64u62a878hep2kev88swjh3tw00gjsfl8f237lmu63q0uf63m",
         }
       ]
     }
   });
+  */
 
   /*
   const [state, setState] = useSafeSetState({
@@ -50,11 +51,11 @@ const CampaignWizard = () => {
       socialNetwork: 1,
       rulesText: "Post something nice",
       oracleFee: 5,
-      oracleAddress: "0xF78A30A396738Ce1a7ea520F707477F8430b9D51",
+      oracleAddress: "0x68aC79AE5D9C9eaf6c783836C35bbcbaCAe7C771",
       offers: [
         {
           rewardAmount: 10,
-          rewardAddress: "0xF78A30A396738Ce1a7ea520F707477F8430b9D51",
+          rewardAddress: "0x68aC79AE5D9C9eaf6c783836C35bbcbaCAe7C771",
           username: "nubis_bruno",
         }
       ]
@@ -113,6 +114,7 @@ const CampaignType = ({ setState }) => {
         <li>Get their RSK addresses so they can get paid.</li>
         <li>Buy "Dollar on Chain" DoC to pay collaborators.</li>
       </ol>
+      If you're just testing the app, you can make a campaign with your own nostr and RSK accounts as a collaborator.
     </Alert>
     <Box display="flex" gap="1em" flexWrap="wrap">
       <Button onClick={() => next(false) } sx={{flexGrow: 1}} size="large" variant="contained">Run Nostr Campaign</Button>

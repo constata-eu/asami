@@ -6,6 +6,7 @@ import {
   ShowGuesser,
   CustomRoutes,
   useSafeSetState,
+  useStore,
 } from "react-admin";
 import { Route } from "react-router-dom";
 import { authProvider } from "./auth_provider";
@@ -14,7 +15,14 @@ import asamiTheme from './components/theme';
 import { AsamiLayout } from './views/layout';
 
 import CampaignWizard from "./views/advertiser/campaign_wizard";
-import Dashboard from "./views/advertiser/dashboard";
+import AdvertiserDashboard from "./views/advertiser/dashboard";
+import CreatorDashboard from "./views/creator/dashboard";
+
+const Dashboard = () => {
+  const [role, setRole] = useStore('user.role', 'advertiser');
+
+  return (role == 'advertiser' ? <AdvertiserDashboard /> : <CreatorDashboard />);
+}
 
 export const App = () => <Admin
     authProvider={authProvider}

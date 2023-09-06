@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import { Box, Button, Typography } from '@mui/material';
-import { useCheckAuth, useSafeSetState } from 'react-admin';
+import { useCheckAuth, useSafeSetState, useStore } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
 import authProvider from '../auth_provider';
 import { BareLayout } from './layout';
 import { Head1 } from '../components/theme';
 
 const Login = () => {
+  const [role, setRole] = useStore('user.role', 'advertiser');
+
   const checkAuth = useCheckAuth();
   const navigate = useNavigate();
   const [error, setError] = useSafeSetState();
@@ -22,8 +24,9 @@ const Login = () => {
     check();
   }, [checkAuth, navigate]);
 
-  const login = async () => {
+  const loginAs = async (role) => {
     try {
+      setRole(role);
       await authProvider.login();
       navigate("/")
     } catch (e) {
@@ -38,7 +41,7 @@ const Login = () => {
     </Typography>
     <Box>
       <Button
-        onClick={login}
+        onClick={() => loginAs("advertiser")}
         sx={{my: 3}}
         variant="contained"
         size="large"
@@ -47,7 +50,7 @@ const Login = () => {
         Connect as advertiser
       </Button>
       <Button
-        onClick={login}
+        onClick={() => loginAs("creator")}
         sx={{my: 3}}
         variant="contained"
         size="large"

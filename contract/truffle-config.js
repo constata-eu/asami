@@ -44,7 +44,7 @@
 // require('dotenv').config();
 // const { MNEMONIC, PROJECT_ID } = process.env;
 
-// const HDWalletProvider = require('@truffle/hdwallet-provider');
+const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 module.exports = {
   /**
@@ -58,17 +58,26 @@ module.exports = {
    */
 
   networks: {
+    local: {
+      host: "127.0.0.1",
+      port: 8545,
+      network_id: "*"
+    },
+    testnet: {
+      network_id: 31,
+      gasPrice: 65164000,
+      networkCheckTimeout: 1e6,
+      timeoutBlocks: 100,
+      // Higher polling interval to check for blocks less frequently
+      // during deployment
+      deploymentPollingInterval: 15e3,
+    },
     // Useful for testing. The `development` name is special - truffle uses it by default
     // if it's defined here and no other network is specified at the command line.
     // You should run a client (like ganache, geth, or parity) in a separate terminal
     // tab if you use this network and you must also set the `host`, `port` and `network_id`
     // options below to some value.
     //  networks: {
-    development: {
-      host: "127.0.0.1",
-      port: 8545,
-      network_id: "*"
-    }
     // development: {
     //  host: "127.0.0.1",     // Localhost (default: none)
     //  port: 8545,            // Standard Ethereum port (default: none)

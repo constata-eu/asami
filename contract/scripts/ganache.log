@@ -295,3 +295,305 @@
 2023-09-04T10:22:36.628Z eth_call
 2023-09-04T10:22:39.843Z eth_call
 2023-09-04T10:22:39.889Z eth_call
+2023-09-05T19:19:53.174Z eth_blockNumber
+2023-09-05T19:19:53.190Z eth_getBlockByNumber
+2023-09-05T19:19:53.192Z eth_getBalance
+2023-09-05T19:19:53.192Z eth_getBalance
+2023-09-05T19:19:53.193Z eth_getBalance
+2023-09-05T19:19:53.193Z eth_getBalance
+2023-09-05T19:19:53.398Z eth_call
+2023-09-05T19:19:53.424Z eth_call
+2023-09-05T19:19:53.435Z eth_call
+2023-09-05T19:19:53.435Z eth_call
+2023-09-05T19:19:53.451Z eth_call
+2023-09-05T19:20:05.588Z eth_blockNumber
+2023-09-05T19:20:05.791Z eth_call
+2023-09-05T19:20:05.815Z eth_call
+2023-09-05T19:20:13.195Z eth_blockNumber
+2023-09-05T19:20:17.148Z eth_blockNumber
+2023-09-05T19:20:17.356Z eth_call
+2023-09-05T19:20:17.378Z eth_call
+2023-09-05T19:20:25.603Z eth_blockNumber
+2023-09-05T19:20:33.206Z eth_blockNumber
+2023-09-05T19:20:37.165Z eth_blockNumber
+2023-09-05T19:20:45.613Z eth_blockNumber
+2023-09-05T19:20:53.219Z eth_blockNumber
+2023-09-05T19:20:57.181Z eth_blockNumber
+2023-09-05T19:21:05.630Z eth_blockNumber
+2023-09-05T19:22:34.782Z eth_blockNumber
+2023-09-05T19:23:17.448Z eth_blockNumber
+2023-09-05T19:23:34.988Z eth_call
+2023-09-05T19:23:35.002Z eth_estimateGas
+2023-09-05T19:23:35.036Z eth_getCode
+2023-09-05T19:23:35.051Z eth_call
+2023-09-05T19:23:35.059Z eth_call
+2023-09-05T19:23:37.286Z eth_blockNumber
+2023-09-05T19:23:37.454Z eth_call
+2023-09-05T19:23:37.457Z eth_blockNumber
+2023-09-05T19:23:37.467Z eth_call
+2023-09-05T19:23:37.559Z eth_getCode
+2023-09-05T19:23:37.573Z eth_getTransactionCount
+2023-09-05T19:23:48.831Z eth_sendRawTransaction
+2023-09-05T19:23:48.840Z 
+2023-09-05T19:23:48.840Z   Transaction: 0x2a5807f793a0852389a002c5ebe866e8397777ccce456334f38c2e1bff29a8e3
+2023-09-05T19:23:48.840Z   Gas usage: 46237
+2023-09-05T19:23:48.840Z   Block number: 14
+2023-09-05T19:23:48.840Z   Block time: Tue Sep 05 2023 16:23:48 GMT-0300 (Argentina Standard Time)
+2023-09-05T19:23:48.840Z 
+2023-09-05T19:23:48.849Z eth_blockNumber
+2023-09-05T19:23:48.858Z eth_call
+2023-09-05T19:23:48.862Z eth_getTransactionReceipt
+2023-09-05T19:23:48.869Z eth_getBlockByHash
+2023-09-05T19:23:48.878Z eth_call
+2023-09-05T19:23:48.878Z eth_blockNumber
+2023-09-05T19:23:48.887Z eth_call
+2023-09-05T19:23:48.920Z eth_call
+2023-09-05T19:23:48.922Z eth_call
+2023-09-05T19:23:48.922Z eth_estimateGas
+2023-09-05T19:23:48.926Z eth_call
+2023-09-05T19:23:48.988Z eth_getCode
+2023-09-05T19:23:48.999Z eth_call
+2023-09-05T19:23:49.005Z eth_call
+2023-09-05T19:23:49.013Z eth_call
+2023-09-05T19:23:49.013Z eth_call
+2023-09-05T19:23:50.966Z eth_blockNumber
+2023-09-05T19:23:50.968Z eth_getBalance
+2023-09-05T19:23:50.968Z eth_getBalance
+2023-09-05T19:23:50.968Z eth_getBalance
+2023-09-05T19:23:50.968Z eth_getBalance
+2023-09-05T19:23:51.387Z eth_getTransactionCount
+2023-09-05T19:24:00.864Z eth_sendRawTransaction
+2023-09-05T19:24:00.900Z 
+2023-09-05T19:24:00.900Z   Transaction: 0xfd8597ca9380a8cd28b4919432e78d7e8a2c364b4bc2323b78bb3e46e4c8bb1a
+2023-09-05T19:24:00.900Z   Gas usage: 329158
+2023-09-05T19:24:00.900Z   Block number: 15
+2023-09-05T19:24:00.900Z   Block time: Tue Sep 05 2023 16:24:00 GMT-0300 (Argentina Standard Time)
+2023-09-05T19:24:00.900Z 
+2023-09-05T19:24:00.910Z eth_blockNumber
+2023-09-05T19:24:00.920Z eth_call
+2023-09-05T19:24:00.924Z eth_getTransactionReceipt
+2023-09-05T19:24:00.929Z eth_getBlockByHash
+2023-09-05T19:24:00.932Z eth_call
+2023-09-05T19:24:00.942Z eth_blockNumber
+2023-09-05T19:24:00.944Z eth_call
+2023-09-05T19:24:00.969Z eth_call
+2023-09-05T19:24:00.969Z eth_call
+2023-09-05T19:24:00.974Z eth_call
+2023-09-05T19:24:00.986Z eth_call
+2023-09-05T19:24:00.987Z eth_call
+2023-09-05T19:24:03.684Z eth_call
+2023-09-05T19:24:03.730Z eth_call
+2023-09-05T19:25:24.898Z eth_blockNumber
+2023-09-05T19:25:35.491Z eth_call
+2023-09-05T19:25:35.502Z eth_estimateGas
+2023-09-05T19:25:35.522Z eth_getCode
+2023-09-05T19:25:35.533Z eth_call
+2023-09-05T19:25:35.542Z eth_call
+2023-09-05T19:25:35.548Z eth_call
+2023-09-05T19:25:35.550Z eth_call
+2023-09-05T19:25:36.752Z eth_blockNumber
+2023-09-05T19:25:36.754Z eth_getBalance
+2023-09-05T19:25:36.755Z eth_getBalance
+2023-09-05T19:25:36.756Z eth_getBalance
+2023-09-05T19:25:36.758Z eth_getBalance
+2023-09-05T19:25:37.012Z eth_call
+2023-09-05T19:25:37.023Z eth_call
+2023-09-05T19:25:37.036Z eth_call
+2023-09-05T19:25:37.110Z eth_getCode
+2023-09-05T19:25:37.130Z eth_getTransactionCount
+2023-09-05T19:25:49.621Z eth_sendRawTransaction
+2023-09-05T19:25:49.629Z 
+2023-09-05T19:25:49.629Z   Transaction: 0xcc8222713fe1eff6aab77571b3fa865ac4cb4eb9c001b4f32be19cdcfce43435
+2023-09-05T19:25:49.629Z   Gas usage: 46237
+2023-09-05T19:25:49.629Z   Block number: 16
+2023-09-05T19:25:49.629Z   Block time: Tue Sep 05 2023 16:25:49 GMT-0300 (Argentina Standard Time)
+2023-09-05T19:25:49.629Z 
+2023-09-05T19:25:49.637Z eth_blockNumber
+2023-09-05T19:25:49.646Z eth_call
+2023-09-05T19:25:49.650Z eth_getTransactionReceipt
+2023-09-05T19:25:49.656Z eth_getBlockByHash
+2023-09-05T19:25:49.661Z eth_call
+2023-09-05T19:25:49.663Z eth_blockNumber
+2023-09-05T19:25:49.673Z eth_call
+2023-09-05T19:25:49.705Z eth_call
+2023-09-05T19:25:49.705Z eth_call
+2023-09-05T19:25:49.709Z eth_estimateGas
+2023-09-05T19:25:49.713Z eth_call
+2023-09-05T19:25:49.780Z eth_getCode
+2023-09-05T19:25:49.791Z eth_call
+2023-09-05T19:25:49.798Z eth_call
+2023-09-05T19:25:49.806Z eth_call
+2023-09-05T19:25:49.806Z eth_call
+2023-09-05T19:25:50.972Z eth_blockNumber
+2023-09-05T19:25:50.974Z eth_getBalance
+2023-09-05T19:25:50.975Z eth_getBalance
+2023-09-05T19:25:50.975Z eth_getBalance
+2023-09-05T19:25:50.975Z eth_getBalance
+2023-09-05T19:25:51.375Z eth_getTransactionCount
+2023-09-05T19:26:00.738Z eth_sendRawTransaction
+2023-09-05T19:26:00.782Z 
+2023-09-05T19:26:00.782Z   Transaction: 0x2086da3fecec8ae7bbcccb62968a251df0c273a612d08219b8a3b9ea50a3af27
+2023-09-05T19:26:00.782Z   Gas usage: 330247
+2023-09-05T19:26:00.782Z   Block number: 17
+2023-09-05T19:26:00.782Z   Block time: Tue Sep 05 2023 16:26:00 GMT-0300 (Argentina Standard Time)
+2023-09-05T19:26:00.782Z 
+2023-09-05T19:26:00.790Z eth_blockNumber
+2023-09-05T19:26:00.801Z eth_call
+2023-09-05T19:26:00.805Z eth_getTransactionReceipt
+2023-09-05T19:26:00.811Z eth_getBlockByHash
+2023-09-05T19:26:00.813Z eth_call
+2023-09-05T19:26:00.823Z eth_blockNumber
+2023-09-05T19:26:00.825Z eth_call
+2023-09-05T19:26:00.834Z eth_call
+2023-09-05T19:26:00.834Z eth_call
+2023-09-05T19:26:00.841Z eth_call
+2023-09-05T19:26:00.850Z eth_call
+2023-09-05T19:26:00.850Z eth_call
+2023-09-05T19:26:02.967Z eth_call
+2023-09-05T19:26:03.021Z eth_call
+2023-09-05T19:26:24.782Z eth_blockNumber
+2023-09-05T19:26:48.689Z eth_blockNumber
+2023-09-05T19:29:10.683Z eth_blockNumber
+2023-09-05T19:41:03.725Z eth_blockNumber
+2023-09-05T19:41:21.937Z eth_blockNumber
+2023-09-05T19:41:21.985Z net_version
+2023-09-05T19:41:21.988Z net_version
+2023-09-05T19:41:21.988Z eth_getBlockByNumber
+2023-09-05T19:41:33.703Z eth_blockNumber
+2023-09-05T19:44:21.229Z eth_blockNumber
+2023-09-05T19:44:25.500Z eth_blockNumber
+2023-09-05T19:44:25.502Z eth_getBalance
+2023-09-05T19:44:25.502Z eth_getBalance
+2023-09-05T19:44:25.502Z eth_getBalance
+2023-09-05T19:44:25.502Z eth_getBalance
+2023-09-05T19:44:25.869Z eth_call
+2023-09-05T19:44:25.905Z eth_call
+2023-09-05T19:44:25.930Z eth_call
+2023-09-05T19:44:25.932Z eth_call
+2023-09-05T19:44:25.951Z eth_call
+2023-09-05T19:44:31.478Z eth_call
+2023-09-05T19:44:31.539Z eth_call
+2023-09-05T19:46:25.338Z eth_blockNumber
+2023-09-05T19:47:00.326Z eth_blockNumber
+2023-09-05T19:48:25.414Z eth_blockNumber
+2023-09-05T20:01:40.527Z eth_blockNumber
+2023-09-05T20:02:20.333Z eth_blockNumber
+2023-09-05T20:04:27.424Z eth_blockNumber
+2023-09-05T21:48:22.391Z eth_blockNumber
+2023-09-05T21:49:05.302Z eth_blockNumber
+2023-09-05T21:49:30.385Z eth_blockNumber
+2023-09-05T21:50:28.295Z eth_blockNumber
+2023-09-05T21:52:08.378Z eth_blockNumber
+2023-09-05T21:53:14.358Z eth_blockNumber
+2023-09-05T21:54:23.339Z eth_blockNumber
+2023-09-05T21:54:53.394Z eth_blockNumber
+2023-09-05T21:55:18.295Z eth_blockNumber
+2023-09-05T21:55:39.528Z eth_blockNumber
+2023-09-05T21:59:23.460Z eth_blockNumber
+2023-09-05T21:59:51.399Z eth_blockNumber
+2023-09-05T22:00:58.359Z eth_blockNumber
+2023-09-05T22:01:49.340Z eth_blockNumber
+2023-09-05T22:02:23.284Z eth_blockNumber
+2023-09-05T22:02:43.432Z eth_blockNumber
+2023-09-05T22:03:06.421Z eth_blockNumber
+2023-09-05T22:03:28.184Z eth_blockNumber
+2023-09-05T22:05:12.289Z eth_blockNumber
+2023-09-05T22:06:26.476Z eth_blockNumber
+2023-09-05T22:08:00.073Z eth_blockNumber
+2023-09-05T22:08:26.392Z eth_blockNumber
+2023-09-05T23:02:43.506Z eth_blockNumber
+2023-09-05T23:03:12.341Z eth_blockNumber
+2023-09-05T23:08:52.981Z eth_blockNumber
+2023-09-05T23:09:14.405Z eth_blockNumber
+2023-09-05T23:10:16.323Z eth_blockNumber
+2023-09-05T23:10:58.373Z eth_blockNumber
+2023-09-05T23:11:23.424Z eth_blockNumber
+2023-09-05T23:12:08.323Z eth_blockNumber
+2023-09-05T23:13:07.447Z eth_blockNumber
+2023-09-05T23:14:19.251Z eth_blockNumber
+2023-09-05T23:14:58.219Z eth_blockNumber
+2023-09-05T23:15:22.211Z eth_blockNumber
+2023-09-05T23:15:51.349Z eth_blockNumber
+2023-09-05T23:16:30.337Z eth_blockNumber
+2023-09-05T23:21:46.448Z eth_blockNumber
+2023-09-05T23:22:28.206Z eth_blockNumber
+2023-09-05T23:23:15.376Z eth_blockNumber
+2023-09-05T23:23:43.340Z eth_blockNumber
+2023-09-05T23:24:18.749Z eth_blockNumber
+2023-09-05T23:25:23.399Z eth_blockNumber
+2023-09-05T23:30:18.327Z eth_blockNumber
+2023-09-05T23:30:48.405Z eth_blockNumber
+2023-09-05T23:31:35.400Z eth_blockNumber
+2023-09-05T23:32:30.457Z eth_blockNumber
+2023-09-05T23:33:20.242Z eth_blockNumber
+2023-09-05T23:34:24.589Z eth_blockNumber
+2023-09-06T08:23:59.204Z eth_blockNumber
+2023-09-06T08:23:59.455Z eth_call
+2023-09-06T08:23:59.497Z eth_call
+2023-09-06T08:24:19.589Z eth_blockNumber
+2023-09-06T08:24:19.592Z eth_blockNumber
+2023-09-06T08:24:36.666Z eth_getBalance
+2023-09-06T08:24:36.666Z eth_getBalance
+2023-09-06T08:24:36.666Z eth_getBalance
+2023-09-06T08:24:39.609Z eth_blockNumber
+2023-09-06T08:24:39.609Z eth_blockNumber
+2023-09-06T08:24:59.631Z eth_blockNumber
+2023-09-06T08:24:59.632Z eth_blockNumber
+2023-09-06T08:25:19.659Z eth_blockNumber
+2023-09-06T08:25:19.659Z eth_blockNumber
+2023-09-06T08:25:39.683Z eth_blockNumber
+2023-09-06T08:25:39.685Z eth_blockNumber
+2023-09-06T08:25:59.706Z eth_blockNumber
+2023-09-06T08:25:59.706Z eth_blockNumber
+2023-09-06T08:34:45.587Z eth_blockNumber
+2023-09-06T08:34:45.850Z eth_call
+2023-09-06T08:34:45.884Z eth_call
+2023-09-06T08:34:49.016Z eth_blockNumber
+2023-09-06T08:44:50.117Z net_version
+2023-09-06T08:50:35.747Z eth_blockNumber
+2023-09-06T08:51:17.365Z eth_blockNumber
+2023-09-06T08:57:02.446Z eth_blockNumber
+2023-09-06T08:57:02.449Z net_version
+2023-09-06T08:57:02.945Z eth_call
+2023-09-06T09:02:19.166Z eth_blockNumber
+2023-09-06T09:02:19.193Z net_version
+2023-09-06T09:02:19.449Z eth_estimateGas
+2023-09-06T09:02:19.560Z eth_gasPrice
+2023-09-06T09:02:30.825Z eth_blockNumber
+2023-09-06T09:02:41.478Z eth_blockNumber
+2023-09-06T09:02:41.767Z eth_getTransactionCount
+2023-09-06T09:02:54.017Z eth_sendRawTransaction
+2023-09-06T09:02:54.046Z 
+2023-09-06T09:02:54.046Z   Transaction: 0x4b0f2900193e0210c58b5664347bd4a733e2672424f152dd480b48d993f6927a
+2023-09-06T09:02:54.046Z   Contract created: 0xcd6d24339c542d4d1e0503bba8a5829a22e19f2f
+2023-09-06T09:02:54.046Z   Gas usage: 5405028
+2023-09-06T09:02:54.046Z   Block number: 18
+2023-09-06T09:02:54.046Z   Block time: Wed Sep 06 2023 06:02:54 GMT-0300 (Argentina Standard Time)
+2023-09-06T09:02:54.046Z 
+2023-09-06T09:02:54.054Z eth_blockNumber
+2023-09-06T09:02:54.074Z eth_getTransactionReceipt
+2023-09-06T09:02:54.079Z eth_getBlockByHash
+2023-09-06T09:02:54.135Z eth_getCode
+2023-09-06T09:02:54.168Z eth_getTransactionByHash
+2023-09-06T09:02:54.196Z eth_getBlockByNumber
+2023-09-06T09:02:54.211Z eth_getBalance
+2023-09-06T09:07:51.318Z eth_blockNumber
+2023-09-06T09:07:51.321Z eth_blockNumber
+2023-09-06T09:07:51.346Z net_version
+2023-09-06T09:08:59.545Z eth_blockNumber
+2023-09-06T09:08:59.567Z net_version
+2023-09-06T09:08:59.791Z eth_estimateGas
+2023-09-06T09:08:59.866Z eth_gasPrice
+2023-09-06T09:09:11.527Z eth_call
+2023-09-06T09:09:26.831Z eth_blockNumber
+2023-09-06T09:09:26.855Z eth_getBalance
+2023-09-06T09:09:26.855Z eth_getBalance
+2023-09-06T09:09:26.856Z eth_getBalance
+2023-09-06T09:09:26.859Z eth_getBalance
+2023-09-06T09:09:26.861Z eth_getBalance
+2023-09-06T09:09:26.861Z eth_getBalance
+2023-09-06T09:09:27.131Z eth_call
+2023-09-06T09:09:27.157Z eth_call
+2023-09-06T09:09:27.182Z eth_call
+2023-09-06T09:09:27.182Z eth_call
+2023-09-06T09:09:27.213Z eth_call
