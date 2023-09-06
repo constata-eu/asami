@@ -26,6 +26,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 'pwa'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -34,20 +37,17 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
-        working-directory: './pwa'
       - name: Install dependencies
         run: yarn
-        working-directory: './pwa'
       - name: Build
         run: yarn build
-        working-directory: './pwa'
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
           # Upload dist repository
-          path: './pwa/dist'
+          path: './dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1
