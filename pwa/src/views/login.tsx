@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { Alert, AlertTitle, AppBar, Toolbar, IconButton, Box, Button, Container, Paper, styled, Backdrop, Typography, Skeleton, useMediaQuery } from '@mui/material';
+import { Alert, AlertTitle, AppBar, Divider, Toolbar, IconButton, Box, Button, Container, Paper, styled, Backdrop, Typography, Skeleton, useMediaQuery } from '@mui/material';
 import { useCheckAuth, useSafeSetState, useStore } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
 import authProvider from '../auth_provider';
 import { BareLayout } from './layout';
 import { Head1 } from '../components/theme';
 import logo from '../assets/asami.png';
+import rootstock from '../assets/rootstock.png';
 
 const Login = () => {
   const [role, setRole] = useStore('user.role', 'advertiser');
@@ -80,7 +81,7 @@ const Login = () => {
         <Typography mb="2em">
           Kickstart your next ad campaign!
           Partner with Asami's micro-influencers for authentic reach and ROI.
-          Connect with your MetaMask wallet to get started today.
+          Connect with your RSK account in MetaMask to get started today.
         </Typography>
         <Button
           onClick={() => loginAs("advertiser")}
@@ -96,7 +97,7 @@ const Login = () => {
         <Typography fontSize="2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">Are you a trusted voice?</Typography>
         <Typography mb="2em">
           Unlock a new revenue stream without compromising your authenticity by joining ASAMI's curated network.
-          Connect with your MetaMask wallet to get started on your next brand collaboration.
+          Connect with your MetaMask RSK wallet to get started on your next brand collaboration.
         </Typography>
         <Button
           onClick={() => loginAs("creator")}
@@ -109,6 +110,16 @@ const Login = () => {
         </Button>
       </Box>
     </Box>
+    <Divider light sx={{ mt: "5em", mb: "2em" }}/>
+
+    <Button href="https://rootstock.io/" target="_blank" sx={{textDecoration: "none", mb: "2em"}}>
+      <Box display="flex" flexDirection="column">
+        <Typography fontSize="1em" textTransform="uppercase" fontFamily="LeagueSpartanBold">
+          Built with
+        </Typography>
+        <img src={rootstock}  style={{width: "150px" }} />
+      </Box>
+    </Button>
   </BareLayout>);
 };
 
