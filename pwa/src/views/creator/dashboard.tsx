@@ -47,8 +47,8 @@ const Dashboard = () => {
   }
 
   return <Container maxWidth="md">
-    <Head1 sx={{my:3}}>Hello Creator!</Head1>
-    <Typography mt="3em" mb="1em">
+    <Head1 sx={{my:3}}>Hello Collaborator!</Head1>
+    <Typography my="1em">
       This is your collaboration inbox, here you can manage the invitations and collect payments.
       <br/>
       Advertisers already know about you, and they will invite you to participate in their campaigns.

@@ -41,19 +41,20 @@ const ResponsiveAppBar = ({loggedIn}) => {
   </Box>
 
   const ComputerMenu = () => <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent:"end" }} id="desktop-menu">
-    <Button sx={{ ml: 1, textTransform: "uppercase" }} variant="outlined" color="highlight" onClick={() => logout() } id="logout-menu-item">
+    <Button sx={{ pt: "0.6em", ml: 1, textTransform: "uppercase" }} variant="outlined" color="highlight" onClick={() => logout() } id="logout-menu-item">
       Logout
     </Button>
   </Box>
 
   return (
-    <AppBar position="static" color="inverted" sx={{ py: isSmall ? "14px" : "28px"}}>
+    <AppBar position="static" color="inverted">
       <Container maxWidth="md" style={{ padding: 0}}>
         <Toolbar sx={{ minHeight: "0 !important" }}>
-          <Box sx={{ display: "flex"}} >
-            <a href="https://constata.eu" style={{lineHeight: 0}} target="_blank" rel="noreferrer">
-              <img src={logo} alt={translate("certos.menu.logo")} style={{ height: isSmall ? "20px" : "30px", width: "auto" }}/>
+          <Box display="flex" gap="5px" alignItems="center" fontFamily="Sacramento" fontSize="5em" lineHeight="1em" fontWeight="bold" >
+            <a href="https://asami.club" style={{lineHeight: 0}} target="_blank" rel="noreferrer">
+              <img src={logo} height="50px" width="auto"/>
             </a>
+            asami
           </Box>
           {loggedIn && <>
               <MobileMenu />
@@ -101,11 +102,8 @@ export const BareLayout = ({children}) => {
       flexDirection: "column",
     }}>
       <CssBaseline/>
-      <Container maxWidth="sm">
+      <Container maxWidth="md">
         { children }
-        <Box textAlign="center" mt={8} mb={4}>
-          <img src={logo}  alt={translate("certos.menu.logo")} style={{width: "200px" }} />
-        </Box>
       </Container>
     </Box>
   )

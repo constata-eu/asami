@@ -48,7 +48,7 @@ const Dashboard = () => {
 
   return <Container maxWidth="md">
     <Head1 sx={{my:3}}>Hello Advertiser!</Head1>
-    <Typography mt="3em" mb="1em">
+    <Typography my="1em">
       You can invite influencers and content creators to advertise your company or project.
       <br/>
       The Asami infrastructure makes sure the process is transparent and reliable for you and for them.
