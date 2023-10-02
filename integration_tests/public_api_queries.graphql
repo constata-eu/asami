@@ -1,0 +1,53 @@
+mutation CreateSession {
+  createSession {
+    id
+    userId
+    pubkey
+    nonce
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+mutation CreateCampaign($input: CreateCampaignInput!) {
+  createCampaign(input: $input) {
+    id
+    accountId
+    budget
+    site
+    content
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+query Campaign($id: Int!) {
+  Campaign(id: $id) {
+    id
+    accountId
+    budget
+    site
+    content
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignFilter) {
+  allCampaigns(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    accountId
+    budget
+    site
+    content
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+query AllCampaignsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignFilter) {
+  _allCampaignsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}

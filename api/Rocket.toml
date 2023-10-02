@@ -1,0 +1,11 @@
+[global]
+address="0.0.0.0"
+limits = { json = "50MB", graphql = "50MB" }
+url = "http://localhost:8000"
+database_uri = "postgres://asami:password@localhost/asami_development"
+recaptcha_threshold=0.0
+
+[global.recaptcha.v3]
+html_key="6Ld9xO0iAAAAALIPY2yJGhshPe3nek4QQIHMgwq-"
+secret_key="6Ld9xO0iAAAAAJWLojhvQ1zx94dzAJT9zFqqCwZq"
+

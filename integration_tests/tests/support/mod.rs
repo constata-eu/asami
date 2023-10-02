@@ -1,0 +1,74 @@
+//pub mod selenium;
+pub mod test_api_server;
+pub mod test_app;
+
+//pub use selenium::Selenium;
+pub use test_api_server::*;
+pub use test_app::*;
+
+pub mod test_api_client;
+pub use test_api_client::*;
+
+pub use thirtyfour::{
+  error::WebDriverResult,
+  WebDriver,
+  WebElement,
+  prelude::*
+};
+pub use galvanic_assert::{
+  self,
+  matchers::{collection::*, variant::*, *},
+  *,
+};
+
+#[macro_export]
+macro_rules! test {
+  ($i:ident $($e:tt)* ) => {
+
+    #[test]
+    fn $i() {
+
+      async fn run_test() -> std::result::Result<(), anyhow::Error> {
+        {$($e)*}
+        Ok(())
+      }
+
+      let result = tokio::runtime::Runtime::new()
+        .expect("could not build runtime")
+        .block_on(run_test());
+
+      if let Err(e) = result {
+        let source = e.source().map(|e| e.to_string() ).unwrap_or_else(|| "none".to_string());
+        println!("Error: {e:?}\n Source: {source}.");
+        panic!("Error in test. see backtrace");
+      }
+    }
+  }
+}
+
+#[macro_export]
+macro_rules! browser_test {
+  ($i:ident($c:ident, $driver:ident) $($e:tt)* ) => {
+    test!{ $i
+      time_test::time_test!("integration test");
+      let $c = TestApp::init().await;
+      let mut server = crate::support::ApiServer::start();
+      let $driver = Selenium::start().await;
+      {$($e)*};
+      server.stop();
+      $driver.stop().await;
+    }
+  }
+}
+
+#[macro_export]
+macro_rules! api_test {
+  ($test_name:ident($test_app:ident, $client:ident) $($e:tt)* ) => {
+    test!{ $test_name
+      time_test::time_test!("api test");
+      let $test_app = crate::support::TestApp::init().await;
+      let $client = crate::support::ApiClient::new($test_app.clone()).await;
+      {$($e)*};
+    }
+  }
+}

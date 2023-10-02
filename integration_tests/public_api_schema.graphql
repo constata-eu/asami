@@ -1,0 +1,90 @@
+"The input for creating a new Campaign."
+input CreateCampaignInput {
+  content: String!
+  budget: Float!
+  accountId: Int!
+  site: Site!
+}
+
+enum Site {
+  X
+  INSTAGRAM
+  NOSTR
+}
+
+"A campaign started by an advertiser"
+type Campaign {
+  "Unique numeric identifier of this werify point"
+  id: Int!
+  "The id of the account that created this."
+  accountId: Int!
+  "The total budget for this campaign to be split across users."
+  budget: Float!
+  "The site where this campaign is to be run on."
+  site: Site!
+  "The content to share."
+  content: String!
+  "The date in which this campaign was created."
+  createdAt: DateTime!
+  "The last time this campaign received an update."
+  updatedAt: DateTime
+}
+
+input CampaignFilter {
+  ids: [Int!]
+  idEq: Int
+  contentLike: String
+}
+
+type Mutation {
+  createSession: Session!
+  createCampaign(input: CreateCampaignInput!): Campaign!
+}
+
+type ListMetadata {
+  count: Int!
+}
+
+type Query {
+  apiVersion: String!
+  Campaign(id: Int!): Campaign!
+  allCampaigns(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignFilter): [Campaign!]!
+  _allCampaignsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignFilter): ListMetadata!
+}
+
+"A campaign started by an advertiser"
+type Session {
+  "The pubkey ID of this session."
+  id: String!
+  "The user associated to this session."
+  userId: Int!
+  "The pubkey associated to this session."
+  pubkey: String!
+  "The content to share."
+  nonce: String!
+  "The date in which this session was created."
+  createdAt: DateTime!
+  "The last time this session was updated."
+  updatedAt: DateTime
+}
+
+"""
+  Combined date and time (with time zone) in [RFC 3339][0] format.
+
+  Represents a description of an exact instant on the time-line (such as the
+  instant that a user account was created).
+
+  [`DateTime` scalar][1] compliant.
+
+  See also [`chrono::DateTime`][2] for details.
+
+  [0]: https://datatracker.ietf.org/doc/html/rfc3339#section-5
+  [1]: https://graphql-scalars.dev/docs/scalars/date-time
+  [2]: https://docs.rs/chrono/latest/chrono/struct.DateTime.html
+"""
+scalar DateTime
+
+schema {
+  query: Query
+  mutation: Mutation
+}
