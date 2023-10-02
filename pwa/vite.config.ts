@@ -15,13 +15,14 @@ export default defineConfig({
     define: {
       global: {},
       'process.env': process.env,
+      'process.version': JSON.stringify(process.version),
     },
     server: {
       https: false,
     },
     build: {
       // minify: false,
-      // target: "es2015",
+      //target: "es2015",
       outDir: 'dist',
       commonjsOptions: { include: [] },
       rollupOptions: {

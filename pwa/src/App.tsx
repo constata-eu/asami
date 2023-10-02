@@ -24,7 +24,7 @@ import logo from './assets/asami.png';
 import rootstock from './assets/rootstock.png';
 
 const GoogleForm = () => {
-  return <BareLayout>
+  return <>
     <Box alignItems="center" marginTop="2em">
       <Typography variant="h1" fontSize="6em" margin="0" lineHeight="0.5em" fontFamily="Sacramento" fontWeight="bold">
         asami
@@ -69,7 +69,7 @@ const GoogleForm = () => {
         <img src={rootstock}  style={{width: "150px" }} />
       </Box>
     </Button>
-  </BareLayout>
+  </>
 }
 
 const Dashboard = () => {
@@ -79,12 +79,10 @@ const Dashboard = () => {
 }
 
 export const App = () => <Admin
-    authProvider={authProvider}
-    dashboard={Dashboard}
+    dashboard={GoogleForm}
     disableTelemetry={true}
-    loginPage={GoogleForm}
     theme={asamiTheme}
-    layout={AsamiLayout}
+    layout={BareLayout}
   >
     <CustomRoutes>
       <Route path="/advertiser/campaign_wizard" element={<CampaignWizard/>}/>
