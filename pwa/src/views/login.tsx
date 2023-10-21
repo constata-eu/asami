@@ -1,8 +1,13 @@
 import { useEffect } from 'react';
-import { Alert, AlertTitle, AppBar, Divider, Toolbar, IconButton, Box, Button, Container, Paper, styled, Backdrop, Typography, Skeleton, useMediaQuery } from '@mui/material';
+import {
+  Alert, AlertTitle, AppBar, Backdrop, Badge, Divider,
+  Dialog, DialogActions, DialogContent, DialogTitle,
+  IconButton, Box, Button, Container, Paper, styled,
+  Toolbar, Typography, Skeleton, useMediaQuery
+} from '@mui/material';
 import { useCheckAuth, useSafeSetState, useStore } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
-import authProvider from '../auth_provider';
+import authProvider, { makeXUrl, makeInstagramUrl, rLoginStart } from '../lib/auth_provider';
 import { BareLayout } from './layout';
 import { Head1 } from '../components/theme';
 import logo from '../assets/asami.png';
@@ -10,33 +15,42 @@ import rootstock from '../assets/rootstock.png';
 
 const Login = () => {
   const [role, setRole] = useStore('user.role', 'advertiser');
+  const [oauthVerifier, setOauthVerifier] = useStore('user.oauthChallenge');
+  const [open, setOpen] = useSafeSetState(false);
 
   const checkAuth = useCheckAuth();
   const navigate = useNavigate();
   const [error, setError] = useSafeSetState();
 
-  useEffect(() => {
-    const check = async () => {
-      try {
-        await checkAuth();
-        navigate("/")
-      } catch (e) {
-      }
+  const startLoginFlow = async (method) => {
+    setOpen(false);
+    switch (method) {
+      case "Eip712":
+        const code = await rLoginStart();
+        navigate(`/eip712_login?code=${code}`);
+        break;
+      case "X":
+        const { url, verifier } = await makeXUrl();
+        localStorage.setItem("oauthVerifier", verifier);
+        document.location.href = url;
+        break;
+      case "Instagram":
+        document.location.href = makeInstagramUrl();
+        break;
     }
-    check();
-  }, [checkAuth, navigate]);
+  };
 
   const loginAs = async (role) => {
     try {
       setRole(role);
-      await authProvider.login();
-      navigate("/")
+      setOpen(true);
     } catch (e) {
       setError(e.message)
     }
   }
 
   return (<BareLayout>
+    <LoginSelector open={open} onSelect={startLoginFlow} />
 
     <Alert severity="error" sx={{my: "1em" }}>
       <AlertTitle>This is a tech preview</AlertTitle>
@@ -123,4 +137,24 @@ const Login = () => {
   </BareLayout>);
 };
 
+const LoginSelector = ({open, onSelect}) => {
+  return (<Dialog open={open} fullWidth maxWidth="sm">
+    <DialogTitle>Login</DialogTitle>
+    <DialogContent>
+      <Box p="1em 2em 1em 1em" display="flex" gap="1em" flexDirection="column">
+        <Badge badgeContent="Most secure" color="secondary">
+          <Button fullWidth variant="contained" onClick={() => onSelect("Eip712")}>Login with Wallet</Button>
+        </Badge>
+        <Badge badgeContent="Asks Elon" color="inverted">
+          <Button fullWidth variant="contained" onClick={() => onSelect("X")}>Login with X</Button>
+        </Badge>
+        <Badge badgeContent="Asks Mark" color="inverted">
+          <Button fullWidth variant="contained" onClick={() => onSelect("Instagram")}>Login with Instagram</Button>
+        </Badge>
+      </Box>
+    </DialogContent>
+  </Dialog>);
+}
+
 export default Login;
+

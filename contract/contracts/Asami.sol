@@ -3,10 +3,63 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./AsamiClassic.sol";
-import "./AsamiNostr.sol";
+//import "./AsamiClassic.sol";
+//import "./AsamiNostr.sol";
 
 contract Asami is Ownable {
+  address admin;
+
+  mapping(uint256 => Account) public accounts;
+  string[] public topics;
+
+  struct Account {
+      uint256 id;
+      Handle x;
+      Handle nostr;
+      Handle instagram;
+  }
+
+  struct Handle {
+    string value;
+    string fixedId;
+    uint256 price;
+    uint256 score;
+    uint256[] topics;
+    string verificationMessageId;
+  }
+
+  function getTopics() external view returns (string[] memory) {
+    return topics;
+  }
+
+  function setAdmin(address _admin) external onlyOwner {
+    admin = _admin;
+  }
+
+  function addTopic(string calldata _name) external {
+    require(msg.sender == admin || msg.sender == owner());
+    topics.push(_name);
+  }
+
+  function addXHandle (
+    uint256 _account_id,
+    Handle calldata _handle
+  ) external {
+    require(msg.sender == admin || msg.sender == owner());
+
+    Account storage account = accounts[_account_id];
+    account.x = _handle;
+  }
+
+  /*
+  function addHandleTopicsForX(
+    uint256 calldata _account_id,
+    Handle calldata _handle
+  ) external onlyOwner {
+  }
+  */
+  
+  /*
     uint constant oneDay = 60 * 60 * 24;
     uint constant campaignDuration = oneDay * 14;
 
@@ -37,7 +90,6 @@ contract Asami is Ownable {
 
     mapping(address => uint256) internal oracleFees;
 
-    /* An offer pointer represents a specific offer made in a campaign */
     struct OfferPointer {
         uint campaignId;
         uint offerId;
@@ -178,15 +230,6 @@ contract Asami is Ownable {
         offer.state = AsamiNostr.OfferState.Confirmed;
     }
 
-    /*
-     The collaborator can always force a refund.
-     If the collaborator deletes a message, the advertiser can submit proof of deletion
-     to prevent payment from happening.
-     Submitting the proof of deletion for a message may be very costly for the advertiser,
-     so when this happens a penalty is applied on the collaborator in favor of the advertiser.
-     To prevent this penalty, the collaborator may forfeit the reward
-     voluntarily before deleting the message.
-    */
     function nostrRenounce(OfferPointer calldata _p) external {
         Campaign storage campaign = getCampaignInTimeWindow(_p, 0, campaignDuration);
         AsamiNostr.Offer storage offer = campaign.nostrTerms.offers[_p.offerId];
@@ -202,13 +245,6 @@ contract Asami is Ownable {
         offer.state = AsamiNostr.OfferState.Renounced;
     }
 
-    /*
-      Submitting a deletion proof is very costly on the advertiser, so if it comes to that,
-      the collaborator gets penalized and is banned from the system until he pays for the penalties.
-      To reduce gas usage, this method does not parse the tags json, it just does a raw string search,
-      which initially may be enough.
-      The r value is the first 32 bytes of the signature, and the s value are the remaining 32,
-    */
     function nostrReportConfirmed(
         OfferPointer calldata _p,
         AsamiNostr.DeletionProof calldata _deletionProof
@@ -391,10 +427,6 @@ contract Asami is Ownable {
         }
     }
 
-    /*
-      Collects pointers to all offers which are interesting for a collaborator.
-      It could be because the collaborator has a reward to receive or a refund of oracle fees.
-    */
     function getCollectableCollaboratorOffers(
         address _collaborator
     )
@@ -438,9 +470,6 @@ contract Asami is Ownable {
         return (nostrPointers, classicPointers);
     }
 
-    /*
-      This function can be called by anyone to collect offers for a collaborator.
-    */
     function collectCollaboratorOffers(
         address _collaborator,
         OfferPointer[] calldata _nostrPointers,
@@ -528,12 +557,6 @@ contract Asami is Ownable {
         return (nostrPointers, classicPointers);
     }
 
-    /*
-      This function is called by the Advertiser to collect refunds from non-awarded offers.
-      It may also be called by third parties to give the refunds to the Advertiser.
-      The Advertiser must provide a known list of offers that are ready to be refunded.
-      The list can be built by calling the getCollectableRefunds function in the contract.
-    */
     function collectAdvertiserOffers(
       address payable _advertiser,
       OfferPointer[] calldata _nostrOffers,
@@ -618,10 +641,6 @@ contract Asami is Ownable {
         feesAddress = _feesAddress;
     }
 
-    function addSocialNetwork(string calldata _name) external onlyOwner {
-        socialNetworks.push(_name);
-    }
-
     function collectAsamiFees() external {
         require(fees > 0);
         require(rewardToken.transferFrom(address(this), feesAddress, fees));
@@ -678,4 +697,5 @@ contract Asami is Ownable {
       tmp[_pointers.length] = OfferPointer(_campaignId, _offerId);
       return tmp;
     }
+  */
 }

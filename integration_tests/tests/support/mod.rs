@@ -1,10 +1,12 @@
 //pub mod selenium;
 pub mod test_api_server;
 pub mod test_app;
+pub mod truffle;
 
 //pub use selenium::Selenium;
 pub use test_api_server::*;
 pub use test_app::*;
+pub use truffle::*;
 
 pub mod test_api_client;
 pub use test_api_client::*;
@@ -21,12 +23,26 @@ pub use galvanic_assert::{
   *,
 };
 
+#[allow(dead_code)]
+pub fn rematch<'a>(expr: &'a str) -> Box<dyn Matcher<'a, String> + 'a> {
+  Box::new(move |actual: &String| {
+    let re = regex::Regex::new(expr).unwrap();
+    let builder = MatchResultBuilder::for_("rematch");
+    if re.is_match(actual) {
+      builder.matched()
+    } else {
+      builder.failed_because(&format!("{:?} does not match {:?}", expr, actual))
+    }
+  })
+}
+
 #[macro_export]
 macro_rules! test {
   ($i:ident $($e:tt)* ) => {
 
     #[test]
     fn $i() {
+      use crate::support::*;
 
       async fn run_test() -> std::result::Result<(), anyhow::Error> {
         {$($e)*}

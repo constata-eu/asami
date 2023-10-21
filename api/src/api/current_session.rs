@@ -4,6 +4,8 @@ use super::models::{*, Session};
 use super::*;
 use jwt_simple::prelude::*;
 use base64::{Engine as _, engine::general_purpose};
+use ethers::types::{Signature, transaction::eip712::TypedData};
+use std::str::FromStr;
 
 use rocket::{
   self,
@@ -24,22 +26,22 @@ pub struct ApiRequestMetadata {
 pub enum ApiAuthError {
   #[error("{0}")]
   Fail(String),
-  #[error("unexpected_error")]
-  Unexpected,
+  #[error("unexpected_error:{0}")]
+  Unexpected(&'static str),
 }
 
 impl From<Error> for ApiAuthError {
   fn from(err: Error) -> ApiAuthError {
     match err {
       Error::Validation( field, message ) => ApiAuthError::Fail(format!("{field}{message}")),
-      _ => ApiAuthError::Unexpected,
+      _ => ApiAuthError::Unexpected("some_base_error"),
     }
   }
 }
 
 impl From<sqlx::Error> for ApiAuthError {
   fn from(_err: sqlx::Error) -> ApiAuthError {
-    ApiAuthError::Unexpected
+    ApiAuthError::Unexpected("db_error")
   }
 }
 
@@ -63,19 +65,31 @@ macro_rules! auth_assert {
   )
 }
 
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct OauthCodeAndVerifier {
+  code: String,
+  oauth_verifier: String,
+}
+
+#[derive(serde::Deserialize)]
+struct InstagramOauthToken {
+  //access_token: String,
+  user_id: u64,
+}
+
 #[derive(Debug, PartialEq)]
 pub struct CurrentSession(pub Session);
 
 impl CurrentSession {
   async fn build(req: &Request<'_>, body: Option<&[u8]>) -> Result<Self, ApiAuthError> {
-    let app = req.rocket().state::<App>().ok_or(ApiAuthError::Unexpected)?;
+    let app = req.rocket().state::<App>().ok_or(ApiAuthError::Unexpected("rocket_error"))?;
     let jwt = auth_some!(
       req.headers().get_one("Authentication"),
       "no_authentication_header"
     ).to_string();
 
     let session = match req.headers().get_one("Auth-Action") {
-      Some("Signup") => Self::signup(&app, &jwt, req, body).await?,
       Some("Login") => Self::login(&app, &jwt, req, body).await?,
       _ => Self::identify(&app, &jwt,  req, body).await?,
     };
@@ -83,45 +97,56 @@ impl CurrentSession {
     Ok(Self(session))
   }
 
-  async fn signup(app: &App, jwt: &str, req: &Request<'_>, body: Option<&[u8]>) -> Result<Session, ApiAuthError> {
+  async fn login(app: &App, jwt: &str, req: &Request<'_>, body: Option<&[u8]>) -> Result<Session, ApiAuthError> {
     Self::validate_recaptcha(req, app).await?;
     let pubkey = Self::get_login_pubkey(req)?;
     let nonce = Self::validate_jwt(&jwt, &pubkey, req, &body).await?;
     let (kind, lookup_key) = Self::validate_auth_data(app, req).await?;
 
-    let account_id = auth_try!(
-      app.account().insert(InsertAccount{name:"account".to_string()}).save().await,
-      "could_not_create_account"
-    ).attrs.id;
-    let user_id = auth_try!(
-      app.user().insert(InsertUser{name:"user".to_string()}).save().await,
-      "could_not_create_user"
-    ).attrs.id;
-    auth_try!(
-      app.account_user().insert(InsertAccountUser{ account_id, user_id }).save().await,
-      "could_not_bind_user_to_account"
+    let maybe_auth_method = app.auth_method().select().kind_eq(&kind).lookup_key_eq(&lookup_key).optional().await?;
+
+    let auth_method = match maybe_auth_method {
+      Some(method) => method,
+      None => {
+        let account_id = auth_try!(
+          app.account().insert(InsertAccount{name:"account".to_string()}).save().await,
+          "could_not_create_account"
+        ).attrs.id;
+        let user_id = auth_try!(
+          app.user().insert(InsertUser{name:"user".to_string()}).save().await,
+          "could_not_create_user"
+        ).attrs.id;
+        auth_try!(
+          app.account_user().insert(InsertAccountUser{ account_id, user_id }).save().await,
+          "could_not_bind_user_to_account"
+        );
+
+        auth_try!(
+          app.auth_method().insert(InsertAuthMethod{ user_id, lookup_key, kind }).save().await,
+          "could_not_insert_auth_method"
+        )
+      }
+    };
+
+    let key_id = hasher::hexdigest(&pubkey.as_bytes());
+
+    let maybe_existing = auth_try!(
+      app.session().find_optional(&key_id).await,
+      "could_not_find_session"
     );
 
-    let auth_method = auth_try!(
-      app.auth_method().insert(InsertAuthMethod{ user_id, lookup_key, kind }).save().await,
-      "could_not_insert_auth_method"
-    );
+    auth_assert!(maybe_existing.is_none(), "session_pubkey_exists");
 
-    Self::create_session(app, &auth_method, pubkey, nonce).await
-  }
-
-  async fn login(app: &App, jwt: &str, req: &Request<'_>, body: Option<&[u8]>) -> Result<Session, ApiAuthError> {
-    Self::validate_recaptcha(req, app).await?;
-    let pubkey = Self::get_login_pubkey(req)?;
-    let nonce = Self::validate_jwt(&jwt, &pubkey, req, &body).await?;
-    let (kind, lookup_key) = Self::validate_auth_data(&app, req).await?;
-
-    let auth_method = auth_try!(
-      app.auth_method().select().kind_eq(&kind).lookup_key_eq(&lookup_key).one().await,
-      "auth_method_never_signed_up"
-    );
-
-    Self::create_session(app, &auth_method, pubkey, nonce).await
+    Ok(auth_try!(
+      app.session().insert(InsertSession{
+        id: key_id,
+        user_id: auth_method.attrs.user_id,
+        auth_method_id: auth_method.attrs.id,
+        pubkey,
+        nonce,
+      }).save().await,
+      "could_not_insert_session"
+    ))
   }
 
   async fn identify(app: &App, jwt: &str, req: &Request<'_>, body: Option<&[u8]>) -> Result<Session, ApiAuthError> {
@@ -153,6 +178,67 @@ impl CurrentSession {
         );
         format!("one_time_token:{}", token.attrs.id)
       },
+      AuthMethodKind::X => {
+        let oauth_data: OauthCodeAndVerifier = auth_try!(
+          serde_json::from_str(&auth_data),
+          "could_not_parse_oauth_data"
+        );
+
+        let verifier = twitter_v2::oauth2::PkceCodeVerifier::new(oauth_data.oauth_verifier);
+        let cb_url = auth_try!( app.settings.x.redirect_uri.parse(), "could_not_parse_cb_url");
+
+        let client = twitter_v2::authorization::Oauth2Client::new(
+          app.settings.x.client_id.clone(),
+          app.settings.x.client_secret.clone(),
+          cb_url
+        );
+
+        let auth_code = twitter_v2::oauth2::AuthorizationCode::new(oauth_data.code);
+        let res = client.request_token(auth_code, verifier).await;
+        let token = auth_try!( res, "could_not_fetch_oauth_token");
+        let twitter = twitter_v2::TwitterApi::new(token);
+
+        let x = auth_try!(
+          twitter.get_users_me().send().await,
+          "could_not_find_twitter_me"
+        );
+        
+        format!("{}", auth_some!(x.payload().data.as_ref(), "no_twitter_payload_data").id)
+      },
+      AuthMethodKind::Instagram => {
+        let result = ureq::post("https://api.instagram.com/oauth/access_token")
+          .send_form(&[
+            ("client_id", &app.settings.instagram.client_id),
+            ("client_secret", &app.settings.instagram.client_secret),
+            ("grant_type", "authorization_code"),
+            ("redirect_uri", &app.settings.instagram.redirect_uri),
+            ("code", auth_data)
+          ]);
+
+        let response = auth_try!(result, "could_not_request_instagram_token");
+        auth_try!(response.into_json::<InstagramOauthToken>(), "instagram_token_was_not_json").user_id.to_string()
+      },
+      AuthMethodKind::Eip712 => {
+        let json = serde_json::json!( {
+          "types": {
+            "EIP712Domain": [
+              { "name": "name", "type": "string" },
+              { "name": "version", "type": "string" },
+              { "name": "chainId", "type": "uint256" }
+            ],
+            "Acceptance": [
+              { "name": "content", "type": "string" }
+            ]
+          },
+          "primaryType": "Acceptance",
+          "domain": { "name": "Asami", "version": "1", "chainId": app.settings.rsk.chain_id.to_string() },
+          "message": { "content": "Login to Asami" }
+        });
+
+        let payload: TypedData = auth_try!(serde_json::from_value(json), "unexpected_invalid_json");
+        let sig = auth_try!(Signature::from_str(auth_data), "invalid_auth_data_signature");
+        auth_try!(sig.recover_typed_data(&payload), "could_not_recover_typed_data_from_sig").to_string()
+      },
       _ => return Err(ApiAuthError::Fail(format!("auth_method_not_supported_yet"))),
     };
 
@@ -171,7 +257,7 @@ impl CurrentSession {
     );
 
     let recaptcha = req.guard::<&rocket::State<rocket_recaptcha_v3::ReCaptcha>>().await
-      .success_or_else(|| ApiAuthError::Unexpected )?;
+      .success_or_else(|| ApiAuthError::Unexpected("recaptcha") )?;
 
     if app.settings.recaptcha_threshold == 0.0 {
       return Ok(());
@@ -188,28 +274,6 @@ impl CurrentSession {
     );
 
     Ok(())
-  }
-
-  pub async fn create_session(app: &App, auth_method: &AuthMethod, pubkey: String, nonce: i64) -> Result<Session, ApiAuthError> {
-    let key_id = hasher::hexdigest(&pubkey.as_bytes());
-
-    let maybe_existing = auth_try!(
-      app.session().find_optional(&key_id).await,
-      "could_not_find_session"
-    );
-
-    auth_assert!(maybe_existing.is_none(), "session_pubkey_exists");
-
-    Ok(auth_try!(
-      app.session().insert(InsertSession{
-        id: key_id,
-        user_id: auth_method.attrs.user_id,
-        auth_method_id: auth_method.attrs.id,
-        pubkey,
-        nonce,
-      }).save().await,
-      "could_not_insert_session"
-    ))
   }
 
   fn get_login_pubkey(req: &Request<'_>) -> Result<String, ApiAuthError> {
@@ -280,7 +344,7 @@ impl<'r, T: DeserializeOwned> FromData<'r> for CurrentSessionAndJson<T> {
 
     let body_bytes = match data.open(limit).into_bytes().await {
       Ok(read) if read.is_complete() => read.into_inner(),
-      _ => return Outcome::Failure((Status::BadRequest, ApiAuthError::Unexpected)),
+      _ => return Outcome::Failure((Status::BadRequest, ApiAuthError::Unexpected("no_body_bytes"))),
     };
     
     match CurrentSession::build(req, Some(&body_bytes)).await {
@@ -290,7 +354,7 @@ impl<'r, T: DeserializeOwned> FromData<'r> for CurrentSessionAndJson<T> {
             session: current,
             json: value
           }),
-          Err(_) => Outcome::Failure((Status::BadRequest, ApiAuthError::Unexpected)),
+          Err(_) => Outcome::Failure((Status::BadRequest, ApiAuthError::Unexpected("invalid_body_json"))),
         }
       },
       Err(e) => Outcome::Failure((Status::Unauthorized, e)),

@@ -53,10 +53,6 @@ contract("Asami Nostr", function (accounts) {
     offer = await asami.nostrGetCampaignOffer(firstOffer);
     assert(offer.collected, "Offer should be collected");
     assert.equal( (await mockDoc.balanceOf(aliceAddress)), rewardAmount, "Alice should have received the money.");
-    console.log(web3.currentProvider);
-    console.log("stopping here");
-    while(true) {
-    }
   });
 });
 

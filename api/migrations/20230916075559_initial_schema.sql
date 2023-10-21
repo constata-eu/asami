@@ -4,20 +4,20 @@ CREATE TYPE site AS ENUM (
   'nostr'
 );
 
-CREATE TYPE collab_status AS ENUM (
-  'unseen',
-  'seen',
-  'reverted'
-);
-
 CREATE TYPE auth_method_kind AS ENUM (
   'x',
-  'google',
-  'facebook',
+  'instagram',
   'nostr',
-  'bitcoin_signed_message',
-  'ethereum_signed_message',
-  'one_time_token'
+  'eip712',
+  'one_time_token',
+  'google'
+);
+
+CREATE TYPE handle_status AS ENUM (
+  'unverified',
+  'verified',
+  'appraised',
+  'active'
 );
 
 CREATE TABLE accounts (
@@ -71,11 +71,19 @@ CREATE TABLE handles (
     account_id INTEGER REFERENCES accounts(id) NOT NULL,
     site site NOT NULL,
     value VARCHAR NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
+    fixed_id VARCHAR,
+    price DECIMAL(10,2),
+    txid VARCHAR,
+    status handle_status NOT NULL DEFAULT 'unverified',
+    verification_message_id VARCHAR,
+    score DECIMAL,
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
 );
-CREATE INDEX idx_collabs_account_id ON handles(account_id);
+CREATE INDEX idx_handles_account_id ON handles(account_id);
+CREATE INDEX idx_handles_site ON handles(site);
+CREATE INDEX idx_handles_status ON handles(status);
+ALTER TABLE handles ADD CONSTRAINT handles_unique  UNIQUE (site, value);
 
 CREATE TABLE handle_topics (
     id SERIAL PRIMARY KEY NOT NULL,
@@ -91,13 +99,11 @@ CREATE TABLE collabs (
     id SERIAL PRIMARY KEY NOT NULL,
     campaign_id INTEGER REFERENCES campaigns(id) NOT NULL,
     handle_id INTEGER REFERENCES handles(id) NOT NULL,
-    status collab_status,
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
 );
 CREATE INDEX idx_collabs_campaign_id ON collabs(campaign_id);
 CREATE INDEX idx_collabs_handle_id ON collabs(handle_id);
-CREATE INDEX idx_collabs_status ON collabs(status);
 
 CREATE TABLE campaign_topics (
     id SERIAL PRIMARY KEY NOT NULL,
@@ -151,3 +157,9 @@ CREATE TABLE one_time_tokens (
     updated_at timestamp DEFAULT now() NOT NULL
 );
 CREATE INDEX idx_one_time_tokens_usable ON one_time_tokens(value, used);
+
+CREATE TABLE indexer_states (
+    id SERIAL PRIMARY KEY NOT NULL,
+    x_handle_verification_checkpoint DECIMAL NOT NULL DEFAULT 0,
+    suggested_price_per_point DECIMAL NOT NULL DEFAULT 0.001
+);

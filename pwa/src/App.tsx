@@ -9,10 +9,10 @@ import {
   useStore,
 } from "react-admin";
 import { Route } from "react-router-dom";
-import { authProvider } from "./auth_provider";
+import { authProvider } from "./lib/auth_provider";
 import Login from "./views/login";
 import asamiTheme from './components/theme';
-import { AsamiLayout, BareLayout  } from './views/layout';
+import { AsamiLayout } from './views/layout';
 
 import CampaignWizard from "./views/advertiser/campaign_wizard";
 import AdvertiserDashboard from "./views/advertiser/dashboard";
@@ -22,6 +22,7 @@ import { Alert, AlertTitle, AppBar, Divider, Toolbar, IconButton, Box, Button, C
 import { Head1 } from './components/theme';
 import logo from './assets/asami.png';
 import rootstock from './assets/rootstock.png';
+import { XLogin, InstagramLogin, Eip712Login } from './views/oauth_redirect';
 
 const GoogleForm = () => {
   return <>
@@ -74,17 +75,21 @@ const GoogleForm = () => {
 
 const Dashboard = () => {
   const [role, setRole] = useStore('user.role', 'advertiser');
-
   return (role == 'advertiser' ? <AdvertiserDashboard /> : <CreatorDashboard />);
 }
 
 export const App = () => <Admin
-    dashboard={GoogleForm}
+    dashboard={Dashboard}
     disableTelemetry={true}
     theme={asamiTheme}
-    layout={BareLayout}
+    layout={AsamiLayout}
+    loginPage={Login}
+    authProvider={authProvider}
   >
     <CustomRoutes>
       <Route path="/advertiser/campaign_wizard" element={<CampaignWizard/>}/>
+      <Route path="/x_login" element={<XLogin/>}/>
+      <Route path="/instagram_login" element={<InstagramLogin/>}/>
+      <Route path="/eip712_login" element={<Eip712Login/>}/>
     </CustomRoutes>
   </Admin>;

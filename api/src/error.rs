@@ -28,9 +28,27 @@ impl From<rocket::figment::Error> for Error {
   }
 }
 
+impl From<ethers::signers::WalletError> for Error {
+  fn from(err: ethers::signers::WalletError) -> Error {
+    Error::Init("Invalid mnemonic for rsk signer wallet".to_string())
+  }
+}
+
 impl From<sqlx::Error> for Error {
   fn from(err: sqlx::Error) -> Error {
     Error::Init(err.to_string())
+  }
+}
+
+impl From<twitter_v2::Error> for Error {
+  fn from(err: twitter_v2::Error) -> Error {
+    Error::Service("twitter_api_v2".to_string(), err.to_string())
+  }
+}
+
+impl From<regex::Error> for Error {
+  fn from(err: regex::Error) -> Error {
+    Error::Precondition(format!("Error in regex {}", err.to_string()))
   }
 }
 

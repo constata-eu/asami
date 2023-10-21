@@ -26,9 +26,27 @@ import Paper from '@mui/material/Paper';
 import { Campaign } from '../../models';
 
 const Dashboard = () => {
-  const [loading, setLoading] = useSafeSetState(true);
-  const [offers, setOffers] = useSafeSetState(true);
+  //const [loading, setLoading] = useSafeSetState(true);
+  //const [offers, setOffers] = useSafeSetState(true);
 
+  return <Container maxWidth="md">
+    <Head1 sx={{my:3}}>Hello Member!</Head1>
+    <Typography my="1em">
+      Check out these projects that need your repost.
+    </Typography>
+
+    <Typography my="1em">
+      Price per X repost.
+    </Typography>
+    <Typography my="1em">
+      Price per Instagram Repost.
+    </Typography>
+    <Typography my="1em">
+      Price per Nostr repost.
+    </Typography>
+  </Container>;
+
+  /*
   useEffect(() => {
     const load = async () => {
       const { asami, signer } = await useContracts();
@@ -83,6 +101,7 @@ const Dashboard = () => {
       </TableContainer>
     </Card>
   </Container>;
+  */
 }
 
 export default Dashboard;

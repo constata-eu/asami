@@ -1,24 +1,29 @@
 use api::{App, AppConfig};
 use jwt_simple::algorithms::*;
 use std::process::Command;
+use crate::support::Truffle;
 
 #[derive(Clone)]
 pub struct TestApp {
-  pub app: App
+  pub app: App,
+  pub truffle: Truffle,
 }
 
 impl TestApp {
   pub async fn init() -> Self {
-    let database_uri = AppConfig::default().expect("config to exist").database_uri;
+    let mut config = AppConfig::default().expect("config to exist");
 
     Command::new("sqlx")
       .current_dir("../api")
-      .env("DATABASE_URL", &database_uri)
+      .env("DATABASE_URL", &config.database_uri)
       .args(&["database", "reset", "-y"])
       .output()
       .expect("SQLX not available.");
 
-    Self{ app: App::default().await.unwrap() }
+    let truffle = Truffle::start(&config.admin_address);
+    config.contract_address = truffle.addresses.asami.clone();
+
+    Self{ truffle, app: App::new("password".to_string(), config).await.unwrap() }
   }
 
   pub fn private_key(&self) -> ES256KeyPair {
