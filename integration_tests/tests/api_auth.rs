@@ -1,19 +1,22 @@
 #[macro_use]
 mod support;
-use ::api::app::asami_contract::AsamiContract;
 use ::api::models::*;
 use graphql_client::GraphQLQuery;
 use support::gql::*;
 use rocket::http::Header;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
-use ethers::prelude::*;
-use ethers::{
-  signers::{LocalWallet, MnemonicBuilder, coins_bip39::English, Signer},
-  prelude::{abigen, Abigen},
-  types::Address,
-  providers::{Http, Provider},
-};
-use rust_decimal::prelude::ToPrimitive;
+
+
+/*
+ Creates account.
+ Participates in campaign.
+ Gets paid.
+ Claims account.
+ Moves money out of account.
+
+ -- Use the API calls instead of models for all interactions.
+*/
+
 
 api_test!{ signs_up (test_app, client)
 
@@ -26,8 +29,7 @@ api_test!{ signs_up (test_app, client)
     test_app.private_key().public_key().to_pem().unwrap()
   );
 
-  // A test token should not work to log in to any account.
-  let created: create_session::ResponseData = client.gql(
+  let _created: create_session::ResponseData = client.gql(
     &CreateSession::build_query(create_session::Variables{}),
     vec![
       Header::new("Auth-Action", "Login"),
@@ -53,54 +55,54 @@ api_test!{ signs_up (test_app, client)
     //score: maybe_some(eq(Decimal::new(3393, 0)))
   }]);
 
+  let submitted = handle.submit().await?;
 
-  let wallet = test_app.app.wallet;
-  let provider = Provider::<Http>::try_from("http://127.0.0.1:8545")?;
-  let client = std::sync::Arc::new(SignerMiddleware::new(provider, wallet.with_chain_id(test_app.app.settings.rsk.chain_id)));
-  let address: Address = test_app.app.settings.contract_address.parse()?;
-  let contract = AsamiContract::new(address, client);
+  assert_that!(&submitted.attrs, structure![ HandleAttrs {
+    status: eq(HandleStatus::Submitted),
+    tx_hash: maybe_some(any_value())
+  }]);
 
-  let contract_handle = ::api::asami_contract::Handle {
-    value: handle.attrs.value.clone().into(),
-    fixed_id: handle.attrs.fixed_id.clone().unwrap().into(),
-    price: handle.attrs.price.clone().unwrap().to_u64().unwrap().into(),
-    score: handle.attrs.score.clone().unwrap().to_u64().unwrap().into(),
-    topics: handle.topic_ids().await.unwrap().into_iter().map(|i| i.into() ).collect(),
-    verification_message_id: handle.attrs.verification_message_id.unwrap().into(),
-  };
+  tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
 
-  //AsamiContract::h
-  /*
-  let contract_handle = serde_json::json![{
-    "value": handle.attrs.value,
-    "fixedId": handle.attrs.fixed_id,
-    "price": handle.attrs.price.and_then(|x| x.to_u64() ).unwrap_or(0),
-    "score": handle.attrs.score.and_then(|x| x.to_u64() ).unwrap_or(0),
-    "topics": handle.topic_ids().await.unwrap(),
-    "verificationMessageId": handle.attrs.verification_message_id.unwrap_or("".to_string()),
-  }];
-  */
+  test_app.app.sync_on_chain_events().await?;
+
+  assert_that!(&submitted.reloaded().await?.attrs, structure![ HandleAttrs {
+    status: eq(HandleStatus::Active),
+  }]);
+
+  //"https://x.com/asami_club/status/1716421161867710954?s=20",
+  let campaign_req = account.create_campaign_request(
+    Site::X,
+    "1716421161867710954",
+    Decimal::new(10,0),
+  ).await?
+  .pay().await?
+  .submit().await?;
+
+  test_app.app.sync_on_chain_events().await.unwrap();
+
+  let campaign = test_app.app.campaign().select().one().await.unwrap();
+
+  assert_that!(&campaign.attrs, structure![ CampaignAttrs {
+    budget: eq(Decimal::new(10,0))
+  }]);
+
+  test_app.app.campaign().sync_x_collabs().await.unwrap();
+
+  assert!(test_app.app.collab_request().select().count().await? == 1);
+
+  todo!("If we're here then we have an active handle properly synced on-chain.");
+
+  // Sign up an advertiser too.
+  // Make the advertiser create a campaign, and sync it on-chain
   
-  //dbg!(contract.get_topics().call().await);
-  let response = contract.add_x_handle(handle.attrs.account_id.into(), contract_handle).call().await;
-  dbg!(&response);
-
-  /*
-    // craft the transaction
-    let tx = TransactionRequest::new().to(wallet2.address()).value(10000);
-
-    // send it!
-    let pending_tx = client.send_transaction(tx, None).await?;
-
-    // get the mined tx
-    let receipt = pending_tx.await?.ok_or_else(|| eyre::format_err!("tx dropped from mempool"))?;
-    let tx = client.get_transaction(receipt.transaction_hash).await?;
-
-
-
-  */
-
-  todo!("die here");
+  // https://x.com/asami_club/status/1716421161867710954?s=20
+  //
+  // Monitor the twitter URL retweets to know if they have retweeted it.
+  //
+  // Validate collab and Sync the collab on-chain:
+  //   -- Check the sender is a registered account.
+  //   -- Check 
 
   /*
 

@@ -10,6 +10,7 @@ use rocket_cors::{AllowedHeaders, AllowedOrigins, Origins};
 use rocket_recaptcha_v3::ReCaptcha;
 
 pub mod app;
+pub mod on_chain;
 pub mod error;
 pub mod api;
 pub mod models;

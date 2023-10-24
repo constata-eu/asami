@@ -7,16 +7,50 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 //import "./AsamiNostr.sol";
 
 contract Asami is Ownable {
+  IERC20 internal rewardToken;
+  
   address admin;
 
-  mapping(uint256 => Account) public accounts;
   string[] public topics;
 
+  mapping(uint256 => Account) public accounts;
+  uint256[] public accountIds;
+  mapping(address => Account) public accountByAddress;
+
+  PendingPriceUpdate[] pendingPriceUpdates;
+
+  struct PendingPriceUpdate {
+    uint256 accountId;
+    uint256 price;
+  }
+
+  PendingAppraisalUpdate[] pendingAppraisalUpdates;
+
+  struct PendingAppraisalUpdate {
+    uint256 accountId;
+    uint256 score;
+    uint256[] addTopics;
+    uint256[] removeTopics;
+  }
+
+  event XHandleAdded(uint256 accountId, Handle handle);
+  event XCampaignAdded(uint256 accountId, uint256 campaignId, Campaign campaign);
+  event XCollabAdded(uint256 accountId, Collab collab);
+
   struct Account {
-      uint256 id;
+      bool active;
+      uint256 docBalance;
+      uint256 asamiTokens;
+      address addr;
       Handle x;
       Handle nostr;
       Handle instagram;
+      Campaign[] xCampaigns;
+      Campaign[] nostrCampaigns;
+      Campaign[] instagramCampaigns;
+      Collab[] xCollabs;
+      Collab[] nostrCollabs;
+      Collab[] instagramCollabs;
   }
 
   struct Handle {
@@ -26,6 +60,22 @@ contract Asami is Ownable {
     uint256 score;
     uint256[] topics;
     string verificationMessageId;
+  }
+
+  struct Campaign {
+    uint256 budget;
+    uint256 remaining;
+    string contentId;
+  }
+
+  struct Collab {
+    uint256 accountId;
+    uint256 campaignId;
+    uint256 reward;
+  }
+
+  constructor(address _dollarOnChainAddress) {
+      rewardToken = IERC20(_dollarOnChainAddress);
   }
 
   function getTopics() external view returns (string[] memory) {
@@ -42,18 +92,63 @@ contract Asami is Ownable {
   }
 
   function addXHandle (
-    uint256 _account_id,
+    uint256 _accountId,
     Handle calldata _handle
   ) external {
     require(msg.sender == admin || msg.sender == owner());
-
-    Account storage account = accounts[_account_id];
+    Account storage account = accounts[_accountId];
+    account.active = true;
     account.x = _handle;
+    emit XHandleAdded(_accountId, _handle);
+  }
+
+  function addRequestedXCampaign(
+    uint256 _accountId,
+    Campaign calldata _campaign
+  ) external {
+    require(msg.sender == admin || msg.sender == owner());
+
+    require(_campaign.budget > 0);
+    require(bytes(_campaign.contentId).length > 0);
+
+    Account storage account = accounts[_accountId];
+    require(account.active && account.addr == address(0));
+    
+    require(rewardToken.transferFrom(msg.sender, address(this), _campaign.budget));
+
+    uint256 campaignId = account.xCampaigns.length;
+    account.xCampaigns.push(_campaign);
+    emit XCampaignAdded(_accountId, campaignId, _campaign);
+  }
+
+  /* A self-managed account can add its own campaign too function addXCampaign() { } */
+
+  function addXCollab(
+    uint256 _accountId,
+    Collab calldata _collab
+  ) external {
+    require(msg.sender == admin || msg.sender == owner());
+
+    Account storage member = accounts[_accountId];
+    require(member.active);
+
+    Account storage advertiser = accounts[_collab.accountId];
+    require(advertiser.active);
+
+    Campaign storage campaign = advertiser.xCampaigns[_collab.campaignId];
+    require(bytes(campaign.contentId).length > 0);
+
+    require(campaign.remaining > member.x.price);
+
+    member.docBalance += member.x.price;
+    campaign.remaining -= member.x.price;
+
+    emit XCollabAdded(_accountId, _collab);
   }
 
   /*
   function addHandleTopicsForX(
-    uint256 calldata _account_id,
+    uint256 calldata _accountId,
     Handle calldata _handle
   ) external onlyOwner {
   }

@@ -20,8 +20,9 @@ impl TestApp {
       .output()
       .expect("SQLX not available.");
 
-    let truffle = Truffle::start(&config.admin_address);
-    config.contract_address = truffle.addresses.asami.clone();
+    let truffle = Truffle::start(&config.rsk.admin_address);
+    config.rsk.contract_address = truffle.addresses.asami.clone();
+    config.rsk.doc_contract_address = truffle.addresses.doc.clone();
 
     Self{ truffle, app: App::new("password".to_string(), config).await.unwrap() }
   }

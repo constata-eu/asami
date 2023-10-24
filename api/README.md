@@ -206,3 +206,11 @@
   - Should the smart contract include a way to change key ownership and still link to the same reputation?
     - Or is the asami smart contract just about being an escrow in a collaboration?
 
+
+### ToDo:
+- API requests have no business logic validations.
+- Converting u256 to database values sucks.
+
+- on-chain is a low level abstraction for calling on-chain methods. Thin wrapper of a client.
+- Syncer knows what events to fetch and how to dispatch them.
+- Each model knows how to convert back and forth from on-chain data.

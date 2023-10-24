@@ -1,15 +1,13 @@
-"The input for creating a new Campaign."
-input CreateCampaignInput {
-  content: String!
-  budget: Float!
-  accountId: Int!
-  site: Site!
-}
-
 enum Site {
   X
   INSTAGRAM
   NOSTR
+}
+
+input CampaignRequestFilter {
+  ids: [Int!]
+  idEq: Int
+  contentIdLike: String
 }
 
 "A campaign started by an advertiser"
@@ -23,7 +21,7 @@ type Campaign {
   "The site where this campaign is to be run on."
   site: Site!
   "The content to share."
-  content: String!
+  contentId: String!
   "The date in which this campaign was created."
   createdAt: DateTime!
   "The last time this campaign received an update."
@@ -33,12 +31,30 @@ type Campaign {
 input CampaignFilter {
   ids: [Int!]
   idEq: Int
-  contentLike: String
+  contentIdLike: String
 }
 
 type Mutation {
   createSession: Session!
-  createCampaign(input: CreateCampaignInput!): Campaign!
+  createCampaignRequest(input: CreateCampaignRequestInput!): CampaignRequest!
+}
+
+"A campaign started by an advertiser"
+type CampaignRequest {
+  "Unique numeric identifier of this werify point"
+  id: Int!
+  "The id of the account that created this."
+  accountId: Int!
+  "The total budget for this campaign to be split across users."
+  budget: Float!
+  "The site where this campaign is to be run on."
+  site: Site!
+  "The content to share."
+  contentId: String!
+  "The date in which this campaign was created."
+  createdAt: DateTime!
+  "The last time this campaign received an update."
+  updatedAt: DateTime
 }
 
 type ListMetadata {
@@ -47,9 +63,20 @@ type ListMetadata {
 
 type Query {
   apiVersion: String!
+  CampaignRequest(id: Int!): CampaignRequest!
+  allCampaignRequests(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignRequestFilter): [CampaignRequest!]!
+  _allCampaignRequestsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignRequestFilter): ListMetadata!
   Campaign(id: Int!): Campaign!
   allCampaigns(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignFilter): [Campaign!]!
   _allCampaignsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignFilter): ListMetadata!
+}
+
+"The input for creating a new CampaignRequest."
+input CreateCampaignRequestInput {
+  contentId: String!
+  budget: Float!
+  accountId: Int!
+  site: Site!
 }
 
 "A campaign started by an advertiser"

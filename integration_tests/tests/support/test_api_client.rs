@@ -191,7 +191,8 @@ pub mod gql {
 
   make_graphql_queries![
     CreateSession,
-    CreateCampaign,
+    CreateCampaignRequest,
+    CampaignRequest,
     Campaign,
     AllCampaigns,
     AllCampaignsMeta,

@@ -22,6 +22,26 @@ pub enum Error {
   Validation(String, String),
 }
 
+impl<A: ethers::middleware::Middleware> From<ethers::contract::ContractError<A>> for Error {
+  fn from(err: ethers::contract::ContractError<A>) -> Error {
+    let desc = err.decode_revert::<String>().unwrap_or_else(|| err.to_string());
+    Error::Service("rsk_contract".into(), desc)
+  }
+}
+
+impl<M: ethers::providers::Middleware, S: ethers::signers::Signer> From<ethers::middleware::signer::SignerMiddlewareError<M,S>> for Error {
+  fn from(err: ethers::middleware::signer::SignerMiddlewareError<M,S>) -> Error {
+    Error::Service("rsk_api".into(), err.to_string())
+  }
+}
+
+impl From<ethers::providers::ProviderError> for Error {
+  fn from(err: ethers::providers::ProviderError) -> Error {
+    Error::Service("rsk_provider".into(), err.to_string())
+  }
+}
+
+
 impl From<rocket::figment::Error> for Error {
   fn from(err: rocket::figment::Error) -> Error {
     Error::Init(err.to_string())
@@ -29,7 +49,7 @@ impl From<rocket::figment::Error> for Error {
 }
 
 impl From<ethers::signers::WalletError> for Error {
-  fn from(err: ethers::signers::WalletError) -> Error {
+  fn from(_err: ethers::signers::WalletError) -> Error {
     Error::Init("Invalid mnemonic for rsk signer wallet".to_string())
   }
 }
@@ -42,6 +62,7 @@ impl From<sqlx::Error> for Error {
 
 impl From<twitter_v2::Error> for Error {
   fn from(err: twitter_v2::Error) -> Error {
+    dbg!(&err);
     Error::Service("twitter_api_v2".to_string(), err.to_string())
   }
 }

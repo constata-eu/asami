@@ -19,6 +19,8 @@ mod current_session;
 use current_session::*;
 mod campaign;
 use campaign::*;
+mod campaign_request;
+use campaign_request::*;
 mod session;
 use session::*;
 
@@ -237,6 +239,7 @@ macro_rules! make_graphql_query {
 make_graphql_query!{
   "1.0";
   showables {
+    [CampaignRequest, allCampaignRequests, allCampaignRequestsMeta, "_allCampaignRequestsMeta", CampaignRequestFilter, i32],
     [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, i32],
   }
 }
@@ -249,7 +252,7 @@ impl Mutation {
     Ok(Session::db_to_graphql(context.current_session.0.clone()).await?)
   }
 
-  pub async fn create_campaign(context: &Context, input: CreateCampaignInput) -> FieldResult<Campaign> {
+  pub async fn create_campaign_request(context: &Context, input: CreateCampaignRequestInput) -> FieldResult<CampaignRequest> {
     input.process(context).await
   }
 }
