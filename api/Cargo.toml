@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 rocket = { version = "0.5.0-rc.3", features = ["json"] }
 rocket_cors = { git = "https://github.com/lawliet89/rocket_cors", branch = "master" }
-juniper = { git = "https://github.com/graphql-rust/juniper", branch = "master", features = ["chrono"] }
+juniper = { git = "https://github.com/graphql-rust/juniper", branch = "master", features = ["chrono", "rust_decimal"] }
 juniper_rocket = { git = "https://github.com/graphql-rust/juniper", branch = "master" }
 async-trait = "^0.1.52"
 rocket-recaptcha-v3 = "*"

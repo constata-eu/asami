@@ -1,5 +1,4 @@
 use super::{*, models::{self, *, Decimal}};
-use rust_decimal::prelude::FromPrimitive;
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -8,9 +7,9 @@ pub struct CampaignRequest {
   #[graphql(description = "Unique numeric identifier of this werify point")]
   id: i32,
   #[graphql(description = "The id of the account that created this.")]
-  account_id: i32,
+  account_id: Decimal,
   #[graphql(description = "The total budget for this campaign to be split across users.")]
-  budget: f64,
+  budget: Decimal,
   #[graphql(description = "The site where this campaign is to be run on.")]
   site: Site,
   #[graphql(description = "The content to share.")]
@@ -65,7 +64,7 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
     Ok(CampaignRequest {
       id: d.attrs.id,
       account_id: d.attrs.account_id,
-      budget: d.attrs.budget.to_f64().unwrap_or(0.0),
+      budget: d.attrs.budget,
       site: d.attrs.site,
       content_id: d.attrs.content_id,
       created_at: d.attrs.created_at,
@@ -79,9 +78,11 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
 #[serde(rename_all = "camelCase")]
 pub struct CreateCampaignRequestInput {
   pub content_id: String,
-  pub budget: f64,
-  pub account_id: i32,
+  pub budget: Decimal,
+  pub account_id: Decimal,
   pub site: Site,
+  pub price_score_ratio: Decimal,
+  pub valid_until: UtcDateTime
 }
 
 impl CreateCampaignRequestInput {
@@ -89,7 +90,13 @@ impl CreateCampaignRequestInput {
     context.require_account_user(self.account_id)?;
     let account = context.app.account().find(self.account_id).await?;
 
-    let req = account.create_campaign_request(self.site, &self.content_id, Decimal::from_f64(self.budget).unwrap_or(Decimal::new(1,0))).await?;
+    let req = account.create_campaign_request(
+      self.site,
+      &self.content_id,
+      self.budget,
+      self.price_score_ratio,
+      self.valid_until,
+    ).await?;
 
     Ok(CampaignRequest::db_to_graphql(req).await?)
   }

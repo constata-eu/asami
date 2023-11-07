@@ -1,4 +1,3 @@
-use super::models;
 use super::*;
 
 use ethers::{
@@ -6,19 +5,23 @@ use ethers::{
   prelude::{abigen, SignerMiddleware, LogMeta},
   types::Address,
   providers::{Http, Provider},
-  abi::AbiEncode,
 };
 use std::sync::Arc;
 
-use rust_decimal::prelude::ToPrimitive;
+abigen!(
+  AsamiContract,
+  "../contract/build/contracts/Asami.json",
+  derives(serde::Deserialize, serde::Serialize),
+);
 
-abigen!(AsamiContract, "../contract/build/contracts/Asami.json");
-
-abigen!( IERC20,
+abigen!(
+  IERC20,
   r#"[
     function approve(address spender, uint256 value) public virtual returns (bool)
-  ]"#
+  ]"#,
+  derives(serde::Deserialize, serde::Serialize),
 );
+//event Approval(address indexed _owner, address indexed _spender, uint256 _value)
 
 #[derive(Clone)]
 pub struct OnChain {
@@ -58,46 +61,7 @@ impl OnChain {
     })
   }
 
-  pub async fn send_add_handle(&self, handle: &models::Handle) -> AsamiResult<String> {
-    let contract_handle = Handle {
-      value: handle.attrs.value.clone().into(),
-      fixed_id: handle.attrs.fixed_id.clone().unwrap().into(),
-      price: handle.attrs.price.clone().unwrap().to_u64().unwrap().into(),
-      score: handle.attrs.score.clone().unwrap().to_u64().unwrap().into(),
-      topics: handle.topic_ids().await.unwrap().into_iter().map(|i| i.into() ).collect(),
-      verification_message_id: handle.attrs.verification_message_id.as_ref().unwrap().into(),
-    };
-    
-    Ok(self.contract
-      .add_x_handle(handle.attrs.account_id.into(), contract_handle)
-      .send().await?
-      .tx_hash()
-      .encode_hex()
-    )
-  }
-
-  pub async fn send_campaign_request(&self, req: &models::CampaignRequest) -> AsamiResult<String> {
-    let amount = req.attrs.budget.to_u64().unwrap().into();
-    let campaign = Campaign {
-      budget: amount,
-      remaining: amount,
-      content_id: req.attrs.content_id.clone()
-    };
-
-    self.doc_contract.approve(self.contract.address(), amount).send()
-      .await?
-      .confirmations(1)
-      .await?;
-
-    Ok(self.contract
-      .add_requested_x_campaign(req.attrs.account_id.into(), campaign)
-      .send().await?
-      .tx_hash()
-      .encode_hex()
-    )
-  }
-
-  pub async fn events(&self, from_block: i64, to_block: i64) -> AsamiResult<Vec<(AsamiContractEvents, LogMeta)>> {
-    Ok(self.contract.events().from_block(from_block).to_block(to_block).query_with_meta().await?)
+  pub async fn events(&self, from_block: &Decimal, to_block: &Decimal) -> AsamiResult<Vec<(AsamiContractEvents, LogMeta)>> {
+    Ok(self.contract.events().from_block(from_block.to_i64().unwrap()).to_block(to_block.to_i64().unwrap()).query_with_meta().await?)
   }
 }

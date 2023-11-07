@@ -2494,6 +2494,7 @@ dependencies = [
  "graphql-parser",
  "indexmap 2.0.0",
  "juniper_codegen",
+ "rust_decimal",
  "serde",
  "smartstring",
  "static_assertions",

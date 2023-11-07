@@ -109,7 +109,14 @@ impl CurrentSession {
       Some(method) => method,
       None => {
         let account_id = auth_try!(
-          app.account().insert(InsertAccount{name:"account".to_string()}).save().await,
+          app.account().insert(InsertAccount{
+            name: Some("account".to_string()),
+            addr: None,
+            unclaimed_asami_tokens: Decimal::ZERO,
+            unclaimed_doc_rewards: Decimal::ZERO,
+            nostr_self_managed: false,
+            nostr_abuse_proven: false
+          }).save().await,
           "could_not_create_account"
         ).attrs.id;
         let user_id = auth_try!(

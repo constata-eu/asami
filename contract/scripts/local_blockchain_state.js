@@ -11,7 +11,7 @@ module.exports = async function(callback) {
   const adminAddress = process.env.ADMIN_ADDRESS;
 
   for (let s of topics) { await asami.addTopic(s); }
-  await asami.setAdmin(adminAddress);
+  await asami.setAdmin(adminAddress, adminAddress);
 
   for (let a of [adminAddress, browserAddress]) {
     await doc.transfer(a, web3.utils.toWei("50", "ether"), { from: accounts[0] });
@@ -22,7 +22,6 @@ module.exports = async function(callback) {
 }
 
 const topics = [
-  "Anything",
   "Fitness",
   "Functional Training",
   "Nutrition and diets",

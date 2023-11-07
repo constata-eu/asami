@@ -8,6 +8,7 @@ use rocket::{
 };
 use rocket_cors::{AllowedHeaders, AllowedOrigins, Origins};
 use rocket_recaptcha_v3::ReCaptcha;
+pub use rust_decimal::prelude::{Decimal, ToPrimitive, FromPrimitive};
 
 pub mod app;
 pub mod on_chain;

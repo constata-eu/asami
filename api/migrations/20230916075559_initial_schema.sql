@@ -13,25 +13,26 @@ CREATE TYPE auth_method_kind AS ENUM (
   'google'
 );
 
-CREATE TYPE handle_status AS ENUM (
+CREATE TYPE handle_request_status AS ENUM (
   'unverified',
   'verified',
   'appraised',
   'submitted',
-  'active'
+  'done'
 );
 
-CREATE TYPE account_status AS ENUM (
-  'managed',
-  'claiming',
-  'claimed'
+CREATE TYPE handle_update_request_status AS ENUM (
+  'received',
+  'submitted',
+  'done'
 );
 
 CREATE TYPE campaign_request_status AS ENUM (
   'received',
   'paid',
+  'approved',
   'submitted',
-  'active'
+  'done'
 );
 
 CREATE TYPE collab_request_status AS ENUM (
@@ -40,13 +41,37 @@ CREATE TYPE collab_request_status AS ENUM (
   'active'
 );
 
+CREATE TABLE synced_events (
+  id SERIAL PRIMARY KEY NOT NULL,
+  address VARCHAR NOT NULL,
+  block_number DECIMAL NOT NULL,
+  block_hash VARCHAR NOT NULL,
+  tx_hash VARCHAR NOT NULL,
+  tx_index DECIMAL NOT NULL,
+  log_index DECIMAL NOT NULL,
+  data TEXT NOT NULL,
+  created_at timestamp DEFAULT now() NOT NULL
+);
+CREATE INDEX idx_synced_events_block_number ON synced_events(block_number);
+CREATE INDEX idx_synced_events_log_index ON synced_events(log_index);
+CREATE INDEX idx_synced_events_block_and_log_index ON synced_events(block_number, log_index);
+CREATE INDEX idx_synced_events_block_hash ON synced_events(block_hash);
+ALTER TABLE synced_events ADD CONSTRAINT synced_events_unique UNIQUE (block_number, log_index);
+
+CREATE SEQUENCE next_account_seq;
 CREATE TABLE accounts (
-    id SERIAL PRIMARY KEY NOT NULL,
-    status account_status NOT NULL DEFAULT 'managed',
-    name VARCHAR NOT NULL,
+    id DECIMAL PRIMARY KEY UNIQUE NOT NULL DEFAULT nextval('next_account_seq')::DECIMAL,
+    name VARCHAR,
+    addr VARCHAR,
+    unclaimed_asami_tokens DECIMAL NOT NULL DEFAULT 0,
+    unclaimed_doc_rewards DECIMAL NOT NULL DEFAULT 0,
+    nostr_self_managed BOOLEAN NOT NULL DEFAULT FALSE,
+    nostr_abuse_proven BOOLEAN NOT NULL DEFAULT FALSE,
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
 );
+
+CREATE INDEX idx_accounts_addr ON accounts(addr);
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY NOT NULL,
@@ -55,10 +80,9 @@ CREATE TABLE users (
     updated_at timestamp
 );
 
-
 CREATE TABLE deletions (
     id SERIAL PRIMARY KEY NOT NULL,
-    account_id INTEGER REFERENCES accounts(id),
+    account_id DECIMAL REFERENCES accounts(id),
     user_id INTEGER REFERENCES users(id),
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
@@ -67,87 +91,141 @@ CREATE INDEX idx_deletions_users_account_id ON deletions(account_id);
 CREATE INDEX idx_deletions_users_user_id ON deletions(user_id);
 
 CREATE TABLE topics (
-    id SERIAL PRIMARY KEY NOT NULL,
+    id DECIMAL UNIQUE NOT NULL,
     name VARCHAR NOT NULL,
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
 );
 
-CREATE TABLE handles (
+CREATE TABLE handle_requests (
     id SERIAL PRIMARY KEY NOT NULL,
     account_id INTEGER REFERENCES accounts(id) NOT NULL,
     site site NOT NULL,
-    value VARCHAR NOT NULL,
-    fixed_id VARCHAR,
+    username VARCHAR NOT NULL,
+    user_id VARCHAR,
     price DECIMAL,
-    tx_hash VARCHAR,
-    status handle_status NOT NULL DEFAULT 'unverified',
-    verification_message_id VARCHAR,
     score DECIMAL,
+    nostr_affine_x DECIMAL,
+    nostr_affine_y DECIMAL,
+    status handle_request_status NOT NULL DEFAULT 'unverified',
+    tx_hash VARCHAR,
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
 );
-CREATE INDEX idx_handles_account_id ON handles(account_id);
-CREATE INDEX idx_handles_site ON handles(site);
-CREATE INDEX idx_handles_status ON handles(status);
-ALTER TABLE handles ADD CONSTRAINT handles_unique  UNIQUE (site, value);
+CREATE INDEX idx_handle_requests_account_id ON handle_requests(account_id);
+CREATE INDEX idx_handle_requests_site ON handle_requests(site);
+CREATE INDEX idx_handle_requests_status ON handle_requests(status);
+CREATE INDEX idx_handle_requests_username ON handle_requests(username);
+CREATE INDEX idx_handle_requests_user_id ON handle_requests(user_id);
 
-CREATE TABLE handle_topics (
+CREATE TABLE handle_request_topics (
     id SERIAL PRIMARY KEY NOT NULL,
-    handle_id INTEGER REFERENCES handles(id) NOT NULL,
-    topic_id INTEGER REFERENCES topics(id) NOT NULL,
+    handle_request_id INTEGER REFERENCES handle_requests(id) NOT NULL,
+    topic_id DECIMAL REFERENCES topics(id) NOT NULL,
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
+);
+CREATE INDEX idx_handle_request_topics_handle_id ON handle_request_topics(handle_request_id);
+CREATE INDEX idx_handle_request_topics_topic_id ON handle_request_topics(topic_id);
+
+CREATE TABLE handles (
+  id DECIMAL UNIQUE NOT NULL,
+  account_id INTEGER REFERENCES accounts(id) NOT NULL,
+  site site NOT NULL,
+  username VARCHAR,
+  user_id VARCHAR,
+  price DECIMAL NOT NULL,
+  score DECIMAL NOT NULL,
+  nostr_affine_x DECIMAL NOT NULL,
+  nostr_affine_y DECIMAL NOT NULL,
+  created_at timestamp DEFAULT now() NOT NULL,
+  updated_at timestamp
+);
+CREATE INDEX idx_handles_account_id ON handles(account_id);
+CREATE INDEX idx_handles_site ON handles(site);
+CREATE INDEX idx_handles_username ON handles(username);
+CREATE INDEX idx_handles_user_id ON handles(user_id);
+
+CREATE TABLE handle_topics (
+  id SERIAL PRIMARY KEY NOT NULL,
+  handle_id DECIMAL REFERENCES handles(id) NOT NULL,
+  topic_id DECIMAL REFERENCES topics(id) NOT NULL,
+  created_at timestamp DEFAULT now() NOT NULL,
+  updated_at timestamp
 );
 CREATE INDEX idx_handle_topics_handle_id ON handle_topics(handle_id);
 CREATE INDEX idx_handle_topics_topic_id ON handle_topics(topic_id);
 
+CREATE TABLE handle_update_requests (
+  id SERIAL PRIMARY KEY NOT NULL,
+  handle_id DECIMAL REFERENCES handles(id) NOT NULL,
+  username VARCHAR NOT NULL,
+  price DECIMAL NOT NULL,
+  score DECIMAL NOT NULL,
+  status handle_update_request_status NOT NULL DEFAULT 'received',
+  tx_hash VARCHAR,
+  created_at timestamp DEFAULT now() NOT NULL,
+  updated_at timestamp
+);
+CREATE INDEX idx_handle_update_requests_handle_id ON handle_update_requests(handle_id);
+CREATE INDEX idx_handle_upate_requests_status ON handle_update_requests(status);
+
+CREATE TABLE handle_update_request_topics (
+  id SERIAL PRIMARY KEY NOT NULL,
+  handle_update_request_id INTEGER REFERENCES handle_update_requests(id) NOT NULL,
+  topic_id DECIMAL REFERENCES topics(id) NOT NULL,
+  created_at timestamp DEFAULT now() NOT NULL,
+  updated_at timestamp
+);
+CREATE INDEX idx_handle_update_request_topics_handle_id ON handle_update_request_topics(handle_update_request_id);
+CREATE INDEX idx_handle_update_request_topics_topic_id ON handle_update_request_topics(topic_id);
+
 CREATE TABLE campaigns (
-    id SERIAL PRIMARY KEY NOT NULL,
-    on_chain_id DECIMAL NOT NULL,
-    account_id INTEGER REFERENCES accounts(id) NOT NULL,
-    site site NOT NULL,
-    budget DECIMAL NOT NULL,
-    remaining DECIMAL NOT NULL,
-    content_id VARCHAR NOT NULL,
-    created_at timestamp DEFAULT now() NOT NULL,
-    updated_at timestamp,
-    tx_hash VARCHAR NOT NULL,
-    block_number DECIMAL NOT NULL,
-    log_index DECIMAL NOT NULL,
-    finished BOOLEAN NOT NULL DEFAULT FALSE
+  id DECIMAL UNIQUE NOT NULL,
+  account_id DECIMAL REFERENCES accounts(id) NOT NULL,
+  site site NOT NULL,
+  budget DECIMAL NOT NULL,
+  remaining DECIMAL NOT NULL,
+  content_id VARCHAR NOT NULL,
+  price_score_ratio DECIMAL NOT NULL,
+  valid_until timestamp NOT NULL,
+  finished BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at timestamp DEFAULT now() NOT NULL,
+  updated_at timestamp
 );
 CREATE INDEX idx_campaigns_account_id ON campaigns(account_id);
 CREATE INDEX idx_campaigns_site ON campaigns(site);
 CREATE INDEX idx_campaigns_finished ON campaigns(finished);
-ALTER TABLE campaigns ADD CONSTRAINT campaigns_unique UNIQUE (block_number, log_index);
 
 CREATE TABLE collab_requests (
-    id SERIAL PRIMARY KEY NOT NULL,
-    campaign_id INTEGER REFERENCES campaigns(id) NOT NULL,
-    handle_id INTEGER REFERENCES handles(id) NOT NULL,
-    status collab_request_status NOT NULL DEFAULT 'received',
-    created_at timestamp DEFAULT now() NOT NULL,
-    updated_at timestamp
+  id SERIAL PRIMARY KEY NOT NULL,
+  campaign_id DECIMAL REFERENCES campaigns(id) NOT NULL,
+  handle_id DECIMAL REFERENCES handles(id) NOT NULL,
+  status collab_request_status NOT NULL DEFAULT 'received',
+  tx_hash VARCHAR,
+  created_at timestamp DEFAULT now() NOT NULL,
+  updated_at timestamp
 );
 CREATE INDEX idx_collab_requests_campaign_id ON collab_requests(campaign_id);
+CREATE INDEX idx_collab_requests_tx_hash ON collab_requests(tx_hash);
 CREATE INDEX idx_collab_requests_handle_id ON collab_requests(handle_id);
 
 CREATE TABLE collabs (
-    id SERIAL PRIMARY KEY NOT NULL,
-    campaign_id INTEGER REFERENCES campaigns(id) NOT NULL,
-    handle_id INTEGER REFERENCES handles(id) NOT NULL,
-    reward DECIMAL NOT NULL,
-    created_at timestamp DEFAULT now() NOT NULL,
-    updated_at timestamp
+  id DECIMAL UNIQUE NOT NULL,
+  handle_id DECIMAL REFERENCES handles(id) NOT NULL,
+  campaign_id DECIMAL REFERENCES campaigns(id) NOT NULL,
+  gross DECIMAL NOT NULL,
+  fee DECIMAL NOT NULL,
+  proof VARCHAR,
+  created_at DECIMAL NOT NULL
 );
 CREATE INDEX idx_collabs_campaign_id ON collabs(campaign_id);
 CREATE INDEX idx_collabs_handle_id ON collabs(handle_id);
 
 CREATE TABLE campaign_topics (
     id SERIAL PRIMARY KEY NOT NULL,
-    campaign_id INTEGER REFERENCES campaigns(id) NOT NULL,
-    topic_id INTEGER REFERENCES topics(id) NOT NULL,
+    campaign_id DECIMAL REFERENCES campaigns(id) NOT NULL,
+    topic_id DECIMAL REFERENCES topics(id) NOT NULL,
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
 );
@@ -180,7 +258,7 @@ CREATE INDEX idx_sessions_user_id ON sessions(user_id);
 
 CREATE TABLE account_users (
     id SERIAL PRIMARY KEY NOT NULL,
-    account_id INTEGER REFERENCES accounts(id),
+    account_id DECIMAL REFERENCES accounts(id),
     user_id INTEGER REFERENCES users(id),
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
@@ -199,21 +277,34 @@ CREATE INDEX idx_one_time_tokens_usable ON one_time_tokens(value, used);
 
 CREATE TABLE indexer_states (
     id SERIAL PRIMARY KEY NOT NULL,
-    x_handle_verification_checkpoint INT8 NOT NULL DEFAULT 0,
+    x_handle_verification_checkpoint DECIMAL NOT NULL DEFAULT 0,
     suggested_price_per_point DECIMAL NOT NULL DEFAULT 0.001,
-    last_synced_block INT8 NOT NULL DEFAULT 0
+    last_synced_block DECIMAL NOT NULL DEFAULT 0
 );
 
 CREATE TABLE campaign_requests (
     id SERIAL PRIMARY KEY NOT NULL,
-    account_id INTEGER REFERENCES accounts(id) NOT NULL,
-    budget DECIMAL(10,2) NOT NULL,
+    account_id DECIMAL REFERENCES accounts(id) NOT NULL,
+    budget DECIMAL NOT NULL,
     site site NOT NULL,
     content_id VARCHAR NOT NULL,
+    price_score_ratio DECIMAL NOT NULL,
+    valid_until timestamp NOT NULL,
     status campaign_request_status NOT NULL DEFAULT 'received',
-    tx_hash VARCHAR,
+    approval_tx_hash VARCHAR,
+    submission_tx_hash VARCHAR,
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
 );
 CREATE INDEX idx_campaign_requestcs_account_id ON campaign_requests(account_id);
 CREATE INDEX idx_campaign_requests_site ON campaign_requests(site);
+
+CREATE TABLE campaign_request_topics (
+    id SERIAL PRIMARY KEY NOT NULL,
+    campaign_request_id INTEGER REFERENCES campaign_requests(id) NOT NULL,
+    topic_id DECIMAL REFERENCES topics(id) NOT NULL,
+    created_at timestamp DEFAULT now() NOT NULL,
+    updated_at timestamp
+);
+CREATE INDEX idx_campaign_request_topics_campaign_id ON campaign_request_topics(campaign_request_id);
+CREATE INDEX idx_campaign_request_topics_topic_id ON campaign_request_topics(topic_id);

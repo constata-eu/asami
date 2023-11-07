@@ -20,6 +20,8 @@ pub enum Error {
   Service(String, String),
   #[error("Invalid input on {0}: {1}")]
   Validation(String, String),
+  #[error("Runtime error {0}")]
+  Runtime(String),
 }
 
 impl<A: ethers::middleware::Middleware> From<ethers::contract::ContractError<A>> for Error {

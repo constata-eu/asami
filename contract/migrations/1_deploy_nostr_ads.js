@@ -1,5 +1,6 @@
 const Asami = artifacts.require("Asami");
 const MockDoc = artifacts.require("MockDoc");
+const NostrUtils = artifacts.require("NostrUtils");
 const Schnorr = artifacts.require("Schnorr");
 
 module.exports = async function(deployer, network) {
@@ -10,6 +11,7 @@ module.exports = async function(deployer, network) {
       return console.log("Not ready for prod yet");
     default:
       await deployer.deploy(MockDoc);
-      return (await deployer.deploy(Asami, MockDoc.address));
+      await deployer.deploy(NostrUtils);
+      return (await deployer.deploy(Asami, MockDoc.address, NostrUtils.address));
   }
 };

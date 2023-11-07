@@ -17,7 +17,7 @@ use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
  -- Use the API calls instead of models for all interactions.
 */
 
-api_test!{ signs_up_and_makes_collab_in_x (test_app, client)
+browser_test!{ signs_up_and_makes_x_collab_stubbing (test_app, client)
   let value = "test+token";
   test_app.app.one_time_token().insert(InsertOneTimeToken{
     value: value.to_string()

@@ -4,10 +4,9 @@ pub use serde::{Serialize, Deserialize};
 use sqlx_models_orm::Db;
 use std::str::FromStr;
 use rocket::Config;
-use super::on_chain::{AsamiContractEvents, OnChain};
+use super::on_chain::OnChain;
 use super::models::*;
 use std::io::{stdin, Read};
-use ethers::abi::AbiEncode;
 
 #[derive(Clone)]
 pub struct App {
@@ -35,68 +34,6 @@ impl App {
     let on_chain = OnChain::new(&config, &password).await?;
 
     Ok(Self{ db, on_chain, settings: Box::new(config) })
-  }
-
-  pub async fn sync_on_chain_events(&self) -> AsamiResult<()> {
-    use ethers::middleware::Middleware;
-    let state = self.indexer_state().get().await?;
-    let to_block = i64::try_from(self.on_chain.contract.client().get_block_number().await?.as_u64()).unwrap() - self.settings.rsk.reorg_protection_padding;
-    let events = self.on_chain.events(state.attrs.last_synced_block, to_block).await?;
-
-    for (event, meta) in events {
-      match event {
-        AsamiContractEvents::XhandleAddedFilter(e) => {
-          let maybe = self.handle().select()
-            .value_eq(e.handle.value)
-            .status_eq(HandleStatus::Submitted)
-            .tx_hash_eq(meta.transaction_hash.encode_hex())
-            .site_eq(Site::X)
-            .optional().await?;
-
-          if let Some(h) = maybe {
-            h.activate().await?;
-          }
-
-        },
-        AsamiContractEvents::XcampaignAddedFilter(e) => {
-          let req = self.campaign_request().select()
-            .content_id_eq(&e.campaign.content_id)
-            .status_eq(CampaignRequestStatus::Submitted)
-            .tx_hash_eq(meta.transaction_hash.encode_hex())
-            .site_eq(Site::X)
-            .optional().await?;
-
-          if let Some(r) = req {
-            r.activate().await?;
-          }
-
-          let not_synced = self.campaign().select()
-            .block_number_eq(Decimal::from(meta.block_number.as_u64()))
-            .log_index_eq(Decimal::from(meta.log_index.as_u64()))
-            .optional().await?.is_none();
-
-          if not_synced {
-            self.campaign().insert(InsertCampaign{
-              on_chain_id: Decimal::from(e.campaign_id.as_u64()),
-              account_id: e.account_id.as_u32().try_into().unwrap(),
-              site: Site::X,
-              budget: e.campaign.budget.as_u64().into(),
-              remaining: e.campaign.remaining.as_u64().into(),
-              content_id: e.campaign.content_id,
-              block_number: meta.block_number.as_u64().into(),
-              log_index: meta.block_number.as_u64().into(),
-              tx_hash: meta.transaction_hash.encode_hex(),
-            }).save().await?;
-          }
-        }
-        _ => {}
-      }
-
-    }
-
-    state.update().last_synced_block(to_block).save().await?;
-
-    Ok(())
   }
 }
 
@@ -141,5 +78,5 @@ pub struct Rsk {
   pub doc_contract_address: String,
   pub wallet_mnemonic: String,
   pub admin_address: String,
-  pub reorg_protection_padding: i64,
+  pub reorg_protection_padding: Decimal,
 }

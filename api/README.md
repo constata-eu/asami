@@ -210,7 +210,7 @@
 ### ToDo:
 - API requests have no business logic validations.
 - Converting u256 to database values sucks.
-
-- on-chain is a low level abstraction for calling on-chain methods. Thin wrapper of a client.
-- Syncer knows what events to fetch and how to dispatch them.
-- Each model knows how to convert back and forth from on-chain data.
+- Idempotency in the SC (do not fail if a resubmission is attempted. Update DB status first?).
+- Twitter api usage quotas are obnoxious:
+  # retweeted by: 5 requests / 15 mins
+  # account confirmations: 5 requests / 15 mins

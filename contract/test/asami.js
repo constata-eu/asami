@@ -10,11 +10,196 @@ const oneHour = 60 * 60;
 const oneDay = oneHour * 24;
 const rewardAmount = web3.utils.toWei("50", "ether");
 
-contract("Asami Nostr", function (accounts) {
+const toWei = web3.utils.toWei;
+
+contract("Asami", function (accounts) {
+  it("Signs up accounts, makes a campaign, has some people participate", async () => {
+    const {
+      asami,
+      doc,
+      aliceId,
+      bobId,
+      carolId,
+      dennisId,
+      admin,
+    } = await setupAccounts(accounts);
+
+    let aliceHandle = await makeNostrHandle(asami, admin, aliceId, "100", 200, [1, 2, 3]);
+    let bobHandle = await makeNostrHandle(asami, admin, bobId, "200", 200, [1, 4, 5]);
+    let carolHandle = await makeNostrHandle(asami, admin, carolId, "300", 200, [1, 6, 7]);
+    let campaign = await makeCampaign(
+      asami,
+      doc,
+      admin,
+      dennisId,
+      1,
+      toWei("700"),
+      "1716421161867710954",
+      toWei("1.5"),
+      [1]
+    );
+
+    let aliceCollab = await makeCollab(asami, admin, aliceHandle.id, campaign.id);
+    let bobCollab = await makeCollab(asami, admin, bobHandle.id, campaign.id);
+    let carolCollab = await makeCollab(asami, admin, carolHandle.id, campaign.id);
+
+    assert.equal(await asami.feePool(), toWei("60"));
+    assert.equal((await asami.accounts(aliceId)).unclaimedAsamiTokens, toWei("1.5"));
+    assert.equal((await asami.accounts(bobId)).unclaimedAsamiTokens.toString(), toWei("3"));
+    assert.equal((await asami.accounts(carolId)).unclaimedAsamiTokens.toString(), toWei("4.5"));
+  });
+});
+
+async function makeCollab(asami, admin, handleId, campaignId) {
+  return (await asami.adminMakeCollabs(
+    [{ handleId, campaignId }],
+    { from: admin }
+  )).receipt.logs.find((x) => x.event == "CollabSaved").args.collab;
+}
+
+async function makeCampaign(
+  asami,
+  doc,
+  admin,
+  accountId,
+  site,
+  budget,
+  contentId,
+  priceScoreRatio,
+  topics,
+  validUntil
+) {
+  await doc.approve(asami.address, budget, { from: admin });
+
+  return (await asami.adminMakeCampaigns(
+    [{
+      accountId,
+      attrs: {
+        site,
+        budget,
+        contentId,
+        priceScoreRatio,
+        topics,
+        validUntil: validUntil || Math.floor(new Date().getTime() / 1000) + 5000,
+      }
+    }],
+    { from: admin }
+  )).receipt.logs.find((x) => x.event == "CampaignSaved").args.campaign;
+}
+
+async function makeNostrHandle(asami, admin, accountId, price, score, topics) {
+  const nostrPubkey = "e729580aba7b4d601c94f1d9c9ba5f37e6066c22d1351ef5d49a851de81211b9";
+  const nostrP = schnorr.math.liftX(Buffer.from(nostrPubkey, 'hex'));
+  const nostrPx = schnorr.convert.intToBuffer(nostrP.affineX);
+  const nostrPy = schnorr.convert.intToBuffer(nostrP.affineY);
+
+  return (await asami.adminMakeHandle({
+    id: 0,
+    accountId: accountId,
+    site: 1,
+    price: toWei(price),
+    score: score,
+    topics: topics || [],
+    username: "",
+    userId: nostrPubkey,
+    nostrAffineX: nostrPx,
+    nostrAffineY: nostrPy
+  }, { from: admin })).receipt.logs[0].args.handle;
+}
+
+async function makeXHandle(asami, accountId, xHandle, xUserId, price, score, topics) {
+  return (await asami.adminMakeHandle({
+    id: 0,
+    accountId,
+    site: 0,
+    price: web3.utils.toWei(price, "ether"),
+    score,
+    topics,
+    xHandle,
+    xUserId,
+    instagramHandle: "",
+    instagramUserId: "",
+    nostrHexPubkey: "",
+    nostrAffineX: 0,
+    nostrAffineY: 0,
+    nostrSelfManaged: false,
+    nostrAbuseProven: false
+  })).receipt.logs[0].args.handle;
+}
+
+async function setupAccounts(accounts) {
+  const admin = accounts[8];
+  const adminTreasury = accounts[9];
+  const asami = await Asami.deployed()
+  const doc = await MockDoc.deployed()
+
+  await doc.transfer(admin, web3.utils.toWei("10000", "ether"), { from: accounts[0] });
+  await asami.setAdmin(admin, adminTreasury);
+
+  for (let s of [ "Cat", "Dog", "Bat", "Sun", "Pen", "Car", "Hat" ] ) {
+    await asami.addTopic(s);
+  }
+
+  /* User tries to sign up.
+   * We create account ids
+   *
+   */
+  //const fees = await asami.calculateCampaignFees(offers.length);
+  //const campaignAmount = fees.add(web3.utils.toBN(rewardAmount * offers.length));
+  //await doc.transfer(advertiser, campaignAmount, { from: admin });
+
+  // Create and fund a campaign.
+  // We trick the campaign into thinking it has 2 collaborators, while it's just the same.
+  // But only one of these instances will claim the payout, that way we test the refund to advertiser.
+  /*
+  await doc.approve(asami.address, campaignAmount, { from: advertiser });
+  await asami.nostrCreateCampaign(
+    campaignAmount,
+    startDate,
+    "Remember: If anyone cancels any plan on you this weekend, they're playing the new zelda.",
+    offers,
+    { from: advertiser }
+  );
+
+  assert.equal( (await doc.balanceOf(advertiser)), 0, "creator balance should be empty.");
+  assert.equal( (await doc.balanceOf(aliceAddress)), 0, "Alice balance should be empty.");
+
+  const firstOffer = {campaignId: 0, offerId: 0};
+  let offer = await asami.nostrGetCampaignOffer(firstOffer);
+  assert(offer.state == 0, "Offer should start awarded");
+
+  return {
+    firstOffer,
+    asami,
+    doc,
+    advertiser,
+    aliceAddress,
+    admin
+  };
+  */
+  return {
+    asami,
+    doc,
+    aliceId: 1,
+    bobId: 2,
+    carolId: 3,
+    dennisId: 4,
+    admin,
+    adminTreasury
+  };
+}
+
+async function forwardTime(seconds) {
+  await web3.currentProvider.send({jsonrpc: "2.0", method: "evm_increaseTime", params: [seconds], id: new Date().getTime()}, () => {});
+  await web3.currentProvider.send({jsonrpc: "2.0", method: "evm_mine", params: [], id: new Date().getTime()}, () => {});
+}
+
+
+/*
   it("Pays everyone after campaign is over if no challenges were submitted", async () => {
     const { 
       asami,
-      mockDoc,
+      doc,
       admin,
       advertiser,
       aliceAddress,
@@ -52,13 +237,13 @@ contract("Asami Nostr", function (accounts) {
 
     offer = await asami.nostrGetCampaignOffer(firstOffer);
     assert(offer.collected, "Offer should be collected");
-    assert.equal( (await mockDoc.balanceOf(aliceAddress)), rewardAmount, "Alice should have received the money.");
+    assert.equal( (await doc.balanceOf(aliceAddress)), rewardAmount, "Alice should have received the money.");
   });
 });
 
 contract("Asami Nostr", function (accounts) {
   it("A collaborator is challenged so the reward will be refunded", async () => {
-    const { asami, mockDoc, admin, aliceAddress, advertiser, firstOffer } = await makeNostrCampaign(accounts);
+    const { asami, doc, admin, aliceAddress, advertiser, firstOffer } = await makeNostrCampaign(accounts);
     await makeNostrCampaign(accounts);
     await makeNostrCampaign(accounts);
 
@@ -109,7 +294,7 @@ contract("Asami Nostr", function (accounts) {
     }
 
     assert.equal(
-      (await mockDoc.balanceOf(advertiser)),
+      (await doc.balanceOf(advertiser)),
       rewardAmount * 3,
       "advertiser should have received 3x rewardAmount."
     );
@@ -120,7 +305,7 @@ contract("Asami Nostr", function (accounts) {
   it("Submitting proof after a challenge awards the reward again", async () => {
     const { 
       asami,
-      mockDoc,
+      doc,
       admin,
       advertiser,
       firstOffer
@@ -252,7 +437,7 @@ contract("Asami Legacy", function(accounts) {
       await asami.addSocialNetwork(s);
     }
 
-    const mockDoc = await MockDoc.deployed()
+    const doc = await MockDoc.deployed()
 
     // We will forward the blockchain time in these tests to target these timeframes.
     // Just keep in mind submissions end in 100 seconds. Payouts are in 200 seconds.
@@ -274,12 +459,12 @@ contract("Asami Legacy", function(accounts) {
 
     const fees = await asami.calculateCampaignFees(offers.length);
     const campaignAmount = fees.add(web3.utils.toBN(rewardAmount * offers.length));
-    await mockDoc.transfer(advertiser, campaignAmount, { from: admin });
+    await doc.transfer(advertiser, campaignAmount, { from: admin });
 
     // Create and fund a campaign.
     // We trick the campaign into thinking it has 2 collaborators, while it's just the same.
     // But only one of these instances will claim the payout, that way we test the refund to advertiser.
-    await mockDoc.approve(asami.address, campaignAmount, { from: advertiser });
+    await doc.approve(asami.address, campaignAmount, { from: advertiser });
     const rulesUrl = "tbd";
     const hash = crypto.createHash("sha256");
     hash.update(rulesUrl);
@@ -296,8 +481,8 @@ contract("Asami Legacy", function(accounts) {
       newOffers: offers
     }, { from: advertiser });
 
-    assert.equal( (await mockDoc.balanceOf(advertiser)), 0, "creator balance should be empty.");
-    assert.equal( (await mockDoc.balanceOf(aliceAddress)), 0, "Alice balance should be empty.");
+    assert.equal( (await doc.balanceOf(advertiser)), 0, "creator balance should be empty.");
+    assert.equal( (await doc.balanceOf(aliceAddress)), 0, "Alice balance should be empty.");
 
     const firstOffer = {campaignId: 0, offerId: 0};
     let offer = await asami.classicGetCampaignOffer(firstOffer);
@@ -306,7 +491,7 @@ contract("Asami Legacy", function(accounts) {
     return {
       firstOffer,
       asami,
-      mockDoc,
+      doc,
       advertiser,
       aliceAddress,
       admin
@@ -321,76 +506,79 @@ contract("Asami Legacy", function(accounts) {
     // Penalty: 4.
   });
 });
+*/
 
-async function makeNostrCampaign(accounts) {
-  const admin = accounts[0];
-  const advertiser = accounts[1];
-  const aliceAddress = accounts[2];
+/*
 
-  const asami = await Asami.deployed()
-  const mockDoc = await MockDoc.deployed()
+Not everyone can participate:
+- A collaboration with a handle that is more expensive is not possible.
+- A collaboration with someone who's missing the right tags is impossible.
+- When the campaign is over-subscribed nobody can participate.
 
-  // We will forward the blockchain time in these tests to target these timeframes.
-  // Just keep in mind submissions end in 100 seconds. Payouts are in 200 seconds.
-  const startDate = Math.floor(new Date().getTime() / 1000) + 100;
-  const payoutDate = startDate + 100;
+A handle with no tags can participate in a campaign with no tags.
 
-  const alicePubkey = "e729580aba7b4d601c94f1d9c9ba5f37e6066c22d1351ef5d49a851de81211b9";
-  const aliceP = schnorr.math.liftX(Buffer.from(alicePubkey, 'hex'));
-  const alicePx = schnorr.convert.intToBuffer(aliceP.affineX);
-  const alicePy = schnorr.convert.intToBuffer(aliceP.affineY);
+Updating profiles:
+- One user tries to update their profile.
+- One user claims their account.
+- Admin cannot schedule an update for them.
+- They can schedule their own update.
+- Then all updates are applied.
+- The last update period is set.
+- Trying to apply updates again fails.
 
-  const offers = [
-    {
-      "rewardAmount": rewardAmount,
-      "rewardAddress": aliceAddress,
-      "nostrHexPubkey": alicePubkey,
-      "nostrAffineX": alicePx,
-      "nostrAffineY": alicePy
-    },
-    {
-      "rewardAmount": rewardAmount,
-      "rewardAddress": aliceAddress,
-      "nostrHexPubkey": alicePubkey,
-      "nostrAffineX": alicePx,
-      "nostrAffineY": alicePy
-    }
-  ];
+Using self-service nostr:
+- A nostr campaign is set up.
+- One of the three members has claimed their account, and decided to report their own nostr messages their nostr handle.
+- The user submits their own nostr account.
 
-  const fees = await asami.calculateCampaignFees(offers.length);
-  const campaignAmount = fees.add(web3.utils.toBN(rewardAmount * offers.length));
-  await mockDoc.transfer(advertiser, campaignAmount, { from: admin });
+People who claimed their account can also vote.
+  - Votes are weighted by their token balance. !!!
+  - Anyone with tokens can vote, no need to be an account.
+  - After the vote, the tally is calculated and the feeRate changes.
 
-  // Create and fund a campaign.
-  // We trick the campaign into thinking it has 2 collaborators, while it's just the same.
-  // But only one of these instances will claim the payout, that way we test the refund to advertiser.
-  await mockDoc.approve(asami.address, campaignAmount, { from: advertiser });
-  await asami.nostrCreateCampaign(
-    campaignAmount,
-    startDate,
-    "Remember: If anyone cancels any plan on you this weekend, they're playing the new zelda.",
-    offers,
-    { from: advertiser }
-  );
+People can vote a new admin.
+- Admin gets paid a fixed amount for each new account and new collaboration.
+- After the admin gets paid that amount, the fees are distributed.
+- If the fees do not cover the expenses the admin does not get owed anything though.
+- People can vote for a new admin. If the new admin gets over 50% of the voting power for 3 consecutive periods, the admin changes.
 
-  assert.equal( (await mockDoc.balanceOf(advertiser)), 0, "creator balance should be empty.");
-  assert.equal( (await mockDoc.balanceOf(aliceAddress)), 0, "Alice balance should be empty.");
+Rogue admin attacks:
+- Can stop accepting new accounts.
+  Advertisers may not like the low selection of accounts, which will make the protocol fail,
+  token holders may not like it either.
 
-  const firstOffer = {campaignId: 0, offerId: 0};
-  let offer = await asami.nostrGetCampaignOffer(firstOffer);
-  assert(offer.state == 0, "Offer should start awarded");
 
-  return {
-    firstOffer,
-    asami,
-    mockDoc,
-    advertiser,
-    aliceAddress,
-    admin
-  };
-}
+What's data protection and privacy like here then?
+  - Everyone will know how much a handle got paid in rewards.
 
-async function forwardTime(seconds) {
-  await web3.currentProvider.send({jsonrpc: "2.0", method: "evm_increaseTime", params: [seconds], id: new Date().getTime()}, () => {});
-  await web3.currentProvider.send({jsonrpc: "2.0", method: "evm_mine", params: [], id: new Date().getTime()}, () => {});
-}
+  - The smart contract will keep track of which handle received payments,
+    this requirement is legitimized by the need of transparency towards
+    advertisers and other members of the community.
+
+  - Once on the blockchain, it will be stored on a number of third party servers, some
+    of them in jurisdictions where no data protection guarantees can be enforced.
+    Exercise caution, and feel free to use a pseudonym, 
+
+    However, when there is no adequacy decision for a particular country, Article 49 of the GDPR provides for a number of derogations under which data may still be transferred. These derogations serve as exceptions to the general rule and can include:
+
+Explicit Consent: The data subject has explicitly consented to the transfer, after being informed of the possible risks.
+
+Contractual Necessity: The transfer is necessary for the performance of a contract between the data subject and the controller, or for pre-contractual steps taken at the data subject's request.
+
+Important Reasons of Public Interest: Data can be transferred if it's based on EU or Member State law, with a clear basis in law and proportionate to the aim pursued.
+
+Legal Claims: The transfer is necessary for the establishment, exercise, or defense of legal claims.
+
+Vital Interests: If it's necessary to protect the vital interests of the data subject or other persons, where the data subject is physically or legally incapable of giving consent.
+
+Occasional Transfers: There is a provision for non-repetitive transfers that only affect a limited number of data subjects, as long as the controller has assessed all the circumstances surrounding the data transfer and has provided suitable safeguards.
+
+The use of these derogations is generally intended to be extraordinary, and they are not meant for routine or mass transfers. Moreover, organizations relying on any of these derogations may need to document their assessments and safeguards to prove compliance with GDPR requirements.
+
+Please consult with a legal advisor for guidance tailored to your specific situation.
+
+  - The admin may be contacted to delete and further ignore personal details stored in the
+    smart contract for causes that supersede the community legitimate interest.
+    This requests will be honored on its website.
+
+*/

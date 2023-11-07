@@ -1,5 +1,4 @@
 use super::{*, models, error::Error};
-use rust_decimal::prelude::ToPrimitive;
 use sqlx_models_orm::*;
 use juniper::{
   FieldResult,
@@ -100,11 +99,11 @@ pub struct Context {
   app: App,
   current_session: CurrentSession,
   user_id: i32,
-  account_ids: Vec<i32>,
+  account_ids: Vec<Decimal>,
 }
 
 impl Context {
-  pub fn require_account_user(&self, account_id: i32) -> FieldResult<()> {
+  pub fn require_account_user(&self, account_id: Decimal) -> FieldResult<()> {
     if !self.account_ids.contains(&account_id) {
       return Err(field_error("no_access_to_account", &account_id.to_string()))
     }
@@ -240,7 +239,7 @@ make_graphql_query!{
   "1.0";
   showables {
     [CampaignRequest, allCampaignRequests, allCampaignRequestsMeta, "_allCampaignRequestsMeta", CampaignRequestFilter, i32],
-    [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, i32],
+    [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, Decimal],
   }
 }
 
