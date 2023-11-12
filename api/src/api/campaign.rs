@@ -5,11 +5,11 @@ use super::{*, models::{self, *}};
 #[graphql(description = "A campaign started by an advertiser")]
 pub struct Campaign {
   #[graphql(description = "Unique numeric identifier of this werify point")]
-  id: Decimal,
+  id: String,
   #[graphql(description = "The id of the account that created this.")]
-  account_id: Decimal,
+  account_id: String,
   #[graphql(description = "The total budget for this campaign to be split across users.")]
-  budget: Decimal,
+  budget: String,
   #[graphql(description = "The site where this campaign is to be run on.")]
   site: Site,
   #[graphql(description = "The content to share.")]
@@ -23,8 +23,8 @@ pub struct Campaign {
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CampaignFilter {
-  ids: Option<Vec<Decimal>>,
-  id_eq: Option<Decimal>,
+  ids: Option<Vec<String>>,
+  id_eq: Option<String>,
   content_id_like: Option<String>,
 }
 
@@ -56,7 +56,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     }
   }
 
-  fn select_by_id(context: &Context, id: Decimal) -> models::SelectCampaign {
+  fn select_by_id(context: &Context, id: String) -> models::SelectCampaign {
     models::SelectCampaign { id_eq: Some(id), account_id_in: Some(context.account_ids.clone()), ..Default::default() }
   }
 

@@ -1,12 +1,14 @@
-//pub mod selenium;
+pub mod selenium;
 pub mod test_api_server;
+pub mod vite_preview;
 pub mod test_app;
 pub mod truffle;
 
-//pub use selenium::Selenium;
-pub use test_api_server::*;
+pub use selenium::Selenium;
 pub use test_app::*;
 pub use truffle::*;
+pub use test_api_server::*;
+pub use vite_preview::*;
 
 pub mod test_api_client;
 pub use test_api_client::*;
@@ -67,11 +69,17 @@ macro_rules! browser_test {
   ($i:ident($c:ident, $driver:ident) $($e:tt)* ) => {
     test!{ $i
       time_test::time_test!("integration test");
-      let $c = TestApp::init().await;
-      let mut server = crate::support::ApiServer::start();
       let $driver = Selenium::start().await;
+
+      let $c = crate::support::TestApp::init().await;
+      let app = $c.app.clone();
+      let mut vite_preview = VitePreview::start();
+      let server = TestApiServer::start(app).await;
+
       {$($e)*};
-      server.stop();
+
+      server.await.unwrap();
+      vite_preview.stop();
       $driver.stop().await;
     }
   }

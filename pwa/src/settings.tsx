@@ -1,7 +1,7 @@
 const development = {
   apiDomain: "http://127.0.0.1:8000",
   environment: 'development',
-  recaptchaSiteKey: "6LcMyXYoAAAAABLRzxeVZ1nae06LVvyv8l3O0LSz",
+  recaptchaSiteKey: "6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX",
   rsk: {
     chainId: 31,
   },

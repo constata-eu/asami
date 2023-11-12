@@ -8,6 +8,7 @@ pub struct Selenium{
 }
 
 pub const DOWNLOADS: &str = "/tmp/asami_tests_downloads";
+pub const PROFILE: &str = "chrome_profile";
 
 impl Selenium {
   pub async fn start() -> Self {

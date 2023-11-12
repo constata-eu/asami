@@ -5,6 +5,7 @@ use ethers::{
   prelude::{abigen, SignerMiddleware, LogMeta},
   types::Address,
   providers::{Http, Provider},
+  types::U64,
 };
 use std::sync::Arc;
 
@@ -61,7 +62,7 @@ impl OnChain {
     })
   }
 
-  pub async fn events(&self, from_block: &Decimal, to_block: &Decimal) -> AsamiResult<Vec<(AsamiContractEvents, LogMeta)>> {
-    Ok(self.contract.events().from_block(from_block.to_i64().unwrap()).to_block(to_block.to_i64().unwrap()).query_with_meta().await?)
+  pub async fn events(&self, from_block: U64, to_block: U64) -> AsamiResult<Vec<(AsamiContractEvents, LogMeta)>> {
+    Ok(self.contract.events().from_block(from_block).to_block(to_block).query_with_meta().await?)
   }
 }

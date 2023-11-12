@@ -6,8 +6,7 @@ use sqlx_models_orm::model;
 pub use chrono::{DateTime, Duration, Utc, Datelike, TimeZone};
 pub type UtcDateTime = DateTime<Utc>;
 pub use juniper::GraphQLEnum;
-use ethers::{ types::{U256, U64}, abi::AbiEncode, middleware::Middleware};
-use rust_decimal::prelude::ToPrimitive;
+use ethers::{ types::{ U256, U64}, abi::{AbiEncode, AbiDecode}, middleware::Middleware};
 
 pub mod hasher;
 
@@ -36,7 +35,7 @@ impl sqlx::postgres::PgHasArrayType for Site {
   }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type)]
+#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
 #[sqlx(type_name = "handle_request_status", rename_all = "snake_case")]
 pub enum HandleRequestStatus {
   Unverified, // Newly created, never sent on-chain.
@@ -52,7 +51,7 @@ impl sqlx::postgres::PgHasArrayType for HandleRequestStatus {
   }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type)]
+#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
 #[sqlx(type_name = "handle_update_request_status", rename_all = "snake_case")]
 pub enum HandleUpdateRequestStatus {
   Received,
@@ -66,7 +65,7 @@ impl sqlx::postgres::PgHasArrayType for HandleUpdateRequestStatus {
   }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type)]
+#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
 #[sqlx(type_name = "campaign_request_status", rename_all = "snake_case")]
 pub enum CampaignRequestStatus {
   Received,   // The request was received by a managed user to create a campaign.
@@ -134,16 +133,16 @@ model!{
   state: App,
   table: accounts,
   struct Account {
-    #[sqlx_model_hints(decimal, default)]
-    id: Decimal,
+    #[sqlx_model_hints(varchar, default)]
+    id: String,
     #[sqlx_model_hints(varchar)]
     name: Option<String>,
     #[sqlx_model_hints(varchar)]
     addr: Option<String>,
-    #[sqlx_model_hints(decimal)]
-    unclaimed_asami_tokens: Decimal,
-    #[sqlx_model_hints(decimal)]
-    unclaimed_doc_rewards: Decimal,
+    #[sqlx_model_hints(varchar)]
+    unclaimed_asami_tokens: String,
+    #[sqlx_model_hints(varchar)]
+    unclaimed_doc_rewards: String,
     #[sqlx_model_hints(boolean)]
     nostr_self_managed: bool,
     #[sqlx_model_hints(boolean)]
@@ -158,7 +157,7 @@ model!{
 impl Account {
   pub async fn create_handle_request(&self, site: Site, username: &str) -> sqlx::Result<HandleRequest> {
     self.state.handle_request().insert(InsertHandleRequest{
-      account_id: self.attrs.id,
+      account_id: self.attrs.id.clone(),
       username: username.to_string(),
       site: site,
     }).save().await
@@ -168,16 +167,16 @@ impl Account {
     &self,
     site: Site,
     content_id: &str,
-    budget: Decimal,
-    price_score_ratio: Decimal,
+    budget: U256,
+    price_score_ratio: U256,
     valid_until: UtcDateTime,
   ) -> sqlx::Result<CampaignRequest> {
     self.state.campaign_request().insert(InsertCampaignRequest{
-      account_id: self.attrs.id,
+      account_id: self.attrs.id.clone(),
       site: site,
-      budget,
+      budget: budget.encode_hex(),
       content_id: content_id.to_string(),
-      price_score_ratio,
+      price_score_ratio: price_score_ratio.encode_hex(),
       valid_until,
     }).save().await
   }
@@ -189,22 +188,22 @@ model!{
   struct HandleRequest {
     #[sqlx_model_hints(int4, default)]
     id: i32,
-    #[sqlx_model_hints(decimal)]
-    account_id: Decimal,
+    #[sqlx_model_hints(varchar)]
+    account_id: String,
     #[sqlx_model_hints(site)]
     site: Site,
     #[sqlx_model_hints(varchar)]
     username: String,
     #[sqlx_model_hints(varchar, default)]
     user_id: Option<String>,
-    #[sqlx_model_hints(decimal, default)]
-    price: Option<Decimal>,
-    #[sqlx_model_hints(decimal, default)]
-    score: Option<Decimal>,
-    #[sqlx_model_hints(decimal, default)]
-    nostr_affine_x: Option<Decimal>,
-    #[sqlx_model_hints(decimal, default)]
-    nostr_affine_y: Option<Decimal>,
+    #[sqlx_model_hints(varchar, default)]
+    price: Option<String>,
+    #[sqlx_model_hints(varchar, default)]
+    score: Option<String>,
+    #[sqlx_model_hints(varchar, default)]
+    nostr_affine_x: Option<String>,
+    #[sqlx_model_hints(varchar, default)]
+    nostr_affine_y: Option<String>,
     #[sqlx_model_hints(handle_request_status, default)]
     status: HandleRequestStatus,
     #[sqlx_model_hints(varchar, default)]
@@ -224,7 +223,6 @@ impl HandleRequestHub {
     use twitter_v2::{TwitterApi, authorization::BearerToken, query::*, api_result::*};
     use rust_decimal::prelude::*;
     use tokio::time::*;
-    use rust_decimal_macros::*;
 
     let mut handle_requests = vec![];
 
@@ -264,7 +262,7 @@ impl HandleRequestHub {
         let Some(public_metrics) = author.public_metrics.clone() else { continue };
 
         if let Some(capture) = msg_regex.captures(&post.text) {
-          let Ok(account_id) = capture[1].parse::<Decimal>() else { continue };
+          let Ok(account_id) = capture[1].parse::<String>() else { continue };
 
           let Some(req) = self.state.handle_request().select()
             .status_eq(&HandleRequestStatus::Unverified)
@@ -273,11 +271,10 @@ impl HandleRequestHub {
             .account_id_eq(&account_id)
             .optional().await? else { continue };
 
-          let score = Decimal::from_usize(public_metrics.followers_count).unwrap_or(dec!(1)) * dec!(0.85);
-          let price = indexer_state.suggested_price_per_point() * score;
+          let score = U256::from(public_metrics.followers_count) * u("85") / u("100");
+          let price = u256(indexer_state.suggested_price_per_point()) * score;
           handle_requests.push(
-            req.verify(author_id.to_string()).await?
-            .appraise(price, score.ceil()).await?
+            req.verify(author_id.to_string()).await?.appraise(price, score).await?
           );
         }
       }
@@ -326,16 +323,20 @@ impl HandleRequest {
       .save().await
   }
 
-  pub async fn appraise(self, price: Decimal, score: Decimal) -> sqlx::Result<Self> {
-    self.update().price(Some(price)).score(Some(score)).status(HandleRequestStatus::Appraised).save().await
+  pub async fn appraise(self, price: U256, score: U256) -> sqlx::Result<Self> {
+    self.update()
+      .price(Some(price.encode_hex()))
+      .score(Some(score.encode_hex()))
+      .status(HandleRequestStatus::Appraised)
+      .save().await
   }
 
   pub async fn done(self) -> sqlx::Result<Self> {
     self.update().status(HandleRequestStatus::Done).save().await
   }
 
-  pub async fn topic_ids(&self) -> sqlx::Result<Vec<Decimal>> {
-    Ok(self.handle_request_topic_vec().await?.iter().map(|t| t.attrs.topic_id ).collect())
+  pub async fn topic_ids(&self) -> sqlx::Result<Vec<String>> {
+    Ok(self.handle_request_topic_vec().await?.into_iter().map(|t| t.attrs.topic_id ).collect())
   }
 
   pub async fn as_param(&self) -> AsamiResult<on_chain::Handle> {
@@ -343,18 +344,18 @@ impl HandleRequest {
 
     let invalid_state = Err(Error::Runtime("Invalid state on appraised handle request".into()));
 
-    let Some(price) = a.price.map(|i| d_to_i(&i)) else { return invalid_state };
-    let Some(score) = a.score.map(|i| d_to_i(&i)) else { return invalid_state };
+    let Some(price) = a.price.as_ref().map(u256) else { return invalid_state };
+    let Some(score) = a.score.as_ref().map(u256) else { return invalid_state };
     let Some(user_id) = a.user_id.clone() else { return invalid_state };
 
-    let nostr_affine_x = a.nostr_affine_x.map(|i| d_to_i(&i) ).unwrap_or(0.into());
-    let nostr_affine_y = a.nostr_affine_y.map(|i| d_to_i(&i) ).unwrap_or(0.into());
+    let nostr_affine_x = a.nostr_affine_x.as_ref().map(u256).unwrap_or(0.into());
+    let nostr_affine_y = a.nostr_affine_y.as_ref().map(u256).unwrap_or(0.into());
 
-    let topics = self.topic_ids().await?.iter().map(|i| d_to_i(&i) ).collect();
+    let topics = self.topic_ids().await?.iter().map(|i| u256(i) ).collect();
 
     Ok(on_chain::Handle {
       id: 0.into(),
-      account_id: d_to_i(&a.account_id), 
+      account_id: u256(&a.account_id), 
       site: a.site as u8,
       price,
       score,
@@ -375,8 +376,8 @@ model!{
     id: i32,
     #[sqlx_model_hints(int4)]
     handle_request_id: i32,
-    #[sqlx_model_hints(decimal)]
-    topic_id: Decimal,
+    #[sqlx_model_hints(varchar)]
+    topic_id: String,
   }
 }
 
@@ -384,24 +385,24 @@ model!{
   state: App,
   table: handles,
   struct Handle {
-    #[sqlx_model_hints(decimal)]
-    id: Decimal,
-    #[sqlx_model_hints(decimal)]
-    account_id: Decimal,
+    #[sqlx_model_hints(varchar)]
+    id: String,
+    #[sqlx_model_hints(varchar)]
+    account_id: String,
     #[sqlx_model_hints(site)]
     site: Site,
     #[sqlx_model_hints(varchar)]
     username: String,
     #[sqlx_model_hints(varchar)]
     user_id: String,
-    #[sqlx_model_hints(decimal)]
-    price: Decimal,
-    #[sqlx_model_hints(decimal)]
-    score: Decimal,
-    #[sqlx_model_hints(decimal)]
-    nostr_affine_x: Decimal,
-    #[sqlx_model_hints(decimal)]
-    nostr_affine_y: Decimal,
+    #[sqlx_model_hints(varchar)]
+    price: String,
+    #[sqlx_model_hints(varchar)]
+    score: String,
+    #[sqlx_model_hints(varchar)]
+    nostr_affine_x: String,
+    #[sqlx_model_hints(varchar)]
+    nostr_affine_y: String,
   },
   has_many {
     HandleTopic(handle_id),
@@ -414,10 +415,10 @@ model!{
   struct HandleTopic {
     #[sqlx_model_hints(int4, default)]
     id: i32,
-    #[sqlx_model_hints(decimal)]
-    handle_id: Decimal,
-    #[sqlx_model_hints(decimal)]
-    topic_id: Decimal,
+    #[sqlx_model_hints(varchar)]
+    handle_id: String,
+    #[sqlx_model_hints(varchar)]
+    topic_id: String,
   }
 }
 
@@ -427,14 +428,14 @@ model!{
   struct HandleUpdateRequest {
     #[sqlx_model_hints(int4, default)]
     id: i32,
-    #[sqlx_model_hints(decimal)]
-    handle_id: Decimal,
+    #[sqlx_model_hints(varchar)]
+    handle_id: String,
     #[sqlx_model_hints(varchar)]
     username: Option<String>,
-    #[sqlx_model_hints(decimal)]
-    price: Option<Decimal>,
-    #[sqlx_model_hints(decimal)]
-    score: Option<Decimal>,
+    #[sqlx_model_hints(varchar)]
+    price: Option<String>,
+    #[sqlx_model_hints(varchar)]
+    score: Option<String>,
     #[sqlx_model_hints(handle_update_request_status)]
     status: HandleUpdateRequestStatus,
     #[sqlx_model_hints(varchar, default)]
@@ -459,8 +460,8 @@ model!{
     id: i32,
     #[sqlx_model_hints(int4)]
     handle_update_request_id: i32,
-    #[sqlx_model_hints(decimal)]
-    topic_id: Decimal,
+    #[sqlx_model_hints(varchar)]
+    topic_id: String,
   }
 }
 
@@ -482,7 +483,7 @@ model!{
 }
 
 impl User {
-  pub async fn account_ids(&self) -> sqlx::Result<Vec<Decimal>> {
+  pub async fn account_ids(&self) -> sqlx::Result<Vec<String>> {
     Ok(self.account_user_vec().await?.into_iter().map(|x| x.attrs.account_id).collect())
   }
 }
@@ -533,8 +534,8 @@ model!{
   struct AccountUser {
     #[sqlx_model_hints(int4, default)]
     id: i32,
-    #[sqlx_model_hints(decimal)]
-    account_id: Decimal,
+    #[sqlx_model_hints(varchar)]
+    account_id: String,
     #[sqlx_model_hints(int4)]
     user_id: i32,
   }
@@ -563,16 +564,16 @@ model! {
   struct CampaignRequest {
     #[sqlx_model_hints(int4, default)]
     id: i32,
-    #[sqlx_model_hints(decimal)]
-    account_id: Decimal,
-    #[sqlx_model_hints(decimal)]
-    budget: Decimal,
+    #[sqlx_model_hints(varchar)]
+    account_id: String,
+    #[sqlx_model_hints(varchar)]
+    budget: String,
     #[sqlx_model_hints(site)]
     site: Site,
     #[sqlx_model_hints(varchar)]
     content_id: String,
-    #[sqlx_model_hints(decimal)]
-    price_score_ratio: Decimal,
+    #[sqlx_model_hints(varchar)]
+    price_score_ratio: String,
     #[sqlx_model_hints(timestamptz)]
     valid_until: UtcDateTime,
     #[sqlx_model_hints(campaign_request_status, default)]
@@ -595,12 +596,10 @@ impl CampaignRequestHub {
   pub async fn submit_approvals(&self) -> AsamiResult<()> {
     let rsk = &self.state.on_chain;
     let reqs = self.select().status_eq(CampaignRequestStatus::Paid).all().await?;
-    let total: Decimal = reqs.iter().map(|r| r.budget() ).sum();
+    let total: U256 = reqs.iter().map(|r| u256(r.budget()) ).fold(0.into(), |a,b| a+b);
 
-    let tx_hash = rsk.doc_contract.approve(
-      rsk.contract.address(),
-      total.to_u64().unwrap().into()
-    ).send().await?.tx_hash().encode_hex();
+    let tx_hash = rsk.doc_contract.approve( rsk.contract.address(), total).send().await?
+      .tx_hash().encode_hex();
 
     for r in reqs {
       r.update().status(CampaignRequestStatus::Approved).approval_tx_hash(Some(tx_hash.clone())).save().await?;
@@ -643,15 +642,15 @@ impl CampaignRequest {
 
   pub async fn as_param(&self) -> AsamiResult<on_chain::AdminCampaignInput> {
     let topics = self.campaign_request_topic_vec().await?
-      .iter().map(|t| d_to_i(&t.attrs.topic_id) ).collect();
+      .into_iter().map(|t| u256(t.attrs.topic_id) ).collect();
 
     Ok(on_chain::AdminCampaignInput{
-      account_id: d_to_i(&self.attrs.account_id),
+      account_id: u256(&self.attrs.account_id),
       attrs: on_chain::CampaignInput {
         site: self.attrs.site as u8,
-        budget: d_to_i(&self.attrs.budget),
+        budget: u256(&self.attrs.budget),
         content_id: self.attrs.content_id.clone(),
-        price_score_ratio: d_to_i(&self.attrs.price_score_ratio),
+        price_score_ratio: u256(&self.attrs.price_score_ratio),
         topics,
         valid_until: utc_to_i(self.attrs.valid_until)
       }
@@ -667,8 +666,8 @@ model!{
     id: i32,
     #[sqlx_model_hints(int4)]
     campaign_request_id: i32,
-    #[sqlx_model_hints(decimal)]
-    topic_id: Decimal,
+    #[sqlx_model_hints(varchar)]
+    topic_id: String,
   }
 }
 
@@ -677,20 +676,20 @@ model!{
   state: App,
   table: campaigns,
   struct Campaign {
-    #[sqlx_model_hints(decimal)]
-    id: Decimal,
-    #[sqlx_model_hints(decimal)]
-    account_id: Decimal,
+    #[sqlx_model_hints(varchar)]
+    id: String,
+    #[sqlx_model_hints(varchar)]
+    account_id: String,
     #[sqlx_model_hints(site)]
     site: Site,
-    #[sqlx_model_hints(decimal)]
-    budget: Decimal,
-    #[sqlx_model_hints(decimal)]
-    remaining: Decimal,
+    #[sqlx_model_hints(varchar)]
+    budget: String,
+    #[sqlx_model_hints(varchar)]
+    remaining: String,
     #[sqlx_model_hints(varchar)]
     content_id: String,
-    #[sqlx_model_hints(decimal)]
-    price_score_ratio: Decimal,
+    #[sqlx_model_hints(varchar)]
+    price_score_ratio: String,
     #[sqlx_model_hints(timestamptz)]
     valid_until: UtcDateTime,
     #[sqlx_model_hints(boolean, default)]
@@ -725,12 +724,20 @@ impl CampaignHub {
         let Some(data) = payload.data() else { break };
 
         for user in data {
-          let Some(handle) = self.state.handle().select().user_id_eq(&user.id.to_string()).optional().await? else { continue };
+          let Some(handle) = self.state.handle()
+            .select()
+            .user_id_eq(&user.id.to_string())
+            .optional().await? else { continue };
 
-          if self.state.collab_request().select().handle_id_eq(handle.attrs.id).campaign_id_eq(campaign.attrs.id).count().await? == 0 {
+          let not_exists = self.state.collab_request().select()
+            .handle_id_eq(handle.attrs.id.clone())
+            .campaign_id_eq(campaign.attrs.id.clone())
+            .count().await? == 0;
+
+          if not_exists {
             reqs.push(
               self.state.collab_request().insert(InsertCollabRequest{
-                campaign_id: campaign.attrs.id,
+                campaign_id: campaign.attrs.id.clone(),
                 handle_id: handle.attrs.id,
               }).save().await?
             );
@@ -751,10 +758,10 @@ model!{
   struct CollabRequest {
     #[sqlx_model_hints(int4, default)]
     id: i32,
-    #[sqlx_model_hints(decimal)]
-    campaign_id: Decimal,
-    #[sqlx_model_hints(decimal)]
-    handle_id: Decimal, 
+    #[sqlx_model_hints(varchar)]
+    campaign_id: String,
+    #[sqlx_model_hints(varchar)]
+    handle_id: String, 
     #[sqlx_model_hints(varchar, default)]
     tx_hash: Option<String>,
     #[sqlx_model_hints(collab_request_status, default)]
@@ -770,7 +777,7 @@ impl CollabRequestHub {
   pub async fn submit_all(&self) -> AsamiResult<Vec<CollabRequest>> {
     let mut submitted = vec![];
     let reqs = self.select().status_eq(CollabRequestStatus::Received).all().await?;
-    let params = reqs.iter().map(|r| r.as_param()).collect();
+    let params = reqs.iter().map(|r| r.as_param() ).collect();
 
     let tx_hash = self.state.on_chain.contract
       .admin_make_collabs(params)
@@ -795,8 +802,8 @@ impl CollabRequest {
 
   pub fn as_param(&self) -> on_chain::AdminMakeCollabsInput {
     on_chain::AdminMakeCollabsInput{
-      campaign_id: d_to_i(&self.attrs.campaign_id),
-      handle_id: d_to_i(&self.attrs.handle_id)
+      campaign_id: u256(&self.attrs.campaign_id),
+      handle_id: u256(&self.attrs.handle_id),
     }
   }
 }
@@ -805,20 +812,20 @@ model!{
   state: App,
   table: collabs,
   struct Collab {
-    #[sqlx_model_hints(decimal)]
-    id: Decimal,
-    #[sqlx_model_hints(decimal)]
-    campaign_id: Decimal,
-    #[sqlx_model_hints(decimal)]
-    handle_id: Decimal, 
-    #[sqlx_model_hints(decimal)]
-    gross: Decimal,
-    #[sqlx_model_hints(decimal)]
-    fee: Decimal,
+    #[sqlx_model_hints(varchar)]
+    id: String,
+    #[sqlx_model_hints(varchar)]
+    campaign_id: String,
+    #[sqlx_model_hints(varchar)]
+    handle_id: String, 
+    #[sqlx_model_hints(varchar)]
+    gross: String,
+    #[sqlx_model_hints(varchar)]
+    fee: String,
     #[sqlx_model_hints(varchar)]
     proof: Option<String>,
-    #[sqlx_model_hints(decimal)]
-    created_at: Decimal,
+    #[sqlx_model_hints(varchar)]
+    created_at: String,
   }
 }
 
@@ -828,10 +835,10 @@ model!{
   struct CampaignTopic {
     #[sqlx_model_hints(int4, default)]
     id: i32,
-    #[sqlx_model_hints(decimal)]
-    campaign_id: Decimal,
-    #[sqlx_model_hints(decimal)]
-    topic_id: Decimal,
+    #[sqlx_model_hints(varchar)]
+    campaign_id: String,
+    #[sqlx_model_hints(varchar)]
+    topic_id: String,
   }
 }
 
@@ -839,8 +846,8 @@ model!{
   state: App,
   table: topics,
   struct Topic {
-    #[sqlx_model_hints(decimal)]
-    id: Decimal,
+    #[sqlx_model_hints(varchar)]
+    id: String,
     #[sqlx_model_hints(varchar)]
     name: String,
   }
@@ -855,8 +862,8 @@ model!{
     id: i32,
     #[sqlx_model_hints(int8, default)]
     x_handle_verification_checkpoint: i64,
-    #[sqlx_model_hints(decimal, default)]
-    suggested_price_per_point: Decimal,
+    #[sqlx_model_hints(varchar, default)]
+    suggested_price_per_point: String,
     #[sqlx_model_hints(decimal, default)]
     last_synced_block: Decimal,
   }
@@ -887,8 +894,8 @@ model!{
     tx_hash: String,
     #[sqlx_model_hints(decimal)]
     tx_index: Decimal,
-    #[sqlx_model_hints(decimal)]
-    log_index: Decimal,
+    #[sqlx_model_hints(varchar)]
+    log_index: String,
     #[sqlx_model_hints(varchar)]
     data: String,
     #[sqlx_model_hints(timestamptz, default)]
@@ -902,14 +909,15 @@ impl SyncedEventHub {
     let on_chain = &app.on_chain;
     let state = app.indexer_state().get().await?;
     
-    let to_block = u64_to_d(on_chain.contract.client().get_block_number().await?)
+    let to_block = on_chain.contract.client().get_block_number().await?
       - app.settings.rsk.reorg_protection_padding;
-    let events = on_chain.events(&state.attrs.last_synced_block, &to_block).await?;
+
+    let events = on_chain.events(d_to_u64(state.attrs.last_synced_block), to_block).await?;
 
     for (event, meta) in events {
       let existing = app.synced_event().select()
         .block_number_eq( u64_to_d(meta.block_number) )
-        .log_index_eq( i_to_d(meta.log_index) )
+        .log_index_eq( meta.log_index.encode_hex() )
         .count().await?;
 
       if existing > 0 {
@@ -924,7 +932,7 @@ impl SyncedEventHub {
           block_hash: meta.block_hash.encode_hex(),
           tx_hash: meta.transaction_hash.encode_hex(),
           tx_index: u64_to_d(meta.transaction_index),
-          log_index: i_to_d(meta.log_index),
+          log_index: meta.log_index.encode_hex(),
           data
         }).save().await?;
       };
@@ -932,12 +940,12 @@ impl SyncedEventHub {
       match event {
         AsamiContractEvents::AccountSavedFilter(e) => {
           let a = e.account;
-          match app.account().find_optional(i_to_d(a.id)).await? {
+          match app.account().find_optional(a.id.encode_hex()).await? {
             Some(account) => {
               account.update()
                 .addr(Some(a.addr.encode_hex()))
-                .unclaimed_asami_tokens(i_to_d(a.unclaimed_asami_tokens))
-                .unclaimed_doc_rewards(i_to_d(a.unclaimed_asami_tokens))
+                .unclaimed_asami_tokens(a.unclaimed_asami_tokens.encode_hex())
+                .unclaimed_doc_rewards(a.unclaimed_asami_tokens.encode_hex())
                 .nostr_self_managed(a.nostr_self_managed)
                 .nostr_abuse_proven(a.nostr_abuse_proven)
                 .save().await?;
@@ -946,13 +954,13 @@ impl SyncedEventHub {
               app.account().insert(InsertAccount{
                 addr: Some(a.addr.encode_hex()),
                 name: None,
-                unclaimed_asami_tokens: i_to_d(a.unclaimed_asami_tokens),
-                unclaimed_doc_rewards: i_to_d(a.unclaimed_asami_tokens),
+                unclaimed_asami_tokens: a.unclaimed_asami_tokens.encode_hex(),
+                unclaimed_doc_rewards: a.unclaimed_asami_tokens.encode_hex(),
                 nostr_self_managed: a.nostr_self_managed,
                 nostr_abuse_proven: a.nostr_abuse_proven,
               })
               .save().await?
-              .update().id(i_to_d(a.id))
+              .update().id(a.id.encode_hex())
               .save().await?;
             }
           }
@@ -968,7 +976,7 @@ impl SyncedEventHub {
             h.done().await?;
           }
 
-          match app.handle().find_optional(i_to_d(e.handle.id)).await? {
+          match app.handle().find_optional(e.handle.id.encode_hex()).await? {
             Some(handle) => {
               let h = e.handle;
               for old in handle.handle_topic_vec().await? {
@@ -977,35 +985,35 @@ impl SyncedEventHub {
 
               for new in h.topics {
                 app.handle_topic().insert(InsertHandleTopic{
-                  handle_id: handle.attrs.id,
-                  topic_id: i_to_d(new),
+                  handle_id: handle.attrs.id.clone().encode_hex(),
+                  topic_id: new.encode_hex(),
                 });
               }
 
               handle.update()
                 .username(h.username)
-                .price(i_to_d(h.price))
-                .score(i_to_d(h.score))
+                .price(h.price.encode_hex())
+                .score(h.score.encode_hex())
                 .save().await?;
             },
             None => {
               let h = e.handle;
               app.handle().insert(InsertHandle {
-                id: i_to_d(h.id),
-                account_id: i_to_d(h.account_id),
+                id: h.id.encode_hex(),
+                account_id: h.account_id.encode_hex(),
                 site: Site::from_on_chain(h.site),
                 username: h.username,
                 user_id: h.user_id,
-                price: i_to_d(h.price),
-                score: i_to_d(h.score),
-                nostr_affine_x: i_to_d(h.nostr_affine_x),
-                nostr_affine_y: i_to_d(h.nostr_affine_y),
+                price: h.price.encode_hex(),
+                score: h.score.encode_hex(),
+                nostr_affine_x: h.nostr_affine_x.encode_hex(),
+                nostr_affine_y: h.nostr_affine_y.encode_hex(),
               }).save().await?;
 
               for new in h.topics {
                 app.handle_topic().insert(InsertHandleTopic{
-                  handle_id: i_to_d(h.id),
-                  topic_id: i_to_d(new),
+                  handle_id: h.id.encode_hex(),
+                  topic_id: new.encode_hex(),
                 });
               }
             }
@@ -1032,31 +1040,31 @@ impl SyncedEventHub {
             r.done().await?;
           }
 
-          match app.campaign().find_optional(i_to_d(e.campaign.id)).await? {
+          match app.campaign().find_optional(e.campaign.id.encode_hex()).await? {
             Some(campaign) => {
-              let remaining = i_to_d(e.campaign.remaining);
+              let remaining = e.campaign.remaining;
               campaign.update()
-                .remaining(remaining)
-                .finished(remaining == Decimal::ZERO)
+                .remaining(remaining.encode_hex())
+                .finished(remaining == 0.into())
                 .save().await?;
             },
             None => {
               let c = e.campaign;
               app.campaign().insert(InsertCampaign{
-                id: i_to_d(c.id),
-                account_id: i_to_d(c.account_id),
+                id: c.id.encode_hex(),
+                account_id: c.account_id.encode_hex(),
                 site: Site::from_on_chain(c.site),
-                budget: i_to_d(c.budget),
-                remaining: i_to_d(c.remaining),
-                content_id: c.content_id,
-                price_score_ratio: i_to_d(c.price_score_ratio),
+                budget: c.budget.encode_hex(),
+                remaining: c.remaining.encode_hex(),
+                content_id: c.content_id.encode_hex(),
+                price_score_ratio: c.price_score_ratio.encode_hex(),
                 valid_until: i_to_utc(c.valid_until),
               }).save().await?;
 
               for new in c.topics {
                 app.campaign_topic().insert(InsertCampaignTopic{
-                  campaign_id: i_to_d(c.id),
-                  topic_id: i_to_d(new),
+                  campaign_id: c.id.encode_hex(),
+                  topic_id: new.encode_hex(),
                 });
               }
             }
@@ -1072,16 +1080,16 @@ impl SyncedEventHub {
             r.done().await?;
           }
 
-          if app.collab().find_optional(i_to_d(e.collab.id)).await?.is_none() {
+          if app.collab().find_optional(e.collab.id.encode_hex()).await?.is_none() {
             let c = e.collab;
             app.collab().insert(InsertCollab{
-              id: i_to_d(c.id),
-              campaign_id: i_to_d(c.campaign_id),
-              handle_id: i_to_d(c.handle_id),
-              gross: i_to_d(c.gross),
-              fee: i_to_d(c.fee),
+              id: c.id.encode_hex(),
+              campaign_id: c.campaign_id.encode_hex(),
+              handle_id: c.handle_id.encode_hex(),
+              gross: c.gross.encode_hex(),
+              fee: c.fee.encode_hex(),
               proof: Some(c.proof),
-              created_at: i_to_d(c.created_at),
+              created_at: c.created_at.encode_hex(),
             }).save().await?;
           }
         },
@@ -1099,20 +1107,31 @@ impl SyncedEventHub {
       }
     }
 
-    state.update().last_synced_block(to_block).save().await?;
+    state.update().last_synced_block(u64_to_d(to_block)).save().await?;
 
     Ok(())
   }
 }
 
-fn d_to_i(d: &Decimal) -> U256 {
-  // We're absolutely sure this conversion is always possible.
-  U256::from_dec_str(&d.to_string()).unwrap()
+// Unsafe conversion for values that we know for sure have an U256 hex encoded value.
+pub fn u256<T: AsRef<str> + std::fmt::Debug>(u: T) -> U256 {
+  U256::decode_hex(u).unwrap()
 }
 
-fn i_to_d(u: U256) -> Decimal {
-  // We're absolutely sure this conversion is always possible.
-  Decimal::from_str_radix(u.encode_hex().trim_start_matches("0x"), 16).unwrap()
+pub fn wei<T: AsRef<str>>(t: T) -> U256 {
+  U256::from_dec_str(t.as_ref()).unwrap()
+}
+
+pub fn weihex<T: AsRef<str>>(t: T) -> String {
+  wei(t).encode_hex()
+}
+
+pub fn u<T: AsRef<str>>(t: T) -> U256 {
+  wei(t) * U256::from(10).pow(U256::from(18))
+}
+
+pub fn uhex<T: AsRef<str>>(t: T) -> String {
+  u(t).encode_hex()
 }
 
 fn i_to_utc(u: U256) -> UtcDateTime {
@@ -1127,3 +1146,8 @@ fn utc_to_i(d: UtcDateTime) -> U256 {
 fn u64_to_d(u: U64) -> Decimal {
   Decimal::from_u64(u.as_u64()).unwrap()
 }
+
+fn d_to_u64(d: Decimal) -> U64 {
+  U64::from_dec_str(&d.to_string()).unwrap()
+}
+

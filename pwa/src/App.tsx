@@ -1,3 +1,4 @@
+import {useEffect } from "react";
 import {
   Admin,
   Resource,
@@ -10,11 +11,11 @@ import {
 } from "react-admin";
 import { Route } from "react-router-dom";
 import { authProvider } from "./lib/auth_provider";
+import { defaultDataProvider } from "./lib/data_provider";
 import Login from "./views/login";
 import asamiTheme from './components/theme';
 import { AsamiLayout } from './views/layout';
 
-import CampaignWizard from "./views/advertiser/campaign_wizard";
 import AdvertiserDashboard from "./views/advertiser/dashboard";
 import CreatorDashboard from "./views/creator/dashboard";
 
@@ -22,7 +23,7 @@ import { Alert, AlertTitle, AppBar, Divider, Toolbar, IconButton, Box, Button, C
 import { Head1 } from './components/theme';
 import logo from './assets/asami.png';
 import rootstock from './assets/rootstock.png';
-import { XLogin, InstagramLogin, Eip712Login } from './views/oauth_redirect';
+import { XLogin, InstagramLogin, Eip712Login, OneTimeTokenLogin } from './views/oauth_redirect';
 
 const GoogleForm = () => {
   return <>
@@ -74,22 +75,42 @@ const GoogleForm = () => {
 }
 
 const Dashboard = () => {
-  const [role, setRole] = useStore('user.role', 'advertiser');
+  const [role] = useStore('user.role', 'advertiser');
   return (role == 'advertiser' ? <AdvertiserDashboard /> : <CreatorDashboard />);
 }
 
-export const App = () => <Admin
-    dashboard={Dashboard}
-    disableTelemetry={true}
-    theme={asamiTheme}
-    layout={AsamiLayout}
-    loginPage={Login}
-    authProvider={authProvider}
-  >
-    <CustomRoutes>
-      <Route path="/advertiser/campaign_wizard" element={<CampaignWizard/>}/>
-      <Route path="/x_login" element={<XLogin/>}/>
-      <Route path="/instagram_login" element={<InstagramLogin/>}/>
-      <Route path="/eip712_login" element={<Eip712Login/>}/>
-    </CustomRoutes>
-  </Admin>;
+export const App = () => {
+  const [dataProvider, setDataProvider] = useSafeSetState<any>(null);
+
+  useEffect(() => {
+    async function initApp() {
+      const dataProv = await defaultDataProvider();
+      setDataProvider(dataProv);
+    }
+    initApp();
+  }, []);
+
+
+  if (!dataProvider) {
+    return <Container maxWidth="md">
+      <Skeleton animation="wave" />
+    </Container>;
+  }
+
+  return (<Admin
+      dashboard={Dashboard}
+      disableTelemetry={true}
+      theme={asamiTheme}
+      layout={AsamiLayout}
+      loginPage={Login}
+      authProvider={authProvider}
+      dataProvider={dataProvider}
+    >
+      <CustomRoutes>
+        <Route path="/one_time_token_login" element={<OneTimeTokenLogin/>}/>
+        <Route path="/x_login" element={<XLogin/>}/>
+        <Route path="/instagram_login" element={<InstagramLogin/>}/>
+        <Route path="/eip712_login" element={<Eip712Login/>}/>
+      </CustomRoutes>
+    </Admin>);
+}

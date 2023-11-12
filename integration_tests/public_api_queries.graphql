@@ -51,7 +51,7 @@ query AllCampaignRequestsMeta($page: Int, $perPage: Int, $sortField: String, $so
     __typename
   }
 }
-query Campaign($id: Int!) {
+query Campaign($id: String!) {
   Campaign(id: $id) {
     id
     accountId

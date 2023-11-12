@@ -64,7 +64,6 @@ impl From<sqlx::Error> for Error {
 
 impl From<twitter_v2::Error> for Error {
   fn from(err: twitter_v2::Error) -> Error {
-    dbg!(&err);
     Error::Service("twitter_api_v2".to_string(), err.to_string())
   }
 }

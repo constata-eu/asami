@@ -13,6 +13,29 @@ import {
   GoogleReCaptcha
 } from 'react-google-recaptcha-v3';
 
+export const OneTimeTokenLogin = () => {
+  const [searchParams,] = useSearchParams();
+  const [role, setRole] = useStore('user.role', 'advertiser');
+  const translate = useTranslate();
+  const token = searchParams.get("token");
+  //setRole(searchParams.get("role") == "advertiser" ? "advertiser" : "member");
+
+  return (<BareLayout>
+    <Box
+      display="flex"
+      flexDirection="column"
+      marginTop="3em"
+      alignItems="center"
+      minHeight="50vh"
+    >
+      { token ?
+        <RegularLogin authData={token} authMethodKind="OneTimeToken" /> :
+        <Errors error={ translate("components.oauth_redirect.invalid_redirect_state") } />
+      }
+    </Box>
+  </BareLayout>);
+}
+
 export const Eip712Login = () => {
   const [searchParams,] = useSearchParams();
   const translate = useTranslate();

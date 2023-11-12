@@ -4,7 +4,6 @@ pub use galvanic_assert::{
   matchers::{collection::*, variant::*, *},
   *,
 };
-
 pub use api::models::hasher;
 use rocket::{
   http::{Header, Status},
@@ -13,6 +12,7 @@ use rocket::{
 use jwt_simple::{ algorithms::*, prelude::*, };
 pub use serde::{Serialize, de::DeserializeOwned, Deserialize};
 use graphql_client;
+pub use api::Decimal;
 
 #[derive(Deserialize)]
 pub struct ApiError {
@@ -187,6 +187,7 @@ macro_rules! make_graphql_queries {
 }
 
 pub mod gql {
+  use rust_decimal::Decimal;
   type DateTime = chrono::DateTime<chrono::Utc>;
 
   make_graphql_queries![

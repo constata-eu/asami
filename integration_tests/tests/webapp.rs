@@ -6,18 +6,37 @@ use support::gql::*;
 use rocket::http::Header;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 
+browser_test!{ browser_test (test_app, d)
+  let value = "test-token";
+  test_app.app.one_time_token().insert(InsertOneTimeToken{
+    value: value.to_string()
+  }).save().await?;
 
-/*
- Creates account.
- Participates in campaign.
- Gets paid.
- Claims account.
- Moves money out of account.
+  d.goto("http://127.0.0.1:5173/#/one_time_token_login?token=test-token").await;
+  // Stub creation of an account with a one-time-token for advertiser.
+  
+  // Creates a campaign (request).
+  // Shows the status in the advertiser dashboard (pending campaigns).
+  // Shows it done in the advertiser dashboard (running campaigns).
 
- -- Use the API calls instead of models for all interactions.
-*/
+  // Stub creation of an account with a one-time-token for member.
+  // Create verification request, stub twitter api creation.
+  // Sees campaigns in his dashboard.
+  // Chooses to participate in one (up until opening repost UI)
 
-browser_test!{ signs_up_and_makes_x_collab_stubbing (test_app, client)
+  // Stub detection of retweet on twitter.
+
+  // Campaign remaining balance is updated.
+  
+  // Member "pending" balance updates. Including tokens. 
+  // Member hits the "claim account" button.
+  //
+  // Rif login opens. 
+  // User choses metamask.
+  // Account is then claimed.
+    // Account claiming is a type of request too.
+  
+  /*
   let value = "test+token";
   test_app.app.one_time_token().insert(InsertOneTimeToken{
     value: value.to_string()
@@ -38,127 +57,63 @@ browser_test!{ signs_up_and_makes_x_collab_stubbing (test_app, client)
     ]
   ).await;
 
-  let account = test_app.app.account().find(1).await?;
+  let account = test_app.app.account().find(weihex("1")).await?;
+  let mut handle_req = account.create_handle_request(Site::X, "nubis_bruno").await?;
+  handle_req = handle_req.verify("179383862".into()).await?;
+  handle_req = handle_req.appraise(u("10"), u("10")).await?;
 
-  let mut handle = account.add_handle(Site::X, "nubis_bruno").await?;
+  test_app.app.handle_request().submit_all().await?;
+  test_app.app.synced_event().sync_on_chain_events().await?;
+  assert_eq!(handle_req.reloaded().await?.attrs.status, HandleRequestStatus::Done);
 
-  test_app.app.handle().verify_and_appraise_x().await.unwrap();
-
-  handle.reload().await?;
-
-  assert_that!(&handle.attrs, structure![ HandleAttrs {
-    status: eq(HandleRequestStatus::Appraised),
-    fixed_id: maybe_some(rematch("179383862")),
-    verification_message_id: maybe_some(rematch("1713930237598150807")),
-    //score: maybe_some(eq(Decimal::new(3393, 0)))
-  }]);
-
-  let submitted = handle.submit().await?;
-
-  assert_that!(&submitted.attrs, structure![ HandleAttrs {
-    status: eq(HandleRequestStatus::Submitted),
-    tx_hash: maybe_some(any_value())
-  }]);
-
-  tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
-
-  test_app.app.sync_on_chain_events().await?;
-
-  assert_that!(&submitted.reloaded().await?.attrs, structure![ HandleAttrs {
-    status: eq(HandleRequestStatus::Active),
-  }]);
+  let handle = test_app.app.handle().select().one().await?;
 
   //"https://x.com/asami_club/status/1716421161867710954?s=20",
   let campaign_req = account.create_campaign_request(
     Site::X,
     "1716421161867710954",
-    Decimal::new(10,0),
+    u("50"),
+    u("2"),
+    Utc::now() + chrono::Duration::days(2),
   ).await?
-  .pay().await?
-  .submit().await?;
+  .pay().await?;
 
-  test_app.app.sync_on_chain_events().await.unwrap();
+  test_app.app.campaign_request().submit_approvals().await?;
+  test_app.app.synced_event().sync_on_chain_events().await?;
+  assert_eq!(campaign_req.reloaded().await?.attrs.status, CampaignRequestStatus::Approved);
+
+  test_app.app.campaign_request().submit_all().await?;
+  test_app.app.synced_event().sync_on_chain_events().await?;
+  assert_eq!(campaign_req.reloaded().await?.attrs.status, CampaignRequestStatus::Done);
 
   let mut campaign = test_app.app.campaign().select().one().await.unwrap();
 
   assert_that!(&campaign.attrs, structure![ CampaignAttrs {
-    budget: eq(Decimal::new(10,0)),
-    remaining: eq(Decimal::new(10,0))
+    budget: eq(uhex("50")),
+    remaining: eq(uhex("50")),
   }]);
 
-  test_app.app.campaign().sync_x_collabs().await.unwrap();
-
-  assert!(test_app.app.collab_request().select().count().await? == 1);
+  test_app.app.collab_request().insert(InsertCollabRequest{
+    campaign_id: campaign.attrs.id.clone(),
+    handle_id: handle.attrs.id.clone(),
+  }).save().await?;
 
   test_app.app.collab_request().submit_all().await.unwrap();
-
-  test_app.app.sync_on_chain_events().await.unwrap();
-
+  test_app.app.synced_event().sync_on_chain_events().await?;
   assert!(test_app.app.collab().select().count().await? == 1);
 
   campaign.reload().await?;
 
   assert_that!(&campaign.attrs, structure![ CampaignAttrs {
-    budget: eq(Decimal::new(10,0)),
-    remaining: eq(Decimal::new(7,0))
+    budget: eq(uhex("50")),
+    remaining: eq(uhex("40"))
   }]);
-}
-
-/*
-browser_test!{ logs_in_with_one_time_token (app, selenium)
-  todo!("Fail here");
-
-  // https://x.com/asami_club/status/1716421161867710954?s=20
-  //
-  // Monitor the twitter URL retweets to know if they have retweeted it.
-  //
-  // Validate collab and Sync the collab on-chain:
-  //   -- Check the sender is a registered account.
-  //   -- Check 
-
-  /*
-
-  use gql::{
-    *,
-    create_attestation as create,
-    attestation as show,
-    all_attestations as all,
-    attestation_html_export as export,
-    attestation_set_published as publish,
-  };
-
-  client.signer.verify_email("test@example.com").await;
-
-  let vars = create::Variables{
-    input: create::AttestationInput {
-      documents: vec![
-        client.signer.signed_payload(b"hello world").into(),
-        client.signer.signed_payload(b"goodbye world").into(),
-      ],
-      open_until: Some(chrono::Utc.with_ymd_and_hms(2050, 1, 1, 1, 1, 1).unwrap()),
-      markers: Some("foo bar baz".to_string()),
-      email_admin_access_url_to: vec!["foo@example.com".to_string(), "bar@example.com".to_string()]
-    }
-  };
-
-  let created: create::ResponseData = client.gql(&CreateAttestation::build_query(vars)).await;
   */
 }
-*/
 
-/*
- * Create the initial campaign topics.
- *
- * Login to the API with one time link, as an advertiser and start a campaign.
- *
- * Login as an advocate, create a profile, link social networks (by posting the example viral campaign).
- *
- * Participate in the recently created campaign.
- *
- * >>> time goes by
- *
- * Get paid for participating in the campaign.
- *
- * Convert the paid money into tokens 
- *
-*/
+// Test creation of an account + session with twitter.
+// Test creation of an account + session with instagram.
+
+// Test creation of an account + session with metamask.
+  // Is this account automatically used for the protocol too?
+  // Does it mean that account starts immediately claimed?

@@ -1,4 +1,4 @@
-use super::{*, models::{self, *, Decimal}};
+use super::{*, models::{self, *}};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -7,11 +7,17 @@ pub struct CampaignRequest {
   #[graphql(description = "Unique numeric identifier of this werify point")]
   id: i32,
   #[graphql(description = "The id of the account that created this.")]
-  account_id: Decimal,
+  account_id: String,
   #[graphql(description = "The total budget for this campaign to be split across users.")]
-  budget: Decimal,
+  budget: String,
   #[graphql(description = "The site where this campaign is to be run on.")]
   site: Site,
+  #[graphql(description = "Status of this campaign request.")]
+  status: CampaignRequestStatus,
+  #[graphql(description = "When this campaigns's ERC20 DOC budget is 'approved', this field will show the transaction hash.")]
+  approval_tx_hash: Option<String>,
+  #[graphql(description = "When this campaign is submitted on-chain, this field will show the transaction hash.")]
+  submission_tx_hash: Option<String>,
   #[graphql(description = "The content to share.")]
   content_id: String,
   #[graphql(description = "The date in which this campaign was created.")]
@@ -65,6 +71,9 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
       id: d.attrs.id,
       account_id: d.attrs.account_id,
       budget: d.attrs.budget,
+      status: d.attrs.status,
+      approval_tx_hash: d.attrs.approval_tx_hash,
+      submission_tx_hash: d.attrs.submission_tx_hash,
       site: d.attrs.site,
       content_id: d.attrs.content_id,
       created_at: d.attrs.created_at,
@@ -78,23 +87,23 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
 #[serde(rename_all = "camelCase")]
 pub struct CreateCampaignRequestInput {
   pub content_id: String,
-  pub budget: Decimal,
-  pub account_id: Decimal,
+  pub budget: String,
+  pub account_id: String,
   pub site: Site,
-  pub price_score_ratio: Decimal,
+  pub price_score_ratio: String,
   pub valid_until: UtcDateTime
 }
 
 impl CreateCampaignRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<CampaignRequest> {
-    context.require_account_user(self.account_id)?;
-    let account = context.app.account().find(self.account_id).await?;
+    context.require_account_user(&self.account_id)?;
+    let account = context.app.account().find(&self.account_id).await?;
 
     let req = account.create_campaign_request(
       self.site,
       &self.content_id,
-      self.budget,
-      self.price_score_ratio,
+      u256(self.budget),
+      u256(self.price_score_ratio),
       self.valid_until,
     ).await?;
 

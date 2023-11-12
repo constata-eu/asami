@@ -6,17 +6,81 @@ use support::gql::*;
 use rocket::http::Header;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 
+api_test!{ signs_up_and_makes_x_collab_stubbing (test_app, client)
+  let value = "test+token";
+  test_app.app.one_time_token().insert(InsertOneTimeToken{
+    value: value.to_string()
+  }).save().await?;
+
+  let login_pubkey = URL_SAFE_NO_PAD.encode(
+    test_app.private_key().public_key().to_pem().unwrap()
+  );
+
+  let _created: create_session::ResponseData = client.gql(
+    &CreateSession::build_query(create_session::Variables{}),
+    vec![
+      Header::new("Auth-Action", "Login"),
+      Header::new("Auth-Method-Kind", "OneTimeToken"),
+      Header::new("Auth-Data", value),
+      Header::new("Login-Pubkey", login_pubkey),
+      Header::new("New-Session-Recaptcha-Code", "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"),
+    ]
+  ).await;
+
+  let account = test_app.app.account().find(weihex("1")).await?;
+  let mut handle_req = account.create_handle_request(Site::X, "nubis_bruno").await?;
+  handle_req = handle_req.verify("179383862".into()).await?;
+  handle_req = handle_req.appraise(u("10"), u("10")).await?;
+
+  test_app.app.handle_request().submit_all().await?;
+  test_app.app.synced_event().sync_on_chain_events().await?;
+  assert_eq!(handle_req.reloaded().await?.attrs.status, HandleRequestStatus::Done);
+
+  let handle = test_app.app.handle().select().one().await?;
+
+  //"https://x.com/asami_club/status/1716421161867710954?s=20",
+  let campaign_req = account.create_campaign_request(
+    Site::X,
+    "1716421161867710954",
+    u("50"),
+    u("2"),
+    Utc::now() + chrono::Duration::days(2),
+  ).await?
+  .pay().await?;
+
+  test_app.app.campaign_request().submit_approvals().await?;
+  test_app.app.synced_event().sync_on_chain_events().await?;
+  assert_eq!(campaign_req.reloaded().await?.attrs.status, CampaignRequestStatus::Approved);
+
+  test_app.app.campaign_request().submit_all().await?;
+  test_app.app.synced_event().sync_on_chain_events().await?;
+  assert_eq!(campaign_req.reloaded().await?.attrs.status, CampaignRequestStatus::Done);
+
+  let mut campaign = test_app.app.campaign().select().one().await.unwrap();
+
+  assert_that!(&campaign.attrs, structure![ CampaignAttrs {
+    budget: eq(uhex("50")),
+    remaining: eq(uhex("50")),
+  }]);
+
+  test_app.app.collab_request().insert(InsertCollabRequest{
+    campaign_id: campaign.attrs.id.clone(),
+    handle_id: handle.attrs.id.clone(),
+  }).save().await?;
+
+  test_app.app.collab_request().submit_all().await.unwrap();
+  test_app.app.synced_event().sync_on_chain_events().await?;
+  assert!(test_app.app.collab().select().count().await? == 1);
+
+  campaign.reload().await?;
+
+  assert_that!(&campaign.attrs, structure![ CampaignAttrs {
+    budget: eq(uhex("50")),
+    remaining: eq(uhex("40"))
+  }]);
+}
 
 /*
- Creates account.
- Participates in campaign.
- Gets paid.
- Claims account.
- Moves money out of account.
-
- -- Use the API calls instead of models for all interactions.
-*/
-
 api_test!{ signs_up_and_makes_collab_in_x (test_app, client)
   let value = "test+token";
   test_app.app.one_time_token().insert(InsertOneTimeToken{
@@ -103,62 +167,5 @@ api_test!{ signs_up_and_makes_collab_in_x (test_app, client)
     remaining: eq(Decimal::new(7,0))
   }]);
 }
-
-/*
-browser_test!{ logs_in_with_one_time_token (app, selenium)
-  todo!("Fail here");
-
-  // https://x.com/asami_club/status/1716421161867710954?s=20
-  //
-  // Monitor the twitter URL retweets to know if they have retweeted it.
-  //
-  // Validate collab and Sync the collab on-chain:
-  //   -- Check the sender is a registered account.
-  //   -- Check 
-
-  /*
-
-  use gql::{
-    *,
-    create_attestation as create,
-    attestation as show,
-    all_attestations as all,
-    attestation_html_export as export,
-    attestation_set_published as publish,
-  };
-
-  client.signer.verify_email("test@example.com").await;
-
-  let vars = create::Variables{
-    input: create::AttestationInput {
-      documents: vec![
-        client.signer.signed_payload(b"hello world").into(),
-        client.signer.signed_payload(b"goodbye world").into(),
-      ],
-      open_until: Some(chrono::Utc.with_ymd_and_hms(2050, 1, 1, 1, 1, 1).unwrap()),
-      markers: Some("foo bar baz".to_string()),
-      email_admin_access_url_to: vec!["foo@example.com".to_string(), "bar@example.com".to_string()]
-    }
-  };
-
-  let created: create::ResponseData = client.gql(&CreateAttestation::build_query(vars)).await;
-  */
-}
 */
 
-/*
- * Create the initial campaign topics.
- *
- * Login to the API with one time link, as an advertiser and start a campaign.
- *
- * Login as an advocate, create a profile, link social networks (by posting the example viral campaign).
- *
- * Participate in the recently created campaign.
- *
- * >>> time goes by
- *
- * Get paid for participating in the campaign.
- *
- * Convert the paid money into tokens 
- *
-*/

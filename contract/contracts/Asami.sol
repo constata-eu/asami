@@ -164,8 +164,9 @@ contract Asami is Ownable, ERC20 {
       }
 
       handles.push(_inputs[i]);
-      handles[handles.length - 1].id = handles.length;
-      emit HandleSaved(_inputs[i]);
+      Handle storage h = handles[handles.length - 1];
+      h.id = handles.length;
+      emit HandleSaved(h);
     }
   }
 

@@ -78,5 +78,5 @@ pub struct Rsk {
   pub doc_contract_address: String,
   pub wallet_mnemonic: String,
   pub admin_address: String,
-  pub reorg_protection_padding: Decimal,
+  pub reorg_protection_padding: ethers::types::U64,
 }

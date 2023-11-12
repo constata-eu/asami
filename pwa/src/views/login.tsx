@@ -114,7 +114,7 @@ const Login = () => {
           Connect with your MetaMask RSK wallet to get started on your next brand collaboration.
         </Typography>
         <Button
-          onClick={() => loginAs("creator")}
+          onClick={() => loginAs("member")}
           sx={{margin: "auto 0 0 0"}}
           variant="contained"
           size="large"

@@ -4,7 +4,10 @@ use super::models::{*, Session};
 use super::*;
 use jwt_simple::prelude::*;
 use base64::{Engine as _, engine::general_purpose};
-use ethers::types::{Signature, transaction::eip712::TypedData};
+use ethers::{
+  abi::AbiEncode,
+  types::{Signature, transaction::eip712::TypedData}
+};
 use std::str::FromStr;
 
 use rocket::{
@@ -112,17 +115,19 @@ impl CurrentSession {
           app.account().insert(InsertAccount{
             name: Some("account".to_string()),
             addr: None,
-            unclaimed_asami_tokens: Decimal::ZERO,
-            unclaimed_doc_rewards: Decimal::ZERO,
+            unclaimed_asami_tokens: u("0").encode_hex(),
+            unclaimed_doc_rewards: u("0").encode_hex(),
             nostr_self_managed: false,
             nostr_abuse_proven: false
           }).save().await,
           "could_not_create_account"
         ).attrs.id;
+
         let user_id = auth_try!(
           app.user().insert(InsertUser{name:"user".to_string()}).save().await,
           "could_not_create_user"
         ).attrs.id;
+
         auth_try!(
           app.account_user().insert(InsertAccountUser{ account_id, user_id }).save().await,
           "could_not_bind_user_to_account"

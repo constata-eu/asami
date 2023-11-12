@@ -99,12 +99,12 @@ pub struct Context {
   app: App,
   current_session: CurrentSession,
   user_id: i32,
-  account_ids: Vec<Decimal>,
+  account_ids: Vec<String>,
 }
 
 impl Context {
-  pub fn require_account_user(&self, account_id: Decimal) -> FieldResult<()> {
-    if !self.account_ids.contains(&account_id) {
+  pub fn require_account_user(&self, account_id: &str) -> FieldResult<()> {
+    if !self.account_ids.iter().any(|s| s == account_id) {
       return Err(field_error("no_access_to_account", &account_id.to_string()))
     }
     return Ok(())
@@ -239,7 +239,7 @@ make_graphql_query!{
   "1.0";
   showables {
     [CampaignRequest, allCampaignRequests, allCampaignRequestsMeta, "_allCampaignRequestsMeta", CampaignRequestFilter, i32],
-    [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, Decimal],
+    [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, String],
   }
 }
 

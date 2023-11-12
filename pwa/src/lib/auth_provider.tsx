@@ -18,20 +18,22 @@ export function getAuthKeys() {
   return {
     "sessionPublicKey": localStorage.getItem("sessionPublicKey"),
     "sessionPrivateKey": localStorage.getItem("sessionPrivateKey"),
+    "session": JSON.parse(localStorage.getItem("session")),
   };
 }
 
-export function setAuthKeys(object) {
+export function setAuthKeys(object, session) {
   if (!_.every(['sessionPublicKey', 'sessionPrivateKey'], (k) => object[k])){
     return false;
   }
   localStorage.setItem("sessionPublicKey", object.sessionPublicKey);
   localStorage.setItem("sessionPrivateKey", object.sessionPrivateKey);
+  localStorage.setItem("session", JSON.stringify(session));
   return true;
 }
 
 function clearAuthKeys() {
-  for(const k of ['sessionPublicKey', 'sessionPrivateKey']) {
+  for(const k of ['sessionPublicKey', 'sessionPrivateKey', 'session']) {
     localStorage.removeItem(k);
   }
 }
@@ -159,8 +161,8 @@ export const login = async (authMethodKind, authData, recaptchaToken) => {
   try {
     const keys = await makeKeys();
     const dataProvider = await createSessionDataProvider(keys, authMethodKind, authData, recaptchaToken);
-    await dataProvider.create('Session', { data: {} });
-    setAuthKeys(keys);
+    const { data } = await dataProvider.create('Session', { data: {} });
+    setAuthKeys(keys, data);
     return Promise.resolve();
   } catch (e) {
     return Promise.reject(e);
@@ -191,10 +193,11 @@ export const authProvider: AuthProvider = {
     return Promise.resolve();
   },
   getIdentity: () => {
-    const persistedUser = localStorage.getItem("user");
-    const user = persistedUser ? JSON.parse(persistedUser) : null;
-    return Promise.resolve(user);
+    const storedSession = localStorage.getItem("session");
+    const session = storedSession ? JSON.parse(storedSession) : null;
+    return Promise.resolve({"id": session.id, "fullName": `Member #${session.user_id}`, "avatar": null});
   },
+  getPermissions: () => Promise.resolve(),
 };
 
 export default authProvider;

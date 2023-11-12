@@ -1,23 +1,23 @@
-enum Site {
-  X
-  INSTAGRAM
-  NOSTR
-}
-
 input CampaignRequestFilter {
   ids: [Int!]
   idEq: Int
   contentIdLike: String
 }
 
+enum Site {
+  X
+  NOSTR
+  INSTAGRAM
+}
+
 "A campaign started by an advertiser"
 type Campaign {
   "Unique numeric identifier of this werify point"
-  id: Int!
+  id: String!
   "The id of the account that created this."
-  accountId: Int!
+  accountId: String!
   "The total budget for this campaign to be split across users."
-  budget: Float!
+  budget: String!
   "The site where this campaign is to be run on."
   site: Site!
   "The content to share."
@@ -29,8 +29,8 @@ type Campaign {
 }
 
 input CampaignFilter {
-  ids: [Int!]
-  idEq: Int
+  ids: [String!]
+  idEq: String
   contentIdLike: String
 }
 
@@ -44,9 +44,9 @@ type CampaignRequest {
   "Unique numeric identifier of this werify point"
   id: Int!
   "The id of the account that created this."
-  accountId: Int!
+  accountId: String!
   "The total budget for this campaign to be split across users."
-  budget: Float!
+  budget: String!
   "The site where this campaign is to be run on."
   site: Site!
   "The content to share."
@@ -66,7 +66,7 @@ type Query {
   CampaignRequest(id: Int!): CampaignRequest!
   allCampaignRequests(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignRequestFilter): [CampaignRequest!]!
   _allCampaignRequestsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignRequestFilter): ListMetadata!
-  Campaign(id: Int!): Campaign!
+  Campaign(id: String!): Campaign!
   allCampaigns(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignFilter): [Campaign!]!
   _allCampaignsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignFilter): ListMetadata!
 }
@@ -74,9 +74,11 @@ type Query {
 "The input for creating a new CampaignRequest."
 input CreateCampaignRequestInput {
   contentId: String!
-  budget: Float!
-  accountId: Int!
+  budget: String!
+  accountId: String!
   site: Site!
+  priceScoreRatio: String!
+  validUntil: DateTime!
 }
 
 "A campaign started by an advertiser"
