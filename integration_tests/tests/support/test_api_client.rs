@@ -19,6 +19,7 @@ pub struct ApiError {
   pub error: String,
 }
 
+#[allow(dead_code)]
 pub struct ApiClient {
   pub client: Client,
   pub test_app: TestApp,
@@ -187,7 +188,6 @@ macro_rules! make_graphql_queries {
 }
 
 pub mod gql {
-  use rust_decimal::Decimal;
   type DateTime = chrono::DateTime<chrono::Utc>;
 
   make_graphql_queries![

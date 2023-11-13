@@ -4,7 +4,7 @@ use super::{*, models::{self, *}};
 #[serde(rename_all = "camelCase")]
 #[graphql(description = "A campaign started by an advertiser")]
 pub struct CampaignRequest {
-  #[graphql(description = "Unique numeric identifier of this werify point")]
+  #[graphql(description = "Unique numeric identifier of this resource")]
   id: i32,
   #[graphql(description = "The id of the account that created this.")]
   account_id: String,
@@ -32,6 +32,7 @@ pub struct CampaignRequestFilter {
   ids: Option<Vec<i32>>,
   id_eq: Option<i32>,
   content_id_like: Option<String>,
+  status_in: Option<Vec<CampaignRequestStatus>>,
 }
 
 #[rocket::async_trait]
@@ -50,6 +51,7 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
       models::SelectCampaignRequest {
         id_in: f.ids,
         account_id_in: Some(context.account_ids.clone()),
+        status_in: f.status_in,
         id_eq: f.id_eq,
         content_id_like: into_like_search(f.content_id_like),
         ..Default::default()

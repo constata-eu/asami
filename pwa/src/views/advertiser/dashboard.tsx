@@ -26,6 +26,11 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Toolbar, Create, SimpleForm, CreateBase, Form, TextInput, RichTextInput, SaveButton, useNotify } from 'react-admin';
 import { ListBase, Title, ListToolbar, Pagination, Datagrid, TextField, FunctionField} from 'react-admin';
+import {  
+    useListController,
+    defaultExporter,
+    ListContextProvider
+} from 'react-admin';
 
 import { Stack } from '@mui/material';
 import CampaignIcon from '@mui/icons-material/Campaign';
@@ -34,9 +39,7 @@ import { getAuthKeys } from '../../lib/auth_provider';
 
 const Dashboard = () => {
   const [loading, setLoading] = useSafeSetState(true);
-  const [campaigns, setCampaigns] = useSafeSetState(true);
-  const [socialNetworks, setSocialNetworks] = useSafeSetState([]);
-  const dataProvider = useDataProvider();
+  const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -51,7 +54,7 @@ const Dashboard = () => {
     </Container>;
   }
 
-  return <Container maxWidth="md">
+  return <Container maxWidth="md" id="advertiser-dashboard">
     <Head1 sx={{my:3}}>Hello Advertiser!</Head1>
     <Typography my="1em">
       Get the ASAMI community to repost your X content, just enter the URL of your X post and how much you want to spend.
@@ -65,34 +68,97 @@ const Dashboard = () => {
       As you're an early adopter, we may be able to fund your campaign with no charge to you, just <a href="#">Contact us</a>.
     </Typography>
 
-    <CreateCampaignRequest />
-    <CampaignList />
-
+    <CreateCampaignRequest onSave={() => setNeedsRefresh(true) } />
+    <CampaignRequestList {...{needsRefresh, setNeedsRefresh}} />
+    <CampaignList/>
   </Container>;
 }
 
-const CampaignList = () => {
-  return <ListBase resource="CampaignRequest" disableSyncWithLocation>
-    <Card sx={{my:"3em"}}>
-      <CardTitle text="Requested campaigns" />
-      <Datagrid bulkActionButtons={false}>
-        <TextField source="status" />
-        <TextField source="site" />
-        <FunctionField label="Post" render={record => <a target="_blank" href={`https://x.com/twitter/status/${record.contentId}`}>See post</a>} />
-        <FunctionField label="budget" render={record => `${formatEther(record.budget)} DOC` } />
-        
-      </Datagrid>
-      <Pagination />
-    </Card>
-  </ListBase>;
+const CampaignRequestList = ({needsRefresh, setNeedsRefresh}) => {
+  const listContext = useListController({
+    debounce: 500,
+    disableSyncWithLocation: true,
+    filter: {statusIn: ["RECEIVED", "PAID", "SUBMITTED"]},
+    queryOptions: {
+      refetchInterval: 2000,
+    },
+    perPage: 20,
+    resource: "CampaignRequest",
+  });
+
+  useEffect(() => {
+    if(needsRefresh) {
+      listContext.refetch();
+      setNeedsRefresh(false);
+    }
+  }, [needsRefresh, setNeedsRefresh]);
+
+  if (listContext.total < 1 ){
+    return <></>;
+  }
+
+  return (
+    <ListContextProvider value={listContext}>
+      <Card id="campaign-request-list" sx={{my:"3em"}}>
+        <CardTitle text="Requested campaigns" >
+          <Typography mt="1em">Since you're still using WEB2 login, we'll take care of publishing these for you.</Typography>
+          <Typography>Claim your account using your WEB3 wallet to save money and time on your next campaign.</Typography>
+        </CardTitle>
+        <Datagrid bulkActionButtons={false}>
+          <FunctionField label="Post" render={record => <a target="_blank" href={`https://x.com/twitter/status/${record.contentId}`}>See post</a>} />
+          <TextField source="status" />
+          <TextField source="site" />
+          <FunctionField label="Budget" render={record => `${formatEther(record.budget)} DOC` } />
+        </Datagrid>
+        <Pagination rowsPerPageOptions={[]} />
+      </Card>
+    </ListContextProvider>
+  );
 }
 
-const CreateCampaignRequest = () => {
+const CampaignList = ({needsRefresh, setNeedsRefresh}) => {
+  const listContext = useListController({
+    debounce: 500,
+    disableSyncWithLocation: true,
+    filter: {accountIdIn: getAuthKeys().session.accountIds },
+    perPage: 20,
+    queryOptions: {
+      refetchInterval: 2000,
+    },
+    resource: "Campaign",
+  });
+
+  if (listContext.total < 1 ){
+    return <></>;
+  }
+
+  return (
+    <ListContextProvider value={listContext}>
+      <Card id="campaign-list" sx={{my:"3em"}}>
+        <CardTitle text="Active campaigns" >
+          <Typography mt="1em">The ASAMI club members will be reposting your content until the budget is fully spent.</Typography>
+          <Typography>Claim your WEB3 account to get reimbursed if the budget is not spent after the campaign due date.</Typography>
+        </CardTitle>
+        <Datagrid bulkActionButtons={false}>
+          <FunctionField label="Post" render={record => <a target="_blank" href={`https://x.com/twitter/status/${record.contentId}`}>See post</a>} />
+          <TextField source="site" />
+          <FunctionField label="Budget" render={record => `${formatEther(record.budget)} DOC` } />
+          <FunctionField label="Remaining" render={record => `${formatEther(record.remaining)} DOC` } />
+          <TextField source="validUntil" />
+        </Datagrid>
+        <Pagination rowsPerPageOptions={[]} />
+      </Card>
+    </ListContextProvider>
+  );
+}
+
+const CreateCampaignRequest = ({onSave}) => {
   const [open, setOpen] = useSafeSetState(false);
 
   const notify = useNotify();
   const handleClose = () => setOpen(false);
   const onSuccess = () => {
+    onSave();
     notify("Campaign will be started soon");
     handleClose();
   }
@@ -140,18 +206,18 @@ const CreateCampaignRequest = () => {
   }
   
   return (<Box>
-    <Button fullWidth variant="contained" size="large" onClick={ () => setOpen(true) }>
+    <Button fullWidth variant="contained" size="large" id="open-start-campaign-dialog" onClick={ () => setOpen(true) }>
       <CampaignIcon sx={{mr:"5px"}}/>
       Start Campaign
     </Button>
     <CreateBase resource="CampaignRequest" transform={transformIt} mutationOptions={{ onSuccess }} >
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <Dialog id="start-campaign-dialog" open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <Box p="0 1em">
           <SimpleForm sanitizeEmptyValues validate={validate} toolbar={false}>
             <TextInput fullWidth required={true} size="large" variant="filled" source="contentUrl" label="Your post URL" />
             <TextInput fullWidth required={true} size="large" variant="filled" source="budget" label="How much you have to spend, in DoC (USD)" />
             <Box width="100%" display="flex" gap="1em" justifyContent="space-between">
-              <SaveButton size="large" label="Start Campaign" icon={<CampaignIcon/>} />
+              <SaveButton id="submit-start-campaign-form" size="large" label="Start Campaign" icon={<CampaignIcon/>} />
               <Button size="large" variant="contained" color="grey" onClick={handleClose}>Cancel</Button>
             </Box>
           </SimpleForm>
@@ -162,17 +228,3 @@ const CreateCampaignRequest = () => {
 }
 
 export default Dashboard;
-
-/*
-  useEffect(() => {
-    const load = async () => {
-    
-      const { asami, signer } = await useContracts();
-      const all = await asami.getCampaigns();
-      setCampaigns(_.filter(all, (x) => x.advertiser == signer.address ));
-      setSocialNetworks(await asami.getSocialNetworks());
-      setLoading(false);
-    }
-    load();
-  }, []);
-*/

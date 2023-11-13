@@ -249,6 +249,7 @@ export const CardTitle = ({text, ...props}) => {
 
   return(<Box {...props} sx={{ p: 2, borderBottom: "2px solid", borderColor: darkPink }}>
     <Head2>{ translate(text, { _: text }) }</Head2>
+    { props.children }
   </Box>)
 }
 

@@ -18,7 +18,6 @@ export const OneTimeTokenLogin = () => {
   const [role, setRole] = useStore('user.role', 'advertiser');
   const translate = useTranslate();
   const token = searchParams.get("token");
-  //setRole(searchParams.get("role") == "advertiser" ? "advertiser" : "member");
 
   return (<BareLayout>
     <Box

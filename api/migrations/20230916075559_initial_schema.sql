@@ -174,11 +174,13 @@ CREATE INDEX idx_handle_topics_topic_id ON handle_topics(topic_id);
 
 CREATE TABLE handle_update_requests (
   id SERIAL PRIMARY KEY NOT NULL,
+  account_id VARCHAR REFERENCES accounts(id) NOT NULL,
   handle_id VARCHAR REFERENCES handles(id) NOT NULL,
-  username VARCHAR NOT NULL,
-  price VARCHAR NOT NULL,
-  score VARCHAR NOT NULL,
+  username VARCHAR,
+  price VARCHAR,
+  score VARCHAR,
   status handle_update_request_status NOT NULL DEFAULT 'received',
+  created_by_admin boolean NOT NULL DEFAULT FALSE,
   tx_hash VARCHAR,
   created_at timestamp DEFAULT now() NOT NULL,
   updated_at timestamp
@@ -229,7 +231,9 @@ CREATE INDEX idx_collab_requests_handle_id ON collab_requests(handle_id);
 CREATE TABLE collabs (
   id VARCHAR UNIQUE NOT NULL,
   handle_id VARCHAR REFERENCES handles(id) NOT NULL,
+  member_id VARCHAR REFERENCES accounts(id) NOT NULL,
   campaign_id VARCHAR REFERENCES campaigns(id) NOT NULL,
+  advertiser_id VARCHAR REFERENCES accounts(id) NOT NULL,
   gross VARCHAR NOT NULL,
   fee VARCHAR NOT NULL,
   proof VARCHAR,

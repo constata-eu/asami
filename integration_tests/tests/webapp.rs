@@ -1,10 +1,9 @@
+#![allow(dead_code)]
+
 #[macro_use]
 mod support;
+
 use ::api::models::*;
-use graphql_client::GraphQLQuery;
-use support::gql::*;
-use rocket::http::Header;
-use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 
 browser_test!{ browser_test (test_app, d)
   let value = "test-token";
@@ -13,6 +12,22 @@ browser_test!{ browser_test (test_app, d)
   }).save().await?;
 
   d.goto("http://127.0.0.1:5173/#/one_time_token_login?token=test-token").await;
+  d.wait_for("#advertiser-dashboard").await;
+  d.click("#open-start-campaign-dialog").await;
+  d.fill_in("#contentUrl", "https://x.com/asami_club/status/1716421161867710954?s=20").await;
+  d.fill_in("#budget", "20").await;
+  d.click("#submit-start-campaign-form").await;
+  d.wait_for_text(".MuiSnackbarContent-message", "Campaign will be started soon").await;
+  d.wait_until_gone(".MuiSnackbarContent-message").await;
+  d.wait_for("#campaign-request-list").await;
+
+  test_app.mock_admin_setting_campaign_requests_as_paid().await;
+  test_app.run_idempotent_background_tasks_a_few_times().await;
+  
+  //d.goto("http://127.0.0.1:5173/#/?role=member").await;
+
+  wait_here();
+
   // Stub creation of an account with a one-time-token for advertiser.
   
   // Creates a campaign (request).

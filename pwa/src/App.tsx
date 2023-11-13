@@ -7,9 +7,9 @@ import {
   ShowGuesser,
   CustomRoutes,
   useSafeSetState,
-  useStore,
+  useStore
 } from "react-admin";
-import { Route } from "react-router-dom";
+import { Route, useSearchParams } from "react-router-dom";
 import { authProvider } from "./lib/auth_provider";
 import { defaultDataProvider } from "./lib/data_provider";
 import Login from "./views/login";
@@ -17,7 +17,7 @@ import asamiTheme from './components/theme';
 import { AsamiLayout } from './views/layout';
 
 import AdvertiserDashboard from "./views/advertiser/dashboard";
-import CreatorDashboard from "./views/creator/dashboard";
+import MemberDashboard from "./views/member/dashboard";
 
 import { Alert, AlertTitle, AppBar, Divider, Toolbar, IconButton, Box, Button, Container, Paper, styled, Backdrop, Typography, Skeleton, useMediaQuery } from '@mui/material';
 import { Head1 } from './components/theme';
@@ -75,8 +75,10 @@ const GoogleForm = () => {
 }
 
 const Dashboard = () => {
-  const [role] = useStore('user.role', 'advertiser');
-  return (role == 'advertiser' ? <AdvertiserDashboard /> : <CreatorDashboard />);
+  const [searchParams,] = useSearchParams();
+  const [storedRole] = useStore('user.role', 'advertiser');
+  const role = searchParams.get("role") || storedRole;
+  return (role == 'advertiser' ? <AdvertiserDashboard /> : <MemberDashboard />);
 }
 
 export const App = () => {

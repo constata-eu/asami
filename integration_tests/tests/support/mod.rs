@@ -26,6 +26,16 @@ pub use galvanic_assert::{
 };
 
 #[allow(dead_code)]
+pub fn wait_here() {
+  use std::{thread, time};
+  println!("Waiting here as instructed. ctrl+c to quit.");
+  let ten_millis = time::Duration::from_millis(10);
+  loop {
+    thread::sleep(ten_millis);
+  }
+}
+
+#[allow(dead_code)]
 pub fn rematch<'a>(expr: &'a str) -> Box<dyn Matcher<'a, String> + 'a> {
   Box::new(move |actual: &String| {
     let re = regex::Regex::new(expr).unwrap();
@@ -78,7 +88,8 @@ macro_rules! browser_test {
 
       {$($e)*};
 
-      server.await.unwrap();
+      server.abort();
+      assert!(server.await.unwrap_err().is_cancelled());
       vite_preview.stop();
       $driver.stop().await;
     }

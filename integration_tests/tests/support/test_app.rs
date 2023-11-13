@@ -1,4 +1,4 @@
-use api::{App, AppConfig};
+use api::{models, App, AppConfig};
 use jwt_simple::algorithms::*;
 use std::process::Command;
 use crate::support::Truffle;
@@ -27,6 +27,20 @@ impl TestApp {
     Self{ truffle, app: App::new("password".to_string(), config).await.unwrap() }
   }
 
+  pub async fn mock_admin_setting_campaign_requests_as_paid(&self) {
+    let all = self.app.campaign_request().select().status_eq(models::CampaignRequestStatus::Received).all().await.unwrap();
+    for r in all {
+      r.pay().await.unwrap();
+    }
+  }
+
+  pub async fn run_idempotent_background_tasks_a_few_times(&self) {
+    for _ in 0..5 {
+      self.app.run_background_tasks().await.unwrap();
+    }
+  }
+
+  #[allow(dead_code)]
   pub fn private_key(&self) -> ES256KeyPair {
     let key = ES256KeyPair::from_pem(
       "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg626FUHw6lA0eAlYl\nqT0TI8m/JAWj+H497JAKfoTUrkmhRANCAARJPbG33RdPLOxXXbc390w00YaFAbh8\n0Hv44ScjS0UMB6/ZjjkIs5fV1gRK1IBF1JMnxM6qWjWUBlu/z9ZjvA0b\n-----END PRIVATE KEY-----\n"

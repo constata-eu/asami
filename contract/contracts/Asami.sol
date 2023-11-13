@@ -120,12 +120,20 @@ contract Asami is Ownable, ERC20 {
     topics.push(_name);
   }
 
+  function ensureAccount(uint256 _accountId) private {
+    if(accounts[_accountId].id == 0) {
+      accounts[_accountId].id = _accountId;
+      accountIds.push(_accountId);
+    }
+  }
+
   function claimAccount (
     uint256 _accountId,
     address _addr
   ) public onlyAdmin {
-    Account storage account = accounts[_accountId];
     ensureAccount(_accountId);
+
+    Account storage account = accounts[_accountId];
     require(account.addr == address(0));
 
     accountIdByAddress[_addr] = _accountId;
@@ -144,24 +152,12 @@ contract Asami is Ownable, ERC20 {
     emit AccountSaved(account);
   }
 
-  function ensureAccount(uint256 _accountId) private {
-    if(accounts[_accountId].id == 0) {
-      accounts[_accountId].id = _accountId;
-      accountIds.push(_accountId);
-    }
-  }
-
   function adminMakeHandles (
     Handle[] calldata _inputs
   ) external onlyAdmin {
 
     for( uint256 i = 0; i < _inputs.length; i++) {
       ensureAccount(_inputs[i].accountId);
-
-      if(accounts[_inputs[i].accountId].id == 0) {
-        accounts[_inputs[i].accountId].id = _inputs[i].accountId;
-        accountIds.push(_inputs[i].accountId);
-      }
 
       handles.push(_inputs[i]);
       Handle storage h = handles[handles.length - 1];
@@ -211,8 +207,8 @@ contract Asami is Ownable, ERC20 {
 
     for( uint i = 0; i < _inputs.length; i++) {
       AdminCampaignInput memory input = _inputs[i];
+      ensureAccount(input.accountId);
       Account storage account = accounts[input.accountId];
-      ensureAccount(account.id);
       require(account.addr == address(0));
 
       _saveCampaignHelper(account, Campaign({

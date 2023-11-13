@@ -22,6 +22,14 @@ mod campaign_request;
 use campaign_request::*;
 mod session;
 use session::*;
+mod handle;
+use handle::*;
+mod handle_request;
+use handle_request::*;
+mod handle_update_request;
+use handle_update_request::*;
+mod collab;
+use collab::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -240,6 +248,10 @@ make_graphql_query!{
   showables {
     [CampaignRequest, allCampaignRequests, allCampaignRequestsMeta, "_allCampaignRequestsMeta", CampaignRequestFilter, i32],
     [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, String],
+    [HandleRequest, allHandleRequests, allHandleRequestsMeta, "_allHandleRequestsMeta", HandleRequestFilter, i32],
+    [Handle, allHandles, allHandlesMeta, "_allHandlesMeta", HandleFilter, String],
+    [HandleUpdateRequest, allHandleUpdateRequests, allHandleUpdateRequestsMeta, "_allHandleUpdateRequestsMeta", HandleUpdateRequestFilter, i32],
+    [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, String],
   }
 }
 
@@ -252,6 +264,14 @@ impl Mutation {
   }
 
   pub async fn create_campaign_request(context: &Context, input: CreateCampaignRequestInput) -> FieldResult<CampaignRequest> {
+    input.process(context).await
+  }
+
+  pub async fn create_handle_request(context: &Context, input: CreateHandleRequestInput) -> FieldResult<HandleRequest> {
+    input.process(context).await
+  }
+
+  pub async fn create_handle_update_request(context: &Context, input: CreateHandleUpdateRequestInput) -> FieldResult<HandleUpdateRequest> {
     input.process(context).await
   }
 }

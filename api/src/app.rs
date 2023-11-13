@@ -35,6 +35,13 @@ impl App {
 
     Ok(Self{ db, on_chain, settings: Box::new(config) })
   }
+
+  pub async fn run_background_tasks(&self) -> AsamiResult<()> {
+    self.campaign_request().submit_approvals().await?;
+    self.campaign_request().submit_all().await?;
+    self.synced_event().sync_on_chain_events().await?;
+    Ok(())
+  }
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]

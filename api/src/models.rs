@@ -429,6 +429,8 @@ model!{
     #[sqlx_model_hints(int4, default)]
     id: i32,
     #[sqlx_model_hints(varchar)]
+    account_id: String,
+    #[sqlx_model_hints(varchar)]
     handle_id: String,
     #[sqlx_model_hints(varchar)]
     username: Option<String>,
@@ -436,7 +438,9 @@ model!{
     price: Option<String>,
     #[sqlx_model_hints(varchar)]
     score: Option<String>,
-    #[sqlx_model_hints(handle_update_request_status)]
+    #[sqlx_model_hints(boolean)]
+    created_by_admin: bool,
+    #[sqlx_model_hints(handle_update_request_status, default)]
     status: HandleUpdateRequestStatus,
     #[sqlx_model_hints(varchar, default)]
     tx_hash: Option<String>,
@@ -817,13 +821,15 @@ model!{
     #[sqlx_model_hints(varchar)]
     campaign_id: String,
     #[sqlx_model_hints(varchar)]
+    advertiser_id: String,
+    #[sqlx_model_hints(varchar)]
     handle_id: String, 
+    #[sqlx_model_hints(varchar)]
+    member_id: String,
     #[sqlx_model_hints(varchar)]
     gross: String,
     #[sqlx_model_hints(varchar)]
     fee: String,
-    #[sqlx_model_hints(varchar)]
-    proof: Option<String>,
     #[sqlx_model_hints(varchar)]
     created_at: String,
   }
@@ -1082,13 +1088,17 @@ impl SyncedEventHub {
 
           if app.collab().find_optional(e.collab.id.encode_hex()).await?.is_none() {
             let c = e.collab;
+            let campaign = app.campaign().find(c.campaign_id.encode_hex()).await?;
+            let handle = app.handle().find(c.handle_id.encode_hex()).await?;
+
             app.collab().insert(InsertCollab{
               id: c.id.encode_hex(),
-              campaign_id: c.campaign_id.encode_hex(),
-              handle_id: c.handle_id.encode_hex(),
+              campaign_id: campaign.attrs.id,
+              advertiser_id: campaign.attrs.account_id,
+              handle_id: handle.attrs.id,
+              member_id: handle.attrs.account_id,
               gross: c.gross.encode_hex(),
               fee: c.fee.encode_hex(),
-              proof: Some(c.proof),
               created_at: c.created_at.encode_hex(),
             }).save().await?;
           }
