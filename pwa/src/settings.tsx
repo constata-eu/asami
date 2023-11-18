@@ -3,7 +3,7 @@ const development = {
   environment: 'development',
   recaptchaSiteKey: "6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX",
   rsk: {
-    chainId: 31,
+    chainId: 1337,
   },
   x: {
     clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",

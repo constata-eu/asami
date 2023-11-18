@@ -21,12 +21,6 @@ CREATE TYPE handle_request_status AS ENUM (
   'done'
 );
 
-CREATE TYPE handle_update_request_status AS ENUM (
-  'received',
-  'submitted',
-  'done'
-);
-
 CREATE TYPE campaign_request_status AS ENUM (
   'received',
   'paid',
@@ -35,7 +29,19 @@ CREATE TYPE campaign_request_status AS ENUM (
   'done'
 );
 
+CREATE TYPE handle_update_request_status AS ENUM (
+  'received',
+  'submitted',
+  'done'
+);
+
 CREATE TYPE collab_request_status AS ENUM (
+  'received',
+  'submitted',
+  'done'
+);
+
+CREATE TYPE claim_account_request_status AS ENUM (
   'received',
   'submitted',
   'done'
@@ -328,3 +334,15 @@ CREATE TABLE campaign_request_topics (
 );
 CREATE INDEX idx_campaign_request_topics_campaign_id ON campaign_request_topics(campaign_request_id);
 CREATE INDEX idx_campaign_request_topics_topic_id ON campaign_request_topics(topic_id);
+
+CREATE TABLE claim_account_requests (
+    id SERIAL PRIMARY KEY NOT NULL,
+    account_id VARCHAR REFERENCES accounts(id) NOT NULL,
+    addr VARCHAR NOT NULL,
+    signature VARCHAR NOT NULL,
+    session_id VARCHAR REFERENCES sessions(id) NOT NULL,
+    status claim_account_request_status NOT NULL DEFAULT 'received',
+    tx_hash VARCHAR
+);
+CREATE INDEX idx_claim_account_request_account_id ON claim_account_requests(account_id);
+CREATE INDEX idx_claim_account_request_status ON claim_account_requests(status);

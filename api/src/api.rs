@@ -30,6 +30,8 @@ mod handle_update_request;
 use handle_update_request::*;
 mod collab;
 use collab::*;
+mod claim_account_request;
+use claim_account_request::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -252,6 +254,16 @@ make_graphql_query!{
     [Handle, allHandles, allHandlesMeta, "_allHandlesMeta", HandleFilter, String],
     [HandleUpdateRequest, allHandleUpdateRequests, allHandleUpdateRequestsMeta, "_allHandleUpdateRequestsMeta", HandleUpdateRequestFilter, i32],
     [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, String],
+    [ClaimAccountRequest, allClaimAccountRequests, allClaimAccountRequestsMeta, "_allClaimAccountRequestsMeta", ClaimAccountRequestFilter, i32],
+  }
+
+  #[allow(non_snake_case)]
+  async fn ServerConfig(context: &Context, id: i32) -> FieldResult<ServerConfig> {
+    Ok(ServerConfig {
+      id,
+      contract_address: context.app.settings.rsk.contract_address.clone(),
+      doc_contract_address: context.app.settings.rsk.doc_contract_address.clone(),
+    })
   }
 }
 
@@ -272,6 +284,10 @@ impl Mutation {
   }
 
   pub async fn create_handle_update_request(context: &Context, input: CreateHandleUpdateRequestInput) -> FieldResult<HandleUpdateRequest> {
+    input.process(context).await
+  }
+
+  pub async fn create_claim_account_request(context: &Context, input: CreateClaimAccountRequestInput) -> FieldResult<ClaimAccountRequest> {
     input.process(context).await
   }
 }

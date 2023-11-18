@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 export ADMIN_ADDRESS=0xed4e67213c7a375af60893fe8e0852d0f7040913
-export BROWSER_ADDRESS=0x68aC79AE5D9C9eaf6c783836C35bbcbaCAe7C771
+export MEMBER_ADDRESS=0x68aC79AE5D9C9eaf6c783836C35bbcbaCAe7C771
 rm -rf build scripts/ganache.log
 truffle compile &&
 truffle compile test/MockDoc.sol &&

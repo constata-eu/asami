@@ -35,6 +35,24 @@ pub fn wait_here() {
   }
 }
 
+pub async fn try_until<T: std::future::Future<Output = bool>>(times: i32, err: &str,  call: impl Fn() -> T) {
+  use std::{thread, time};
+  let millis = time::Duration::from_millis(100);
+  for _i in 0..times {
+    if call().await {
+      return;
+    }
+    thread::sleep(millis);
+  }
+  assert!(false, "{err}");
+}
+
+#[allow(dead_code)]
+pub fn pause_a_bit() {
+  use std::{thread, time};
+  thread::sleep(time::Duration::from_millis(2000));
+}
+
 #[allow(dead_code)]
 pub fn rematch<'a>(expr: &'a str) -> Box<dyn Matcher<'a, String> + 'a> {
   Box::new(move |actual: &String| {
@@ -79,13 +97,13 @@ macro_rules! browser_test {
   ($i:ident($c:ident, $driver:ident) $($e:tt)* ) => {
     test!{ $i
       time_test::time_test!("integration test");
-      let $driver = Selenium::start().await;
 
       let $c = crate::support::TestApp::init().await;
       let app = $c.app.clone();
       let mut vite_preview = VitePreview::start();
       let server = TestApiServer::start(app).await;
 
+      let $driver = Selenium::start().await;
       {$($e)*};
 
       server.abort();

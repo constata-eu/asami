@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { useDataProvider, useGetIdentity, useSafeSetState, useTranslate } from "react-admin";
+import { useDataProvider, useGetIdentity, useSafeSetState, useTranslate, ReferenceField, useShowController} from "react-admin";
+import { rLogin } from "../../lib/rLogin";
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Alert, Box, Button, Card, CardActions, CardContent, Container, FormControl, FormHelperText, InputLabel, MenuItem, Select, Skeleton, Typography, IconButton } from "@mui/material";
 import { Dialog, DialogContent, DialogTitle, DialogActions } from '@mui/material';
@@ -15,7 +16,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { DateField } from '@mui/x-date-pickers/DateField';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs';
-import { nip19 } from 'nostr-tools'
+import { nip19 } from 'nostr-tools';
+import { TwitterTweetEmbed } from 'react-twitter-embed';
 
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -36,15 +38,21 @@ import { Stack } from '@mui/material';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import CloseIcon from '@mui/icons-material/Close';
 import { getAuthKeys } from '../../lib/auth_provider';
+import ClaimAccountButton from '../claim_account';
+
+import asamiABI from "../../abi/Asami.json";
+import docABI from "../../abi/Doc.json";
 
 const Dashboard = () => {
   const [loading, setLoading] = useSafeSetState(true);
   const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
 
   const handles = useListController({
-    debounce: 500,
     disableSyncWithLocation: true,
     filter: {accountIdIn: getAuthKeys().session.accountIds, siteEq: "X"},
+    queryOptions: {
+      refetchInterval: 2000,
+    },
     perPage: 1,
     resource: "Handle",
   });
@@ -67,6 +75,11 @@ const Dashboard = () => {
     <Typography my="1em">
       The ASAMI community is a human based amplifier for social network posts. You get paid for reposting content.
     </Typography>
+    <ClaimAccountRequestPendingMessage />
+    <CampaignList handles={handles}/>
+    <CollabList />
+    <ConfigureXAccount handles={handles}/>
+
     <ul>
       <li> Once you verify your X account you can start reposting things.</li>
       <li>You can set the price of your reposts, but you can only change it once every 14 days.</li>
@@ -78,15 +91,70 @@ const Dashboard = () => {
       <li>Fees collected will be distributed among token holders, similar to a company's dividends, every 14 days.</li>
       <li>Tokens also allow voting on changing the fee rate and electing new ADMIN.</li>
     </ul>
-
-    <ConfigureXAccount handles={handles}/>
-    <CampaignList handles={handles}/>
   </Container>;
+}
+
+const ClaimAccountRequestPendingMessage = () => {
+  const {isLoading, data } = useListController({
+    disableSyncWithLocation: true,
+    filter: { accountIdEq: getAuthKeys().session.accountIds[0] },
+    perPage: 1,
+    queryOptions: {
+      refetchInterval: 3000,
+    },
+    resource: "ClaimAccountRequest",
+  });
+
+  let content;
+
+  if (isLoading) {
+    content = <></>;
+  } else if(!data[0]) {
+    content = <Typography id="account-summary-claim-none">
+      Your rewards will be paid using the DOC token, which is pegged to the united states dollar, in the RSK network.
+      To get your rewards, you'll have to claim your account using a WEB3 wallet such as metamask.
+      You've claimed your account.
+    </Typography>;
+  } else if(data[0].status == "DONE") {
+    content = <ClaimedAccountState />;
+  } else {
+    content = <Typography id="account-summary-claim-pending">
+      You've requested to manage your own account, we'll let you know when it's done.
+    </Typography>;
+    
+    content = <ClaimedAccountState />;
+  }
+  
+  return <Card id="account-summary" sx={{my:"3em"}}>
+    <CardTitle text="Your account" />
+    { content }
+  </Card>;
+}
+
+const ClaimedAccountState = () => {
+  const [loading, setLoading] = useSafeSetState(true);
+
+
+  useEffect(() => {
+    const load = async () => {
+    }
+
+    if (!isLoading && !isFetching) {
+      load();
+    }
+  }, [isLoading, isFetching]);
+
+  if (loading) {
+    return <></>;
+  }
+
+  return <Typography id="account-summary-claim-done">
+    You've claimed your account.
+  </Typography>;
 }
 
 const CampaignList = ({handles}) => {
   const listContext = useListController({
-    debounce: 500,
     disableSyncWithLocation: true,
     filter: {finishedEq: false},
     perPage: 20,
@@ -107,10 +175,53 @@ const CampaignList = ({handles}) => {
           <Typography>Repost these campaigns and get rewards!</Typography>
         </CardTitle>
         <Datagrid bulkActionButtons={false}>
-          <FunctionField label="Post" render={record => <a target="_blank" href={`https://x.com/twitter/status/${record.contentId}`}>See post</a>} />
-          <TextField source="site" />
-          <TextField source="validUntil" />
-          <Button variant="contained" href="#">Repost it!</Button>
+          <FunctionField label={false} render={record =>  {
+            const repostUrl = `https://twitter.com/intent/retweet?tweet_id=${record.contentId}&related=asami_club`;
+            return <Box>
+              <TwitterTweetEmbed tweetId={record.contentId} options={{ align: "center", width: "550px", conversation: "none"}} />
+              <Button fullWidth variant="contained" href={repostUrl} target="_blank">Repost it!</Button>
+            </Box>
+          }} />
+        </Datagrid>
+        <Pagination rowsPerPageOptions={[]} />
+      </Card>
+    </ListContextProvider>
+  );
+}
+
+const CollabList = () => {
+  const listContext = useListController({
+    disableSyncWithLocation: true,
+    filter: {memberIdIn: getAuthKeys().session.accountIds },
+    perPage: 20,
+    queryOptions: {
+      refetchInterval: 3000,
+    },
+    resource: "Collab",
+  });
+
+  if (listContext.total == 0 || listContext.isLoading) {
+    return <></>;
+  }
+
+  return (
+    <ListContextProvider value={listContext}>
+      <Card id="collab-list" sx={{my:"3em"}}>
+        <CardTitle text="Your collaboration history" >
+          <Typography>These are your collaborations so far.</Typography>
+          <Typography>You got paid 2000 DOC in total since you became a member.</Typography>
+          <Alert severity="info">
+            You're still a WEB2 user, so we're keeping your money safe.
+            You need to claim your account with a WEB3 wallet so we can send you the funds.
+            <ClaimAccountButton id="collabs-claim-account-button"/>
+          </Alert>
+        </CardTitle>
+        <Datagrid bulkActionButtons={false}>
+          <ReferenceField source="campaignId" reference="Campaign">
+            <FunctionField label={false} render={record => <a target="_blank" href={`https://x.com/twitter/status/${record.contentId}`}>See post</a>} />
+          </ReferenceField>
+          <FunctionField label="Reward" render={record => `${formatEther(record.gross)} DOC`} />
+          <FunctionField label="Asami Fee" render={record => `${formatEther(record.fee)} DOC`} />
         </Datagrid>
         <Pagination rowsPerPageOptions={[]} />
       </Card>
@@ -119,15 +230,29 @@ const CampaignList = ({handles}) => {
 }
 
 const ConfigureXAccount = ({handles}) => {
-  const [open, setOpen] = useSafeSetState(false);
+  const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
 
   const reqs = useListController({
-    debounce: 500,
     disableSyncWithLocation: true,
-    filter: {siteEq: "X", statusIn: ["UNVERIFIED", "VERIFIED", "APPRAISED", "SUBMITTED"]},
+    filter: {siteEq: "X"},
+    queryOptions: {
+      refetchInterval: 10000,
+    },
     perPage: 1,
     resource: "HandleRequest",
   });
+
+  useEffect(() => {
+    const refetchAll = async () => {
+      await handles.refetch();
+      await reqs.refetch();
+      setNeedsRefresh(false);
+    };
+    
+    if(needsRefresh) {
+      refetchAll()
+    }
+  }, [needsRefresh, setNeedsRefresh, handles, reqs]);
 
   let content;
 
@@ -137,27 +262,17 @@ const ConfigureXAccount = ({handles}) => {
       <Skeleton />
     </>);
   } else if (handles.data[0]) {
-    let h = handles.data[0];
-    content = <Typography>
-      You've verified your handle
-      { h.username }, with user id { h.userId }.
-      The price for each message is { formatEther(h.price) },
-      and the admin has given it a score of { toQuantity(h.score) }.
-    </Typography>;
+    content = <HandleStats handle={handles.data[0]} />;
   } else {
-    if (reqs.data[0]) {
-      const req = reqs.data[0];
+    const req = reqs.data[0];
+    if (req) {
       if (req.status == "UNVERIFIED") {
-        content = <Typography>To fully verify your account, and your willingness to become a member, we need you to post this message on X.</Typography>;
-      } else {
-        content = <Typography>
-          We've verified {req.username}, and we're in process of publishing it to the blockchain.
-          Once we're done you can start participating in campaigns.
-          This shouldn't take long.
-        </Typography>;
+        content = <MakeVerificationPost />;
+      } else if (req.status != "DONE" ) {
+        content = <HandleSubmissionInProgress req={req} />;
       }
     } else {
-      content = <CreateHandleRequest />;
+      content = <CreateHandleRequest {...{setNeedsRefresh}} />;
     }
   }
 
@@ -169,9 +284,16 @@ const ConfigureXAccount = ({handles}) => {
   </Box>);
 }
 
-const CreateHandleRequest = () => {
+const CreateHandleRequest = ({setNeedsRefresh}) => {
+  const notify = useNotify();
+
   const transformIt = async (values) => {
     return { input: values.handleRequestInput };
+  }
+
+  const onSuccess = () => {
+    notify("We've got your handle!");
+    setNeedsRefresh(true);
   }
 
   const validate = (values) => {
@@ -187,13 +309,50 @@ const CreateHandleRequest = () => {
     values.handleRequestInput = input;
     return errors;
   }
-  return <CreateBase resource="HandleRequest" transform={transformIt} redirect={false}>
+
+  return <CreateBase resource="HandleRequest" transform={transformIt} mutationOptions={{ onSuccess }} >
     <SimpleForm sanitizeEmptyValues validate={validate} toolbar={false}>
+      <Typography mb="1em">Let's set up your X account in ASAMI so you can start getting paid for your reposts.</Typography>
       <TextInput fullWidth required={true} size="large" variant="filled" source="username" label="Tell us your X username." />
-      <SaveButton fullWidth id="submit-handle-request-form" size="large" label="Continue" />
+      <SaveButton fullWidth id="submit-handle-request-form" size="large" label="Continue" icon={<></>} />
     </SimpleForm>
   </CreateBase>;
 }
+
+const MakeVerificationPost = () => {
+  const [clicked, setClicked] = useSafeSetState(false);
+
+  let accountId = BigInt(getAuthKeys().session.accountIds[0]);
+  let text = `Starting today, some of my reposts will be paid for, as I joined @asami_club [${accountId}].`;
+  let intent_url = `https://x.com/intent/tweet?text=${text}`;
+
+  return <Box p="1em">
+    <Typography mb="1em">Now, to verify your account, and your willingness to become a member, we need you to post this message on X.</Typography>
+    <Paper sx={{ my:"1em", p:"1em", background:"#eee"}}> {text} </Paper>
+    { clicked ?
+      <Alert>Thank you! It will take a moment for us to pick up your post.</Alert> :
+      <Button fullWidth onClick={() => setClicked(true)} size="large" variant="contained" href={intent_url} target="_blank" rel="noopener noreferrer">Post the message</Button> 
+    }
+  </Box>
+}
+
+const HandleSubmissionInProgress = ({req}) => 
+  <Box p="1em" id="handle-submission-in-progress-message">
+    <Typography>
+      We've verified {req.username}, and we're in process of publishing it to the blockchain.
+      Once we're done you can start participating in campaigns.
+      This shouldn't take long.
+    </Typography>
+  </Box>
+
+const HandleStats = ({handle}) => 
+  <Box p="1em" id="existing-x-handle-stats">
+    <Typography>
+      You've verified your handle { handle.username }, with user id { handle.userId }.
+      The reward for each message is { formatEther(handle.price) } DOC,
+      and the admin has given it a score of { BigInt(handle.score).toString() }.
+    </Typography>
+  </Box>
 
 export default Dashboard;
 

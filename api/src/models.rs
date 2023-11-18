@@ -6,7 +6,8 @@ use sqlx_models_orm::model;
 pub use chrono::{DateTime, Duration, Utc, Datelike, TimeZone};
 pub type UtcDateTime = DateTime<Utc>;
 pub use juniper::GraphQLEnum;
-use ethers::{ types::{ U256, U64}, abi::{AbiEncode, AbiDecode}, middleware::Middleware};
+use ethers::{ types::{ U256, U64, H160, Signature, transaction::eip712::TypedData}, abi::{AbiEncode, AbiDecode}, middleware::Middleware};
+use std::str::FromStr;
 
 pub mod hasher;
 
@@ -62,6 +63,20 @@ pub enum HandleUpdateRequestStatus {
 impl sqlx::postgres::PgHasArrayType for HandleUpdateRequestStatus {
   fn array_type_info() -> sqlx::postgres::PgTypeInfo {
     sqlx::postgres::PgTypeInfo::with_name("_handle_update_request_status")
+  }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
+#[sqlx(type_name = "claim_account_request_status", rename_all = "snake_case")]
+pub enum ClaimAccountRequestStatus {
+  Received,
+  Submitted,
+  Done,
+}
+
+impl sqlx::postgres::PgHasArrayType for ClaimAccountRequestStatus {
+  fn array_type_info() -> sqlx::postgres::PgTypeInfo {
+    sqlx::postgres::PgTypeInfo::with_name("_claim_account_request_status")
   }
 }
 
@@ -163,6 +178,15 @@ impl Account {
     }).save().await
   }
 
+  pub async fn create_claim_account_request(&self, addr: String, signature: String, session_id: String) -> sqlx::Result<ClaimAccountRequest> {
+    self.state.claim_account_request().insert(InsertClaimAccountRequest{
+      account_id: self.attrs.id.clone(),
+      addr,
+      signature,
+      session_id,
+    }).save().await
+  }
+
   pub async fn create_campaign_request(
     &self,
     site: Site,
@@ -181,6 +205,7 @@ impl Account {
     }).save().await
   }
 }
+
 
 model!{
   state: App,
@@ -262,7 +287,8 @@ impl HandleRequestHub {
         let Some(public_metrics) = author.public_metrics.clone() else { continue };
 
         if let Some(capture) = msg_regex.captures(&post.text) {
-          let Ok(account_id) = capture[1].parse::<String>() else { continue };
+          let Ok(account_id_str) = capture[1].parse::<String>() else { continue };
+          let Ok(account_id) = U256::from_dec_str(&account_id_str).map(U256::encode_hex) else { continue };
 
           let Some(req) = self.state.handle_request().select()
             .status_eq(&HandleRequestStatus::Unverified)
@@ -739,12 +765,7 @@ impl CampaignHub {
             .count().await? == 0;
 
           if not_exists {
-            reqs.push(
-              self.state.collab_request().insert(InsertCollabRequest{
-                campaign_id: campaign.attrs.id.clone(),
-                handle_id: handle.attrs.id,
-              }).save().await?
-            );
+            reqs.push( campaign.make_collab(&handle).await? );
           }
         }
 
@@ -753,6 +774,15 @@ impl CampaignHub {
       }
     }
     Ok(reqs)
+  }
+}
+
+impl Campaign {
+  pub async fn make_collab(&self, handle: &Handle) -> sqlx::Result<CollabRequest> {
+    self.state.collab_request().insert(InsertCollabRequest{
+      campaign_id: self.attrs.id.clone(),
+      handle_id: handle.attrs.id.clone(),
+    }).save().await
   }
 }
 
@@ -886,6 +916,66 @@ impl IndexerStateHub {
 
 model!{
   state: App,
+  table: claim_account_requests,
+  struct ClaimAccountRequest {
+    #[sqlx_model_hints(int4, default)]
+    id: i32,
+    #[sqlx_model_hints(varchar)]
+    account_id: String,
+    #[sqlx_model_hints(varchar)]
+    addr: String,
+    #[sqlx_model_hints(varchar)]
+    signature: String,
+    #[sqlx_model_hints(varchar)]
+    session_id: String,
+    #[sqlx_model_hints(varchar, default)]
+    tx_hash: Option<String>,
+    #[sqlx_model_hints(claim_account_request_status, default)]
+    status: ClaimAccountRequestStatus,
+  },
+  belongs_to {
+    Account(account_id),
+    Session(account_id),
+  }
+}
+
+impl ClaimAccountRequestHub {
+  pub async fn submit_all(&self) -> AsamiResult<Vec<ClaimAccountRequest>> {
+    let mut submitted = vec![];
+    let reqs = self.select().status_eq(ClaimAccountRequestStatus::Received).all().await?;
+    let params = reqs.iter().map(|r| r.as_param() ).collect();
+
+    let tx_hash = self.state.on_chain.contract
+      .claim_accounts(params)
+      .send().await?
+      .tx_hash()
+      .encode_hex();
+
+    for req in reqs {
+      submitted.push(
+        req.update().status(ClaimAccountRequestStatus::Submitted).tx_hash(Some(tx_hash.clone())).save().await?
+      );
+    }
+
+    Ok(submitted)
+  }
+}
+
+impl ClaimAccountRequest {
+  pub async fn done(self) -> sqlx::Result<Self> {
+    self.update().status(ClaimAccountRequestStatus::Done).save().await
+  }
+
+  pub fn as_param(&self) -> on_chain::AdminClaimAccountsInput {
+    on_chain::AdminClaimAccountsInput {
+      account_id: u256(&self.attrs.account_id),
+      addr: H160::decode_hex(&self.attrs.addr).unwrap(),
+    }
+  }
+}
+
+model!{
+  state: App,
   table: synced_events,
   struct SyncedEvent {
     #[sqlx_model_hints(int4, default)]
@@ -946,10 +1036,22 @@ impl SyncedEventHub {
       match event {
         AsamiContractEvents::AccountSavedFilter(e) => {
           let a = e.account;
+          let addr = if a.addr.is_zero() { None } else { Some(a.addr.encode_hex()) };
+
+          let maybe_claim_req = app.claim_account_request().select()
+            .tx_hash_eq(meta.transaction_hash.encode_hex())
+            .account_id_eq(a.id.encode_hex())
+            .status_eq(ClaimAccountRequestStatus::Submitted)
+            .optional().await?;
+
+          if let Some(h) = maybe_claim_req {
+            h.done().await?;
+          }
+
           match app.account().find_optional(a.id.encode_hex()).await? {
             Some(account) => {
               account.update()
-                .addr(Some(a.addr.encode_hex()))
+                .addr(addr)
                 .unclaimed_asami_tokens(a.unclaimed_asami_tokens.encode_hex())
                 .unclaimed_doc_rewards(a.unclaimed_asami_tokens.encode_hex())
                 .nostr_self_managed(a.nostr_self_managed)
@@ -958,7 +1060,7 @@ impl SyncedEventHub {
             },
             None => {
               app.account().insert(InsertAccount{
-                addr: Some(a.addr.encode_hex()),
+                addr,
                 name: None,
                 unclaimed_asami_tokens: a.unclaimed_asami_tokens.encode_hex(),
                 unclaimed_doc_rewards: a.unclaimed_asami_tokens.encode_hex(),
@@ -1062,7 +1164,7 @@ impl SyncedEventHub {
                 site: Site::from_on_chain(c.site),
                 budget: c.budget.encode_hex(),
                 remaining: c.remaining.encode_hex(),
-                content_id: c.content_id.encode_hex(),
+                content_id: c.content_id,
                 price_score_ratio: c.price_score_ratio.encode_hex(),
                 valid_until: i_to_utc(c.valid_until),
               }).save().await?;
@@ -1161,3 +1263,26 @@ fn d_to_u64(d: Decimal) -> U64 {
   U64::from_dec_str(&d.to_string()).unwrap()
 }
 
+pub fn eip_721_sig_to_address(chain_id: u64, signature: &str) -> Result<String, String> {
+  let json = serde_json::json!( {
+    "types": {
+      "EIP712Domain": [
+        { "name": "name", "type": "string" },
+        { "name": "version", "type": "string" },
+        { "name": "chainId", "type": "uint256" }
+      ],
+      "Acceptance": [
+        { "name": "content", "type": "string" }
+      ]
+    },
+    "primaryType": "Acceptance",
+    "domain": { "name": "Asami", "version": "1", "chainId": chain_id.to_string() },
+    "message": { "content": "Login to Asami" }
+  });
+
+  let payload: TypedData = serde_json::from_value(json).map_err(|_| "unexpected_invalid_json".to_string())?;
+  let sig = Signature::from_str(signature).map_err(|_| "invalid_auth_data_signature".to_string())?;
+  sig.recover_typed_data(&payload)
+    .map(|a| a.encode_hex() )
+    .map_err(|_| "could_not_recover_typed_data_from_sig".to_string())
+}

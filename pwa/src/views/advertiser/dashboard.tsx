@@ -3,7 +3,7 @@ import { useDataProvider, useGetIdentity, useSafeSetState, useTranslate } from "
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Alert, Box, Button, Card, CardActions, CardContent, Container, FormControl, FormHelperText, InputLabel, MenuItem, Select, Skeleton, Typography, IconButton } from "@mui/material";
 import { Dialog, DialogContent, DialogTitle, DialogActions } from '@mui/material';
-import { ethers, parseUnits, formatEther, toQuantity, toBeHex, zeroPadValue, parseEther } from "ethers";
+import { ethers, parseUnits, formatEther, toBeHex, zeroPadValue, parseEther } from "ethers";
 import schnorr from "bip-schnorr";
 import { Buffer } from "buffer";
 import Login from "./views/login";

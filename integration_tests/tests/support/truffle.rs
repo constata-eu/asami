@@ -7,7 +7,7 @@ pub struct Truffle {
   pub addresses: Addresses,
 }
 
-#[derive(Clone, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Deserialize)]
 pub struct Addresses {
   pub asami: String,
   pub doc: String,
@@ -48,7 +48,7 @@ impl Truffle {
     let out = Command::new("truffle")
       .current_dir(&dir)
       .env("ADMIN_ADDRESS", &admin_address)
-      .env("BROWSER_ADDRESS", "0x68aC79AE5D9C9eaf6c783836C35bbcbaCAe7C771")
+      .env("MEMBER_ADDRESS", "0xF92DddAE4853a8cEA0b99a55d265E3b1Ee352429")
       .args(["exec", "scripts/local_blockchain_state.js", "--network", "local"])
       .output()
       .unwrap();
@@ -56,6 +56,7 @@ impl Truffle {
     let out_str = String::from_utf8(out.stdout).unwrap();
     let addresses: Addresses = serde_json::from_str(&out_str.lines().last().unwrap())
       .expect("Local blockchain init script may have exited with an error.");
+    dbg!(&addresses);
 
     Truffle { child, dir, addresses }
   }

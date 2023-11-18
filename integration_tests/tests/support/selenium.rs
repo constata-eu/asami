@@ -8,16 +8,21 @@ pub struct Selenium{
 }
 
 pub const DOWNLOADS: &str = "/tmp/asami_tests_downloads";
-//pub const PROFILE: &str = "chrome_profile";
 
 impl Selenium {
   pub async fn start() -> Self {
+    Command::new("rm").args(&["-r", "-f", "/tmp/asami_browser_datadir"])
+      .output().expect("Could not delete downloads link");
+    Command::new("cp").args(&["-r", "chromedrivers/profile", "/tmp/asami_browser_datadir"])
+      .output().expect("Could not copy profile folder to temp location");
+
     Command::new("rm").args(&["-r", "-f", DOWNLOADS])
       .output().expect("Could not delete downloads link");
     Command::new("mkdir").args(&["-p", DOWNLOADS])
       .output().expect("Could not create downloads dir");
 
     let mut caps = DesiredCapabilities::chrome();
+    caps.add_extension(std::path::Path::new("chromedrivers/metamask.crx")).unwrap();
     caps.add_chrome_option(
       "prefs",
       serde_json::json![{
@@ -25,6 +30,7 @@ impl Selenium {
         "download": { "default_directory" : DOWNLOADS }
       }]
     ).unwrap();
+    caps.add_chrome_arg("--user-data-dir=/tmp/asami_browser_datadir").unwrap();
 
     let local_driver_path = format!("chromedrivers/chromedriver_{}", std::env::consts::OS);
     let driver_path: String;
@@ -143,6 +149,10 @@ impl Selenium {
     self.driver.switch_to_window(handles[0].clone()).await.expect("to switch window zero");
   }
   */
+
+  pub async fn open_metamask(&self) {
+    self.goto("chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/popup.html").await;
+  }
 
   pub async fn goto(&self, url: &str) {
     self.driver.goto(url).await.expect(&format!("Could not visit {url}"));

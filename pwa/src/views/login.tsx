@@ -7,16 +7,18 @@ import {
 } from '@mui/material';
 import { useCheckAuth, useSafeSetState, useStore } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
-import authProvider, { makeXUrl, makeInstagramUrl, rLoginStart } from '../lib/auth_provider';
+import authProvider, { makeXUrl, makeInstagramUrl} from '../lib/auth_provider';
 import { BareLayout } from './layout';
 import { Head1 } from '../components/theme';
 import logo from '../assets/asami.png';
 import rootstock from '../assets/rootstock.png';
+import { useContracts } from "../components/contracts_context";
 
 const Login = () => {
   const [role, setRole] = useStore('user.role', 'advertiser');
   const [oauthVerifier, setOauthVerifier] = useStore('user.oauthChallenge');
   const [open, setOpen] = useSafeSetState(false);
+  const { signLoginMessage } = useContracts();
 
   const checkAuth = useCheckAuth();
   const navigate = useNavigate();
@@ -26,7 +28,7 @@ const Login = () => {
     setOpen(false);
     switch (method) {
       case "Eip712":
-        const code = await rLoginStart();
+        const code = await signLoginMessage();
         navigate(`/eip712_login?code=${code}`);
         break;
       case "X":
@@ -103,6 +105,7 @@ const Login = () => {
           variant="contained"
           size="large"
           fullWidth
+          id="button-login-as-advertiser"
         >
           Connect as advertiser
         </Button>
@@ -119,8 +122,9 @@ const Login = () => {
           variant="contained"
           size="large"
           fullWidth
+          id="button-login-as-member"
         >
-          Connect as collaborator
+          Connect as member
         </Button>
       </Box>
     </Box>

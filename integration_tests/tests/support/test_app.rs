@@ -34,6 +34,21 @@ impl TestApp {
     }
   }
 
+  pub async fn mock_all_handles_being_verified_and_appraised(&self) {
+    let all = self.app.handle_request().select().status_eq(models::HandleRequestStatus::Unverified).all().await.unwrap();
+    for r in all.into_iter() {
+      r.verify("179383862".into()).await.unwrap().appraise(models::u("10"), models::u("10")).await.unwrap();
+    }
+  }
+
+  pub async fn mock_collab_on_all_campaigns_with_all_handles(&self) {
+    for c in self.app.campaign().select().all().await.unwrap() {
+      for h in self.app.handle().select().all().await.unwrap() {
+        c.make_collab(&h).await.unwrap();
+      }
+    }
+  }
+
   pub async fn run_idempotent_background_tasks_a_few_times(&self) {
     for _ in 0..5 {
       self.app.run_background_tasks().await.unwrap();

@@ -7,13 +7,13 @@ module.exports = async function(callback) {
   const asami = await Asami.deployed();
   const doc = await MockDoc.deployed();
 
-  const browserAddress = process.env.BROWSER_ADDRESS;
+  const memberAddress = process.env.MEMBER_ADDRESS;
   const adminAddress = process.env.ADMIN_ADDRESS;
 
   for (let s of topics) { await asami.addTopic(s); }
   await asami.setAdmin(adminAddress, adminAddress);
 
-  for (let a of [adminAddress, browserAddress]) {
+  for (let a of [adminAddress, memberAddress]) {
     await doc.transfer(a, web3.utils.toWei("50", "ether"), { from: accounts[0] });
     await web3.eth.sendTransaction({from: accounts[0], to: a, value: web3.utils.toWei('100', 'ether')})
   }

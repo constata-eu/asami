@@ -127,29 +127,36 @@ contract Asami is Ownable, ERC20 {
     }
   }
 
-  function claimAccount (
-    uint256 _accountId,
-    address _addr
+  struct AdminClaimAccountsInput {
+    uint256 accountId;
+    address addr;
+  }
+
+  function claimAccounts (
+    AdminClaimAccountsInput[] calldata _input
   ) public onlyAdmin {
-    ensureAccount(_accountId);
+    for( uint256 i = 0; i < _input.length; i++) {
+      AdminClaimAccountsInput calldata claim = _input[i];
+      ensureAccount(claim.accountId);
 
-    Account storage account = accounts[_accountId];
-    require(account.addr == address(0));
+      Account storage account = accounts[claim.accountId];
+      require(account.addr == address(0));
 
-    accountIdByAddress[_addr] = _accountId;
-    account.addr = _addr;
+      accountIdByAddress[claim.addr] = claim.accountId;
+      account.addr = claim.addr;
 
-    if(account.unclaimedAsamiTokens > 0) {
-      _safeMint(_addr, account.unclaimedAsamiTokens);
-      account.unclaimedAsamiTokens = 0;
+      if(account.unclaimedAsamiTokens > 0) {
+        _safeMint(claim.addr, account.unclaimedAsamiTokens);
+        account.unclaimedAsamiTokens = 0;
+      }
+
+      if(account.unclaimedDocRewards > 0) {
+        doc.transfer(account.addr, account.unclaimedDocRewards);
+        account.unclaimedDocRewards = 0;
+      }
+
+      emit AccountSaved(account);
     }
-
-    if(account.unclaimedDocRewards > 0) {
-      doc.transfer(account.addr, account.unclaimedDocRewards);
-      account.unclaimedDocRewards = 0;
-    }
-
-    emit AccountSaved(account);
   }
 
   function adminMakeHandles (

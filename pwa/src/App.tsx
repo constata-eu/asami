@@ -9,6 +9,8 @@ import {
   useSafeSetState,
   useStore
 } from "react-admin";
+import { ContractsProvider } from './components/contracts_context';
+
 import { Route, useSearchParams } from "react-router-dom";
 import { authProvider } from "./lib/auth_provider";
 import { defaultDataProvider } from "./lib/data_provider";
@@ -99,7 +101,9 @@ export const App = () => {
     </Container>;
   }
 
-  return (<Admin
+  return (
+  <ContractsProvider dataProvider={dataProvider}>
+    <Admin
       dashboard={Dashboard}
       disableTelemetry={true}
       theme={asamiTheme}
@@ -108,11 +112,13 @@ export const App = () => {
       authProvider={authProvider}
       dataProvider={dataProvider}
     >
-      <CustomRoutes>
-        <Route path="/one_time_token_login" element={<OneTimeTokenLogin/>}/>
-        <Route path="/x_login" element={<XLogin/>}/>
-        <Route path="/instagram_login" element={<InstagramLogin/>}/>
-        <Route path="/eip712_login" element={<Eip712Login/>}/>
-      </CustomRoutes>
-    </Admin>);
+        <CustomRoutes>
+          <Route path="/one_time_token_login" element={<OneTimeTokenLogin/>}/>
+          <Route path="/x_login" element={<XLogin/>}/>
+          <Route path="/instagram_login" element={<InstagramLogin/>}/>
+          <Route path="/eip712_login" element={<Eip712Login/>}/>
+        </CustomRoutes>
+    </Admin>
+  </ContractsProvider>
+);
 }

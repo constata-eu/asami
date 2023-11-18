@@ -9,9 +9,49 @@ import { dcentProviderOptions } from '@rsksmart/rlogin-dcent-provider'
 const rpcUrls = {
   30: 'https://public-node.rsk.co',
   31: 'https://public-node.testnet.rsk.co',
+  1337: 'http://localhost:8545',
 }
 
-const supportedChains = Object.keys(rpcUrls).map(Number)
+const supportedChains = [
+  {
+    chainId: '0x1e', // hex 30
+    chainName: 'RSK Mainnet',
+    nativeCurrency: {
+      name: 'RSK BTC',
+      symbol: 'RBTC',
+      decimals: 18
+    },
+    rpcUrls: ['https://public-node.rsk.co'],
+    blockExplorerUrls: ['https://explorer.rsk.co'],
+    iconUrls: ['https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png']
+  },
+  {
+    chainId: '0x1f', // hex 31
+    chainName: 'RSK Testnet',
+    nativeCurrency: {
+      name: 'TEST RSK BTC',
+      symbol: 'tRBTC',
+      decimals: 18
+    },
+    rpcUrls: ['https://public-node.testnet.rsk.co'],
+    blockExplorerUrls: ['https://explorer.testnet.rsk.co'],
+    iconUrls: ['https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png']
+  },
+  {
+    chainId: '0x539', // hex 1337
+    chainName: 'RSK local',
+    nativeCurrency: {
+      name: 'Local RSK BTC',
+      symbol: 'lRBTC',
+      decimals: 18
+    },
+    rpcUrls: ['http://localhost:8545'],
+    blockExplorerUrls: [],
+    iconUrls: ['https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png']
+  }
+];
+
+//const supportedChains = Object.keys(rpcUrls).map(Number)
 
 const infoOptions = {
   30: { addressBaseURL: 'https://explorer.rsk.co/address/' },
@@ -49,7 +89,7 @@ export const rLogin = new RLogin({
       }
     }
   },
-  rpcUrls,
-  supportedChains,
-  infoOptions
+  //rpcUrls,
+  ethereumChains: supportedChains,
+  //infoOptions
 })

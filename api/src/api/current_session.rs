@@ -4,11 +4,7 @@ use super::models::{*, Session};
 use super::*;
 use jwt_simple::prelude::*;
 use base64::{Engine as _, engine::general_purpose};
-use ethers::{
-  abi::AbiEncode,
-  types::{Signature, transaction::eip712::TypedData}
-};
-use std::str::FromStr;
+use ethers::abi::AbiEncode;
 
 use rocket::{
   self,
@@ -231,25 +227,7 @@ impl CurrentSession {
         auth_try!(response.into_json::<InstagramOauthToken>(), "instagram_token_was_not_json").user_id.to_string()
       },
       AuthMethodKind::Eip712 => {
-        let json = serde_json::json!( {
-          "types": {
-            "EIP712Domain": [
-              { "name": "name", "type": "string" },
-              { "name": "version", "type": "string" },
-              { "name": "chainId", "type": "uint256" }
-            ],
-            "Acceptance": [
-              { "name": "content", "type": "string" }
-            ]
-          },
-          "primaryType": "Acceptance",
-          "domain": { "name": "Asami", "version": "1", "chainId": app.settings.rsk.chain_id.to_string() },
-          "message": { "content": "Login to Asami" }
-        });
-
-        let payload: TypedData = auth_try!(serde_json::from_value(json), "unexpected_invalid_json");
-        let sig = auth_try!(Signature::from_str(auth_data), "invalid_auth_data_signature");
-        auth_try!(sig.recover_typed_data(&payload), "could_not_recover_typed_data_from_sig").to_string()
+        eip_721_sig_to_address(app.settings.rsk.chain_id, auth_data).map_err(ApiAuthError::Fail)?
       },
       _ => return Err(ApiAuthError::Fail(format!("auth_method_not_supported_yet"))),
     };

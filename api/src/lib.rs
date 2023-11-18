@@ -36,6 +36,14 @@ pub async fn instagram_login(app: &State<App>, code: &str) -> rocket::response::
   rocket::response::Redirect::permanent(uri)
 }
 
+#[rocket::get("/config")]
+pub async fn config(app: &State<App>) -> serde_json::Value {
+  serde_json::json![{
+    "contractAddress": app.settings.rsk.contract_address.clone(),
+    "docContractAddress": app.settings.rsk.doc_contract_address.clone(),
+  }]
+}
+
 pub fn server(app: App) -> rocket::Rocket<rocket::Build> {
   let allowed = AllowedOrigins::some(
     &[
@@ -66,6 +74,6 @@ pub fn server(app: App) -> rocket::Rocket<rocket::Build> {
     .attach(ReCaptcha::fairing())
     .manage(new_graphql_schema())
     .attach(cors)
-    .mount("/", routes![x_login, instagram_login])
+    .mount("/", routes![x_login, instagram_login, config])
     .mount("/graphql", routes![graphiql, post_handler, introspect])
 }

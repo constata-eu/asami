@@ -9,7 +9,7 @@ import { Buffer } from 'buffer';
 
 import { Settings } from '../settings';
 export const apiUrl = `${Settings.apiDomain || ''}/graphql/`
-const schema = (await (await fetch(`${apiUrl}introspect`)).json()).__schema;
+const schema = async () => (await (await fetch(`${apiUrl}introspect`)).json()).__schema;
 
 export const defaultDataProvider = async () => {
   const httpLink = new HttpLink({
@@ -23,7 +23,8 @@ export const defaultDataProvider = async () => {
   });
 
   const client = new ApolloClient({ link: from([ httpLink ]), cache: new InMemoryCache(), });
-  return (await buildGraphQLProvider({ client, introspection: {schema} }));
+  const introspection = await schema();
+  return (await buildGraphQLProvider({ client, introspection }));
 }
 
 export const createSessionDataProvider = async (keys, authMethodKind, authData, recaptchaToken) => {
@@ -52,7 +53,8 @@ export const createSessionDataProvider = async (keys, authMethodKind, authData, 
   });
 
   const client = new ApolloClient({ link: from([ httpLink ]), cache: new InMemoryCache() });
-  return (await buildGraphQLProvider({ client, introspection: {schema} }));
+  const introspection = await schema();
+  return (await buildGraphQLProvider({ client, introspection }));
 }
 
 export const accessTokenDataProvider = async (access_token) => {
@@ -87,7 +89,8 @@ export const accessTokenDataProvider = async (access_token) => {
     }
   };
 
-  return (await buildGraphQLProvider({ client, buildQuery: webappBuildQuery, introspection: {schema} }));
+  const introspection = await schema();
+  return (await buildGraphQLProvider({ client, buildQuery: webappBuildQuery, introspection }));
 };
 
 

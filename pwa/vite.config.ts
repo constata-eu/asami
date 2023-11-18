@@ -13,7 +13,7 @@ export default defineConfig({
       react(),
     ],
     define: {
-      global: {},
+      "window.global": {},
       'process.env': process.env,
       'process.version': JSON.stringify(process.version),
     },

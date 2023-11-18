@@ -4,3 +4,4 @@ target
 *.swp
 contract/contracts/artifacts
 .deps/*
+pwa/dist
