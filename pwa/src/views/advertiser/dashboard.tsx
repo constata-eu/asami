@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useDataProvider, useGetIdentity, useSafeSetState, useTranslate } from "react-admin";
+import { useDataProvider, useAuthenticated, useSafeSetState, useTranslate, useGetList} from "react-admin";
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Alert, Box, Button, Card, CardActions, CardContent, Container, FormControl, FormHelperText, InputLabel, MenuItem, Select, Skeleton, Typography, IconButton } from "@mui/material";
 import { Dialog, DialogContent, DialogTitle, DialogActions } from '@mui/material';
@@ -36,19 +36,24 @@ import { Stack } from '@mui/material';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import CloseIcon from '@mui/icons-material/Close';
 import { getAuthKeys } from '../../lib/auth_provider';
+import ClaimAccountButton from '../claim_account';
 
 const Dashboard = () => {
-  const [loading, setLoading] = useSafeSetState(true);
+  useAuthenticated();
+
   const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(false);
-    }
-    load();
-  }, []);
+  const {data, isLoading} = useGetList(
+    "ClaimAccountRequest",
+    {filter: { accountIdEq: getAuthKeys().session.accountIds[0] }},
+    { refetchInterval: (data) => data?.[0]?.status == "DONE" ? false : 5000 }
+  );
 
-  if(loading) {
+  const hasClaim = !!data?.[0];
+  const hasPendingClaim = hasClaim && data?.[0].status != "DONE";
+  const isFullMember = hasClaim && data?.[0].status == "DONE";
+
+  if(isLoading) {
     return <Container maxWidth="md">
       <Skeleton animation="wave" />
     </Container>;
@@ -57,18 +62,23 @@ const Dashboard = () => {
   return <Container maxWidth="md" id="advertiser-dashboard">
     <Head1 sx={{my:3}}>Hello Advertiser!</Head1>
     <Typography my="1em">
-      Get the ASAMI community to repost your X content, just enter the URL of your X post and how much you want to spend.
+      Just enter the URL of your X post and how much you want to spend.
       <br/>
       You'll be paying between 0.001 and 0.005 USD for each <strong>real person</strong> reached.
       <br/>
       Anyone will be able to participate reposting in the next 7 days.
-      <br/> 
-      Read the <a href="#">Asami community guide</a> to learn more about the process.
-      <br/> 
-      As you're an early adopter, we may be able to fund your campaign with no charge to you, just <a href="#">Contact us</a>.
     </Typography>
 
-    <CreateCampaignRequest onSave={() => setNeedsRefresh(true) } />
+    { !hasPendingClaim && <CreateCampaignRequest onSave={() => setNeedsRefresh(true) } /> }
+
+    { hasPendingClaim && <Alert id="advertiser-claim-account-pending" sx={{ mt: "1em" }}>You'll be able to start new campaigns again once your WEB3 account setup is done.</Alert> }
+    { !hasClaim && <Alert id="advertiser-claim-account-none" sx={{ mt: "1em" }}>
+        Since you haven't connected your WEB3 wallet, your campaigns will be funded privately by the club's admin,
+        subject to how much funds are available.
+        Connect your wallet to claim your account and fund campaigns with your own budget.
+        <ClaimAccountButton id="advertiser-claim-account-button"/>
+      </Alert>  
+    }
     <CampaignRequestList {...{needsRefresh, setNeedsRefresh}} />
     <CampaignList/>
   </Container>;
@@ -123,7 +133,7 @@ const CampaignList = ({needsRefresh, setNeedsRefresh}) => {
     filter: {accountIdIn: getAuthKeys().session.accountIds },
     perPage: 20,
     queryOptions: {
-      refetchInterval: 2000,
+      refetchInterval: 3000,
     },
     resource: "Campaign",
   });
@@ -153,18 +163,50 @@ const CampaignList = ({needsRefresh, setNeedsRefresh}) => {
 }
 
 const CreateCampaignRequest = ({onSave}) => {
-  const [open, setOpen] = useSafeSetState(false);
-
   const notify = useNotify();
+  const dataProvider = useDataProvider();
+  const { contracts } = useContracts();
+  const [open, setOpen] = useSafeSetState(false);
+  const {data, isLoading} = useGetList(
+    "ClaimAccountRequest",
+    {filter: { accountIdEq: getAuthKeys().session.accountIds[0] }},
+    { refetchInterval: (data) => data?.[0]?.status == "DONE" ? false : 5000 }
+  );
   const handleClose = () => setOpen(false);
-  const onSuccess = () => {
+
+  const defaultValidUntil = () => {
+    let currentDate = new Date();
+    currentDate.setTime(currentDate.getTime() + (7 * 24 * 60 * 60 * 1000));
+    return currentDate;
+  }
+
+  const onSubmit = async (values) => {
+    if (data?.[0]?.status == "DONE") {
+      const { doc, asami, asamiAddress, signer } = await contracts();
+      const input = values.campaignRequestInput;
+      const budget = BigInt(input.budget);
+      const site = { 'X': 0, 'Nostr': 1, 'Instagram': 2 }[input.site];
+      const approval = await doc.approve(asamiAddress, budget, signer);
+      await approval.wait();
+      notify("Campaign budget approved.");
+      
+      const creation = await asami.makeCampaigns([
+        { site,
+          budget: BigInt(input.budget),
+          contentId: input.contentId,
+          priceScoreRatio: BigInt(input.priceScoreRatio),
+          topics: [],
+          validUntil: BigInt(Math.floor(defaultValidUntil().getTime() / 1000))
+        }
+      ]);
+      await creation.wait();
+    } else {
+      await dataProvider.create("CampaignRequest", { data: { input: values.campaignRequestInput } });
+    }
+
     onSave();
     notify("Campaign will be started soon");
     handleClose();
-  }
-
-  const transformIt = async (values, a, b, c) => {
-    return { input: values.campaignRequestInput };
   }
 
   const validate = (values) => {
@@ -197,12 +239,14 @@ const CreateCampaignRequest = ({onSave}) => {
 
     input.priceScoreRatio = zeroPadValue(toBeHex(parseEther("0.001")), 32);
 
-    let currentDate = new Date();
-    currentDate.setTime(currentDate.getTime() + (7 * 24 * 60 * 60 * 1000));
-    input.validUntil = currentDate.toISOString();
+    input.validUntil = defaultValidUntil().toISOString();
 
     values.campaignRequestInput = input;
     return errors;
+  }
+
+  if ( isLoading ) {
+    return null;
   }
   
   return (<Box>
@@ -210,20 +254,18 @@ const CreateCampaignRequest = ({onSave}) => {
       <CampaignIcon sx={{mr:"5px"}}/>
       Start Campaign
     </Button>
-    <CreateBase resource="CampaignRequest" transform={transformIt} mutationOptions={{ onSuccess }} >
-      <Dialog id="start-campaign-dialog" open={open} onClose={handleClose} maxWidth="md" fullWidth>
-        <Box p="0 1em">
-          <SimpleForm sanitizeEmptyValues validate={validate} toolbar={false}>
-            <TextInput fullWidth required={true} size="large" variant="filled" source="contentUrl" label="Your post URL" />
-            <TextInput fullWidth required={true} size="large" variant="filled" source="budget" label="How much you have to spend, in DoC (USD)" />
-            <Box width="100%" display="flex" gap="1em" justifyContent="space-between">
-              <SaveButton id="submit-start-campaign-form" size="large" label="Start Campaign" icon={<CampaignIcon/>} />
-              <Button size="large" variant="contained" color="grey" onClick={handleClose}>Cancel</Button>
-            </Box>
-          </SimpleForm>
-        </Box>
-      </Dialog>
-    </CreateBase>
+    <Dialog id="start-campaign-dialog" open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <Box p="1em">
+        <Form sanitizeEmptyValues validate={validate} onSubmit={onSubmit}>
+          <TextInput fullWidth required={true} size="large" variant="filled" source="contentUrl" label="Your post URL" />
+          <TextInput fullWidth required={true} size="large" variant="filled" source="budget" label="How much you have to spend, in DoC (USD)" />
+          <Box width="100%" display="flex" gap="1em" justifyContent="space-between">
+            <SaveButton id="submit-start-campaign-form" size="large" label="Start Campaign" icon={<CampaignIcon/>} />
+            <Button size="large" variant="contained" color="grey" onClick={handleClose}>Cancel</Button>
+          </Box>
+        </Form>
+      </Box>
+    </Dialog>
   </Box>);
 }
 

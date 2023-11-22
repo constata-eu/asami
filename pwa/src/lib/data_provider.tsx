@@ -9,7 +9,10 @@ import { Buffer } from 'buffer';
 
 import { Settings } from '../settings';
 export const apiUrl = `${Settings.apiDomain || ''}/graphql/`
-const schema = async () => (await (await fetch(`${apiUrl}introspect`)).json()).__schema;
+
+const schema = async () => {
+  return {"schema": (await (await fetch(`${apiUrl}introspect`)).json()).__schema }
+}
 
 export const defaultDataProvider = async () => {
   const httpLink = new HttpLink({
@@ -41,13 +44,12 @@ export const createSessionDataProvider = async (keys, authMethodKind, authData, 
       const response = (await fetch(url, req, ...more));
 
       if (response.status < 200 || response.status >= 300) {
-        const text = await response.text();
         let json;
         try { json = JSON.parse(text); } catch (e) { }
         return Promise.reject(
           new HttpError(json?.errors[0]?.message || response?.statusText, response.status, json));
       }
-
+      
       return response;
     }
   });

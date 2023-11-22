@@ -154,6 +154,19 @@ trait Showable<Model: SqlxModel<State=App>, Filter: Send>: Sized {
   ) -> FieldResult<Vec<Self>>
     where Filter: 'async_trait
   {
+    Self::base_collection(context, page, per_page, sort_field, sort_order, filter).await
+  }
+
+  async fn base_collection(
+    context: &Context,
+    page: Option<i32>,
+    per_page: Option<i32>,
+    sort_field: Option<String>,
+    sort_order: Option<String>,
+    filter: Option<Filter>
+  ) -> FieldResult<Vec<Self>>
+    where Filter: 'async_trait
+  {
     let limit = per_page.unwrap_or(DEFAULT_PER_PAGE);
     if limit >= 500 {
       return Err(FieldError::new(
@@ -190,6 +203,12 @@ trait Showable<Model: SqlxModel<State=App>, Filter: Send>: Sized {
   }
 
   async fn count( context: &Context, filter: Option<Filter>) -> FieldResult<ListMetadata>
+    where Filter: 'async_trait
+  {
+    Self::base_count(context, filter).await
+  }
+
+  async fn base_count( context: &Context, filter: Option<Filter>) -> FieldResult<ListMetadata>
     where Filter: 'async_trait
   {
     let count = <Model as SqlxModel>::SelectModelHub::from_state(context.app.clone())
@@ -255,15 +274,6 @@ make_graphql_query!{
     [HandleUpdateRequest, allHandleUpdateRequests, allHandleUpdateRequestsMeta, "_allHandleUpdateRequestsMeta", HandleUpdateRequestFilter, i32],
     [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, String],
     [ClaimAccountRequest, allClaimAccountRequests, allClaimAccountRequestsMeta, "_allClaimAccountRequestsMeta", ClaimAccountRequestFilter, i32],
-  }
-
-  #[allow(non_snake_case)]
-  async fn ServerConfig(context: &Context, id: i32) -> FieldResult<ServerConfig> {
-    Ok(ServerConfig {
-      id,
-      contract_address: context.app.settings.rsk.contract_address.clone(),
-      doc_contract_address: context.app.settings.rsk.doc_contract_address.clone(),
-    })
   }
 }
 

@@ -7,9 +7,14 @@ import {
   ShowGuesser,
   CustomRoutes,
   useSafeSetState,
-  useStore
+  useStore,
+  Authenticated
 } from "react-admin";
 import { ContractsProvider } from './components/contracts_context';
+import { Settings } from './settings';
+import {
+  GoogleReCaptchaProvider,
+} from 'react-google-recaptcha-v3';
 
 import { Route, useSearchParams } from "react-router-dom";
 import { authProvider } from "./lib/auth_provider";
@@ -80,7 +85,7 @@ const Dashboard = () => {
   const [searchParams,] = useSearchParams();
   const [storedRole] = useStore('user.role', 'advertiser');
   const role = searchParams.get("role") || storedRole;
-  return (role == 'advertiser' ? <AdvertiserDashboard /> : <MemberDashboard />);
+  return <Authenticated requireAuth>{role == 'advertiser' ? <AdvertiserDashboard /> : <MemberDashboard />}</Authenticated>;
 }
 
 export const App = () => {
@@ -102,23 +107,25 @@ export const App = () => {
   }
 
   return (
-  <ContractsProvider dataProvider={dataProvider}>
-    <Admin
-      dashboard={Dashboard}
-      disableTelemetry={true}
-      theme={asamiTheme}
-      layout={AsamiLayout}
-      loginPage={Login}
-      authProvider={authProvider}
-      dataProvider={dataProvider}
-    >
+  <ContractsProvider>
+    <GoogleReCaptchaProvider reCaptchaKey={ Settings.recaptchaSiteKey }>
+      <Admin
+        dashboard={Dashboard}
+        disableTelemetry={true}
+        theme={asamiTheme}
+        layout={AsamiLayout}
+        loginPage={Login}
+        authProvider={authProvider}
+        dataProvider={dataProvider}
+      >
         <CustomRoutes>
           <Route path="/one_time_token_login" element={<OneTimeTokenLogin/>}/>
           <Route path="/x_login" element={<XLogin/>}/>
           <Route path="/instagram_login" element={<InstagramLogin/>}/>
           <Route path="/eip712_login" element={<Eip712Login/>}/>
         </CustomRoutes>
-    </Admin>
+      </Admin>
+    </GoogleReCaptchaProvider>
   </ContractsProvider>
 );
 }

@@ -56,7 +56,6 @@ impl Truffle {
     let out_str = String::from_utf8(out.stdout).unwrap();
     let addresses: Addresses = serde_json::from_str(&out_str.lines().last().unwrap())
       .expect("Local blockchain init script may have exited with an error.");
-    dbg!(&addresses);
 
     Truffle { child, dir, addresses }
   }

@@ -100,14 +100,14 @@ impl CurrentSession {
     Self::validate_recaptcha(req, app).await?;
     let pubkey = Self::get_login_pubkey(req)?;
     let nonce = Self::validate_jwt(&jwt, &pubkey, req, &body).await?;
-    let (kind, lookup_key) = Self::validate_auth_data(app, req).await?;
+    let (kind, lookup_key, auth_data) = Self::validate_auth_data(app, req).await?;
 
     let maybe_auth_method = app.auth_method().select().kind_eq(&kind).lookup_key_eq(&lookup_key).optional().await?;
 
-    let auth_method = match maybe_auth_method {
-      Some(method) => method,
+    let (auth_method, new_account) = match maybe_auth_method {
+      Some(method) => (method, None),
       None => {
-        let account_id = auth_try!(
+        let account = auth_try!(
           app.account().insert(InsertAccount{
             name: Some("account".to_string()),
             addr: None,
@@ -117,7 +117,8 @@ impl CurrentSession {
             nostr_abuse_proven: false
           }).save().await,
           "could_not_create_account"
-        ).attrs.id;
+        );
+        let account_id = account.attrs.id.clone();
 
         let user_id = auth_try!(
           app.user().insert(InsertUser{name:"user".to_string()}).save().await,
@@ -129,10 +130,12 @@ impl CurrentSession {
           "could_not_bind_user_to_account"
         );
 
-        auth_try!(
-          app.auth_method().insert(InsertAuthMethod{ user_id, lookup_key, kind }).save().await,
+        let method = auth_try!(
+          app.auth_method().insert(InsertAuthMethod{ user_id, lookup_key: lookup_key.clone(), kind }).save().await,
           "could_not_insert_auth_method"
-        )
+        );
+
+        (method, Some(account))
       }
     };
 
@@ -145,7 +148,7 @@ impl CurrentSession {
 
     auth_assert!(maybe_existing.is_none(), "session_pubkey_exists");
 
-    Ok(auth_try!(
+    let session = auth_try!(
       app.session().insert(InsertSession{
         id: key_id,
         user_id: auth_method.attrs.user_id,
@@ -154,7 +157,15 @@ impl CurrentSession {
         nonce,
       }).save().await,
       "could_not_insert_session"
-    ))
+    );
+
+    if let Some(account) = new_account {
+      if kind == AuthMethodKind::Eip712 {
+        account.create_claim_account_request(lookup_key, auth_data, session.attrs.id.clone()).await?;
+      }
+    }
+
+    Ok(session)
   }
 
   async fn identify(app: &App, jwt: &str, req: &Request<'_>, body: Option<&[u8]>) -> Result<Session, ApiAuthError> {
@@ -167,7 +178,7 @@ impl CurrentSession {
     Ok(auth_try!(session.update().nonce(nonce).save().await, "could_not_update_nonce"))
   }
 
-  async fn validate_auth_data(app: &App, req: &Request<'_>) -> Result<(AuthMethodKind, String), ApiAuthError> {
+  async fn validate_auth_data(app: &App, req: &Request<'_>) -> Result<(AuthMethodKind, String, String), ApiAuthError> {
     let auth_method_kind_string = auth_some!(
       req.headers().get_one("Auth-Method-Kind"),
       "no_auth_method_kind_in_headers"
@@ -227,12 +238,12 @@ impl CurrentSession {
         auth_try!(response.into_json::<InstagramOauthToken>(), "instagram_token_was_not_json").user_id.to_string()
       },
       AuthMethodKind::Eip712 => {
-        eip_721_sig_to_address(app.settings.rsk.chain_id, auth_data).map_err(ApiAuthError::Fail)?
+        eip_712_sig_to_address(app.settings.rsk.chain_id, auth_data).map_err(ApiAuthError::Fail)?
       },
       _ => return Err(ApiAuthError::Fail(format!("auth_method_not_supported_yet"))),
     };
 
-    Ok((auth_method_kind, lookup_key))
+    Ok((auth_method_kind, lookup_key, auth_data.to_string()))
   }
 
   async fn validate_recaptcha(req: &Request<'_>, app: &App) -> Result<(), ApiAuthError> {

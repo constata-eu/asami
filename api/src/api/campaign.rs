@@ -30,10 +30,18 @@ pub struct Campaign {
 #[serde(rename_all = "camelCase")]
 pub struct CampaignFilter {
   ids: Option<Vec<String>>,
+  id_not_in: Option<Vec<String>>,
   id_eq: Option<String>,
   account_id_in: Option<Vec<String>>,
   finished_eq: Option<bool>,
   content_id_like: Option<String>,
+  available_to_account_ids: Option<Vec<String>>,
+}
+
+async fn make_available_to_account_ids_filter(context: &Context, account_ids: Vec<String>) -> FieldResult<CampaignFilter> {
+  let id_not_in = context.app.collab().select().member_id_in(account_ids).all().await?
+    .into_iter().map(|x| x.attrs.campaign_id).collect();
+  Ok(CampaignFilter{ finished_eq: Some(false), id_not_in: Some(id_not_in), ..Default::default() })
 }
 
 #[rocket::async_trait]
@@ -47,9 +55,36 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     }
   }
 
+  async fn collection(
+    context: &Context,
+    page: Option<i32>,
+    per_page: Option<i32>,
+    sort_field: Option<String>,
+    sort_order: Option<String>,
+    filter: Option<CampaignFilter>
+  ) -> FieldResult<Vec<Self>> {
+    if let Some(account_ids) = filter.as_ref().and_then(|f| f.available_to_account_ids.clone() ) {
+      let ids_filter = make_available_to_account_ids_filter(&context, account_ids).await?;
+      Self::base_collection(context, page, per_page, sort_field, sort_order, Some(ids_filter)).await
+    } else {
+      Self::base_collection(context, page, per_page, sort_field, sort_order, filter).await
+    }
+  }
+
+  async fn count( context: &Context, filter: Option<CampaignFilter>) -> FieldResult<ListMetadata>
+  {
+    if let Some(account_ids) = filter.as_ref().and_then(|f| f.available_to_account_ids.clone() ) {
+      let ids_filter = make_available_to_account_ids_filter(&context, account_ids).await?;
+      Self::base_count(context, Some(ids_filter)).await
+    } else {
+      Self::base_count(context, filter).await
+    }
+  }
+
   fn filter_to_select(_context: &Context, filter: Option<CampaignFilter>) -> models::SelectCampaign {
     if let Some(f) = filter {
       models::SelectCampaign {
+        id_not_in: f.id_not_in,
         id_in: f.ids,
         account_id_in: f.account_id_in,
         id_eq: f.id_eq,

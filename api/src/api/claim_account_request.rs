@@ -80,14 +80,20 @@ impl CreateClaimAccountRequestInput {
     
     let account = context.app.account().find(&self.account_id).await?;
 
-    let address = eip_721_sig_to_address(context.app.settings.rsk.chain_id, &self.signature)
-      .map_err(|msg| Error::Validation("eip_721_sig".to_string(), msg) )?;
+    let address = eip_712_sig_to_address(context.app.settings.rsk.chain_id, &self.signature)
+      .map_err(|msg| Error::Validation("eip_712_sig".to_string(), msg) )?;
 
     let req = account.create_claim_account_request(
-      address,
+      address.clone(),
       self.signature,
       context.current_session.0.attrs.id.clone()
     ).await?;
+
+    context.app.auth_method().insert(InsertAuthMethod{
+      user_id: context.user_id,
+      lookup_key: address,
+      kind: AuthMethodKind::Eip712
+    }).save().await?;
 
     Ok(ClaimAccountRequest::db_to_graphql(req).await?)
   }

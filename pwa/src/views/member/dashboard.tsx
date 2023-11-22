@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useDataProvider, useGetIdentity, useSafeSetState, useTranslate, ReferenceField, useShowController} from "react-admin";
+import { useDataProvider, useAuthenticated, useSafeSetState, useTranslate, ReferenceField, useGetList} from "react-admin";
 import { rLogin } from "../../lib/rLogin";
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Alert, Box, Button, Card, CardActions, CardContent, Container, FormControl, FormHelperText, InputLabel, MenuItem, Select, Skeleton, Typography, IconButton } from "@mui/material";
@@ -27,7 +27,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Toolbar, Create, SimpleForm, CreateBase, Form, TextInput, RichTextInput, SaveButton, useNotify } from 'react-admin';
-import { ListBase, Title, ListToolbar, Pagination, Datagrid, TextField, FunctionField} from 'react-admin';
+import { ListBase, Title, ListToolbar, Pagination, Datagrid, TextField, FunctionField, RecordContextProvider, SimpleShowLayout} from 'react-admin';
 import {  
     useListController,
     defaultExporter,
@@ -44,6 +44,8 @@ import asamiABI from "../../abi/Asami.json";
 import docABI from "../../abi/Doc.json";
 
 const Dashboard = () => {
+  useAuthenticated();
+
   const [loading, setLoading] = useSafeSetState(true);
   const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
 
@@ -70,122 +72,117 @@ const Dashboard = () => {
     </Container>;
   }
 
-  return <Container maxWidth="md" id="advertiser-dashboard">
-    <Head1 sx={{my:3}}>Hello!</Head1>
-    <Typography my="1em">
-      The ASAMI community is a human based amplifier for social network posts. You get paid for reposting content.
-    </Typography>
-    <ClaimAccountRequestPendingMessage />
+  return <Container maxWidth="md" id="member-dashboard">
+    <AccountState />
     <CampaignList handles={handles}/>
     <CollabList />
     <ConfigureXAccount handles={handles}/>
-
-    <ul>
-      <li> Once you verify your X account you can start reposting things.</li>
-      <li>You can set the price of your reposts, but you can only change it once every 14 days.</li>
-      <li>The ASAMI smart contract ensures you get paid for your activity, and keeps the rules clear.</li>
-      <li>A third party entity, called the ADMIN, verifies your account, your social reach, and your reposts.</li>
-      <li>ASAMI will deduct a fee from your rewards, to keep the protocol working.</li>
-      <li>You'll get paid in the stablecoin DoC for your reposts and accumulate the amount until you claim your account using a WEB3 wallet.</li>
-      <li>You'll also receive ASAMI tokens for each collaboration, these work like stock in the protocol.</li>
-      <li>Fees collected will be distributed among token holders, similar to a company's dividends, every 14 days.</li>
-      <li>Tokens also allow voting on changing the fee rate and electing new ADMIN.</li>
-    </ul>
   </Container>;
 }
 
-const ClaimAccountRequestPendingMessage = () => {
-  const {isLoading, data } = useListController({
-    disableSyncWithLocation: true,
-    filter: { accountIdEq: getAuthKeys().session.accountIds[0] },
-    perPage: 1,
-    queryOptions: {
-      refetchInterval: 3000,
-    },
-    resource: "ClaimAccountRequest",
-  });
+const AccountState = () => {
+  const {data, isLoading} = useGetList(
+    "ClaimAccountRequest",
+    {filter: { accountIdEq: getAuthKeys().session.accountIds[0] }},
+    { refetchInterval: (data) => data?.[0]?.status == "DONE" ? false : 5000 }
+  );
 
   let content;
 
   if (isLoading) {
     content = <></>;
   } else if(!data[0]) {
-    content = <Typography id="account-summary-claim-none">
-      Your rewards will be paid using the DOC token, which is pegged to the united states dollar, in the RSK network.
-      To get your rewards, you'll have to claim your account using a WEB3 wallet such as metamask.
-      You've claimed your account.
-    </Typography>;
+    content = <Card>
+      <CardContent>
+        <Typography id="account-summary-claim-none">
+          You're not a full member yet, you can participate in campaigns and ASAMI will hold on to your rewards for you.
+          Once you claim your account by connectng your WEB3 wallet, you'll receive all your outstanding rewards.
+          <ClaimAccountButton id="collabs-claim-account-button"/>
+        </Typography>
+      </CardContent>
+    </Card>;
   } else if(data[0].status == "DONE") {
     content = <ClaimedAccountState />;
   } else {
-    content = <Typography id="account-summary-claim-pending">
-      You've requested to manage your own account, we'll let you know when it's done.
-    </Typography>;
-    
-    content = <ClaimedAccountState />;
+    content = <Card>
+      <CardContent>
+        <Typography id="account-summary-claim-pending">
+          You've requested to manage your own account, we'll let you know when it's done.
+        </Typography>
+      </CardContent>
+    </Card>;
   }
   
-  return <Card id="account-summary" sx={{my:"3em"}}>
-    <CardTitle text="Your account" />
+  return <Box id="account-summary" mb="2em">
     { content }
-  </Card>;
+  </Box>;
 }
 
 const ClaimedAccountState = () => {
-  const [loading, setLoading] = useSafeSetState(true);
-
+  const [loading, setLoading] = useSafeSetState(false);
+  const [balances, setBalances] = useSafeSetState({asami: 0, doc: 0});
+  const { contracts } = useContracts();
 
   useEffect(() => {
-    const load = async () => {
+    const init = async () => {
+      const { doc, asami, signer } = await contracts();
+      setBalances({
+        asami: (await asami.balanceOf(signer.address)),
+        doc: (await doc.balanceOf(signer.address))
+      });
+      setLoading(false);
     }
-
-    if (!isLoading && !isFetching) {
-      load();
-    }
-  }, [isLoading, isFetching]);
+    init();
+  }, [balances, setBalances]);
 
   if (loading) {
-    return <></>;
+    return null;
   }
 
-  return <Typography id="account-summary-claim-done">
-    You've claimed your account.
-  </Typography>;
+  return <Box id="account-summary-claim-done" display="flex" alignItems="center" flexWrap="wrap" gap="1em" flex="1 1">
+    <SimpleShowLayout record={balances} sx={{ ".ra-field": {flex: "1 1"}}}>
+      <FunctionField label="ASAMI token balance" render={ record => `${formatEther(record.asami)}` }  />
+      <FunctionField label="DOC balance" render={ record => `${formatEther(record.doc)}` }  />
+    </SimpleShowLayout>
+  </Box>;
 }
 
 const CampaignList = ({handles}) => {
   const listContext = useListController({
     disableSyncWithLocation: true,
-    filter: {finishedEq: false},
+    filter: {availableToAccountIds: getAuthKeys().session.accountIds },
     perPage: 20,
     queryOptions: {
-      refetchInterval: 2000,
+      refetchInterval: 6000,
     },
     resource: "Campaign",
   });
 
-  if (listContext.total == 0 || handles.isLoading || handles.total == 0 ){
+  if (listContext.isLoading || handles.isLoading || handles.total == 0 ){
     return <></>;
   }
 
-  return (
-    <ListContextProvider value={listContext}>
-      <Card id="campaign-list" sx={{my:"3em"}}>
-        <CardTitle text="Some campaigns for you!" >
-          <Typography>Repost these campaigns and get rewards!</Typography>
-        </CardTitle>
-        <Datagrid bulkActionButtons={false}>
-          <FunctionField label={false} render={record =>  {
-            const repostUrl = `https://twitter.com/intent/retweet?tweet_id=${record.contentId}&related=asami_club`;
-            return <Box>
-              <TwitterTweetEmbed tweetId={record.contentId} options={{ align: "center", width: "550px", conversation: "none"}} />
-              <Button fullWidth variant="contained" href={repostUrl} target="_blank">Repost it!</Button>
-            </Box>
-          }} />
-        </Datagrid>
-        <Pagination rowsPerPageOptions={[]} />
-      </Card>
-    </ListContextProvider>
+  if (listContext.total == 0 ) {
+    return <Card id="campaign-list-empty" sx={{my:"3em"}}>
+      <CardContent>
+        <Head2>We're all out of campaigns.</Head2>
+        <Typography>Check back soon though!</Typography>
+      </CardContent>
+    </Card>;
+  }
+
+  return ( <>
+    <Head1 sx={{ my: "1em" }}>Check out these campaigns</Head1>
+    <Box id="campaign-list" display="flex" flexWrap="wrap" gap="2em">
+      { listContext.data.map((item, index) => {
+        const repostUrl = `https://twitter.com/intent/retweet?tweet_id=${item.contentId}&related=asami_club`;
+        return <Card sx={{ flex: "1 1 400px", p: "1em" }} key={index}>
+          <TwitterTweetEmbed tweetId={item.contentId} options={{ align: "center", width: "550px", conversation: "none"}} />
+          <Button fullWidth size="large" variant="contained" href={repostUrl} target="_blank">Repost it!</Button>
+        </Card>;
+      })}
+    </Box>
+    </>
   );
 }
 
@@ -209,12 +206,6 @@ const CollabList = () => {
       <Card id="collab-list" sx={{my:"3em"}}>
         <CardTitle text="Your collaboration history" >
           <Typography>These are your collaborations so far.</Typography>
-          <Typography>You got paid 2000 DOC in total since you became a member.</Typography>
-          <Alert severity="info">
-            You're still a WEB2 user, so we're keeping your money safe.
-            You need to claim your account with a WEB3 wallet so we can send you the funds.
-            <ClaimAccountButton id="collabs-claim-account-button"/>
-          </Alert>
         </CardTitle>
         <Datagrid bulkActionButtons={false}>
           <ReferenceField source="campaignId" reference="Campaign">
@@ -278,7 +269,7 @@ const ConfigureXAccount = ({handles}) => {
 
   return (<Box>
     <Card id="configure-x-handle-card" sx={{my:"3em"}}>
-      <CardTitle text="𝕏 &nbsp; Your account" />
+      <CardTitle text="Your 𝕏" />
       { content }
     </Card>
   </Box>);
@@ -327,11 +318,13 @@ const MakeVerificationPost = () => {
   let intent_url = `https://x.com/intent/tweet?text=${text}`;
 
   return <Box p="1em">
-    <Typography mb="1em">Now, to verify your account, and your willingness to become a member, we need you to post this message on X.</Typography>
+    <Typography mb="1em">Now, to verify your username, and your willingness to use it in ASAMI, we need you to post this message on X.</Typography>
     <Paper sx={{ my:"1em", p:"1em", background:"#eee"}}> {text} </Paper>
     { clicked ?
       <Alert>Thank you! It will take a moment for us to pick up your post.</Alert> :
-      <Button fullWidth onClick={() => setClicked(true)} size="large" variant="contained" href={intent_url} target="_blank" rel="noopener noreferrer">Post the message</Button> 
+      <Button fullWidth onClick={() => setClicked(true)} size="large" variant="contained" href={intent_url} target="_blank" rel="noopener noreferrer">
+        Post the message
+      </Button> 
     }
   </Box>
 }
@@ -346,12 +339,15 @@ const HandleSubmissionInProgress = ({req}) =>
   </Box>
 
 const HandleStats = ({handle}) => 
-  <Box p="1em" id="existing-x-handle-stats">
-    <Typography>
-      You've verified your handle { handle.username }, with user id { handle.userId }.
-      The reward for each message is { formatEther(handle.price) } DOC,
-      and the admin has given it a score of { BigInt(handle.score).toString() }.
-    </Typography>
+  <Box pb="1em" id="existing-x-handle-stats">
+    <RecordContextProvider value={handle}>
+      <SimpleShowLayout>
+        <TextField label="Username" source="username" />
+        <TextField label="User ID" source="userId" />
+        <FunctionField label="Price per repost" render={ record => `${formatEther(record.price)} DOC` }  />
+        <FunctionField label="Score" render={ record => `${BigInt(handle.score)} ✭` }  />
+      </SimpleShowLayout>
+    </RecordContextProvider>
   </Box>
 
 export default Dashboard;

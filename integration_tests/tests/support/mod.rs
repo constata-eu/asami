@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 pub mod selenium;
 pub mod test_api_server;
 pub mod vite_preview;

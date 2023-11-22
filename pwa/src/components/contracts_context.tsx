@@ -9,23 +9,26 @@ import { Settings } from '../settings';
 
 const ContractsContext = createContext(null);
 
-export const ContractsProvider = ({ dataProvider, children }) => {
+export const ContractsProvider = ({ children }) => {
   const [values, setValues] = useSafeSetState(null);
 
   const contracts = async () => {
-    debugger;
     if (values) {
       return values;
     }
-    const config = (await (await fetch(`${Settings.apiDomain}/config`)).json());
-    const result = await rLogin.connect();
-    const ethersProvider = new ethers.BrowserProvider(provider);
-    const signer = await ethersProvider.getSigner(0);
-    const asami = new ethers.Contract(config.contractAddress, asamiABI.abi, provider);
-    const doc = new ethers.Contract(config.docContractAddress, docABI, signer);
-    const newVals = {doc, asami, signer, provider};
-    setValues(newVals);
 
+    const config = (await (await fetch(`${Settings.apiDomain}/config`)).json());
+    const {provider, disconnect} = await rLogin.connect();
+    const ethersProvider = new ethers.BrowserProvider(provider);
+    // ToDo: How should we use provider.disconnect?
+    
+    const signer = await ethersProvider.getSigner(0);
+    const asamiAddress = config.contractAddress;
+    const docAddress = config.docContractAddress;
+    const asami = new ethers.Contract(asamiAddress, asamiABI.abi, signer);
+    const doc = new ethers.Contract(docAddress, docABI, signer);
+    const newVals = {doc, asami, asamiAddress, docAddress, signer, provider};
+    setValues(newVals);
     return newVals;
   }
 

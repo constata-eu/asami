@@ -25,12 +25,12 @@ const ClaimAccountButton = ({id}) => {
       const accountId = getAuthKeys().session.accountIds[0];
       let result = await dataProvider.create("ClaimAccountRequest", { data: { input: { signature, accountId }}});
       notify("The admin will hand over control of your account to you soon.", { type: "success" })
-    } catch {
+    } catch(e) {
       notify("Ooops, we could not receive your request. Please try again or contact the admin.", { type: "error"})
     }
   }
 
-  return (<Button id={id} onClick={createClaimRequest}>Claim your account</Button>);
+  return (<Button sx={{ mt: "1em"}} fullWidth id={id} variant="contained" color="inherit" onClick={createClaimRequest}>Claim your account</Button>);
 };
 
 export default ClaimAccountButton;

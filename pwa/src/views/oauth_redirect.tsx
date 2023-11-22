@@ -110,7 +110,7 @@ const RegularLogin = ({ authData, authMethodKind}) => {
       await authProvider.login(authMethodKind, authData, recaptchaToken);
       navigate("/")
     } catch (e) {
-      setError(e.message || translate("certos.error.default"))
+      setError(e.message || "An unexpected error ocurred logging you in")
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -118,10 +118,8 @@ const RegularLogin = ({ authData, authMethodKind}) => {
   return (!error ?
     <>
       <CircularProgress sx={{mb: 3}}/>
-      <Head2>{ translate("components.login.logging_in") } </Head2>
-      <GoogleReCaptchaProvider reCaptchaKey={ Settings.recaptchaSiteKey }>
-        <GoogleReCaptcha onVerify={onVerify} />
-      </GoogleReCaptchaProvider>
+      <Head2>Logging you in, this won't take long.</Head2>
+      <GoogleReCaptcha onVerify={onVerify} />
     </>
     :
     <Errors error={error} />
@@ -134,9 +132,9 @@ const Errors = ({error}) => {
 
   return <>
       <NoAccounts sx={{ mb: 3, width: "2em", height: "auto" }}/>
-      <Head2 sx={{mb: 3}}>{ translate("components.login.error_title") } </Head2>
-      <Typography>{ translate("components.login.error_description") }</Typography>
-      <Alert severity="info" sx={{my: "2em" }}>{ translate(`components.login.errors.${error}`, { _: error }) }</Alert>
+      <Head2 sx={{mb: 3}}>An unexpected error ocurred logging you in.</Head2>
+      <Typography>We have a description code for the error: </Typography>
+      <Alert severity="info" sx={{my: "2em" }}>{ error }</Alert>
 
       <Button
         sx={{mb: 2}}
@@ -144,14 +142,14 @@ const Errors = ({error}) => {
         onClick={() => navigate("/login")}
         startIcon={<Replay />}
       >
-        { translate("components.login.try_again") }
+        Try again
       </Button>
       <Button
         variant="outlined"
-        href="mailto:werify@werify.eu"
+        href="mailto:hola@constata.eu"
         startIcon={<LiveHelp />}
       >
-        { translate("components.login.contact_us") }
+        Contact us
       </Button>
   </>;
 }

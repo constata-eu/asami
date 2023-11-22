@@ -297,7 +297,7 @@ impl HandleRequestHub {
             .account_id_eq(&account_id)
             .optional().await? else { continue };
 
-          let score = U256::from(public_metrics.followers_count) * u("85") / u("100");
+          let score = U256::from(public_metrics.followers_count) * wei("85") / wei("100");
           let price = u256(indexer_state.suggested_price_per_point()) * score;
           handle_requests.push(
             req.verify(author_id.to_string()).await?.appraise(price, score).await?
@@ -1263,7 +1263,7 @@ fn d_to_u64(d: Decimal) -> U64 {
   U64::from_dec_str(&d.to_string()).unwrap()
 }
 
-pub fn eip_721_sig_to_address(chain_id: u64, signature: &str) -> Result<String, String> {
+pub fn eip_712_sig_to_address(chain_id: u64, signature: &str) -> Result<String, String> {
   let json = serde_json::json!( {
     "types": {
       "EIP712Domain": [
