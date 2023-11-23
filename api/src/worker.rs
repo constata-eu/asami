@@ -7,7 +7,7 @@ async fn main() {
   loop {
     if let Err(e) = app.run_background_tasks().await {
       println!("Got error running periodic tasks {:?}", e);
-      tokio::time::sleep(Duration::from_millis(1000)).await;
+      tokio::time::sleep(Duration::from_millis(5000)).await;
     }
   }
 }

@@ -48,7 +48,14 @@ anyhow = "*"
 name = "api"
 path = "src/main.rs"
 
-
 [[bin]]
 name = "worker"
 path = "src/worker.rs"
+
+[[bin]]
+name = "make_admin_address"
+path = "src/make_admin_address.rs"
+
+[[bin]]
+name = "migrator"
+path = "src/migrator.rs"

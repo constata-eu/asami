@@ -54,8 +54,9 @@ pub fn server(app: App) -> rocket::Rocket<rocket::Build> {
       "http://localhost:3000",
       "http://127.0.0.1:5173",
       "http://localhost:5173",
+      "https://asami.club",
     ],
-    &["file://.*", "content://.*", "https://.*"]
+    &["file://.*", "content://.*"]
   ).unwrap();
 
   let cors = rocket_cors::CorsOptions {

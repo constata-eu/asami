@@ -26,13 +26,8 @@ impl App {
   }
 
   pub async fn new(password: String, config: AppConfig) -> AsamiResult<Self> {
-    let mut options = PgConnectOptions::from_str(&config.database_uri)?;
-    options.disable_statement_logging();
-    let pool_options = PgPoolOptions::new().max_connections(5);
-    let pool = pool_options.connect_with(options).await?;
-    let db = Db{ pool, transaction: None };
+    let db = config.db().await?;
     let on_chain = OnChain::new(&config, &password).await?;
-
     Ok(Self{ db, on_chain, settings: Box::new(config) })
   }
 
@@ -60,6 +55,14 @@ pub struct AppConfig {
 impl AppConfig {
   pub fn default() -> AsamiResult<Self> {
     Ok(Config::figment().extract::<Self>()?)
+  }
+
+  pub async fn db(&self) -> AsamiResult<Db> {
+    let mut options = PgConnectOptions::from_str(&self.database_uri)?;
+    options.disable_statement_logging();
+    let pool_options = PgPoolOptions::new().max_connections(5);
+    let pool = pool_options.connect_with(options).await?;
+    Ok(Db{ pool, transaction: None })
   }
 }
 

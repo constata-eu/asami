@@ -37,7 +37,7 @@ impl OnChain {
       .password(&password)
       .build()?;
 
-    let wallet_address: String = serde_json::to_string(&wallet.address())
+   let wallet_address: String = serde_json::to_string(&wallet.address())
       .and_then(|s| serde_json::from_str::<String>(&s) )
       .map_err(|_| Error::Init("Could not serialize wallet address to json".to_string()) )?;
 

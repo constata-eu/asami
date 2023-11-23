@@ -5,3 +5,4 @@ target
 contract/contracts/artifacts
 .deps/*
 pwa/dist
+release

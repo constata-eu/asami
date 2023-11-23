@@ -1,0 +1,29 @@
+version: '3.1'
+
+services:
+  db_container:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: asami
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: asami_development
+    networks:
+      - release-builder
+
+  builder:
+    build:
+      dockerfile: docker/release-builder/Dockerfile
+      context: .
+    environment:
+      - HOST_UID
+    depends_on:
+      - db_container
+    volumes:
+      - ".:/host_workspace"
+    networks:
+      - release-builder
+
+networks:
+  release-builder:
+    driver: bridge
