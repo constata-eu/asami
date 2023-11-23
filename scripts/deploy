@@ -64,10 +64,10 @@ done &&
 echo "Running migrations" &&
 echo "'$password'" | ./migrator &&
 echo "Start new servers" &&
-systemctl start worker asami_public_api &&
+systemctl start asami_worker asami_public_api &&
 echo Wait a moment for password sync &&
 sleep 3 &&
 for s in `ls /run/systemd/ask-password/sck.*`;
   do echo -n "+'"$password"'" | nc -uU -q0 $s;
 done &&
-systemctl status asami_public_api worker'
+systemctl status asami_public_api asami_worker'
