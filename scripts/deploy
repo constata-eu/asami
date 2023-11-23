@@ -3,7 +3,7 @@ trap "exit" INT
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD) 
 STAGING_IP=128.199.33.144
-PRODUCTIO_IP=178.128.244.41
+PRODUCTION_IP=178.128.244.41
 
 if [[ $1 == "production" && $BRANCH != "master" ]]
 then
@@ -48,7 +48,7 @@ rm -rf /tmp/asami-deploy-files &&
 mkdir /tmp/asami-deploy-files &&
 cp release/{migrator,api,worker} /tmp/asami-deploy-files &&
 echo "Copying deploy files" &&
-scp -r /tmp/asami-deploy-files root@$1:/home/asami/ &&
+scp -r /tmp/asami-deploy-files root@$IP:/home/asami/ &&
 ssh root@$IP '
 cd /home/asami &&
 mkdir -p templates &&
