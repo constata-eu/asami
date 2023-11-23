@@ -13,6 +13,7 @@ fn main() {
   let mut rng = rand::thread_rng();
   MnemonicBuilder::<English>::default()
     .write_to(".")
+    .password(&password)
     .word_count(24)
     .build_random(&mut rng).expect("Could not build wallet");
 

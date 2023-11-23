@@ -1,4 +1,4 @@
-FROM ubuntu:21.04
+FROM ubuntu:22.04
 
 RUN apt update && apt install curl wget git build-essential libssl-dev pkg-config ca-certificates rsync -y
 
