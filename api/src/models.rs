@@ -628,6 +628,8 @@ impl CampaignRequestHub {
     let reqs = self.select().status_eq(CampaignRequestStatus::Paid).all().await?;
     let total: U256 = reqs.iter().map(|r| u256(r.budget()) ).fold(0.into(), |a,b| a+b);
 
+    if reqs.len() > 0 { return Ok(()); }
+
     let tx_hash = rsk.doc_contract.approve( rsk.contract.address(), total).send().await?
       .tx_hash().encode_hex();
 

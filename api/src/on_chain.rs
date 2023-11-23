@@ -47,6 +47,7 @@ impl OnChain {
 
     let provider = Provider::<Http>::try_from(&config.rsk.rpc_url)
       .map_err(|_| Error::Init("Invalid rsk rpc_url in config".to_string()) )?;
+
     let client = Arc::new(
       SignerMiddleware::new(provider, wallet.with_chain_id(config.rsk.chain_id))
     );

@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Running the docker/builder to build all the required binaries."
 docker compose --project-directory . -f docker/release-builder/docker-compose.yml down
-docker compose --project-directory . -f docker/release-builder/docker-compose.yml build --no-cache
+#docker compose --project-directory . -f docker/release-builder/docker-compose.yml build --no-cache
 docker compose --project-directory . -f docker/release-builder/docker-compose.yml pull
 HOST_UID=$(id -u) docker compose --project-directory . -f docker/release-builder/docker-compose.yml up --remove-orphans --abort-on-container-exit 
 echo "All done, find the new binaries in 'release'."
