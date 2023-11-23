@@ -49,7 +49,7 @@ mkdir /tmp/asami-deploy-files &&
 cp release/{migrator,api,worker} /tmp/asami-deploy-files &&
 echo "Copying deploy files" &&
 scp -r /tmp/asami-deploy-files root@$1:/home/asami/ &&
-ssh root@$1 '
+ssh root@$IP '
 cd /home/asami &&
 mkdir -p templates &&
 echo "Changing ownership" &&
