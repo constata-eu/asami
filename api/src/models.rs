@@ -321,6 +321,7 @@ impl HandleRequestHub {
   pub async fn submit_all(self) -> AsamiResult<()> {
     let rsk = &self.state.on_chain;
     let reqs = self.select().status_eq(HandleRequestStatus::Appraised).all().await?;
+    if reqs.is_empty() { return Ok(()); }
 
     let mut params = vec![];
     for r in &reqs {
@@ -628,7 +629,7 @@ impl CampaignRequestHub {
     let reqs = self.select().status_eq(CampaignRequestStatus::Paid).all().await?;
     let total: U256 = reqs.iter().map(|r| u256(r.budget()) ).fold(0.into(), |a,b| a+b);
 
-    if reqs.len() > 0 { return Ok(()); }
+    if reqs.is_empty() { return Ok(()); }
 
     let tx_hash = rsk.doc_contract.approve( rsk.contract.address(), total).send().await?
       .tx_hash().encode_hex();
@@ -643,6 +644,8 @@ impl CampaignRequestHub {
   pub async fn submit_all(&self) -> AsamiResult<()> {
     let rsk = &self.state.on_chain;
     let reqs = self.select().status_eq(CampaignRequestStatus::Approved).all().await?;
+
+    if reqs.is_empty() { return Ok(()); }
 
     let mut params = vec![];
     for r in &reqs {
@@ -813,6 +816,8 @@ impl CollabRequestHub {
   pub async fn submit_all(&self) -> AsamiResult<Vec<CollabRequest>> {
     let mut submitted = vec![];
     let reqs = self.select().status_eq(CollabRequestStatus::Received).all().await?;
+    if reqs.is_empty() { return Ok(submitted); }
+
     let params = reqs.iter().map(|r| r.as_param() ).collect();
 
     let tx_hash = self.state.on_chain.contract
@@ -945,6 +950,9 @@ impl ClaimAccountRequestHub {
   pub async fn submit_all(&self) -> AsamiResult<Vec<ClaimAccountRequest>> {
     let mut submitted = vec![];
     let reqs = self.select().status_eq(ClaimAccountRequestStatus::Received).all().await?;
+
+    if reqs.is_empty() { return Ok(submitted); }
+
     let params = reqs.iter().map(|r| r.as_param() ).collect();
 
     let tx_hash = self.state.on_chain.contract
@@ -1229,11 +1237,11 @@ impl SyncedEventHub {
 
 // Unsafe conversion for values that we know for sure have an U256 hex encoded value.
 pub fn u256<T: AsRef<str> + std::fmt::Debug>(u: T) -> U256 {
-  U256::decode_hex(u).unwrap()
+  U256::decode_hex(u).unwrap_or(U256::zero())
 }
 
 pub fn wei<T: AsRef<str>>(t: T) -> U256 {
-  U256::from_dec_str(t.as_ref()).unwrap()
+  U256::from_dec_str(t.as_ref()).unwrap_or(U256::zero())
 }
 
 pub fn weihex<T: AsRef<str>>(t: T) -> String {
@@ -1258,11 +1266,11 @@ fn utc_to_i(d: UtcDateTime) -> U256 {
 }
 
 fn u64_to_d(u: U64) -> Decimal {
-  Decimal::from_u64(u.as_u64()).unwrap()
+  Decimal::from_u64(u.as_u64()).unwrap_or(Decimal::ZERO)
 }
 
 fn d_to_u64(d: Decimal) -> U64 {
-  U64::from_dec_str(&d.to_string()).unwrap()
+  U64::from_dec_str(&d.to_string()).unwrap_or(U64::zero())
 }
 
 pub fn eip_712_sig_to_address(chain_id: u64, signature: &str) -> Result<String, String> {
