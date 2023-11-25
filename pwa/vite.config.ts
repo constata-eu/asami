@@ -25,7 +25,8 @@ export default defineConfig({
       //target: "es2015",
       outDir: 'dist',
       commonjsOptions: { 
-        transformMixedEsModules: true
+        transformMixedEsModules: true,
+        include: [/react-twitter-embed/]
       },
       rollupOptions: {
         plugins: [
