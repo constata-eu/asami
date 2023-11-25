@@ -55,7 +55,7 @@ mkdir -p templates &&
 echo "Changing ownership" &&
 chown -R www-data.www-data asami-deploy-files &&
 echo "Stopping servers" &&
-systemctl stop asami_public_api worker &&
+systemctl stop asami_public_api asami_worker &&
 echo "Backing up old files, moving in new ones" &&
 for f in "api" "migrator" "worker";
   do mv $f $f.old;
