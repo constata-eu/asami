@@ -24,7 +24,10 @@ export default defineConfig({
       // minify: false,
       //target: "es2015",
       outDir: 'dist',
-      commonjsOptions: { include: [] },
+      commonjsOptions: { 
+        transformMixedEsModules: true,
+        include: []
+      },
       rollupOptions: {
         plugins: [
           // Enable rollup polyfills plugin
