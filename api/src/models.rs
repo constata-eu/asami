@@ -777,6 +777,8 @@ impl CampaignHub {
         page = reposts.next_page().await?;
         if page.is_some() { sleep(Duration::from_millis(3 * 60 * 1000)).await; }
       }
+
+      sleep(Duration::from_millis(3 * 60 * 1000)).await;
     }
     Ok(reqs)
   }
