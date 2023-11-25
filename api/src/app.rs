@@ -32,7 +32,6 @@ impl App {
   }
 
   pub async fn run_background_tasks(&self) -> AsamiResult<()> {
-    self.handle_request().verify_and_appraise_all().await?;
     self.handle_request().submit_all().await?;
     self.campaign_request().submit_approvals().await?;
     self.campaign_request().submit_all().await?;

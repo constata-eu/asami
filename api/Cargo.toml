@@ -6,6 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+futures = "*"
 rocket = { version = "0.5.0-rc.3", features = ["json"] }
 rocket_cors = { git = "https://github.com/lawliet89/rocket_cors", branch = "master" }
 juniper = { git = "https://github.com/graphql-rust/juniper", branch = "master", features = ["chrono", "rust_decimal"] }

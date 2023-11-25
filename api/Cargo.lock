@@ -108,6 +108,7 @@ dependencies = [
  "chbs",
  "chrono",
  "ethers",
+ "futures",
  "galvanic-assert",
  "galvanic-test",
  "hex",
