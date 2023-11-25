@@ -155,6 +155,7 @@ dependencies = [
  "chbs",
  "chrono",
  "ethers",
+ "futures",
  "hex",
  "hmac 0.11.0",
  "itertools 0.10.5",

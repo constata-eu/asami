@@ -32,6 +32,7 @@ async fn main() {
 
   every![600000, |s| {
     run!("verify_handles" { s.handle_request().verify_and_appraise_all().await });
+    run!("sync_x_collabs" { s.campaign().sync_x_collabs().await });
   }];
 
   futures::future::join_all(handles).await;
