@@ -15,13 +15,13 @@
     "absolutePath": "project:/contracts/AsamiNostr.sol",
     "exportedSymbols": {
       "AsamiNostr": [
-        5187
+        2540
       ],
       "Math": [
         1919
       ],
       "Schnorr": [
-        6285
+        3638
       ],
       "SignedMath": [
         2024
@@ -30,12 +30,12 @@
         1053
       ]
     },
-    "id": 5188,
+    "id": 2541,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 4862,
+        "id": 2215,
         "literals": [
           "solidity",
           "^",
@@ -48,10 +48,10 @@
       {
         "absolutePath": "@openzeppelin/contracts/utils/Strings.sol",
         "file": "@openzeppelin/contracts/utils/Strings.sol",
-        "id": 4863,
+        "id": 2216,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 5188,
+        "scope": 2541,
         "sourceUnit": 1054,
         "src": "56:51:10",
         "symbolAliases": [],
@@ -60,11 +60,11 @@
       {
         "absolutePath": "project:/contracts/Schnorr.sol",
         "file": "./Schnorr.sol",
-        "id": 4864,
+        "id": 2217,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 5188,
-        "sourceUnit": 6286,
+        "scope": 2541,
+        "sourceUnit": 3639,
         "src": "108:23:10",
         "symbolAliases": [],
         "unitAlias": ""
@@ -76,9 +76,9 @@
         "contractDependencies": [],
         "contractKind": "library",
         "fullyImplemented": true,
-        "id": 5187,
+        "id": 2540,
         "linearizedBaseContracts": [
-          5187
+          2540
         ],
         "name": "AsamiNostr",
         "nameLocation": "141:10:10",
@@ -86,38 +86,38 @@
         "nodes": [
           {
             "canonicalName": "AsamiNostr.OfferState",
-            "id": 4870,
+            "id": 2223,
             "members": [
               {
-                "id": 4865,
+                "id": 2218,
                 "name": "Assumed",
                 "nameLocation": "229:7:10",
                 "nodeType": "EnumValue",
                 "src": "229:7:10"
               },
               {
-                "id": 4866,
+                "id": 2219,
                 "name": "Challenged",
                 "nameLocation": "309:10:10",
                 "nodeType": "EnumValue",
                 "src": "309:10:10"
               },
               {
-                "id": 4867,
+                "id": 2220,
                 "name": "Confirmed",
                 "nameLocation": "391:9:10",
                 "nodeType": "EnumValue",
                 "src": "391:9:10"
               },
               {
-                "id": 4868,
+                "id": 2221,
                 "name": "Renounced",
                 "nameLocation": "503:9:10",
                 "nodeType": "EnumValue",
                 "src": "503:9:10"
               },
               {
-                "id": 4869,
+                "id": 2222,
                 "name": "ReportedDeletion",
                 "nameLocation": "618:16:10",
                 "nodeType": "EnumValue",
@@ -131,16 +131,16 @@
           },
           {
             "canonicalName": "AsamiNostr.NewOffer",
-            "id": 4881,
+            "id": 2234,
             "members": [
               {
                 "constant": false,
-                "id": 4872,
+                "id": 2225,
                 "mutability": "mutable",
                 "name": "rewardAmount",
                 "nameLocation": "988:12:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4881,
+                "scope": 2234,
                 "src": "980:20:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -149,7 +149,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4871,
+                  "id": 2224,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "980:7:10",
@@ -162,12 +162,12 @@
               },
               {
                 "constant": false,
-                "id": 4874,
+                "id": 2227,
                 "mutability": "mutable",
                 "name": "rewardAddress",
                 "nameLocation": "1018:13:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4881,
+                "scope": 2234,
                 "src": "1010:21:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -176,7 +176,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 4873,
+                  "id": 2226,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "1010:7:10",
@@ -190,12 +190,12 @@
               },
               {
                 "constant": false,
-                "id": 4876,
+                "id": 2229,
                 "mutability": "mutable",
                 "name": "nostrHexPubkey",
                 "nameLocation": "1048:14:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4881,
+                "scope": 2234,
                 "src": "1041:21:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -204,7 +204,7 @@
                   "typeString": "string"
                 },
                 "typeName": {
-                  "id": 4875,
+                  "id": 2228,
                   "name": "string",
                   "nodeType": "ElementaryTypeName",
                   "src": "1041:6:10",
@@ -217,12 +217,12 @@
               },
               {
                 "constant": false,
-                "id": 4878,
+                "id": 2231,
                 "mutability": "mutable",
                 "name": "nostrAffineX",
                 "nameLocation": "1080:12:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4881,
+                "scope": 2234,
                 "src": "1072:20:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -231,7 +231,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4877,
+                  "id": 2230,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1072:7:10",
@@ -244,12 +244,12 @@
               },
               {
                 "constant": false,
-                "id": 4880,
+                "id": 2233,
                 "mutability": "mutable",
                 "name": "nostrAffineY",
                 "nameLocation": "1173:12:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4881,
+                "scope": 2234,
                 "src": "1165:20:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -258,7 +258,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4879,
+                  "id": 2232,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1165:7:10",
@@ -273,22 +273,22 @@
             "name": "NewOffer",
             "nameLocation": "961:8:10",
             "nodeType": "StructDefinition",
-            "scope": 5187,
+            "scope": 2540,
             "src": "954:264:10",
             "visibility": "public"
           },
           {
             "canonicalName": "AsamiNostr.MessageProof",
-            "id": 4888,
+            "id": 2241,
             "members": [
               {
                 "constant": false,
-                "id": 4883,
+                "id": 2236,
                 "mutability": "mutable",
                 "name": "createdAt",
                 "nameLocation": "1365:9:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4888,
+                "scope": 2241,
                 "src": "1357:17:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -297,7 +297,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4882,
+                  "id": 2235,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1357:7:10",
@@ -310,12 +310,12 @@
               },
               {
                 "constant": false,
-                "id": 4885,
+                "id": 2238,
                 "mutability": "mutable",
                 "name": "sigR",
                 "nameLocation": "1392:4:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4888,
+                "scope": 2241,
                 "src": "1384:12:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -324,7 +324,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4884,
+                  "id": 2237,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1384:7:10",
@@ -337,12 +337,12 @@
               },
               {
                 "constant": false,
-                "id": 4887,
+                "id": 2240,
                 "mutability": "mutable",
                 "name": "sigS",
                 "nameLocation": "1454:4:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4888,
+                "scope": 2241,
                 "src": "1446:12:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -351,7 +351,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4886,
+                  "id": 2239,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1446:7:10",
@@ -366,22 +366,22 @@
             "name": "MessageProof",
             "nameLocation": "1334:12:10",
             "nodeType": "StructDefinition",
-            "scope": 5187,
+            "scope": 2540,
             "src": "1327:178:10",
             "visibility": "public"
           },
           {
             "canonicalName": "AsamiNostr.DeletionProof",
-            "id": 4899,
+            "id": 2252,
             "members": [
               {
                 "constant": false,
-                "id": 4890,
+                "id": 2243,
                 "mutability": "mutable",
                 "name": "content",
                 "nameLocation": "1549:7:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4899,
+                "scope": 2252,
                 "src": "1542:14:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -390,7 +390,7 @@
                   "typeString": "string"
                 },
                 "typeName": {
-                  "id": 4889,
+                  "id": 2242,
                   "name": "string",
                   "nodeType": "ElementaryTypeName",
                   "src": "1542:6:10",
@@ -403,12 +403,12 @@
               },
               {
                 "constant": false,
-                "id": 4892,
+                "id": 2245,
                 "mutability": "mutable",
                 "name": "tags",
                 "nameLocation": "1573:4:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4899,
+                "scope": 2252,
                 "src": "1566:11:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -417,7 +417,7 @@
                   "typeString": "string"
                 },
                 "typeName": {
-                  "id": 4891,
+                  "id": 2244,
                   "name": "string",
                   "nodeType": "ElementaryTypeName",
                   "src": "1566:6:10",
@@ -430,12 +430,12 @@
               },
               {
                 "constant": false,
-                "id": 4894,
+                "id": 2247,
                 "mutability": "mutable",
                 "name": "createdAt",
                 "nameLocation": "1595:9:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4899,
+                "scope": 2252,
                 "src": "1587:17:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -444,7 +444,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4893,
+                  "id": 2246,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1587:7:10",
@@ -457,12 +457,12 @@
               },
               {
                 "constant": false,
-                "id": 4896,
+                "id": 2249,
                 "mutability": "mutable",
                 "name": "sigR",
                 "nameLocation": "1622:4:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4899,
+                "scope": 2252,
                 "src": "1614:12:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -471,7 +471,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4895,
+                  "id": 2248,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1614:7:10",
@@ -484,12 +484,12 @@
               },
               {
                 "constant": false,
-                "id": 4898,
+                "id": 2251,
                 "mutability": "mutable",
                 "name": "sigS",
                 "nameLocation": "1684:4:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4899,
+                "scope": 2252,
                 "src": "1676:12:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -498,7 +498,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4897,
+                  "id": 2250,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1676:7:10",
@@ -513,46 +513,46 @@
             "name": "DeletionProof",
             "nameLocation": "1518:13:10",
             "nodeType": "StructDefinition",
-            "scope": 5187,
+            "scope": 2540,
             "src": "1511:224:10",
             "visibility": "public"
           },
           {
             "canonicalName": "AsamiNostr.Offer",
-            "id": 4917,
+            "id": 2270,
             "members": [
               {
                 "constant": false,
-                "id": 4902,
+                "id": 2255,
                 "mutability": "mutable",
                 "name": "state",
                 "nameLocation": "1839:5:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4917,
+                "scope": 2270,
                 "src": "1828:16:10",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_enum$_OfferState_$4870",
+                  "typeIdentifier": "t_enum$_OfferState_$2223",
                   "typeString": "enum AsamiNostr.OfferState"
                 },
                 "typeName": {
-                  "id": 4901,
+                  "id": 2254,
                   "nodeType": "UserDefinedTypeName",
                   "pathNode": {
-                    "id": 4900,
+                    "id": 2253,
                     "name": "OfferState",
                     "nameLocations": [
                       "1828:10:10"
                     ],
                     "nodeType": "IdentifierPath",
-                    "referencedDeclaration": 4870,
+                    "referencedDeclaration": 2223,
                     "src": "1828:10:10"
                   },
-                  "referencedDeclaration": 4870,
+                  "referencedDeclaration": 2223,
                   "src": "1828:10:10",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_enum$_OfferState_$4870",
+                    "typeIdentifier": "t_enum$_OfferState_$2223",
                     "typeString": "enum AsamiNostr.OfferState"
                   }
                 },
@@ -560,12 +560,12 @@
               },
               {
                 "constant": false,
-                "id": 4904,
+                "id": 2257,
                 "mutability": "mutable",
                 "name": "collected",
                 "nameLocation": "1859:9:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4917,
+                "scope": 2270,
                 "src": "1854:14:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -574,7 +574,7 @@
                   "typeString": "bool"
                 },
                 "typeName": {
-                  "id": 4903,
+                  "id": 2256,
                   "name": "bool",
                   "nodeType": "ElementaryTypeName",
                   "src": "1854:4:10",
@@ -587,12 +587,12 @@
               },
               {
                 "constant": false,
-                "id": 4906,
+                "id": 2259,
                 "mutability": "mutable",
                 "name": "nostrHexPubkey",
                 "nameLocation": "1885:14:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4917,
+                "scope": 2270,
                 "src": "1878:21:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -601,7 +601,7 @@
                   "typeString": "string"
                 },
                 "typeName": {
-                  "id": 4905,
+                  "id": 2258,
                   "name": "string",
                   "nodeType": "ElementaryTypeName",
                   "src": "1878:6:10",
@@ -614,12 +614,12 @@
               },
               {
                 "constant": false,
-                "id": 4908,
+                "id": 2261,
                 "mutability": "mutable",
                 "name": "rewardAmount",
                 "nameLocation": "1917:12:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4917,
+                "scope": 2270,
                 "src": "1909:20:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -628,7 +628,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4907,
+                  "id": 2260,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1909:7:10",
@@ -641,12 +641,12 @@
               },
               {
                 "constant": false,
-                "id": 4910,
+                "id": 2263,
                 "mutability": "mutable",
                 "name": "rewardAddress",
                 "nameLocation": "1947:13:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4917,
+                "scope": 2270,
                 "src": "1939:21:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -655,7 +655,7 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 4909,
+                  "id": 2262,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
                   "src": "1939:7:10",
@@ -669,12 +669,12 @@
               },
               {
                 "constant": false,
-                "id": 4912,
+                "id": 2265,
                 "mutability": "mutable",
                 "name": "nostrAffineX",
                 "nameLocation": "1978:12:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4917,
+                "scope": 2270,
                 "src": "1970:20:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -683,7 +683,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4911,
+                  "id": 2264,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "1970:7:10",
@@ -696,12 +696,12 @@
               },
               {
                 "constant": false,
-                "id": 4914,
+                "id": 2267,
                 "mutability": "mutable",
                 "name": "nostrAffineY",
                 "nameLocation": "2008:12:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4917,
+                "scope": 2270,
                 "src": "2000:20:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -710,7 +710,7 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 4913,
+                  "id": 2266,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
                   "src": "2000:7:10",
@@ -723,12 +723,12 @@
               },
               {
                 "constant": false,
-                "id": 4916,
+                "id": 2269,
                 "mutability": "mutable",
                 "name": "messageId",
                 "nameLocation": "2038:9:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4917,
+                "scope": 2270,
                 "src": "2030:17:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -737,7 +737,7 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 4915,
+                  "id": 2268,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
                   "src": "2030:7:10",
@@ -752,22 +752,22 @@
             "name": "Offer",
             "nameLocation": "1812:5:10",
             "nodeType": "StructDefinition",
-            "scope": 5187,
+            "scope": 2540,
             "src": "1805:249:10",
             "visibility": "public"
           },
           {
             "canonicalName": "AsamiNostr.Terms",
-            "id": 4924,
+            "id": 2277,
             "members": [
               {
                 "constant": false,
-                "id": 4919,
+                "id": 2272,
                 "mutability": "mutable",
                 "name": "requestedContent",
                 "nameLocation": "2090:16:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4924,
+                "scope": 2277,
                 "src": "2083:23:10",
                 "stateVariable": false,
                 "storageLocation": "default",
@@ -776,7 +776,7 @@
                   "typeString": "string"
                 },
                 "typeName": {
-                  "id": 4918,
+                  "id": 2271,
                   "name": "string",
                   "nodeType": "ElementaryTypeName",
                   "src": "2083:6:10",
@@ -789,45 +789,45 @@
               },
               {
                 "constant": false,
-                "id": 4923,
+                "id": 2276,
                 "mutability": "mutable",
                 "name": "offers",
                 "nameLocation": "2124:6:10",
                 "nodeType": "VariableDeclaration",
-                "scope": 4924,
+                "scope": 2277,
                 "src": "2116:14:10",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_Offer_$4917_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_Offer_$2270_storage_$dyn_storage_ptr",
                   "typeString": "struct AsamiNostr.Offer[]"
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 4921,
+                    "id": 2274,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 4920,
+                      "id": 2273,
                       "name": "Offer",
                       "nameLocations": [
                         "2116:5:10"
                       ],
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 4917,
+                      "referencedDeclaration": 2270,
                       "src": "2116:5:10"
                     },
-                    "referencedDeclaration": 4917,
+                    "referencedDeclaration": 2270,
                     "src": "2116:5:10",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Offer_$4917_storage_ptr",
+                      "typeIdentifier": "t_struct$_Offer_$2270_storage_ptr",
                       "typeString": "struct AsamiNostr.Offer"
                     }
                   },
-                  "id": 4922,
+                  "id": 2275,
                   "nodeType": "ArrayTypeName",
                   "src": "2116:7:10",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_Offer_$4917_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_Offer_$2270_storage_$dyn_storage_ptr",
                     "typeString": "struct AsamiNostr.Offer[]"
                   }
                 },
@@ -837,13 +837,13 @@
             "name": "Terms",
             "nameLocation": "2067:5:10",
             "nodeType": "StructDefinition",
-            "scope": 5187,
+            "scope": 2540,
             "src": "2060:77:10",
             "visibility": "public"
           },
           {
             "body": {
-              "id": 4950,
+              "id": 2303,
               "nodeType": "Block",
               "src": "2240:154:10",
               "statements": [
@@ -853,7 +853,7 @@
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
                     },
-                    "id": 4948,
+                    "id": 2301,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -861,7 +861,7 @@
                     "leftExpression": {
                       "components": [
                         {
-                          "id": 4934,
+                          "id": 2287,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -872,18 +872,18 @@
                           "src": "2258:17:10",
                           "subExpression": {
                             "expression": {
-                              "id": 4932,
+                              "id": 2285,
                               "name": "_offer",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 4927,
+                              "referencedDeclaration": 2280,
                               "src": "2259:6:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Offer_$4917_storage_ptr",
+                                "typeIdentifier": "t_struct$_Offer_$2270_storage_ptr",
                                 "typeString": "struct AsamiNostr.Offer storage pointer"
                               }
                             },
-                            "id": 4933,
+                            "id": 2286,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
@@ -891,7 +891,7 @@
                             "memberLocation": "2266:9:10",
                             "memberName": "collected",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 4904,
+                            "referencedDeclaration": 2257,
                             "src": "2259:16:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_bool",
@@ -904,7 +904,7 @@
                           }
                         }
                       ],
-                      "id": 4935,
+                      "id": 2288,
                       "isConstant": false,
                       "isInlineArray": false,
                       "isLValue": false,
@@ -926,35 +926,35 @@
                             "typeIdentifier": "t_bool",
                             "typeString": "bool"
                           },
-                          "id": 4946,
+                          "id": 2299,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
                           "lValueRequested": false,
                           "leftExpression": {
                             "commonType": {
-                              "typeIdentifier": "t_enum$_OfferState_$4870",
+                              "typeIdentifier": "t_enum$_OfferState_$2223",
                               "typeString": "enum AsamiNostr.OfferState"
                             },
-                            "id": 4940,
+                            "id": 2293,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
                             "lValueRequested": false,
                             "leftExpression": {
                               "expression": {
-                                "id": 4936,
+                                "id": 2289,
                                 "name": "_offer",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 4927,
+                                "referencedDeclaration": 2280,
                                 "src": "2292:6:10",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_struct$_Offer_$4917_storage_ptr",
+                                  "typeIdentifier": "t_struct$_Offer_$2270_storage_ptr",
                                   "typeString": "struct AsamiNostr.Offer storage pointer"
                                 }
                               },
-                              "id": 4937,
+                              "id": 2290,
                               "isConstant": false,
                               "isLValue": true,
                               "isPure": false,
@@ -962,10 +962,10 @@
                               "memberLocation": "2299:5:10",
                               "memberName": "state",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 4902,
+                              "referencedDeclaration": 2255,
                               "src": "2292:12:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_enum$_OfferState_$4870",
+                                "typeIdentifier": "t_enum$_OfferState_$2223",
                                 "typeString": "enum AsamiNostr.OfferState"
                               }
                             },
@@ -973,18 +973,18 @@
                             "operator": "==",
                             "rightExpression": {
                               "expression": {
-                                "id": 4938,
+                                "id": 2291,
                                 "name": "OfferState",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 4870,
+                                "referencedDeclaration": 2223,
                                 "src": "2308:10:10",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_type$_t_enum$_OfferState_$4870_$",
+                                  "typeIdentifier": "t_type$_t_enum$_OfferState_$2223_$",
                                   "typeString": "type(enum AsamiNostr.OfferState)"
                                 }
                               },
-                              "id": 4939,
+                              "id": 2292,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": true,
@@ -992,10 +992,10 @@
                               "memberLocation": "2319:7:10",
                               "memberName": "Assumed",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 4865,
+                              "referencedDeclaration": 2218,
                               "src": "2308:18:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_enum$_OfferState_$4870",
+                                "typeIdentifier": "t_enum$_OfferState_$2223",
                                 "typeString": "enum AsamiNostr.OfferState"
                               }
                             },
@@ -1009,28 +1009,28 @@
                           "operator": "||",
                           "rightExpression": {
                             "commonType": {
-                              "typeIdentifier": "t_enum$_OfferState_$4870",
+                              "typeIdentifier": "t_enum$_OfferState_$2223",
                               "typeString": "enum AsamiNostr.OfferState"
                             },
-                            "id": 4945,
+                            "id": 2298,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
                             "lValueRequested": false,
                             "leftExpression": {
                               "expression": {
-                                "id": 4941,
+                                "id": 2294,
                                 "name": "_offer",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 4927,
+                                "referencedDeclaration": 2280,
                                 "src": "2340:6:10",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_struct$_Offer_$4917_storage_ptr",
+                                  "typeIdentifier": "t_struct$_Offer_$2270_storage_ptr",
                                   "typeString": "struct AsamiNostr.Offer storage pointer"
                                 }
                               },
-                              "id": 4942,
+                              "id": 2295,
                               "isConstant": false,
                               "isLValue": true,
                               "isPure": false,
@@ -1038,10 +1038,10 @@
                               "memberLocation": "2347:5:10",
                               "memberName": "state",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 4902,
+                              "referencedDeclaration": 2255,
                               "src": "2340:12:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_enum$_OfferState_$4870",
+                                "typeIdentifier": "t_enum$_OfferState_$2223",
                                 "typeString": "enum AsamiNostr.OfferState"
                               }
                             },
@@ -1049,18 +1049,18 @@
                             "operator": "==",
                             "rightExpression": {
                               "expression": {
-                                "id": 4943,
+                                "id": 2296,
                                 "name": "OfferState",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 4870,
+                                "referencedDeclaration": 2223,
                                 "src": "2356:10:10",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_type$_t_enum$_OfferState_$4870_$",
+                                  "typeIdentifier": "t_type$_t_enum$_OfferState_$2223_$",
                                   "typeString": "type(enum AsamiNostr.OfferState)"
                                 }
                               },
-                              "id": 4944,
+                              "id": 2297,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": true,
@@ -1068,10 +1068,10 @@
                               "memberLocation": "2367:9:10",
                               "memberName": "Confirmed",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 4867,
+                              "referencedDeclaration": 2220,
                               "src": "2356:20:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_enum$_OfferState_$4870",
+                                "typeIdentifier": "t_enum$_OfferState_$2223",
                                 "typeString": "enum AsamiNostr.OfferState"
                               }
                             },
@@ -1088,7 +1088,7 @@
                           }
                         }
                       ],
-                      "id": 4947,
+                      "id": 2300,
                       "isConstant": false,
                       "isInlineArray": false,
                       "isLValue": false,
@@ -1107,14 +1107,14 @@
                       "typeString": "bool"
                     }
                   },
-                  "functionReturnParameters": 4931,
-                  "id": 4949,
+                  "functionReturnParameters": 2284,
+                  "id": 2302,
                   "nodeType": "Return",
                   "src": "2250:137:10"
                 }
               ]
             },
-            "id": 4951,
+            "id": 2304,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -1122,41 +1122,41 @@
             "nameLocation": "2152:22:10",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 4928,
+              "id": 2281,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4927,
+                  "id": 2280,
                   "mutability": "mutable",
                   "name": "_offer",
                   "nameLocation": "2198:6:10",
                   "nodeType": "VariableDeclaration",
-                  "scope": 4951,
+                  "scope": 2304,
                   "src": "2184:20:10",
                   "stateVariable": false,
                   "storageLocation": "storage",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Offer_$4917_storage_ptr",
+                    "typeIdentifier": "t_struct$_Offer_$2270_storage_ptr",
                     "typeString": "struct AsamiNostr.Offer"
                   },
                   "typeName": {
-                    "id": 4926,
+                    "id": 2279,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 4925,
+                      "id": 2278,
                       "name": "Offer",
                       "nameLocations": [
                         "2184:5:10"
                       ],
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 4917,
+                      "referencedDeclaration": 2270,
                       "src": "2184:5:10"
                     },
-                    "referencedDeclaration": 4917,
+                    "referencedDeclaration": 2270,
                     "src": "2184:5:10",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Offer_$4917_storage_ptr",
+                      "typeIdentifier": "t_struct$_Offer_$2270_storage_ptr",
                       "typeString": "struct AsamiNostr.Offer"
                     }
                   },
@@ -1166,17 +1166,17 @@
               "src": "2174:36:10"
             },
             "returnParameters": {
-              "id": 4931,
+              "id": 2284,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4930,
+                  "id": 2283,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 4951,
+                  "scope": 2304,
                   "src": "2234:4:10",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1185,7 +1185,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 4929,
+                    "id": 2282,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "2234:4:10",
@@ -1199,7 +1199,7 @@
               ],
               "src": "2233:6:10"
             },
-            "scope": 5187,
+            "scope": 2540,
             "src": "2143:251:10",
             "stateMutability": "view",
             "virtual": false,
@@ -1207,7 +1207,7 @@
           },
           {
             "body": {
-              "id": 4983,
+              "id": 2336,
               "nodeType": "Block",
               "src": "2495:215:10",
               "statements": [
@@ -1217,7 +1217,7 @@
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
                     },
-                    "id": 4981,
+                    "id": 2334,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1225,7 +1225,7 @@
                     "leftExpression": {
                       "components": [
                         {
-                          "id": 4961,
+                          "id": 2314,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -1236,18 +1236,18 @@
                           "src": "2513:17:10",
                           "subExpression": {
                             "expression": {
-                              "id": 4959,
+                              "id": 2312,
                               "name": "_offer",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 4954,
+                              "referencedDeclaration": 2307,
                               "src": "2514:6:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_Offer_$4917_storage_ptr",
+                                "typeIdentifier": "t_struct$_Offer_$2270_storage_ptr",
                                 "typeString": "struct AsamiNostr.Offer storage pointer"
                               }
                             },
-                            "id": 4960,
+                            "id": 2313,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
@@ -1255,7 +1255,7 @@
                             "memberLocation": "2521:9:10",
                             "memberName": "collected",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 4904,
+                            "referencedDeclaration": 2257,
                             "src": "2514:16:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_bool",
@@ -1268,7 +1268,7 @@
                           }
                         }
                       ],
-                      "id": 4962,
+                      "id": 2315,
                       "isConstant": false,
                       "isInlineArray": false,
                       "isLValue": false,
@@ -1290,7 +1290,7 @@
                             "typeIdentifier": "t_bool",
                             "typeString": "bool"
                           },
-                          "id": 4979,
+                          "id": 2332,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -1300,35 +1300,35 @@
                               "typeIdentifier": "t_bool",
                               "typeString": "bool"
                             },
-                            "id": 4973,
+                            "id": 2326,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
                             "lValueRequested": false,
                             "leftExpression": {
                               "commonType": {
-                                "typeIdentifier": "t_enum$_OfferState_$4870",
+                                "typeIdentifier": "t_enum$_OfferState_$2223",
                                 "typeString": "enum AsamiNostr.OfferState"
                               },
-                              "id": 4967,
+                              "id": 2320,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": false,
                               "lValueRequested": false,
                               "leftExpression": {
                                 "expression": {
-                                  "id": 4963,
+                                  "id": 2316,
                                   "name": "_offer",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 4954,
+                                  "referencedDeclaration": 2307,
                                   "src": "2547:6:10",
                                   "typeDescriptions": {
-                                    "typeIdentifier": "t_struct$_Offer_$4917_storage_ptr",
+                                    "typeIdentifier": "t_struct$_Offer_$2270_storage_ptr",
                                     "typeString": "struct AsamiNostr.Offer storage pointer"
                                   }
                                 },
-                                "id": 4964,
+                                "id": 2317,
                                 "isConstant": false,
                                 "isLValue": true,
                                 "isPure": false,
@@ -1336,10 +1336,10 @@
                                 "memberLocation": "2554:5:10",
                                 "memberName": "state",
                                 "nodeType": "MemberAccess",
-                                "referencedDeclaration": 4902,
+                                "referencedDeclaration": 2255,
                                 "src": "2547:12:10",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_enum$_OfferState_$4870",
+                                  "typeIdentifier": "t_enum$_OfferState_$2223",
                                   "typeString": "enum AsamiNostr.OfferState"
                                 }
                               },
@@ -1347,18 +1347,18 @@
                               "operator": "==",
                               "rightExpression": {
                                 "expression": {
-                                  "id": 4965,
+                                  "id": 2318,
                                   "name": "OfferState",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 4870,
+                                  "referencedDeclaration": 2223,
                                   "src": "2563:10:10",
                                   "typeDescriptions": {
-                                    "typeIdentifier": "t_type$_t_enum$_OfferState_$4870_$",
+                                    "typeIdentifier": "t_type$_t_enum$_OfferState_$2223_$",
                                     "typeString": "type(enum AsamiNostr.OfferState)"
                                   }
                                 },
-                                "id": 4966,
+                                "id": 2319,
                                 "isConstant": false,
                                 "isLValue": false,
                                 "isPure": true,
@@ -1366,10 +1366,10 @@
                                 "memberLocation": "2574:10:10",
                                 "memberName": "Challenged",
                                 "nodeType": "MemberAccess",
-                                "referencedDeclaration": 4866,
+                                "referencedDeclaration": 2219,
                                 "src": "2563:21:10",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_enum$_OfferState_$4870",
+                                  "typeIdentifier": "t_enum$_OfferState_$2223",
                                   "typeString": "enum AsamiNostr.OfferState"
                                 }
                               },
@@ -1383,28 +1383,28 @@
                             "operator": "||",
                             "rightExpression": {
                               "commonType": {
-                                "typeIdentifier": "t_enum$_OfferState_$4870",
+                                "typeIdentifier": "t_enum$_OfferState_$2223",
                                 "typeString": "enum AsamiNostr.OfferState"
                               },
-                              "id": 4972,
+                              "id": 2325,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": false,
                               "lValueRequested": false,
                               "leftExpression": {
                                 "expression": {
-                                  "id": 4968,
+                                  "id": 2321,
                                   "name": "_offer",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 4954,
+                                  "referencedDeclaration": 2307,
                                   "src": "2598:6:10",
                                   "typeDescriptions": {
-                                    "typeIdentifier": "t_struct$_Offer_$4917_storage_ptr",
+                                    "typeIdentifier": "t_struct$_Offer_$2270_storage_ptr",
                                     "typeString": "struct AsamiNostr.Offer storage pointer"
                                   }
                                 },
-                                "id": 4969,
+                                "id": 2322,
                                 "isConstant": false,
                                 "isLValue": true,
                                 "isPure": false,
@@ -1412,10 +1412,10 @@
                                 "memberLocation": "2605:5:10",
                                 "memberName": "state",
                                 "nodeType": "MemberAccess",
-                                "referencedDeclaration": 4902,
+                                "referencedDeclaration": 2255,
                                 "src": "2598:12:10",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_enum$_OfferState_$4870",
+                                  "typeIdentifier": "t_enum$_OfferState_$2223",
                                   "typeString": "enum AsamiNostr.OfferState"
                                 }
                               },
@@ -1423,18 +1423,18 @@
                               "operator": "==",
                               "rightExpression": {
                                 "expression": {
-                                  "id": 4970,
+                                  "id": 2323,
                                   "name": "OfferState",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 4870,
+                                  "referencedDeclaration": 2223,
                                   "src": "2614:10:10",
                                   "typeDescriptions": {
-                                    "typeIdentifier": "t_type$_t_enum$_OfferState_$4870_$",
+                                    "typeIdentifier": "t_type$_t_enum$_OfferState_$2223_$",
                                     "typeString": "type(enum AsamiNostr.OfferState)"
                                   }
                                 },
-                                "id": 4971,
+                                "id": 2324,
                                 "isConstant": false,
                                 "isLValue": false,
                                 "isPure": true,
@@ -1442,10 +1442,10 @@
                                 "memberLocation": "2625:9:10",
                                 "memberName": "Renounced",
                                 "nodeType": "MemberAccess",
-                                "referencedDeclaration": 4868,
+                                "referencedDeclaration": 2221,
                                 "src": "2614:20:10",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_enum$_OfferState_$4870",
+                                  "typeIdentifier": "t_enum$_OfferState_$2223",
                                   "typeString": "enum AsamiNostr.OfferState"
                                 }
                               },
@@ -1465,28 +1465,28 @@
                           "operator": "||",
                           "rightExpression": {
                             "commonType": {
-                              "typeIdentifier": "t_enum$_OfferState_$4870",
+                              "typeIdentifier": "t_enum$_OfferState_$2223",
                               "typeString": "enum AsamiNostr.OfferState"
                             },
-                            "id": 4978,
+                            "id": 2331,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
                             "lValueRequested": false,
                             "leftExpression": {
                               "expression": {
-                                "id": 4974,
+                                "id": 2327,
                                 "name": "_offer",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 4954,
+                                "referencedDeclaration": 2307,
                                 "src": "2648:6:10",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_struct$_Offer_$4917_storage_ptr",
+                                  "typeIdentifier": "t_struct$_Offer_$2270_storage_ptr",
                                   "typeString": "struct AsamiNostr.Offer storage pointer"
                                 }
                               },
-                              "id": 4975,
+                              "id": 2328,
                               "isConstant": false,
                               "isLValue": true,
                               "isPure": false,
@@ -1494,10 +1494,10 @@
                               "memberLocation": "2655:5:10",
                               "memberName": "state",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 4902,
+                              "referencedDeclaration": 2255,
                               "src": "2648:12:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_enum$_OfferState_$4870",
+                                "typeIdentifier": "t_enum$_OfferState_$2223",
                                 "typeString": "enum AsamiNostr.OfferState"
                               }
                             },
@@ -1505,18 +1505,18 @@
                             "operator": "==",
                             "rightExpression": {
                               "expression": {
-                                "id": 4976,
+                                "id": 2329,
                                 "name": "OfferState",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 4870,
+                                "referencedDeclaration": 2223,
                                 "src": "2664:10:10",
                                 "typeDescriptions": {
-                                  "typeIdentifier": "t_type$_t_enum$_OfferState_$4870_$",
+                                  "typeIdentifier": "t_type$_t_enum$_OfferState_$2223_$",
                                   "typeString": "type(enum AsamiNostr.OfferState)"
                                 }
                               },
-                              "id": 4977,
+                              "id": 2330,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": true,
@@ -1524,10 +1524,10 @@
                               "memberLocation": "2675:16:10",
                               "memberName": "ReportedDeletion",
                               "nodeType": "MemberAccess",
-                              "referencedDeclaration": 4869,
+                              "referencedDeclaration": 2222,
                               "src": "2664:27:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_enum$_OfferState_$4870",
+                                "typeIdentifier": "t_enum$_OfferState_$2223",
                                 "typeString": "enum AsamiNostr.OfferState"
                               }
                             },
@@ -1544,7 +1544,7 @@
                           }
                         }
                       ],
-                      "id": 4980,
+                      "id": 2333,
                       "isConstant": false,
                       "isInlineArray": false,
                       "isLValue": false,
@@ -1563,14 +1563,14 @@
                       "typeString": "bool"
                     }
                   },
-                  "functionReturnParameters": 4958,
-                  "id": 4982,
+                  "functionReturnParameters": 2311,
+                  "id": 2335,
                   "nodeType": "Return",
                   "src": "2505:198:10"
                 }
               ]
             },
-            "id": 4984,
+            "id": 2337,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -1578,41 +1578,41 @@
             "nameLocation": "2409:20:10",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 4955,
+              "id": 2308,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4954,
+                  "id": 2307,
                   "mutability": "mutable",
                   "name": "_offer",
                   "nameLocation": "2453:6:10",
                   "nodeType": "VariableDeclaration",
-                  "scope": 4984,
+                  "scope": 2337,
                   "src": "2439:20:10",
                   "stateVariable": false,
                   "storageLocation": "storage",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Offer_$4917_storage_ptr",
+                    "typeIdentifier": "t_struct$_Offer_$2270_storage_ptr",
                     "typeString": "struct AsamiNostr.Offer"
                   },
                   "typeName": {
-                    "id": 4953,
+                    "id": 2306,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 4952,
+                      "id": 2305,
                       "name": "Offer",
                       "nameLocations": [
                         "2439:5:10"
                       ],
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 4917,
+                      "referencedDeclaration": 2270,
                       "src": "2439:5:10"
                     },
-                    "referencedDeclaration": 4917,
+                    "referencedDeclaration": 2270,
                     "src": "2439:5:10",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Offer_$4917_storage_ptr",
+                      "typeIdentifier": "t_struct$_Offer_$2270_storage_ptr",
                       "typeString": "struct AsamiNostr.Offer"
                     }
                   },
@@ -1622,17 +1622,17 @@
               "src": "2429:36:10"
             },
             "returnParameters": {
-              "id": 4958,
+              "id": 2311,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4957,
+                  "id": 2310,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 4984,
+                  "scope": 2337,
                   "src": "2489:4:10",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -1641,7 +1641,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 4956,
+                    "id": 2309,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "2489:4:10",
@@ -1655,7 +1655,7 @@
               ],
               "src": "2488:6:10"
             },
-            "scope": 5187,
+            "scope": 2540,
             "src": "2400:310:10",
             "stateMutability": "view",
             "virtual": false,
@@ -1663,23 +1663,23 @@
           },
           {
             "body": {
-              "id": 5039,
+              "id": 2392,
               "nodeType": "Block",
               "src": "2948:491:10",
               "statements": [
                 {
                   "assignments": [
-                    5001
+                    2354
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 5001,
+                      "id": 2354,
                       "mutability": "mutable",
                       "name": "message",
                       "nameLocation": "2971:7:10",
                       "nodeType": "VariableDeclaration",
-                      "scope": 5039,
+                      "scope": 2392,
                       "src": "2958:20:10",
                       "stateVariable": false,
                       "storageLocation": "memory",
@@ -1688,7 +1688,7 @@
                         "typeString": "bytes"
                       },
                       "typeName": {
-                        "id": 5000,
+                        "id": 2353,
                         "name": "bytes",
                         "nodeType": "ElementaryTypeName",
                         "src": "2958:5:10",
@@ -1700,12 +1700,12 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 5016,
+                  "id": 2369,
                   "initialValue": {
                     "arguments": [
                       {
                         "hexValue": "5b302c22",
-                        "id": 5004,
+                        "id": 2357,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -1720,11 +1720,11 @@
                         "value": "[0,\""
                       },
                       {
-                        "id": 5005,
+                        "id": 2358,
                         "name": "_pubkey",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4988,
+                        "referencedDeclaration": 2341,
                         "src": "3032:7:10",
                         "typeDescriptions": {
                           "typeIdentifier": "t_string_memory_ptr",
@@ -1733,7 +1733,7 @@
                       },
                       {
                         "hexValue": "222c",
-                        "id": 5006,
+                        "id": 2359,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -1751,18 +1751,18 @@
                         "arguments": [
                           {
                             "expression": {
-                              "id": 5009,
+                              "id": 2362,
                               "name": "_proof",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 4991,
+                              "referencedDeclaration": 2344,
                               "src": "3089:6:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_MessageProof_$4888_memory_ptr",
+                                "typeIdentifier": "t_struct$_MessageProof_$2241_memory_ptr",
                                 "typeString": "struct AsamiNostr.MessageProof memory"
                               }
                             },
-                            "id": 5010,
+                            "id": 2363,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
@@ -1770,7 +1770,7 @@
                             "memberLocation": "3096:9:10",
                             "memberName": "createdAt",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 4883,
+                            "referencedDeclaration": 2236,
                             "src": "3089:16:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -1786,7 +1786,7 @@
                             }
                           ],
                           "expression": {
-                            "id": 5007,
+                            "id": 2360,
                             "name": "Strings",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
@@ -1797,7 +1797,7 @@
                               "typeString": "type(library Strings)"
                             }
                           },
-                          "id": 5008,
+                          "id": 2361,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -1812,7 +1812,7 @@
                             "typeString": "function (uint256) pure returns (string memory)"
                           }
                         },
-                        "id": 5011,
+                        "id": 2364,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -1830,7 +1830,7 @@
                       },
                       {
                         "hexValue": "2c312c5b5d2c22",
-                        "id": 5012,
+                        "id": 2365,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -1845,11 +1845,11 @@
                         "value": ",1,[],\""
                       },
                       {
-                        "id": 5013,
+                        "id": 2366,
                         "name": "_content",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4986,
+                        "referencedDeclaration": 2339,
                         "src": "3144:8:10",
                         "typeDescriptions": {
                           "typeIdentifier": "t_string_memory_ptr",
@@ -1858,7 +1858,7 @@
                       },
                       {
                         "hexValue": "225d",
-                        "id": 5014,
+                        "id": 2367,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -1905,7 +1905,7 @@
                         }
                       ],
                       "expression": {
-                        "id": 5002,
+                        "id": 2355,
                         "name": "abi",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
@@ -1916,7 +1916,7 @@
                           "typeString": "abi"
                         }
                       },
-                      "id": 5003,
+                      "id": 2356,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -1930,7 +1930,7 @@
                         "typeString": "function () pure returns (bytes memory)"
                       }
                     },
-                    "id": 5015,
+                    "id": 2368,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1951,17 +1951,17 @@
                 },
                 {
                   "assignments": [
-                    5018
+                    2371
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 5018,
+                      "id": 2371,
                       "mutability": "mutable",
                       "name": "messageId",
                       "nameLocation": "3200:9:10",
                       "nodeType": "VariableDeclaration",
-                      "scope": 5039,
+                      "scope": 2392,
                       "src": "3192:17:10",
                       "stateVariable": false,
                       "storageLocation": "default",
@@ -1970,7 +1970,7 @@
                         "typeString": "bytes32"
                       },
                       "typeName": {
-                        "id": 5017,
+                        "id": 2370,
                         "name": "bytes32",
                         "nodeType": "ElementaryTypeName",
                         "src": "3192:7:10",
@@ -1982,15 +1982,15 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 5022,
+                  "id": 2375,
                   "initialValue": {
                     "arguments": [
                       {
-                        "id": 5020,
+                        "id": 2373,
                         "name": "message",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 5001,
+                        "referencedDeclaration": 2354,
                         "src": "3219:7:10",
                         "typeDescriptions": {
                           "typeIdentifier": "t_bytes_memory_ptr",
@@ -2005,7 +2005,7 @@
                           "typeString": "bytes memory"
                         }
                       ],
-                      "id": 5019,
+                      "id": 2372,
                       "name": "sha256",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
@@ -2016,7 +2016,7 @@
                         "typeString": "function (bytes memory) pure returns (bytes32)"
                       }
                     },
-                    "id": 5021,
+                    "id": 2374,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2041,11 +2041,11 @@
                       {
                         "arguments": [
                           {
-                            "id": 5026,
+                            "id": 2379,
                             "name": "messageId",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 5018,
+                            "referencedDeclaration": 2371,
                             "src": "3274:9:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_bytes32",
@@ -2053,11 +2053,11 @@
                             }
                           },
                           {
-                            "id": 5027,
+                            "id": 2380,
                             "name": "_affineX",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 4993,
+                            "referencedDeclaration": 2346,
                             "src": "3297:8:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -2065,11 +2065,11 @@
                             }
                           },
                           {
-                            "id": 5028,
+                            "id": 2381,
                             "name": "_affineY",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 4995,
+                            "referencedDeclaration": 2348,
                             "src": "3319:8:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -2078,18 +2078,18 @@
                           },
                           {
                             "expression": {
-                              "id": 5029,
+                              "id": 2382,
                               "name": "_proof",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 4991,
+                              "referencedDeclaration": 2344,
                               "src": "3341:6:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_MessageProof_$4888_memory_ptr",
+                                "typeIdentifier": "t_struct$_MessageProof_$2241_memory_ptr",
                                 "typeString": "struct AsamiNostr.MessageProof memory"
                               }
                             },
-                            "id": 5030,
+                            "id": 2383,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
@@ -2097,7 +2097,7 @@
                             "memberLocation": "3348:4:10",
                             "memberName": "sigR",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 4885,
+                            "referencedDeclaration": 2238,
                             "src": "3341:11:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -2106,18 +2106,18 @@
                           },
                           {
                             "expression": {
-                              "id": 5031,
+                              "id": 2384,
                               "name": "_proof",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 4991,
+                              "referencedDeclaration": 2344,
                               "src": "3366:6:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_MessageProof_$4888_memory_ptr",
+                                "typeIdentifier": "t_struct$_MessageProof_$2241_memory_ptr",
                                 "typeString": "struct AsamiNostr.MessageProof memory"
                               }
                             },
-                            "id": 5032,
+                            "id": 2385,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
@@ -2125,7 +2125,7 @@
                             "memberLocation": "3373:4:10",
                             "memberName": "sigS",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 4887,
+                            "referencedDeclaration": 2240,
                             "src": "3366:11:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -2157,18 +2157,18 @@
                             }
                           ],
                           "expression": {
-                            "id": 5024,
+                            "id": 2377,
                             "name": "Schnorr",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 6285,
+                            "referencedDeclaration": 3638,
                             "src": "3246:7:10",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_type$_t_contract$_Schnorr_$6285_$",
+                              "typeIdentifier": "t_type$_t_contract$_Schnorr_$3638_$",
                               "typeString": "type(library Schnorr)"
                             }
                           },
-                          "id": 5025,
+                          "id": 2378,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -2176,14 +2176,14 @@
                           "memberLocation": "3254:6:10",
                           "memberName": "verify",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 5303,
+                          "referencedDeclaration": 2656,
                           "src": "3246:14:10",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_internal_pure$_t_bytes32_$_t_uint256_$_t_uint256_$_t_uint256_$_t_uint256_$returns$_t_bool_$",
                             "typeString": "function (bytes32,uint256,uint256,uint256,uint256) pure returns (bool)"
                           }
                         },
-                        "id": 5033,
+                        "id": 2386,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -2201,7 +2201,7 @@
                       },
                       {
                         "hexValue": "696e76616c69645f70726f6f66",
-                        "id": 5034,
+                        "id": 2387,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -2227,7 +2227,7 @@
                           "typeString": "literal_string \"invalid_proof\""
                         }
                       ],
-                      "id": 5023,
+                      "id": 2376,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -2241,7 +2241,7 @@
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 5035,
+                    "id": 2388,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2257,31 +2257,31 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 5036,
+                  "id": 2389,
                   "nodeType": "ExpressionStatement",
                   "src": "3238:167:10"
                 },
                 {
                   "expression": {
-                    "id": 5037,
+                    "id": 2390,
                     "name": "messageId",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 5018,
+                    "referencedDeclaration": 2371,
                     "src": "3423:9:10",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
                     }
                   },
-                  "functionReturnParameters": 4999,
-                  "id": 5038,
+                  "functionReturnParameters": 2352,
+                  "id": 2391,
                   "nodeType": "Return",
                   "src": "3416:16:10"
                 }
               ]
             },
-            "id": 5040,
+            "id": 2393,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -2289,17 +2289,17 @@
             "nameLocation": "2725:21:10",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 4996,
+              "id": 2349,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4986,
+                  "id": 2339,
                   "mutability": "mutable",
                   "name": "_content",
                   "nameLocation": "2770:8:10",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5040,
+                  "scope": 2393,
                   "src": "2756:22:10",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -2308,7 +2308,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 4985,
+                    "id": 2338,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "2756:6:10",
@@ -2321,12 +2321,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 4988,
+                  "id": 2341,
                   "mutability": "mutable",
                   "name": "_pubkey",
                   "nameLocation": "2802:7:10",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5040,
+                  "scope": 2393,
                   "src": "2788:21:10",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -2335,7 +2335,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 4987,
+                    "id": 2340,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "2788:6:10",
@@ -2348,36 +2348,36 @@
                 },
                 {
                   "constant": false,
-                  "id": 4991,
+                  "id": 2344,
                   "mutability": "mutable",
                   "name": "_proof",
                   "nameLocation": "2839:6:10",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5040,
+                  "scope": 2393,
                   "src": "2819:26:10",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_MessageProof_$4888_memory_ptr",
+                    "typeIdentifier": "t_struct$_MessageProof_$2241_memory_ptr",
                     "typeString": "struct AsamiNostr.MessageProof"
                   },
                   "typeName": {
-                    "id": 4990,
+                    "id": 2343,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 4989,
+                      "id": 2342,
                       "name": "MessageProof",
                       "nameLocations": [
                         "2819:12:10"
                       ],
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 4888,
+                      "referencedDeclaration": 2241,
                       "src": "2819:12:10"
                     },
-                    "referencedDeclaration": 4888,
+                    "referencedDeclaration": 2241,
                     "src": "2819:12:10",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_MessageProof_$4888_storage_ptr",
+                      "typeIdentifier": "t_struct$_MessageProof_$2241_storage_ptr",
                       "typeString": "struct AsamiNostr.MessageProof"
                     }
                   },
@@ -2385,12 +2385,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 4993,
+                  "id": 2346,
                   "mutability": "mutable",
                   "name": "_affineX",
                   "nameLocation": "2863:8:10",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5040,
+                  "scope": 2393,
                   "src": "2855:16:10",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2399,7 +2399,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 4992,
+                    "id": 2345,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "2855:7:10",
@@ -2412,12 +2412,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 4995,
+                  "id": 2348,
                   "mutability": "mutable",
                   "name": "_affineY",
                   "nameLocation": "2889:8:10",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5040,
+                  "scope": 2393,
                   "src": "2881:16:10",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2426,7 +2426,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 4994,
+                    "id": 2347,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "2881:7:10",
@@ -2441,17 +2441,17 @@
               "src": "2746:157:10"
             },
             "returnParameters": {
-              "id": 4999,
+              "id": 2352,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4998,
+                  "id": 2351,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5040,
+                  "scope": 2393,
                   "src": "2935:7:10",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -2460,7 +2460,7 @@
                     "typeString": "bytes32"
                   },
                   "typeName": {
-                    "id": 4997,
+                    "id": 2350,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
                     "src": "2935:7:10",
@@ -2474,7 +2474,7 @@
               ],
               "src": "2934:9:10"
             },
-            "scope": 5187,
+            "scope": 2540,
             "src": "2716:723:10",
             "stateMutability": "pure",
             "virtual": false,
@@ -2482,23 +2482,23 @@
           },
           {
             "body": {
-              "id": 5089,
+              "id": 2442,
               "nodeType": "Block",
               "src": "3628:478:10",
               "statements": [
                 {
                   "assignments": [
-                    5053
+                    2406
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 5053,
+                      "id": 2406,
                       "mutability": "mutable",
                       "name": "message",
                       "nameLocation": "3651:7:10",
                       "nodeType": "VariableDeclaration",
-                      "scope": 5089,
+                      "scope": 2442,
                       "src": "3638:20:10",
                       "stateVariable": false,
                       "storageLocation": "memory",
@@ -2507,7 +2507,7 @@
                         "typeString": "bytes"
                       },
                       "typeName": {
-                        "id": 5052,
+                        "id": 2405,
                         "name": "bytes",
                         "nodeType": "ElementaryTypeName",
                         "src": "3638:5:10",
@@ -2519,12 +2519,12 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 5072,
+                  "id": 2425,
                   "initialValue": {
                     "arguments": [
                       {
                         "hexValue": "5b302c22",
-                        "id": 5056,
+                        "id": 2409,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -2539,11 +2539,11 @@
                         "value": "[0,\""
                       },
                       {
-                        "id": 5057,
+                        "id": 2410,
                         "name": "_pubkey",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 5042,
+                        "referencedDeclaration": 2395,
                         "src": "3712:7:10",
                         "typeDescriptions": {
                           "typeIdentifier": "t_string_memory_ptr",
@@ -2552,7 +2552,7 @@
                       },
                       {
                         "hexValue": "222c",
-                        "id": 5058,
+                        "id": 2411,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -2570,18 +2570,18 @@
                         "arguments": [
                           {
                             "expression": {
-                              "id": 5061,
+                              "id": 2414,
                               "name": "_proof",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 5045,
+                              "referencedDeclaration": 2398,
                               "src": "3769:6:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_DeletionProof_$4899_memory_ptr",
+                                "typeIdentifier": "t_struct$_DeletionProof_$2252_memory_ptr",
                                 "typeString": "struct AsamiNostr.DeletionProof memory"
                               }
                             },
-                            "id": 5062,
+                            "id": 2415,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
@@ -2589,7 +2589,7 @@
                             "memberLocation": "3776:9:10",
                             "memberName": "createdAt",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 4894,
+                            "referencedDeclaration": 2247,
                             "src": "3769:16:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -2605,7 +2605,7 @@
                             }
                           ],
                           "expression": {
-                            "id": 5059,
+                            "id": 2412,
                             "name": "Strings",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
@@ -2616,7 +2616,7 @@
                               "typeString": "type(library Strings)"
                             }
                           },
-                          "id": 5060,
+                          "id": 2413,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -2631,7 +2631,7 @@
                             "typeString": "function (uint256) pure returns (string memory)"
                           }
                         },
-                        "id": 5063,
+                        "id": 2416,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -2649,7 +2649,7 @@
                       },
                       {
                         "hexValue": "2c352c",
-                        "id": 5064,
+                        "id": 2417,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -2665,18 +2665,18 @@
                       },
                       {
                         "expression": {
-                          "id": 5065,
+                          "id": 2418,
                           "name": "_proof",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 5045,
+                          "referencedDeclaration": 2398,
                           "src": "3819:6:10",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_DeletionProof_$4899_memory_ptr",
+                            "typeIdentifier": "t_struct$_DeletionProof_$2252_memory_ptr",
                             "typeString": "struct AsamiNostr.DeletionProof memory"
                           }
                         },
-                        "id": 5066,
+                        "id": 2419,
                         "isConstant": false,
                         "isLValue": true,
                         "isPure": false,
@@ -2684,7 +2684,7 @@
                         "memberLocation": "3826:4:10",
                         "memberName": "tags",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 4892,
+                        "referencedDeclaration": 2245,
                         "src": "3819:11:10",
                         "typeDescriptions": {
                           "typeIdentifier": "t_string_memory_ptr",
@@ -2693,7 +2693,7 @@
                       },
                       {
                         "hexValue": "2c22",
-                        "id": 5067,
+                        "id": 2420,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -2709,18 +2709,18 @@
                       },
                       {
                         "expression": {
-                          "id": 5068,
+                          "id": 2421,
                           "name": "_proof",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 5045,
+                          "referencedDeclaration": 2398,
                           "src": "3863:6:10",
                           "typeDescriptions": {
-                            "typeIdentifier": "t_struct$_DeletionProof_$4899_memory_ptr",
+                            "typeIdentifier": "t_struct$_DeletionProof_$2252_memory_ptr",
                             "typeString": "struct AsamiNostr.DeletionProof memory"
                           }
                         },
-                        "id": 5069,
+                        "id": 2422,
                         "isConstant": false,
                         "isLValue": true,
                         "isPure": false,
@@ -2728,7 +2728,7 @@
                         "memberLocation": "3870:7:10",
                         "memberName": "content",
                         "nodeType": "MemberAccess",
-                        "referencedDeclaration": 4890,
+                        "referencedDeclaration": 2243,
                         "src": "3863:14:10",
                         "typeDescriptions": {
                           "typeIdentifier": "t_string_memory_ptr",
@@ -2737,7 +2737,7 @@
                       },
                       {
                         "hexValue": "225d",
-                        "id": 5070,
+                        "id": 2423,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -2792,7 +2792,7 @@
                         }
                       ],
                       "expression": {
-                        "id": 5054,
+                        "id": 2407,
                         "name": "abi",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
@@ -2803,7 +2803,7 @@
                           "typeString": "abi"
                         }
                       },
-                      "id": 5055,
+                      "id": 2408,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -2817,7 +2817,7 @@
                         "typeString": "function () pure returns (bytes memory)"
                       }
                     },
-                    "id": 5071,
+                    "id": 2424,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -2844,11 +2844,11 @@
                           {
                             "arguments": [
                               {
-                                "id": 5077,
+                                "id": 2430,
                                 "name": "message",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 5053,
+                                "referencedDeclaration": 2406,
                                 "src": "3960:7:10",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_bytes_memory_ptr",
@@ -2863,7 +2863,7 @@
                                   "typeString": "bytes memory"
                                 }
                               ],
-                              "id": 5076,
+                              "id": 2429,
                               "name": "sha256",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
@@ -2874,7 +2874,7 @@
                                 "typeString": "function (bytes memory) pure returns (bytes32)"
                               }
                             },
-                            "id": 5078,
+                            "id": 2431,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
@@ -2891,11 +2891,11 @@
                             }
                           },
                           {
-                            "id": 5079,
+                            "id": 2432,
                             "name": "_affineX",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 5047,
+                            "referencedDeclaration": 2400,
                             "src": "3982:8:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -2903,11 +2903,11 @@
                             }
                           },
                           {
-                            "id": 5080,
+                            "id": 2433,
                             "name": "_affineY",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 5049,
+                            "referencedDeclaration": 2402,
                             "src": "4004:8:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -2916,18 +2916,18 @@
                           },
                           {
                             "expression": {
-                              "id": 5081,
+                              "id": 2434,
                               "name": "_proof",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 5045,
+                              "referencedDeclaration": 2398,
                               "src": "4026:6:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_DeletionProof_$4899_memory_ptr",
+                                "typeIdentifier": "t_struct$_DeletionProof_$2252_memory_ptr",
                                 "typeString": "struct AsamiNostr.DeletionProof memory"
                               }
                             },
-                            "id": 5082,
+                            "id": 2435,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
@@ -2935,7 +2935,7 @@
                             "memberLocation": "4033:4:10",
                             "memberName": "sigR",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 4896,
+                            "referencedDeclaration": 2249,
                             "src": "4026:11:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -2944,18 +2944,18 @@
                           },
                           {
                             "expression": {
-                              "id": 5083,
+                              "id": 2436,
                               "name": "_proof",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 5045,
+                              "referencedDeclaration": 2398,
                               "src": "4051:6:10",
                               "typeDescriptions": {
-                                "typeIdentifier": "t_struct$_DeletionProof_$4899_memory_ptr",
+                                "typeIdentifier": "t_struct$_DeletionProof_$2252_memory_ptr",
                                 "typeString": "struct AsamiNostr.DeletionProof memory"
                               }
                             },
-                            "id": 5084,
+                            "id": 2437,
                             "isConstant": false,
                             "isLValue": true,
                             "isPure": false,
@@ -2963,7 +2963,7 @@
                             "memberLocation": "4058:4:10",
                             "memberName": "sigS",
                             "nodeType": "MemberAccess",
-                            "referencedDeclaration": 4898,
+                            "referencedDeclaration": 2251,
                             "src": "4051:11:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -2995,18 +2995,18 @@
                             }
                           ],
                           "expression": {
-                            "id": 5074,
+                            "id": 2427,
                             "name": "Schnorr",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 6285,
+                            "referencedDeclaration": 3638,
                             "src": "3925:7:10",
                             "typeDescriptions": {
-                              "typeIdentifier": "t_type$_t_contract$_Schnorr_$6285_$",
+                              "typeIdentifier": "t_type$_t_contract$_Schnorr_$3638_$",
                               "typeString": "type(library Schnorr)"
                             }
                           },
-                          "id": 5075,
+                          "id": 2428,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -3014,14 +3014,14 @@
                           "memberLocation": "3933:6:10",
                           "memberName": "verify",
                           "nodeType": "MemberAccess",
-                          "referencedDeclaration": 5303,
+                          "referencedDeclaration": 2656,
                           "src": "3925:14:10",
                           "typeDescriptions": {
                             "typeIdentifier": "t_function_internal_pure$_t_bytes32_$_t_uint256_$_t_uint256_$_t_uint256_$_t_uint256_$returns$_t_bool_$",
                             "typeString": "function (bytes32,uint256,uint256,uint256,uint256) pure returns (bool)"
                           }
                         },
-                        "id": 5085,
+                        "id": 2438,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -3039,7 +3039,7 @@
                       },
                       {
                         "hexValue": "696e76616c69645f64656c6574696f6e5f70726f6f66",
-                        "id": 5086,
+                        "id": 2439,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -3065,7 +3065,7 @@
                           "typeString": "literal_string \"invalid_deletion_proof\""
                         }
                       ],
-                      "id": 5073,
+                      "id": 2426,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -3079,7 +3079,7 @@
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 5087,
+                    "id": 2440,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -3095,13 +3095,13 @@
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 5088,
+                  "id": 2441,
                   "nodeType": "ExpressionStatement",
                   "src": "3917:182:10"
                 }
               ]
             },
-            "id": 5090,
+            "id": 2443,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -3109,17 +3109,17 @@
             "nameLocation": "3454:21:10",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 5050,
+              "id": 2403,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5042,
+                  "id": 2395,
                   "mutability": "mutable",
                   "name": "_pubkey",
                   "nameLocation": "3499:7:10",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5090,
+                  "scope": 2443,
                   "src": "3485:21:10",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -3128,7 +3128,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 5041,
+                    "id": 2394,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "3485:6:10",
@@ -3141,36 +3141,36 @@
                 },
                 {
                   "constant": false,
-                  "id": 5045,
+                  "id": 2398,
                   "mutability": "mutable",
                   "name": "_proof",
                   "nameLocation": "3537:6:10",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5090,
+                  "scope": 2443,
                   "src": "3516:27:10",
                   "stateVariable": false,
                   "storageLocation": "memory",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_DeletionProof_$4899_memory_ptr",
+                    "typeIdentifier": "t_struct$_DeletionProof_$2252_memory_ptr",
                     "typeString": "struct AsamiNostr.DeletionProof"
                   },
                   "typeName": {
-                    "id": 5044,
+                    "id": 2397,
                     "nodeType": "UserDefinedTypeName",
                     "pathNode": {
-                      "id": 5043,
+                      "id": 2396,
                       "name": "DeletionProof",
                       "nameLocations": [
                         "3516:13:10"
                       ],
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 4899,
+                      "referencedDeclaration": 2252,
                       "src": "3516:13:10"
                     },
-                    "referencedDeclaration": 4899,
+                    "referencedDeclaration": 2252,
                     "src": "3516:13:10",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_DeletionProof_$4899_storage_ptr",
+                      "typeIdentifier": "t_struct$_DeletionProof_$2252_storage_ptr",
                       "typeString": "struct AsamiNostr.DeletionProof"
                     }
                   },
@@ -3178,12 +3178,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 5047,
+                  "id": 2400,
                   "mutability": "mutable",
                   "name": "_affineX",
                   "nameLocation": "3561:8:10",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5090,
+                  "scope": 2443,
                   "src": "3553:16:10",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -3192,7 +3192,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5046,
+                    "id": 2399,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "3553:7:10",
@@ -3205,12 +3205,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 5049,
+                  "id": 2402,
                   "mutability": "mutable",
                   "name": "_affineY",
                   "nameLocation": "3587:8:10",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5090,
+                  "scope": 2443,
                   "src": "3579:16:10",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -3219,7 +3219,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 5048,
+                    "id": 2401,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "3579:7:10",
@@ -3234,12 +3234,12 @@
               "src": "3475:126:10"
             },
             "returnParameters": {
-              "id": 5051,
+              "id": 2404,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "3628:0:10"
             },
-            "scope": 5187,
+            "scope": 2540,
             "src": "3445:661:10",
             "stateMutability": "pure",
             "virtual": false,
@@ -3247,23 +3247,23 @@
           },
           {
             "body": {
-              "id": 5185,
+              "id": 2538,
               "nodeType": "Block",
               "src": "4233:631:10",
               "statements": [
                 {
                   "assignments": [
-                    5100
+                    2453
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 5100,
+                      "id": 2453,
                       "mutability": "mutable",
                       "name": "needleHex",
                       "nameLocation": "4257:9:10",
                       "nodeType": "VariableDeclaration",
-                      "scope": 5185,
+                      "scope": 2538,
                       "src": "4243:23:10",
                       "stateVariable": false,
                       "storageLocation": "memory",
@@ -3272,7 +3272,7 @@
                         "typeString": "string"
                       },
                       "typeName": {
-                        "id": 5099,
+                        "id": 2452,
                         "name": "string",
                         "nodeType": "ElementaryTypeName",
                         "src": "4243:6:10",
@@ -3284,17 +3284,17 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 5108,
+                  "id": 2461,
                   "initialValue": {
                     "arguments": [
                       {
                         "arguments": [
                           {
-                            "id": 5105,
+                            "id": 2458,
                             "name": "needle",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 5092,
+                            "referencedDeclaration": 2445,
                             "src": "4297:6:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_bytes32",
@@ -3309,7 +3309,7 @@
                               "typeString": "bytes32"
                             }
                           ],
-                          "id": 5104,
+                          "id": 2457,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
@@ -3321,14 +3321,14 @@
                             "typeString": "type(uint256)"
                           },
                           "typeName": {
-                            "id": 5103,
+                            "id": 2456,
                             "name": "uint256",
                             "nodeType": "ElementaryTypeName",
                             "src": "4289:7:10",
                             "typeDescriptions": {}
                           }
                         },
-                        "id": 5106,
+                        "id": 2459,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -3353,7 +3353,7 @@
                         }
                       ],
                       "expression": {
-                        "id": 5101,
+                        "id": 2454,
                         "name": "Strings",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
@@ -3364,7 +3364,7 @@
                           "typeString": "type(library Strings)"
                         }
                       },
-                      "id": 5102,
+                      "id": 2455,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -3379,7 +3379,7 @@
                         "typeString": "function (uint256) pure returns (string memory)"
                       }
                     },
-                    "id": 5107,
+                    "id": 2460,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -3400,17 +3400,17 @@
                 },
                 {
                   "assignments": [
-                    5110
+                    2463
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 5110,
+                      "id": 2463,
                       "mutability": "mutable",
                       "name": "needleHexBytes",
                       "nameLocation": "4328:14:10",
                       "nodeType": "VariableDeclaration",
-                      "scope": 5185,
+                      "scope": 2538,
                       "src": "4315:27:10",
                       "stateVariable": false,
                       "storageLocation": "memory",
@@ -3419,7 +3419,7 @@
                         "typeString": "bytes"
                       },
                       "typeName": {
-                        "id": 5109,
+                        "id": 2462,
                         "name": "bytes",
                         "nodeType": "ElementaryTypeName",
                         "src": "4315:5:10",
@@ -3431,15 +3431,15 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 5115,
+                  "id": 2468,
                   "initialValue": {
                     "arguments": [
                       {
-                        "id": 5113,
+                        "id": 2466,
                         "name": "needleHex",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 5100,
+                        "referencedDeclaration": 2453,
                         "src": "4351:9:10",
                         "typeDescriptions": {
                           "typeIdentifier": "t_string_memory_ptr",
@@ -3454,7 +3454,7 @@
                           "typeString": "string memory"
                         }
                       ],
-                      "id": 5112,
+                      "id": 2465,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -3466,14 +3466,14 @@
                         "typeString": "type(bytes storage pointer)"
                       },
                       "typeName": {
-                        "id": 5111,
+                        "id": 2464,
                         "name": "bytes",
                         "nodeType": "ElementaryTypeName",
                         "src": "4345:5:10",
                         "typeDescriptions": {}
                       }
                     },
-                    "id": 5114,
+                    "id": 2467,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -3494,17 +3494,17 @@
                 },
                 {
                   "assignments": [
-                    5117
+                    2470
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 5117,
+                      "id": 2470,
                       "mutability": "mutable",
                       "name": "haystackBytes",
                       "nameLocation": "4384:13:10",
                       "nodeType": "VariableDeclaration",
-                      "scope": 5185,
+                      "scope": 2538,
                       "src": "4371:26:10",
                       "stateVariable": false,
                       "storageLocation": "memory",
@@ -3513,7 +3513,7 @@
                         "typeString": "bytes"
                       },
                       "typeName": {
-                        "id": 5116,
+                        "id": 2469,
                         "name": "bytes",
                         "nodeType": "ElementaryTypeName",
                         "src": "4371:5:10",
@@ -3525,15 +3525,15 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 5122,
+                  "id": 2475,
                   "initialValue": {
                     "arguments": [
                       {
-                        "id": 5120,
+                        "id": 2473,
                         "name": "haystack",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 5094,
+                        "referencedDeclaration": 2447,
                         "src": "4406:8:10",
                         "typeDescriptions": {
                           "typeIdentifier": "t_string_memory_ptr",
@@ -3548,7 +3548,7 @@
                           "typeString": "string memory"
                         }
                       ],
-                      "id": 5119,
+                      "id": 2472,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -3560,14 +3560,14 @@
                         "typeString": "type(bytes storage pointer)"
                       },
                       "typeName": {
-                        "id": 5118,
+                        "id": 2471,
                         "name": "bytes",
                         "nodeType": "ElementaryTypeName",
                         "src": "4400:5:10",
                         "typeDescriptions": {}
                       }
                     },
-                    "id": 5121,
+                    "id": 2474,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -3588,23 +3588,23 @@
                 },
                 {
                   "body": {
-                    "id": 5181,
+                    "id": 2534,
                     "nodeType": "Block",
                     "src": "4501:335:10",
                     "statements": [
                       {
                         "assignments": [
-                          5140
+                          2493
                         ],
                         "declarations": [
                           {
                             "constant": false,
-                            "id": 5140,
+                            "id": 2493,
                             "mutability": "mutable",
                             "name": "found",
                             "nameLocation": "4520:5:10",
                             "nodeType": "VariableDeclaration",
-                            "scope": 5181,
+                            "scope": 2534,
                             "src": "4515:10:10",
                             "stateVariable": false,
                             "storageLocation": "default",
@@ -3613,7 +3613,7 @@
                               "typeString": "bool"
                             },
                             "typeName": {
-                              "id": 5139,
+                              "id": 2492,
                               "name": "bool",
                               "nodeType": "ElementaryTypeName",
                               "src": "4515:4:10",
@@ -3625,10 +3625,10 @@
                             "visibility": "internal"
                           }
                         ],
-                        "id": 5142,
+                        "id": 2495,
                         "initialValue": {
                           "hexValue": "74727565",
-                          "id": 5141,
+                          "id": 2494,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
@@ -3647,7 +3647,7 @@
                       },
                       {
                         "body": {
-                          "id": 5174,
+                          "id": 2527,
                           "nodeType": "Block",
                           "src": "4598:161:10",
                           "statements": [
@@ -3657,41 +3657,41 @@
                                   "typeIdentifier": "t_bytes1",
                                   "typeString": "bytes1"
                                 },
-                                "id": 5166,
+                                "id": 2519,
                                 "isConstant": false,
                                 "isLValue": false,
                                 "isPure": false,
                                 "lValueRequested": false,
                                 "leftExpression": {
                                   "baseExpression": {
-                                    "id": 5156,
+                                    "id": 2509,
                                     "name": "haystackBytes",
                                     "nodeType": "Identifier",
                                     "overloadedDeclarations": [],
-                                    "referencedDeclaration": 5117,
+                                    "referencedDeclaration": 2470,
                                     "src": "4619:13:10",
                                     "typeDescriptions": {
                                       "typeIdentifier": "t_bytes_memory_ptr",
                                       "typeString": "bytes memory"
                                     }
                                   },
-                                  "id": 5160,
+                                  "id": 2513,
                                   "indexExpression": {
                                     "commonType": {
                                       "typeIdentifier": "t_uint256",
                                       "typeString": "uint256"
                                     },
-                                    "id": 5159,
+                                    "id": 2512,
                                     "isConstant": false,
                                     "isLValue": false,
                                     "isPure": false,
                                     "lValueRequested": false,
                                     "leftExpression": {
-                                      "id": 5157,
+                                      "id": 2510,
                                       "name": "i",
                                       "nodeType": "Identifier",
                                       "overloadedDeclarations": [],
-                                      "referencedDeclaration": 5124,
+                                      "referencedDeclaration": 2477,
                                       "src": "4633:1:10",
                                       "typeDescriptions": {
                                         "typeIdentifier": "t_uint256",
@@ -3701,11 +3701,11 @@
                                     "nodeType": "BinaryOperation",
                                     "operator": "+",
                                     "rightExpression": {
-                                      "id": 5158,
+                                      "id": 2511,
                                       "name": "j",
                                       "nodeType": "Identifier",
                                       "overloadedDeclarations": [],
-                                      "referencedDeclaration": 5144,
+                                      "referencedDeclaration": 2497,
                                       "src": "4637:1:10",
                                       "typeDescriptions": {
                                         "typeIdentifier": "t_uint256",
@@ -3733,34 +3733,34 @@
                                 "operator": "!=",
                                 "rightExpression": {
                                   "baseExpression": {
-                                    "id": 5161,
+                                    "id": 2514,
                                     "name": "needleHexBytes",
                                     "nodeType": "Identifier",
                                     "overloadedDeclarations": [],
-                                    "referencedDeclaration": 5110,
+                                    "referencedDeclaration": 2463,
                                     "src": "4643:14:10",
                                     "typeDescriptions": {
                                       "typeIdentifier": "t_bytes_memory_ptr",
                                       "typeString": "bytes memory"
                                     }
                                   },
-                                  "id": 5165,
+                                  "id": 2518,
                                   "indexExpression": {
                                     "commonType": {
                                       "typeIdentifier": "t_uint256",
                                       "typeString": "uint256"
                                     },
-                                    "id": 5164,
+                                    "id": 2517,
                                     "isConstant": false,
                                     "isLValue": false,
                                     "isPure": false,
                                     "lValueRequested": false,
                                     "leftExpression": {
-                                      "id": 5162,
+                                      "id": 2515,
                                       "name": "j",
                                       "nodeType": "Identifier",
                                       "overloadedDeclarations": [],
-                                      "referencedDeclaration": 5144,
+                                      "referencedDeclaration": 2497,
                                       "src": "4658:1:10",
                                       "typeDescriptions": {
                                         "typeIdentifier": "t_uint256",
@@ -3771,7 +3771,7 @@
                                     "operator": "+",
                                     "rightExpression": {
                                       "hexValue": "32",
-                                      "id": 5163,
+                                      "id": 2516,
                                       "isConstant": false,
                                       "isLValue": false,
                                       "isPure": true,
@@ -3808,27 +3808,27 @@
                                   "typeString": "bool"
                                 }
                               },
-                              "id": 5173,
+                              "id": 2526,
                               "nodeType": "IfStatement",
                               "src": "4616:129:10",
                               "trueBody": {
-                                "id": 5172,
+                                "id": 2525,
                                 "nodeType": "Block",
                                 "src": "4664:81:10",
                                 "statements": [
                                   {
                                     "expression": {
-                                      "id": 5169,
+                                      "id": 2522,
                                       "isConstant": false,
                                       "isLValue": false,
                                       "isPure": false,
                                       "lValueRequested": false,
                                       "leftHandSide": {
-                                        "id": 5167,
+                                        "id": 2520,
                                         "name": "found",
                                         "nodeType": "Identifier",
                                         "overloadedDeclarations": [],
-                                        "referencedDeclaration": 5140,
+                                        "referencedDeclaration": 2493,
                                         "src": "4686:5:10",
                                         "typeDescriptions": {
                                           "typeIdentifier": "t_bool",
@@ -3839,7 +3839,7 @@
                                       "operator": "=",
                                       "rightHandSide": {
                                         "hexValue": "66616c7365",
-                                        "id": 5168,
+                                        "id": 2521,
                                         "isConstant": false,
                                         "isLValue": false,
                                         "isPure": true,
@@ -3859,12 +3859,12 @@
                                         "typeString": "bool"
                                       }
                                     },
-                                    "id": 5170,
+                                    "id": 2523,
                                     "nodeType": "ExpressionStatement",
                                     "src": "4686:13:10"
                                   },
                                   {
-                                    "id": 5171,
+                                    "id": 2524,
                                     "nodeType": "Break",
                                     "src": "4721:5:10"
                                   }
@@ -3878,17 +3878,17 @@
                             "typeIdentifier": "t_uint256",
                             "typeString": "uint256"
                           },
-                          "id": 5152,
+                          "id": 2505,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
                           "lValueRequested": false,
                           "leftExpression": {
-                            "id": 5147,
+                            "id": 2500,
                             "name": "j",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 5144,
+                            "referencedDeclaration": 2497,
                             "src": "4562:1:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -3902,25 +3902,25 @@
                               "typeIdentifier": "t_uint256",
                               "typeString": "uint256"
                             },
-                            "id": 5151,
+                            "id": 2504,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
                             "lValueRequested": false,
                             "leftExpression": {
                               "expression": {
-                                "id": 5148,
+                                "id": 2501,
                                 "name": "needleHexBytes",
                                 "nodeType": "Identifier",
                                 "overloadedDeclarations": [],
-                                "referencedDeclaration": 5110,
+                                "referencedDeclaration": 2463,
                                 "src": "4566:14:10",
                                 "typeDescriptions": {
                                   "typeIdentifier": "t_bytes_memory_ptr",
                                   "typeString": "bytes memory"
                                 }
                               },
-                              "id": 5149,
+                              "id": 2502,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": false,
@@ -3938,7 +3938,7 @@
                             "operator": "-",
                             "rightExpression": {
                               "hexValue": "32",
-                              "id": 5150,
+                              "id": 2503,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": true,
@@ -3964,20 +3964,20 @@
                             "typeString": "bool"
                           }
                         },
-                        "id": 5175,
+                        "id": 2528,
                         "initializationExpression": {
                           "assignments": [
-                            5144
+                            2497
                           ],
                           "declarations": [
                             {
                               "constant": false,
-                              "id": 5144,
+                              "id": 2497,
                               "mutability": "mutable",
                               "name": "j",
                               "nameLocation": "4555:1:10",
                               "nodeType": "VariableDeclaration",
-                              "scope": 5175,
+                              "scope": 2528,
                               "src": "4550:6:10",
                               "stateVariable": false,
                               "storageLocation": "default",
@@ -3986,7 +3986,7 @@
                                 "typeString": "uint256"
                               },
                               "typeName": {
-                                "id": 5143,
+                                "id": 2496,
                                 "name": "uint",
                                 "nodeType": "ElementaryTypeName",
                                 "src": "4550:4:10",
@@ -3998,10 +3998,10 @@
                               "visibility": "internal"
                             }
                           ],
-                          "id": 5146,
+                          "id": 2499,
                           "initialValue": {
                             "hexValue": "30",
-                            "id": 5145,
+                            "id": 2498,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
@@ -4020,7 +4020,7 @@
                         },
                         "loopExpression": {
                           "expression": {
-                            "id": 5154,
+                            "id": 2507,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
@@ -4030,11 +4030,11 @@
                             "prefix": false,
                             "src": "4593:3:10",
                             "subExpression": {
-                              "id": 5153,
+                              "id": 2506,
                               "name": "j",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
-                              "referencedDeclaration": 5144,
+                              "referencedDeclaration": 2497,
                               "src": "4593:1:10",
                               "typeDescriptions": {
                                 "typeIdentifier": "t_uint256",
@@ -4046,7 +4046,7 @@
                               "typeString": "uint256"
                             }
                           },
-                          "id": 5155,
+                          "id": 2508,
                           "nodeType": "ExpressionStatement",
                           "src": "4593:3:10"
                         },
@@ -4055,29 +4055,29 @@
                       },
                       {
                         "condition": {
-                          "id": 5176,
+                          "id": 2529,
                           "name": "found",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 5140,
+                          "referencedDeclaration": 2493,
                           "src": "4775:5:10",
                           "typeDescriptions": {
                             "typeIdentifier": "t_bool",
                             "typeString": "bool"
                           }
                         },
-                        "id": 5180,
+                        "id": 2533,
                         "nodeType": "IfStatement",
                         "src": "4772:54:10",
                         "trueBody": {
-                          "id": 5179,
+                          "id": 2532,
                           "nodeType": "Block",
                           "src": "4782:44:10",
                           "statements": [
                             {
                               "expression": {
                                 "hexValue": "74727565",
-                                "id": 5177,
+                                "id": 2530,
                                 "isConstant": false,
                                 "isLValue": false,
                                 "isPure": true,
@@ -4091,8 +4091,8 @@
                                 },
                                 "value": "true"
                               },
-                              "functionReturnParameters": 5098,
-                              "id": 5178,
+                              "functionReturnParameters": 2451,
+                              "id": 2531,
                               "nodeType": "Return",
                               "src": "4800:11:10"
                             }
@@ -4106,17 +4106,17 @@
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     },
-                    "id": 5135,
+                    "id": 2488,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftExpression": {
-                      "id": 5127,
+                      "id": 2480,
                       "name": "i",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 5124,
+                      "referencedDeclaration": 2477,
                       "src": "4442:1:10",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -4130,7 +4130,7 @@
                         "typeIdentifier": "t_uint256",
                         "typeString": "uint256"
                       },
-                      "id": 5134,
+                      "id": 2487,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -4140,25 +4140,25 @@
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
                         },
-                        "id": 5132,
+                        "id": 2485,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
                         "lValueRequested": false,
                         "leftExpression": {
                           "expression": {
-                            "id": 5128,
+                            "id": 2481,
                             "name": "haystackBytes",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 5117,
+                            "referencedDeclaration": 2470,
                             "src": "4446:13:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_bytes_memory_ptr",
                               "typeString": "bytes memory"
                             }
                           },
-                          "id": 5129,
+                          "id": 2482,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -4176,18 +4176,18 @@
                         "operator": "-",
                         "rightExpression": {
                           "expression": {
-                            "id": 5130,
+                            "id": 2483,
                             "name": "needleHexBytes",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 5110,
+                            "referencedDeclaration": 2463,
                             "src": "4469:14:10",
                             "typeDescriptions": {
                               "typeIdentifier": "t_bytes_memory_ptr",
                               "typeString": "bytes memory"
                             }
                           },
-                          "id": 5131,
+                          "id": 2484,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -4211,7 +4211,7 @@
                       "operator": "+",
                       "rightExpression": {
                         "hexValue": "31",
-                        "id": 5133,
+                        "id": 2486,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
@@ -4237,20 +4237,20 @@
                       "typeString": "bool"
                     }
                   },
-                  "id": 5182,
+                  "id": 2535,
                   "initializationExpression": {
                     "assignments": [
-                      5124
+                      2477
                     ],
                     "declarations": [
                       {
                         "constant": false,
-                        "id": 5124,
+                        "id": 2477,
                         "mutability": "mutable",
                         "name": "i",
                         "nameLocation": "4435:1:10",
                         "nodeType": "VariableDeclaration",
-                        "scope": 5182,
+                        "scope": 2535,
                         "src": "4430:6:10",
                         "stateVariable": false,
                         "storageLocation": "default",
@@ -4259,7 +4259,7 @@
                           "typeString": "uint256"
                         },
                         "typeName": {
-                          "id": 5123,
+                          "id": 2476,
                           "name": "uint",
                           "nodeType": "ElementaryTypeName",
                           "src": "4430:4:10",
@@ -4271,10 +4271,10 @@
                         "visibility": "internal"
                       }
                     ],
-                    "id": 5126,
+                    "id": 2479,
                     "initialValue": {
                       "hexValue": "30",
-                      "id": 5125,
+                      "id": 2478,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -4293,7 +4293,7 @@
                   },
                   "loopExpression": {
                     "expression": {
-                      "id": 5137,
+                      "id": 2490,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -4303,11 +4303,11 @@
                       "prefix": false,
                       "src": "4496:3:10",
                       "subExpression": {
-                        "id": 5136,
+                        "id": 2489,
                         "name": "i",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 5124,
+                        "referencedDeclaration": 2477,
                         "src": "4496:1:10",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
@@ -4319,7 +4319,7 @@
                         "typeString": "uint256"
                       }
                     },
-                    "id": 5138,
+                    "id": 2491,
                     "nodeType": "ExpressionStatement",
                     "src": "4496:3:10"
                   },
@@ -4329,7 +4329,7 @@
                 {
                   "expression": {
                     "hexValue": "66616c7365",
-                    "id": 5183,
+                    "id": 2536,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": true,
@@ -4343,14 +4343,14 @@
                     },
                     "value": "false"
                   },
-                  "functionReturnParameters": 5098,
-                  "id": 5184,
+                  "functionReturnParameters": 2451,
+                  "id": 2537,
                   "nodeType": "Return",
                   "src": "4845:12:10"
                 }
               ]
             },
-            "id": 5186,
+            "id": 2539,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
@@ -4358,17 +4358,17 @@
             "nameLocation": "4121:8:10",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 5095,
+              "id": 2448,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5092,
+                  "id": 2445,
                   "mutability": "mutable",
                   "name": "needle",
                   "nameLocation": "4147:6:10",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5186,
+                  "scope": 2539,
                   "src": "4139:14:10",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -4377,7 +4377,7 @@
                     "typeString": "bytes32"
                   },
                   "typeName": {
-                    "id": 5091,
+                    "id": 2444,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
                     "src": "4139:7:10",
@@ -4390,12 +4390,12 @@
                 },
                 {
                   "constant": false,
-                  "id": 5094,
+                  "id": 2447,
                   "mutability": "mutable",
                   "name": "haystack",
                   "nameLocation": "4177:8:10",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5186,
+                  "scope": 2539,
                   "src": "4163:22:10",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -4404,7 +4404,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 5093,
+                    "id": 2446,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "4163:6:10",
@@ -4419,17 +4419,17 @@
               "src": "4129:62:10"
             },
             "returnParameters": {
-              "id": 5098,
+              "id": 2451,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5097,
+                  "id": 2450,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5186,
+                  "scope": 2539,
                   "src": "4223:4:10",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -4438,7 +4438,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 5096,
+                    "id": 2449,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "4223:4:10",
@@ -4452,14 +4452,14 @@
               ],
               "src": "4222:6:10"
             },
-            "scope": 5187,
+            "scope": 2540,
             "src": "4112:752:10",
             "stateMutability": "pure",
             "virtual": false,
             "visibility": "internal"
           }
         ],
-        "scope": 5188,
+        "scope": 2541,
         "src": "133:4733:10",
         "usedErrors": []
       }
@@ -4472,7 +4472,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.15",
-  "updatedAt": "2023-09-04T08:56:50.968Z",
+  "updatedAt": "2023-10-22T08:37:06.148Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

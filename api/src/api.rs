@@ -1,5 +1,4 @@
 use super::{*, models, error::Error};
-use rust_decimal::prelude::ToPrimitive;
 use sqlx_models_orm::*;
 use juniper::{
   FieldResult,
@@ -19,8 +18,20 @@ mod current_session;
 use current_session::*;
 mod campaign;
 use campaign::*;
+mod campaign_request;
+use campaign_request::*;
 mod session;
 use session::*;
+mod handle;
+use handle::*;
+mod handle_request;
+use handle_request::*;
+mod handle_update_request;
+use handle_update_request::*;
+mod collab;
+use collab::*;
+mod claim_account_request;
+use claim_account_request::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -98,12 +109,12 @@ pub struct Context {
   app: App,
   current_session: CurrentSession,
   user_id: i32,
-  account_ids: Vec<i32>,
+  account_ids: Vec<String>,
 }
 
 impl Context {
-  pub fn require_account_user(&self, account_id: i32) -> FieldResult<()> {
-    if !self.account_ids.contains(&account_id) {
+  pub fn require_account_user(&self, account_id: &str) -> FieldResult<()> {
+    if !self.account_ids.iter().any(|s| s == account_id) {
       return Err(field_error("no_access_to_account", &account_id.to_string()))
     }
     return Ok(())
@@ -134,6 +145,19 @@ trait Showable<Model: SqlxModel<State=App>, Filter: Send>: Sized {
   }
 
   async fn collection(
+    context: &Context,
+    page: Option<i32>,
+    per_page: Option<i32>,
+    sort_field: Option<String>,
+    sort_order: Option<String>,
+    filter: Option<Filter>
+  ) -> FieldResult<Vec<Self>>
+    where Filter: 'async_trait
+  {
+    Self::base_collection(context, page, per_page, sort_field, sort_order, filter).await
+  }
+
+  async fn base_collection(
     context: &Context,
     page: Option<i32>,
     per_page: Option<i32>,
@@ -179,6 +203,12 @@ trait Showable<Model: SqlxModel<State=App>, Filter: Send>: Sized {
   }
 
   async fn count( context: &Context, filter: Option<Filter>) -> FieldResult<ListMetadata>
+    where Filter: 'async_trait
+  {
+    Self::base_count(context, filter).await
+  }
+
+  async fn base_count( context: &Context, filter: Option<Filter>) -> FieldResult<ListMetadata>
     where Filter: 'async_trait
   {
     let count = <Model as SqlxModel>::SelectModelHub::from_state(context.app.clone())
@@ -237,7 +267,13 @@ macro_rules! make_graphql_query {
 make_graphql_query!{
   "1.0";
   showables {
-    [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, i32],
+    [CampaignRequest, allCampaignRequests, allCampaignRequestsMeta, "_allCampaignRequestsMeta", CampaignRequestFilter, i32],
+    [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, String],
+    [HandleRequest, allHandleRequests, allHandleRequestsMeta, "_allHandleRequestsMeta", HandleRequestFilter, i32],
+    [Handle, allHandles, allHandlesMeta, "_allHandlesMeta", HandleFilter, String],
+    [HandleUpdateRequest, allHandleUpdateRequests, allHandleUpdateRequestsMeta, "_allHandleUpdateRequestsMeta", HandleUpdateRequestFilter, i32],
+    [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, String],
+    [ClaimAccountRequest, allClaimAccountRequests, allClaimAccountRequestsMeta, "_allClaimAccountRequestsMeta", ClaimAccountRequestFilter, i32],
   }
 }
 
@@ -249,7 +285,19 @@ impl Mutation {
     Ok(Session::db_to_graphql(context.current_session.0.clone()).await?)
   }
 
-  pub async fn create_campaign(context: &Context, input: CreateCampaignInput) -> FieldResult<Campaign> {
+  pub async fn create_campaign_request(context: &Context, input: CreateCampaignRequestInput) -> FieldResult<CampaignRequest> {
+    input.process(context).await
+  }
+
+  pub async fn create_handle_request(context: &Context, input: CreateHandleRequestInput) -> FieldResult<HandleRequest> {
+    input.process(context).await
+  }
+
+  pub async fn create_handle_update_request(context: &Context, input: CreateHandleUpdateRequestInput) -> FieldResult<HandleUpdateRequest> {
+    input.process(context).await
+  }
+
+  pub async fn create_claim_account_request(context: &Context, input: CreateClaimAccountRequestInput) -> FieldResult<ClaimAccountRequest> {
     input.process(context).await
   }
 }

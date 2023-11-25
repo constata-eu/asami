@@ -4,3 +4,8 @@ target
 *.swp
 contract/contracts/artifacts
 .deps/*
+pwa/dist
+release
+api/Rocket.toml
+api/Rocket.toml.staging
+api/Rocket.toml.development

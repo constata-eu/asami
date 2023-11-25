@@ -9,25 +9,55 @@ mutation CreateSession {
     __typename
   }
 }
-mutation CreateCampaign($input: CreateCampaignInput!) {
-  createCampaign(input: $input) {
+mutation CreateCampaignRequest($input: CreateCampaignRequestInput!) {
+  createCampaignRequest(input: $input) {
     id
     accountId
     budget
     site
-    content
+    contentId
     createdAt
     updatedAt
     __typename
   }
 }
-query Campaign($id: Int!) {
+query CampaignRequest($id: Int!) {
+  CampaignRequest(id: $id) {
+    id
+    accountId
+    budget
+    site
+    contentId
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+query AllCampaignRequests($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignRequestFilter) {
+  allCampaignRequests(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    accountId
+    budget
+    site
+    contentId
+    createdAt
+    updatedAt
+    __typename
+  }
+}
+query AllCampaignRequestsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignRequestFilter) {
+  _allCampaignRequestsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query Campaign($id: String!) {
   Campaign(id: $id) {
     id
     accountId
     budget
     site
-    content
+    contentId
     createdAt
     updatedAt
     __typename
@@ -39,7 +69,7 @@ query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: St
     accountId
     budget
     site
-    content
+    contentId
     createdAt
     updatedAt
     __typename

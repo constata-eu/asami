@@ -8,6 +8,8 @@ pub struct Session {
   id: String,
   #[graphql(description = "The user associated to this session.")]
   user_id: i32,
+  #[graphql(description = "The account IDS associated with this user.")]
+  account_ids: Vec<String>,
   #[graphql(description = "The pubkey associated to this session.")]
   pubkey: String,
   #[graphql(description = "The content to share.")]
@@ -59,9 +61,11 @@ impl Showable<models::Session, SessionFilter> for Session {
   }
 
   async fn db_to_graphql(d: models::Session) -> AsamiResult<Self> {
+    let account_ids = d.user().await?.account_ids().await?;
     Ok(Session {
       id: d.attrs.id,
       user_id: d.attrs.user_id,
+      account_ids,
       pubkey: d.attrs.pubkey,
       nonce: d.attrs.nonce.to_string(),
       created_at: d.attrs.created_at,

@@ -24,6 +24,9 @@ jwt-simple = "0.11.6"
 graphql_client = "0.12.0"
 graphql_queries_from_schema = { git = "https://github.com/constata-eu/graphql_queries_from_schema", branch = "main" }
 base64 = "0.21.2"
+ethers = { version = "2.0.10", features = ["eip712"] }
+twitter-v2 = { version = "0.1.8", features = ["oauth2", "rustls-tls"] }
+rust_decimal = "*"
 
 [lib]
 name = "integration_tests"

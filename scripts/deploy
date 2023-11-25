@@ -1,0 +1,73 @@
+#!/bin/bash
+trap "exit" INT
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD) 
+STAGING_IP=128.199.33.144
+PRODUCTION_IP=178.128.244.41
+
+if [[ $1 == "production" && $BRANCH != "master" ]]
+then
+  echo Wont deploy anything but MASTER to production
+  exit 1
+fi
+
+if [[ -n $(git status --porcelain) ]]
+then
+  echo "Can't deploy while you have uncommited files"
+  exit 1
+fi
+
+if ! git pull origin $BRANCH
+then
+  echo Could not pull from $BRANCH
+  exit 1
+fi
+
+if [[ -n $(git status | grep ahead) ]]
+then
+  echo "Your branch is ahead of origin, push your changes first"
+  exit 1
+fi
+
+if [[ $1 == "production" ]]
+then
+  IP=$PRODUCTION_IP
+else
+  IP=$STAGING_IP
+fi
+
+until [[ -n $password ]]
+do
+  echo -n Services encryption password:
+  read -s password
+  echo 
+done
+echo Got password
+
+rm -rf /tmp/asami-deploy-files &&
+mkdir /tmp/asami-deploy-files &&
+cp release/{migrator,api,worker} /tmp/asami-deploy-files &&
+echo "Copying deploy files" &&
+scp -r /tmp/asami-deploy-files root@$IP:/home/asami/ &&
+ssh root@$IP '
+cd /home/asami &&
+mkdir -p templates &&
+echo "Changing ownership" &&
+chown -R www-data.www-data asami-deploy-files &&
+echo "Stopping servers" &&
+systemctl stop asami_public_api worker &&
+echo "Backing up old files, moving in new ones" &&
+for f in "api" "migrator" "worker";
+  do mv $f $f.old;
+  mv asami-deploy-files/$f .;
+done &&
+echo "Running migrations" &&
+echo "'$password'" | ./migrator &&
+echo "Start new servers" &&
+systemctl start asami_worker asami_public_api &&
+echo Wait a moment for password sync &&
+sleep 3 &&
+for s in `ls /run/systemd/ask-password/sck.*`;
+  do echo -n "+'"$password"'" | nc -uU -q0 $s;
+done &&
+systemctl status asami_public_api asami_worker'

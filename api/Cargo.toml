@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 rocket = { version = "0.5.0-rc.3", features = ["json"] }
 rocket_cors = { git = "https://github.com/lawliet89/rocket_cors", branch = "master" }
-juniper = { git = "https://github.com/graphql-rust/juniper", branch = "master", features = ["chrono"] }
+juniper = { git = "https://github.com/graphql-rust/juniper", branch = "master", features = ["chrono", "rust_decimal"] }
 juniper_rocket = { git = "https://github.com/graphql-rust/juniper", branch = "master" }
 async-trait = "^0.1.52"
 rocket-recaptcha-v3 = "*"
@@ -18,7 +18,7 @@ serde_derive = "1.0"
 serde_json = "1.0.85"
 itertools = "0.10.1"
 thiserror = "1.0"
-sqlx = "0.6.0"
+sqlx = "*"
 sqlx-models-orm = "0.1.6"
 rust_decimal = "*"
 rust_decimal_macros = "*"
@@ -32,11 +32,34 @@ hex = "0.4.3"
 chbs = "0.1.0"
 hmac = "0.11.0"
 sha2 = "0.9.8"
+twitter-v2 = { version = "0.1.8", features = ["oauth2", "rustls-tls"] }
+ureq = { version = "2.8.0", features = ["json"] }
+ethers = { version = "2.0.10", features = ["eip712", "legacy"] }
+regex = "1"
 
 [dev-dependencies]
 galvanic-test = "0.2"
 galvanic-assert = "0.8.7"
-regex = "1"
 mockito = "0.28"
 time-test = "0.2.2"
 anyhow = "*"
+
+[[bin]]
+name = "api"
+path = "src/main.rs"
+
+[[bin]]
+name = "worker"
+path = "src/worker.rs"
+
+[[bin]]
+name = "make_admin_address"
+path = "src/make_admin_address.rs"
+
+[[bin]]
+name = "debug_rust_contract_bindings"
+path = "src/debug_rust_contract_bindings.rs"
+
+[[bin]]
+name = "migrator"
+path = "src/migrator.rs"

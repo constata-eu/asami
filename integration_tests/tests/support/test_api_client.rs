@@ -4,7 +4,6 @@ pub use galvanic_assert::{
   matchers::{collection::*, variant::*, *},
   *,
 };
-
 pub use api::models::hasher;
 use rocket::{
   http::{Header, Status},
@@ -13,12 +12,14 @@ use rocket::{
 use jwt_simple::{ algorithms::*, prelude::*, };
 pub use serde::{Serialize, de::DeserializeOwned, Deserialize};
 use graphql_client;
+pub use api::Decimal;
 
 #[derive(Deserialize)]
 pub struct ApiError {
   pub error: String,
 }
 
+#[allow(dead_code)]
 pub struct ApiClient {
   pub client: Client,
   pub test_app: TestApp,
@@ -191,7 +192,8 @@ pub mod gql {
 
   make_graphql_queries![
     CreateSession,
-    CreateCampaign,
+    CreateCampaignRequest,
+    CampaignRequest,
     Campaign,
     AllCampaigns,
     AllCampaignsMeta,

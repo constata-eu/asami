@@ -1,9 +1,17 @@
-use rocket::{self, fairing::AdHoc, routes, serde::json::Json};
-use rocket::http::Method;
+use rocket::{
+  self,
+  fairing::AdHoc,
+  routes,
+  serde::json::Json,
+  http::Method,
+  State
+};
 use rocket_cors::{AllowedHeaders, AllowedOrigins, Origins};
 use rocket_recaptcha_v3::ReCaptcha;
+pub use rust_decimal::prelude::{Decimal, ToPrimitive, FromPrimitive};
 
 pub mod app;
+pub mod on_chain;
 pub mod error;
 pub mod api;
 pub mod models;
@@ -11,6 +19,30 @@ pub mod models;
 pub use app::*;
 pub use error::*;
 pub use api::*;
+
+#[rocket::get("/x_login?<code>&<state>")]
+pub async fn x_login(app: &State<App>, code: &str, state: &str) -> rocket::response::Redirect {
+  let uri = format!(
+    "{host}/#/x_login?code={code}&state={state}",
+    host = app.settings.pwa_host,
+    state = state.replace(" ", "+"),
+  );
+  rocket::response::Redirect::permanent(uri)
+}
+
+#[rocket::get("/instagram_login?<code>")]
+pub async fn instagram_login(app: &State<App>, code: &str) -> rocket::response::Redirect {
+  let uri = format!( "{host}/#/instagram_login?code={code}", host = app.settings.pwa_host );
+  rocket::response::Redirect::permanent(uri)
+}
+
+#[rocket::get("/config")]
+pub async fn config(app: &State<App>) -> serde_json::Value {
+  serde_json::json![{
+    "contractAddress": app.settings.rsk.contract_address.clone(),
+    "docContractAddress": app.settings.rsk.doc_contract_address.clone(),
+  }]
+}
 
 pub fn server(app: App) -> rocket::Rocket<rocket::Build> {
   let allowed = AllowedOrigins::some(
@@ -20,8 +52,11 @@ pub fn server(app: App) -> rocket::Rocket<rocket::Build> {
       "http://0.0.0.0:8000",
       "http://127.0.0.1:3000",
       "http://localhost:3000",
+      "http://127.0.0.1:5173",
+      "http://localhost:5173",
+      "https://asami.club",
     ],
-    &["file://.*", "content://.*", "https://.*"]
+    &["file://.*", "content://.*"]
   ).unwrap();
 
   let cors = rocket_cors::CorsOptions {
@@ -40,5 +75,6 @@ pub fn server(app: App) -> rocket::Rocket<rocket::Build> {
     .attach(ReCaptcha::fairing())
     .manage(new_graphql_schema())
     .attach(cors)
+    .mount("/", routes![x_login, instagram_login, config])
     .mount("/graphql", routes![graphiql, post_handler, introspect])
 }

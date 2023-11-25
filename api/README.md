@@ -206,3 +206,11 @@
   - Should the smart contract include a way to change key ownership and still link to the same reputation?
     - Or is the asami smart contract just about being an escrow in a collaboration?
 
+
+### ToDo:
+- API requests have no business logic validations.
+- Converting u256 to database values sucks.
+- Idempotency in the SC (do not fail if a resubmission is attempted. Update DB status first?).
+- Twitter api usage quotas are obnoxious:
+  # retweeted by: 5 requests / 15 mins
+  # account confirmations: 5 requests / 15 mins
