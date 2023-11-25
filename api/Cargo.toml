@@ -57,5 +57,9 @@ name = "make_admin_address"
 path = "src/make_admin_address.rs"
 
 [[bin]]
+name = "debug_rust_contract_bindings"
+path = "src/debug_rust_contract_bindings.rs"
+
+[[bin]]
 name = "migrator"
 path = "src/migrator.rs"

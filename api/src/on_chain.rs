@@ -1,6 +1,6 @@
 use super::*;
 
-use ethers::{
+pub use ethers::{
   signers::{MnemonicBuilder, LocalWallet, coins_bip39::English, Signer},
   prelude::{abigen, SignerMiddleware, LogMeta},
   types::Address,
@@ -24,9 +24,11 @@ abigen!(
 );
 //event Approval(address indexed _owner, address indexed _spender, uint256 _value)
 
+pub type AsamiContractSigner = AsamiContract<SignerMiddleware<Provider<Http>, LocalWallet>>;
+
 #[derive(Clone)]
 pub struct OnChain {
-  pub contract: AsamiContract<SignerMiddleware<Provider<Http>, LocalWallet>>,
+  pub contract: AsamiContractSigner,
   pub doc_contract: IERC20<SignerMiddleware<Provider<Http>, LocalWallet>>,
 }
 
@@ -61,9 +63,5 @@ impl OnChain {
       contract: AsamiContract::new(address, client.clone()),
       doc_contract: IERC20::new(doc_address, client),
     })
-  }
-
-  pub async fn events(&self, from_block: U64, to_block: U64) -> AsamiResult<Vec<(AsamiContractEvents, LogMeta)>> {
-    Ok(self.contract.events().from_block(from_block).to_block(to_block).query_with_meta().await?)
   }
 }

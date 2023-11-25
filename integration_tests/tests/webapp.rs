@@ -59,7 +59,6 @@ browser_test!{ browser_test (test_app, d)
   test_app.run_idempotent_background_tasks_a_few_times().await;
   d.wait_for("#account-summary-claim-done").await;
 
-  wait_here();
   // Now logging back in.
   d.click("#logout-menu-item").await;
   d.click("#button-login-as-member").await;
