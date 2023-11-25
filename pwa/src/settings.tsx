@@ -36,6 +36,7 @@ const all = {
   "http://127.0.0.1:5173": development,
   "http://127.0.0.1:4173": development,
   "http://localhost:5173": development,
+  "http://localhost:4173": development,
   "https://asami.club": staging,
 }
 

@@ -1014,7 +1014,11 @@ impl SyncedEventHub {
     let contract = &self.state.on_chain.contract;
     let index_state = self.state.indexer_state().get().await?;
     
-    let from_block = d_to_u64(index_state.attrs.last_synced_block);
+    let from_block = std::cmp::max(
+      self.state.settings.rsk.start_sync_from_block.into(),
+      d_to_u64(index_state.attrs.last_synced_block)
+    );
+
     let to_block = contract.client().get_block_number().await?
       - self.state.settings.rsk.reorg_protection_padding;
     
