@@ -310,7 +310,7 @@ impl HandleRequestHub {
       pages += 1;
       if pages == 5 { break; }
       page = mentions.next_page().await?;
-      if page.is_some() { sleep(Duration::from_millis(60 * 1000)).await; }
+      if page.is_some() { sleep(Duration::from_millis(3 * 60 * 1000)).await; }
     }
 
     indexer_state.update().x_handle_verification_checkpoint(checkpoint).save().await?;
@@ -775,7 +775,7 @@ impl CampaignHub {
         }
 
         page = reposts.next_page().await?;
-        if page.is_some() { sleep(Duration::from_millis(60 * 1000)).await; }
+        if page.is_some() { sleep(Duration::from_millis(3 * 60 * 1000)).await; }
       }
     }
     Ok(reqs)

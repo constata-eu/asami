@@ -30,7 +30,7 @@ async fn main() {
     run!("blockchain_sync_tasks" { s.run_background_tasks().await });
   }];
 
-  every![600000, |s| {
+  every![900000, |s| {
     run!("sync_x_collabs" { s.campaign().sync_x_collabs().await });
     run!("verify_handles" { s.handle_request().verify_and_appraise_all().await });
   }];
