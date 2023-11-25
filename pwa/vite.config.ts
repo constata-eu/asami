@@ -25,8 +25,7 @@ export default defineConfig({
       //target: "es2015",
       outDir: 'dist',
       commonjsOptions: { 
-        transformMixedEsModules: true,
-        include: []
+        transformMixedEsModules: true
       },
       rollupOptions: {
         plugins: [
