@@ -309,8 +309,8 @@ impl HandleRequestHub {
       // Older mentions are dropped and should be tried again by the users.
       pages += 1;
       if pages == 5 { break; }
+      tokio::time::sleep(Duration::from_millis(3 * 60 * 1000)).await;
       page = mentions.next_page().await?;
-      if page.is_some() { sleep(Duration::from_millis(3 * 60 * 1000)).await; }
     }
 
     indexer_state.update().x_handle_verification_checkpoint(checkpoint).save().await?;
@@ -739,7 +739,6 @@ model!{
 impl CampaignHub {
   pub async fn sync_x_collabs(&self) -> AsamiResult<Vec<CollabRequest>> {
     use twitter_v2::{TwitterApi, authorization::BearerToken, api_result::*};
-    use tokio::time::*;
 
     let mut reqs = vec![];
     let conf = &self.state.settings.x;
@@ -756,7 +755,9 @@ impl CampaignHub {
 
       while let Some(reposts) = page {
         let payload = reposts.payload();
-        let Some(data) = payload.data() else { break };
+        let Some(data) = payload.data() else {
+          break;
+        };
 
         for user in data {
           let Some(handle) = self.state.handle()
@@ -774,13 +775,21 @@ impl CampaignHub {
           }
         }
 
-        page = reposts.next_page().await?;
-        if page.is_some() { sleep(Duration::from_millis(3 * 60 * 1000)).await; }
+        if data.len() < 100 {
+          page = None;
+        } else {
+          page = reposts.next_page().await?;
+          self.x_cooldown().await; // After fetching a page.
+        }
       }
 
-      sleep(Duration::from_millis(3 * 60 * 1000)).await;
+      self.x_cooldown().await; // Always between campaigns, even if reposts was None.
     }
     Ok(reqs)
+  }
+
+  async fn x_cooldown(&self) {
+    tokio::time::sleep(tokio::time::Duration::from_millis(3 * 60 * 1000)).await;
   }
 }
 
