@@ -3,6 +3,7 @@ use std::time::Duration;
 #[tokio::main]
 async fn main() {
   let app = api::App::from_stdin_password().await.unwrap();
+  let settings = app.settings.clone();
   let mut handles = vec![];
 
   macro_rules! every {
@@ -26,11 +27,11 @@ async fn main() {
     )
   }
 
-  every![5000, |s| {
+  every![settings.rsk.blockchain_sync_cooldown, |s| {
     run!("blockchain_sync_tasks" { s.run_background_tasks().await });
   }];
 
-  every![900000, |s| {
+  every![600000, |s| {
     run!("sync_x_collabs" { s.campaign().sync_x_collabs().await });
     run!("verify_handles" { s.handle_request().verify_and_appraise_all().await });
   }];

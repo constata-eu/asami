@@ -92,4 +92,5 @@ pub struct Rsk {
   pub wallet_mnemonic: String,
   pub admin_address: String,
   pub reorg_protection_padding: ethers::types::U64,
+  pub blockchain_sync_cooldown: u64,
 }
