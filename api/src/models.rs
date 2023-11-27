@@ -232,10 +232,16 @@ model!{
     #[sqlx_model_hints(handle_request_status, default)]
     status: HandleRequestStatus,
     #[sqlx_model_hints(varchar, default)]
+    handle_id: Option<String>,
+    #[sqlx_model_hints(varchar, default)]
     tx_hash: Option<String>,
   },
   has_many {
     HandleRequestTopic(handle_request_id),
+  },
+  belongs_to {
+    Account(account_id),
+    Handle(handle_id),
   }
 }
 
@@ -613,6 +619,8 @@ model! {
     approval_tx_hash: Option<String>,
     #[sqlx_model_hints(varchar, default)]
     submission_tx_hash: Option<String>,
+    #[sqlx_model_hints(varchar, default)]
+    campaign_id: Option<String>,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
     #[sqlx_model_hints(timestamptz, default)]
@@ -620,6 +628,10 @@ model! {
   },
   has_many {
     CampaignRequestTopic(campaign_request_id)
+  },
+  belongs_to {
+    Campaign(campaign_id),
+    Account(account_id)
   }
 }
 
@@ -705,7 +717,6 @@ model!{
     topic_id: String,
   }
 }
-
 
 model!{
   state: App,

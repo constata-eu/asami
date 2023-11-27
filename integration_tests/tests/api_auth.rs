@@ -7,25 +7,7 @@ use rocket::http::Header;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 
 api_test!{ signs_up_and_makes_x_collab_stubbing (test_app, client)
-  let value = "test+token";
-  test_app.app.one_time_token().insert(InsertOneTimeToken{
-    value: value.to_string()
-  }).save().await?;
-
-  let login_pubkey = URL_SAFE_NO_PAD.encode(
-    test_app.private_key().public_key().to_pem().unwrap()
-  );
-
-  let _created: create_session::ResponseData = client.gql(
-    &CreateSession::build_query(create_session::Variables{}),
-    vec![
-      Header::new("Auth-Action", "Login"),
-      Header::new("Auth-Method-Kind", "OneTimeToken"),
-      Header::new("Auth-Data", value),
-      Header::new("Login-Pubkey", login_pubkey),
-      Header::new("New-Session-Recaptcha-Code", "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"),
-    ]
-  ).await;
+  client.login().await?;
 
   let account = test_app.app.account().find(weihex("1")).await?;
   let mut handle_req = account.create_handle_request(Site::X, "nubis_bruno").await?;
