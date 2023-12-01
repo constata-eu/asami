@@ -32,7 +32,7 @@ pub struct HandleFilter {
   username_like: Option<String>,
   user_id_like: Option<String>,
   site_eq: Option<Site>,
-  account_id_in: Option<Vec<String>>,
+  account_id_eq: Option<String>,
 }
 
 #[rocket::async_trait]
@@ -48,7 +48,7 @@ impl Showable<models::Handle, HandleFilter> for Handle {
     if let Some(f) = filter {
       models::SelectHandle {
         id_in: f.ids,
-        account_id_in: f.account_id_in,
+        account_id_eq: f.account_id_eq,
         id_eq: f.id_eq,
         username_like: f.username_like,
         user_id_like: f.user_id_like,
@@ -57,7 +57,7 @@ impl Showable<models::Handle, HandleFilter> for Handle {
       }
     } else {
       models::SelectHandle {
-        account_id_in: Some(context.account_ids.clone()),
+        account_id_eq: Some(context.account_id().to_string()),
         ..Default::default()
       }
     }

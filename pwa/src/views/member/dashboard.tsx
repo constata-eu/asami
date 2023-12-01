@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useDataProvider, useAuthenticated, useSafeSetState, useTranslate, ReferenceField, useGetList} from "react-admin";
+import { useDataProvider, useAuthenticated, useSafeSetState, useTranslate, ReferenceField, useGetAll, useGetOne, useGetList} from "react-admin";
 import { rLogin } from "../../lib/rLogin";
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Alert, Box, Button, Card, CardActions, CardContent, Container, FormControl, FormHelperText, InputLabel, MenuItem, Select, Skeleton, Typography, IconButton } from "@mui/material";
@@ -26,7 +26,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { Toolbar, Create, SimpleForm, CreateBase, Form, TextInput, RichTextInput, SaveButton, useNotify } from 'react-admin';
+import { Toolbar, Create, Confirm, SimpleForm, CreateBase, Form, TextInput, RichTextInput, SaveButton, useNotify } from 'react-admin';
 import { ListBase, Title, ListToolbar, Pagination, Datagrid, TextField, FunctionField, RecordContextProvider, SimpleShowLayout} from 'react-admin';
 import {  
     useListController,
@@ -51,7 +51,7 @@ const Dashboard = () => {
 
   const handles = useListController({
     disableSyncWithLocation: true,
-    filter: {accountIdIn: getAuthKeys().session.accountIds, siteEq: "X"},
+    filter: {accountIdEq: getAuthKeys().session.accountId, siteEq: "X"},
     queryOptions: {
       refetchInterval: 2000,
     },
@@ -83,7 +83,6 @@ const Dashboard = () => {
 const AccountState = () => {
   const {data, isLoading} = useGetList(
     "ClaimAccountRequest",
-    {filter: { accountIdEq: getAuthKeys().session.accountIds[0] }},
     { refetchInterval: (data) => data?.[0]?.status == "DONE" ? false : 5000 }
   );
 
@@ -148,9 +147,10 @@ const ClaimedAccountState = () => {
 }
 
 const CampaignList = ({handles}) => {
+  const dataProvider = useDataProvider();
   const listContext = useListController({
     disableSyncWithLocation: true,
-    filter: {availableToAccountIds: getAuthKeys().session.accountIds },
+    filter: {availableToAccountId: getAuthKeys().session.accountId },
     perPage: 20,
     queryOptions: {
       refetchInterval: 6000,
@@ -158,7 +158,13 @@ const CampaignList = ({handles}) => {
     resource: "Campaign",
   });
 
-  if (listContext.isLoading || handles.isLoading || handles.total == 0 ){
+  const prefsContext = useListController({
+    disableSyncWithLocation: true,
+    perPage: 200,
+    resource: "CampaignPreference",
+  });
+
+  if (prefsContext.isLoading || listContext.isLoading || handles.isLoading || handles.total == 0 ){
     return <></>;
   }
 
@@ -171,14 +177,23 @@ const CampaignList = ({handles}) => {
     </Card>;
   }
 
+  const setPreference = async (campaignId, notInterested, attempted) => {
+    await dataProvider.create('CampaignPreference', { data: { input: {campaignId, notInterested, attempted} } });
+    await listContext.refetch();
+    if(attempted) {
+      await prefsContext.refetch();
+    }
+  };
+
   return ( <>
     <Head1 sx={{ my: "1em" }}>Check out these campaigns</Head1>
     <Box id="campaign-list" display="flex" flexWrap="wrap" gap="2em">
       { listContext.data.map((item, index) => {
-        const repostUrl = `https://twitter.com/intent/retweet?tweet_id=${item.contentId}&related=asami_club`;
-        return <Card sx={{ flex: "1 1 400px", p: "1em" }} key={index}>
+        const attemptedOn = prefsContext.data.find((x) => x.campaignId == item.id)?.attemptedOn;
+        return <Card sx={{ flex: "1 1 400px", p: "1em" }} key={item.id} id={`campaign-container-${item.id}`}>
           <TwitterTweetEmbed tweetId={item.contentId} options={{ align: "center", width: "550px", conversation: "none"}} />
-          <Button fullWidth size="large" variant="contained" href={repostUrl} target="_blank">Repost it!</Button>
+          <RepostXCampaign attemptedOn={attemptedOn} campaignId={item.id} contentId={item.contentId} onAttempt={(id) => setPreference(id, false, true) } />
+          <ConfirmHideCampaign campaignId={item.id} onConfirm={(id) => setPreference(id, true, false) } />
         </Card>;
       })}
     </Box>
@@ -186,10 +201,67 @@ const CampaignList = ({handles}) => {
   );
 }
 
+const RepostXCampaign = ({campaignId, contentId, attemptedOn, onAttempt}) => {
+  const repostUrl = `https://twitter.com/intent/retweet?tweet_id=${contentId}&related=asami_club`;
+
+  if (attemptedOn) {
+    return <>
+      <Alert id={`alert-repost-attempted-${campaignId}`} severity="info" sx={{mb: "0.5em"}}
+        action={
+          <Button color="info" fullWidth size="small" href={repostUrl} target="_blank" >
+            Try again!
+          </Button>
+        }
+      >
+        You tried to repost this
+      </Alert>
+    </>;
+  } else {
+    return <Button
+      id={`button-repost-${campaignId}`}
+      sx={{mb: "0.5em" }}
+      onClick={() => onAttempt(campaignId)}
+      fullWidth
+      size="large"
+      variant="contained"
+      href={repostUrl}
+      target="_blank"
+    >
+      Repost it!
+    </Button>;
+  }
+}
+
+const ConfirmHideCampaign = ({campaignId, onConfirm }) => {
+  const [open, setOpen] = useSafeSetState(false);
+  const [hide, setHide] = useSafeSetState(false);
+  
+  const handleConfirm = () => {
+    onConfirm(campaignId);
+    setOpen(false);
+    setHide(true);
+  }
+
+  if (hide) { return null; }
+
+  return <>
+    <Button fullWidth id={`open-hide-campaign-${campaignId}`} size="small" variant="outlined" onClick={() => setOpen(true) } >
+      Not interested
+    </Button>
+    <Confirm
+      isOpen={open}
+      title="Hiding this campaign"
+      content="We won't show this campaign again, this cannot be undone."
+      onConfirm={handleConfirm}
+      onClose={() => setOpen(false)}
+    />
+  </>;
+}
+
 const CollabList = () => {
   const listContext = useListController({
     disableSyncWithLocation: true,
-    filter: {memberIdIn: getAuthKeys().session.accountIds },
+    filter: {memberIdEq: getAuthKeys().session.accountId },
     perPage: 20,
     queryOptions: {
       refetchInterval: 3000,
@@ -289,7 +361,7 @@ const CreateHandleRequest = ({setNeedsRefresh}) => {
 
   const validate = (values) => {
     let errors = {};
-    let input = { accountId: getAuthKeys().session.accountIds[0], site: "X"};
+    let input = { accountId: getAuthKeys().session.accountId, site: "X"};
 
     if ( values.username.match(/^@?(\w){1,15}$/) ) {
       input.username = values.username.replace("@","");
@@ -313,7 +385,7 @@ const CreateHandleRequest = ({setNeedsRefresh}) => {
 const MakeVerificationPost = () => {
   const [clicked, setClicked] = useSafeSetState(false);
 
-  let accountId = BigInt(getAuthKeys().session.accountIds[0]);
+  let accountId = BigInt(getAuthKeys().session.accountId);
   let text = `Starting today, some of my reposts will be paid for, as I joined @asami_club [${accountId}].`;
   let intent_url = `https://x.com/intent/tweet?text=${text}`;
 

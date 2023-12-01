@@ -50,7 +50,7 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
     if let Some(f) = filter {
       models::SelectCampaignRequest {
         id_in: f.ids,
-        account_id_in: Some(context.account_ids.clone()),
+        account_id_eq: Some(context.account_id().to_string()),
         status_in: f.status_in,
         id_eq: f.id_eq,
         content_id_like: into_like_search(f.content_id_like),
@@ -58,14 +58,14 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
       }
     } else {
       models::SelectCampaignRequest {
-        account_id_in: Some(context.account_ids.clone()),
+        account_id_eq: Some(context.account_id().to_string()),
         ..Default::default()
       }
     }
   }
 
   fn select_by_id(context: &Context, id: i32) -> models::SelectCampaignRequest {
-    models::SelectCampaignRequest { id_eq: Some(id), account_id_in: Some(context.account_ids.clone()), ..Default::default() }
+    models::SelectCampaignRequest { id_eq: Some(id), account_id_eq: Some(context.account_id().to_string()), ..Default::default() }
   }
 
   async fn db_to_graphql(d: models::CampaignRequest) -> AsamiResult<Self> {
@@ -98,7 +98,6 @@ pub struct CreateCampaignRequestInput {
 
 impl CreateCampaignRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<CampaignRequest> {
-    context.require_account_user(&self.account_id)?;
     let account = context.app.account().find(&self.account_id).await?;
 
     let req = account.create_campaign_request(

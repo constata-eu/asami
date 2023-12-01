@@ -148,10 +148,13 @@ impl CurrentSession {
 
     auth_assert!(maybe_existing.is_none(), "session_pubkey_exists");
 
+    let user = auth_method.user().await?;
+
     let session = auth_try!(
       app.session().insert(InsertSession{
         id: key_id,
-        user_id: auth_method.attrs.user_id,
+        user_id: user.attrs.id,
+        account_id: user.account_id().await?,
         auth_method_id: auth_method.attrs.id,
         pubkey,
         nonce,

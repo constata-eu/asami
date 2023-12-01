@@ -45,6 +45,7 @@ impl Truffle {
     }
 
     Command::new("truffle").current_dir(&dir).args(["migrate", "--network", "local"]).output().unwrap();
+
     let out = Command::new("truffle")
       .current_dir(&dir)
       .env("ADMIN_ADDRESS", &admin_address)

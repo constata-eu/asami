@@ -45,7 +45,6 @@ const Dashboard = () => {
 
   const {data, isLoading} = useGetList(
     "ClaimAccountRequest",
-    {filter: { accountIdEq: getAuthKeys().session.accountIds[0] }},
     { refetchInterval: (data) => data?.[0]?.status == "DONE" ? false : 5000 }
   );
 
@@ -130,7 +129,7 @@ const CampaignList = ({needsRefresh, setNeedsRefresh}) => {
   const listContext = useListController({
     debounce: 500,
     disableSyncWithLocation: true,
-    filter: {accountIdIn: getAuthKeys().session.accountIds },
+    filter: {accountIdEq: getAuthKeys().session.accountId },
     perPage: 20,
     queryOptions: {
       refetchInterval: 3000,
@@ -169,7 +168,6 @@ const CreateCampaignRequest = ({onSave}) => {
   const [open, setOpen] = useSafeSetState(false);
   const {data, isLoading} = useGetList(
     "ClaimAccountRequest",
-    {filter: { accountIdEq: getAuthKeys().session.accountIds[0] }},
     { refetchInterval: (data) => data?.[0]?.status == "DONE" ? false : 5000 }
   );
   const handleClose = () => setOpen(false);
@@ -212,7 +210,7 @@ const CreateCampaignRequest = ({onSave}) => {
   const validate = (values) => {
     let errors = {};
     let keys = getAuthKeys();
-    let input = { accountId: getAuthKeys().session.accountIds[0], site: "X"};
+    let input = { accountId: getAuthKeys().session.accountId, site: "X"};
 
     try {
       const u = new URL(values.contentUrl);

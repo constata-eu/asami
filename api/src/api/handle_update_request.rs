@@ -46,7 +46,7 @@ impl Showable<models::HandleUpdateRequest, HandleUpdateRequestFilter> for Handle
     if let Some(f) = filter {
       models::SelectHandleUpdateRequest {
         id_in: f.ids,
-        account_id_in: Some(context.account_ids.clone()),
+        account_id_eq: Some(context.account_id().to_string()),
         status_in: f.status_in,
         id_eq: f.id_eq,
         handle_id_eq: f.handle_id_eq,
@@ -56,14 +56,14 @@ impl Showable<models::HandleUpdateRequest, HandleUpdateRequestFilter> for Handle
       }
     } else {
       models::SelectHandleUpdateRequest {
-        account_id_in: Some(context.account_ids.clone()),
+        account_id_eq: Some(context.account_id().to_string()),
         ..Default::default()
       }
     }
   }
 
   fn select_by_id(context: &Context, id: i32) -> models::SelectHandleUpdateRequest {
-    models::SelectHandleUpdateRequest { id_eq: Some(id), account_id_in: Some(context.account_ids.clone()), ..Default::default() }
+    models::SelectHandleUpdateRequest { id_eq: Some(id), account_id_eq: Some(context.account_id().to_string()), ..Default::default() }
   }
 
   async fn db_to_graphql(d: models::HandleUpdateRequest) -> AsamiResult<Self> {
@@ -90,12 +90,10 @@ pub struct CreateHandleUpdateRequestInput {
 
 impl CreateHandleUpdateRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<HandleUpdateRequest> {
-    let handle = context.app.handle().find(&self.handle_id).await?;
-    context.require_account_user(&handle.attrs.account_id)?;
-    let account = context.app.account().find(&handle.attrs.account_id).await?;
+    let handle = context.account().await?.handle_scope().id_eq(&self.handle_id).one().await?;
 
     let req = context.app.handle_update_request().insert(InsertHandleUpdateRequest{
-      account_id: account.attrs.id,
+      account_id: handle.attrs.account_id,
       handle_id: handle.attrs.id,
       username: None,
       price: Some(self.price),
