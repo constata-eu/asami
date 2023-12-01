@@ -2,6 +2,7 @@ mutation CreateSession {
   createSession {
     id
     userId
+    accountId
     pubkey
     nonce
     createdAt
@@ -15,9 +16,58 @@ mutation CreateCampaignRequest($input: CreateCampaignRequestInput!) {
     accountId
     budget
     site
+    status
+    approvalTxHash
+    submissionTxHash
     contentId
     createdAt
     updatedAt
+    __typename
+  }
+}
+mutation CreateHandleRequest($input: CreateHandleRequestInput!) {
+  createHandleRequest(input: $input) {
+    id
+    accountId
+    site
+    username
+    userId
+    price
+    score
+    nostrAffineX
+    nostrAffineY
+    status
+    __typename
+  }
+}
+mutation CreateHandleUpdateRequest($input: CreateHandleUpdateRequestInput!) {
+  createHandleUpdateRequest(input: $input) {
+    id
+    accountId
+    handleId
+    username
+    price
+    score
+    createdByAdmin
+    status
+    __typename
+  }
+}
+mutation CreateClaimAccountRequest($input: CreateClaimAccountRequestInput!) {
+  createClaimAccountRequest(input: $input) {
+    id
+    accountId
+    addr
+    status
+    __typename
+  }
+}
+mutation CreateCampaignPreference($input: CreateCampaignPreferenceInput!) {
+  createCampaignPreference(input: $input) {
+    id
+    campaignId
+    notInterestedOn
+    attemptedOn
     __typename
   }
 }
@@ -27,6 +77,9 @@ query CampaignRequest($id: Int!) {
     accountId
     budget
     site
+    status
+    approvalTxHash
+    submissionTxHash
     contentId
     createdAt
     updatedAt
@@ -39,6 +92,9 @@ query AllCampaignRequests($page: Int, $perPage: Int, $sortField: String, $sortOr
     accountId
     budget
     site
+    status
+    approvalTxHash
+    submissionTxHash
     contentId
     createdAt
     updatedAt
@@ -56,6 +112,9 @@ query Campaign($id: String!) {
     id
     accountId
     budget
+    remaining
+    finished
+    validUntil
     site
     contentId
     createdAt
@@ -68,6 +127,9 @@ query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: St
     id
     accountId
     budget
+    remaining
+    finished
+    validUntil
     site
     contentId
     createdAt
@@ -77,6 +139,186 @@ query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: St
 }
 query AllCampaignsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignFilter) {
   _allCampaignsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query HandleRequest($id: Int!) {
+  HandleRequest(id: $id) {
+    id
+    accountId
+    site
+    username
+    userId
+    price
+    score
+    nostrAffineX
+    nostrAffineY
+    status
+    __typename
+  }
+}
+query AllHandleRequests($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HandleRequestFilter) {
+  allHandleRequests(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    accountId
+    site
+    username
+    userId
+    price
+    score
+    nostrAffineX
+    nostrAffineY
+    status
+    __typename
+  }
+}
+query AllHandleRequestsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HandleRequestFilter) {
+  _allHandleRequestsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query Handle($id: String!) {
+  Handle(id: $id) {
+    id
+    accountId
+    site
+    username
+    userId
+    price
+    score
+    nostrAffineX
+    nostrAffineY
+    __typename
+  }
+}
+query AllHandles($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HandleFilter) {
+  allHandles(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    accountId
+    site
+    username
+    userId
+    price
+    score
+    nostrAffineX
+    nostrAffineY
+    __typename
+  }
+}
+query AllHandlesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HandleFilter) {
+  _allHandlesMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query HandleUpdateRequest($id: Int!) {
+  HandleUpdateRequest(id: $id) {
+    id
+    accountId
+    handleId
+    username
+    price
+    score
+    createdByAdmin
+    status
+    __typename
+  }
+}
+query AllHandleUpdateRequests($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HandleUpdateRequestFilter) {
+  allHandleUpdateRequests(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    accountId
+    handleId
+    username
+    price
+    score
+    createdByAdmin
+    status
+    __typename
+  }
+}
+query AllHandleUpdateRequestsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HandleUpdateRequestFilter) {
+  _allHandleUpdateRequestsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query Collab($id: String!) {
+  Collab(id: $id) {
+    id
+    campaignId
+    advertiserId
+    handleId
+    memberId
+    gross
+    fee
+    __typename
+  }
+}
+query AllCollabs($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CollabFilter) {
+  allCollabs(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    campaignId
+    advertiserId
+    handleId
+    memberId
+    gross
+    fee
+    __typename
+  }
+}
+query AllCollabsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CollabFilter) {
+  _allCollabsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query ClaimAccountRequest($id: Int!) {
+  ClaimAccountRequest(id: $id) {
+    id
+    accountId
+    addr
+    status
+    __typename
+  }
+}
+query AllClaimAccountRequests($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: ClaimAccountRequestFilter) {
+  allClaimAccountRequests(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    accountId
+    addr
+    status
+    __typename
+  }
+}
+query AllClaimAccountRequestsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: ClaimAccountRequestFilter) {
+  _allClaimAccountRequestsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query CampaignPreference($id: Int!) {
+  CampaignPreference(id: $id) {
+    id
+    campaignId
+    notInterestedOn
+    attemptedOn
+    __typename
+  }
+}
+query AllCampaignPreferences($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignPreferenceFilter) {
+  allCampaignPreferences(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    campaignId
+    notInterestedOn
+    attemptedOn
+    __typename
+  }
+}
+query AllCampaignPreferencesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignPreferenceFilter) {
+  _allCampaignPreferencesMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
     count
     __typename
   }

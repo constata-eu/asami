@@ -1,10 +1,11 @@
 use super::TestApp;
+use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 pub use galvanic_assert::{
   self,
   matchers::{collection::*, variant::*, *},
   *,
 };
-pub use api::models::{self, hasher};
+pub use api::models::{self, u, U256, u256, hasher, Utc, wei};
 use rocket::{
   http::{Header, Status},
   local::asynchronous::{Client, LocalResponse},
@@ -12,8 +13,8 @@ use rocket::{
 use jwt_simple::{ algorithms::*, prelude::*, };
 pub use serde::{Serialize, de::DeserializeOwned, Deserialize};
 use graphql_client;
+use graphql_client::GraphQLQuery;
 pub use api::Decimal;
-use jwt_simple::algorithms::*;
 
 #[derive(Deserialize)]
 pub struct ApiError {
@@ -25,49 +26,49 @@ pub struct ApiClient {
   pub client: Client,
   pub test_app: TestApp,
   pub session_key: Option<ES256KeyPair>,
-  pub scenario: Box<Scenario>
+  pub session: Option<models::Session>,
 }
 
-#[derive(Clone, Default)]
-pub struct Scenario {
-  pub campaigns: Option<CampaignsFixture>,
+#[derive(Clone)]
+pub struct BaseLineScenario {
+  pub regular_campaign: models::Campaign,
+  pub high_rate_campaign: models::Campaign,
+  pub low_rate_campaign: models::Campaign,
+  pub low_budget_campaign: models::Campaign,
 }
-
-#[derive(Clone, Default)]
-pub struct CampaignsFixture {
-  account: Account,
-  regular_campaign: Campaign,
-  high_rate_campaign: Campaign,
-  low_rate_campaign: Campaign,
-  low_budget_campaign: Campaign,
-}
-
-pub struct 
 
 impl ApiClient {
   pub async fn new(test_app: TestApp) -> Self {
-    Self { session_key: None, client: Client::tracked(api::server(test_app.app.clone())).await.unwrap(), test_app }
+    Self { session_key: None, session: None, client: Client::tracked(api::server(test_app.app.clone())).await.unwrap(), test_app }
   }
 
-  pub async fn login(&mut self) -> Account {
+  pub async fn account(&self) -> models::Account {
+    self.session.as_ref().unwrap().account().await.unwrap()
+  }
+
+  pub async fn user(&self) -> models::User {
+    self.session.as_ref().unwrap().user().await.unwrap()
+  }
+
+  pub async fn login(&mut self) {
     self.login_with_key(self.test_app.private_key()).await
   }
 
-  pub async fn login_with_key(&mut self, key: &ES256KeyPair) -> Account {
-    self.session_key = key;
+  pub async fn login_with_key(&mut self, key: ES256KeyPair) {
+    let token = api::models::hasher::hexdigest(key.public_key().to_pem().unwrap().as_bytes());
+    self.session_key = Some(key.with_key_id(&token));
 
-    let token = key.key_id().clone().unwrap();
     self.test_app.app.one_time_token()
-      .insert(InsertOneTimeToken{
+      .insert(models::InsertOneTimeToken{
       value: token.to_string()
     }).save().await.unwrap();
 
     let login_pubkey = URL_SAFE_NO_PAD.encode(
-      self.session_key.public_key().to_pem().unwrap()
+      self.session_key.as_ref().unwrap().public_key().to_pem().unwrap()
     );
 
-    let result = create_session::ResponseData = client.gql(
-      &CreateSession::build_query(create_session::Variables{}),
+    let result: gql::create_session::ResponseData = self.gql(
+      &gql::CreateSession::build_query(gql::create_session::Variables{}),
       vec![
         Header::new("Auth-Action", "Login"),
         Header::new("Auth-Method-Kind", "OneTimeToken"),
@@ -77,60 +78,55 @@ impl ApiClient {
       ]
     ).await;
 
-    let account = self.test_app.app.account().find(&result.account_ids[0]).await.unwrap();
-
-    (self, account)
+    self.session = Some(self.test_app.app.session().find(&result.create_session.id).await.unwrap());
   }
 
-  pub async fn build_baseline_scenario(&mut self) -> Scenario {
+  pub async fn build_baseline_scenario(&mut self) -> BaseLineScenario {
     // This is a full scenario to use in testing any integration.
     // It replicates the application having run for a few cicles 
     // All tests should at least be run in this scenario.
     // ToDo: Can we just cache and load instead of re-running every time?
 
-    let campaigns = self.build_campaigns().await;
-    Scenario { campaigns }
-  }
+    self.login_with_key(ES256KeyPair::generate()).await;
+    let rate = u256(self.test_app.app.indexer_state().get().await.unwrap().suggested_price_per_point());
+    let budget = || { rate * wei("200") };
 
-  pub async fn build_campaigns(&mut self) -> CampaignsFixture {
-    let account = self.login_with_key(&ES256KeyPair::generate()).await;
-    let rate = u256(self.test_app.app.indexer_state().get().await?.suggested_price_per_point());
-    let budget = rate * u("200");
-    let post = "1716421161867710954";
-    let two_days = Utc::now() + chrono::Duration::days(2);
-
-    let campaign = |budget, rate| async {
-      account.create_campaign_request(Site::X, post, budget, rate, two_days)
-        .await.unwrap().pay()
-        .await.unwrap()
-    };
-    
-    let regular_campaign = campaign(budget, rate).await;
-    let high_rate_campaign = campaign(budget, rate * u("2")).await;
-    let low_rate_campaign = campaign(budget, rate / u("2")).await;
-    let low_budget_campaign = campaign(rate * u("1"), rate).await;
+    let regular_campaign = self.build_campaign(budget(), rate).await;
+    let high_rate_campaign = self.build_campaign(budget(), rate * wei("2")).await;
+    let low_rate_campaign = self.build_campaign(budget(), rate / wei("2")).await;
+    let low_budget_campaign = self.build_campaign(rate * wei("1"), rate).await;
 
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
 
-    CampaignFixture {
-      account: account.reload().await?,
-      regular_campaign: regular_campaign.campaign().await.unwrap(),
-      high_rate_campaign: high_rate_campaign.campaign().await.unwrap(),
-      low_rate_campaign: low_rate_campaign.campaign().await.unwrap(),
-      low_budget_campaign: low_budget_campaign.campaign().await.unwrap(),
+    BaseLineScenario {
+      regular_campaign: regular_campaign.reloaded().await.unwrap().campaign().await.unwrap().unwrap(),
+      high_rate_campaign: high_rate_campaign.reloaded().await.unwrap().campaign().await.unwrap().unwrap(),
+      low_rate_campaign: low_rate_campaign.reloaded().await.unwrap().campaign().await.unwrap().unwrap(),
+      low_budget_campaign: low_budget_campaign.reloaded().await.unwrap().campaign().await.unwrap().unwrap(),
     }
   }
 
-  pub async fn build_x_handle(&mut self, account: &Account, username: &str) -> models::Handle {
-    let rate = u256(self.test_app.app.indexer_state().get().await?.suggested_price_per_point());
+  pub async fn build_campaign(&mut self, budget: U256, rate: U256) -> models::CampaignRequest {
+    let post = "1716421161867710954";
+    let two_days = Utc::now() + chrono::Duration::days(2);
 
-    let req = account.create_handle_request(Site::X, username).await.unwrap()
-      .verify("179383862".into()).await.unwrap().
-      .appraise(rate * u("10"), u("10")).await.unwrap();
+    self.account().await.create_campaign_request(models::Site::X, post, budget, rate, two_days)
+      .await.unwrap().pay()
+      .await.unwrap()
+  }
+
+  pub async fn build_x_handle(&mut self, username: &str) -> (models::HandleRequest, models::Handle) {
+    let rate = u256(self.test_app.app.indexer_state().get().await.unwrap().suggested_price_per_point());
+
+    let mut req = self.account().await.create_handle_request(models::Site::X, username).await.unwrap()
+      .verify("179383862".into()).await.unwrap()
+      .appraise(rate * wei("10"), wei("10")).await.unwrap();
 
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
 
-    req.handle().await.unwrap()
+    req.reload().await.unwrap();
+    let handle = req.handle().await.unwrap().unwrap();
+    (req, handle)
   }
 
   pub async fn gql<'a, T: core::fmt::Debug, Q>(&'a self, query: Q, extra_headers: Vec<Header<'static>>) -> T
@@ -153,7 +149,7 @@ impl ApiClient {
     }];
 
     let claims = Claims::with_custom_claims(payload, Duration::from_secs(30));
-    let jwt = self.session_key.unwrap().sign(claims).unwrap();
+    let jwt = self.session_key.as_ref().unwrap().sign(claims).unwrap();
     Header::new("Authentication", jwt)
   }
 
@@ -257,7 +253,7 @@ impl ApiClient {
     }];
 
     let claims = Claims::with_custom_claims(payload, Duration::from_secs(30));
-    let jwt = self.session_key.unwrap().sign(claims).unwrap();
+    let jwt = self.session_key.as_ref().unwrap().sign(claims).unwrap();
 
     self.get_response_with_auth(path, Header::new("Authentication", jwt)).await
   }
@@ -300,5 +296,9 @@ pub mod gql {
     Campaign,
     AllCampaigns,
     AllCampaignsMeta,
+    CampaignPreference,
+    AllCampaignPreferences,
+    AllCampaignPreferencesMeta,
+    CreateCampaignPreference,
   ];
 }

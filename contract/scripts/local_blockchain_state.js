@@ -1,7 +1,6 @@
 const Asami = artifacts.require("Asami");
 const MockDoc = artifacts.require("MockDoc");
 
-
 module.exports = async function(callback) {
   const accounts = await web3.eth.getAccounts();
   const asami = await Asami.deployed();
@@ -14,7 +13,7 @@ module.exports = async function(callback) {
   await asami.setAdmin(adminAddress, adminAddress);
 
   for (let a of [adminAddress, memberAddress]) {
-    await doc.transfer(a, web3.utils.toWei("1000000", "ether"), { from: accounts[0] });
+    await doc.transfer(a, web3.utils.toWei("200000", "ether"), { from: accounts[0] });
     await web3.eth.sendTransaction({from: accounts[0], to: a, value: web3.utils.toWei('100', 'ether')})
   }
   console.log(`{"asami":"${asami.address}", "doc":"${doc.address}"}`);

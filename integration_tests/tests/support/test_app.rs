@@ -24,7 +24,7 @@ impl TestApp {
     config.rsk.contract_address = truffle.addresses.asami.clone();
     config.rsk.doc_contract_address = truffle.addresses.doc.clone();
 
-    Self{ truffle, scenario: Scenario::default(), app: App::new("password".to_string(), config).await.unwrap() }
+    Self{ truffle, app: App::new("password".to_string(), config).await.unwrap() }
   }
 
   pub async fn mock_admin_setting_campaign_requests_as_paid(&self) {

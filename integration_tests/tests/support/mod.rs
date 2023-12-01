@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+
 pub mod selenium;
 pub mod test_api_server;
 pub mod vite_preview;
@@ -70,9 +71,9 @@ pub fn rematch<'a>(expr: &'a str) -> Box<dyn Matcher<'a, String> + 'a> {
 #[macro_export]
 macro_rules! test {
   ($i:ident $($e:tt)* ) => {
-
     #[test]
     fn $i() {
+      #![allow(unused_imports)]
       use crate::support::*;
 
       async fn run_test() -> std::result::Result<(), anyhow::Error> {
@@ -95,33 +96,34 @@ macro_rules! test {
 
 #[macro_export]
 macro_rules! browser_test {
-  ($i:ident($c:ident, $driver:ident) $($e:tt)* ) => {
+  ($i:ident(mut $browser:ident) $($e:tt)* ) => {
     test!{ $i
       time_test::time_test!("integration test");
 
-      let $c = crate::support::TestApp::init().await;
-      let app = $c.app.clone();
+      let test_app = crate::support::TestApp::init().await;
       let mut vite_preview = VitePreview::start();
-      let server = TestApiServer::start(app).await;
+      let server = TestApiServer::start(test_app.app.clone()).await;
+      let api = crate::support::ApiClient::new(test_app.clone()).await;
 
-      let $driver = Selenium::start().await;
+      #[allow(unused_mut)]
+      let mut $browser = Selenium::start(api).await;
       {$($e)*};
 
       server.abort();
       assert!(server.await.unwrap_err().is_cancelled());
       vite_preview.stop();
-      $driver.stop().await;
+      $browser.stop().await;
     }
   }
 }
 
 #[macro_export]
 macro_rules! api_test {
-  ($test_name:ident($test_app:ident, $client:ident) $($e:tt)* ) => {
+  ($test_name:ident(mut $client:ident) $($e:tt)* ) => {
     test!{ $test_name
       time_test::time_test!("api test");
-      let $test_app = crate::support::TestApp::init().await;
-      let $client = crate::support::ApiClient::new($test_app.clone()).await;
+      let test_app = crate::support::TestApp::init().await;
+      let mut $client = crate::support::ApiClient::new(test_app.clone()).await;
       {$($e)*};
     }
   }

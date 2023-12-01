@@ -19,7 +19,6 @@ pub struct ClaimAccountRequest {
 pub struct ClaimAccountRequestFilter {
   ids: Option<Vec<i32>>,
   id_eq: Option<i32>,
-  account_id_eq: Option<String>,
   addr_eq: Option<String>,
   status_in: Option<Vec<ClaimAccountRequestStatus>>,
 }
@@ -37,8 +36,7 @@ impl Showable<models::ClaimAccountRequest, ClaimAccountRequestFilter> for ClaimA
     if let Some(f) = filter {
       models::SelectClaimAccountRequest {
         id_in: f.ids,
-        account_id_in: Some(context.account_ids.clone()),
-        account_id_eq: f.account_id_eq,
+        account_id_eq: Some(context.account_id().to_string()),
         status_in: f.status_in,
         id_eq: f.id_eq,
         addr_eq: f.addr_eq,
@@ -46,14 +44,14 @@ impl Showable<models::ClaimAccountRequest, ClaimAccountRequestFilter> for ClaimA
       }
     } else {
       models::SelectClaimAccountRequest {
-        account_id_in: Some(context.account_ids.clone()),
+        account_id_eq: Some(context.account_id().to_string()),
         ..Default::default()
       }
     }
   }
 
   fn select_by_id(context: &Context, id: i32) -> models::SelectClaimAccountRequest {
-    models::SelectClaimAccountRequest { id_eq: Some(id), account_id_in: Some(context.account_ids.clone()), ..Default::default() }
+    models::SelectClaimAccountRequest { id_eq: Some(id), account_id_eq: Some(context.account_id().to_string()), ..Default::default() }
   }
 
   async fn db_to_graphql(d: models::ClaimAccountRequest) -> AsamiResult<Self> {
@@ -70,27 +68,22 @@ impl Showable<models::ClaimAccountRequest, ClaimAccountRequestFilter> for ClaimA
 #[graphql(description = "The input for creating a new ClaimAccountRequest.")]
 #[serde(rename_all = "camelCase")]
 pub struct CreateClaimAccountRequestInput {
-  pub account_id: String,
   pub signature: String,
 }
 
 impl CreateClaimAccountRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<ClaimAccountRequest> {
-    context.require_account_user(&self.account_id)?;
-    
-    let account = context.app.account().find(&self.account_id).await?;
-
     let address = eip_712_sig_to_address(context.app.settings.rsk.chain_id, &self.signature)
       .map_err(|msg| Error::Validation("eip_712_sig".to_string(), msg) )?;
 
-    let req = account.create_claim_account_request(
+    let req = context.account().await?.create_claim_account_request(
       address.clone(),
       self.signature,
       context.current_session.0.attrs.id.clone()
     ).await?;
 
     context.app.auth_method().insert(InsertAuthMethod{
-      user_id: context.user_id,
+      user_id: context.user_id(),
       lookup_key: address,
       kind: AuthMethodKind::Eip712
     }).save().await?;

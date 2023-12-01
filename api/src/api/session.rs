@@ -9,7 +9,7 @@ pub struct Session {
   #[graphql(description = "The user associated to this session.")]
   user_id: i32,
   #[graphql(description = "The account IDS associated with this user.")]
-  account_ids: Vec<String>,
+  account_id: String,
   #[graphql(description = "The pubkey associated to this session.")]
   pubkey: String,
   #[graphql(description = "The content to share.")]
@@ -43,29 +43,28 @@ impl Showable<models::Session, SessionFilter> for Session {
     if let Some(f) = filter {
       models::SelectSession {
         id_in: f.ids,
-        user_id_eq: Some(context.user_id),
+        user_id_eq: Some(context.user_id()),
         id_eq: f.id_eq,
         pubkey_eq: f.pubkey_eq,
         ..Default::default()
       }
     } else {
       models::SelectSession {
-        user_id_eq: Some(context.user_id),
+        user_id_eq: Some(context.user_id()),
         ..Default::default()
       }
     }
   }
 
   fn select_by_id(context: &Context, id: String) -> models::SelectSession {
-    models::SelectSession { id_eq: Some(id), user_id_eq: Some(context.user_id), ..Default::default() }
+    models::SelectSession { id_eq: Some(id), user_id_eq: Some(context.user_id()), ..Default::default() }
   }
 
   async fn db_to_graphql(d: models::Session) -> AsamiResult<Self> {
-    let account_ids = d.user().await?.account_ids().await?;
     Ok(Session {
       id: d.attrs.id,
       user_id: d.attrs.user_id,
-      account_ids,
+      account_id: d.attrs.account_id,
       pubkey: d.attrs.pubkey,
       nonce: d.attrs.nonce.to_string(),
       created_at: d.attrs.created_at,

@@ -49,7 +49,7 @@ impl Showable<models::HandleRequest, HandleRequestFilter> for HandleRequest {
     if let Some(f) = filter {
       models::SelectHandleRequest {
         id_in: f.ids,
-        account_id_in: Some(context.account_ids.clone()),
+        account_id_eq: Some(context.account_id().to_string()),
         status_in: f.status_in,
         id_eq: f.id_eq,
         site_eq: f.site_eq,
@@ -58,14 +58,14 @@ impl Showable<models::HandleRequest, HandleRequestFilter> for HandleRequest {
       }
     } else {
       models::SelectHandleRequest {
-        account_id_in: Some(context.account_ids.clone()),
+        account_id_eq: Some(context.account_id().to_string()),
         ..Default::default()
       }
     }
   }
 
   fn select_by_id(context: &Context, id: i32) -> models::SelectHandleRequest {
-    models::SelectHandleRequest { id_eq: Some(id), account_id_in: Some(context.account_ids.clone()), ..Default::default() }
+    models::SelectHandleRequest { id_eq: Some(id), account_id_eq: Some(context.account_id().to_string()), ..Default::default() }
   }
 
   async fn db_to_graphql(d: models::HandleRequest) -> AsamiResult<Self> {
@@ -95,10 +95,7 @@ pub struct CreateHandleRequestInput {
 
 impl CreateHandleRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<HandleRequest> {
-    context.require_account_user(&self.account_id)?;
-    let account = context.app.account().find(&self.account_id).await?;
-
-    let req = account.create_handle_request(
+    let req = context.account().await?.create_handle_request(
       self.site,
       &self.username,
     ).await?;

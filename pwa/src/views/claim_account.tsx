@@ -22,8 +22,7 @@ const ClaimAccountButton = ({id}) => {
   const createClaimRequest = async () => {
     try {
       const signature = await signLoginMessage();
-      const accountId = getAuthKeys().session.accountIds[0];
-      let result = await dataProvider.create("ClaimAccountRequest", { data: { input: { signature, accountId }}});
+      let result = await dataProvider.create("ClaimAccountRequest", { data: { input: { signature }}});
       notify("The admin will hand over control of your account to you soon.", { type: "success" })
     } catch(e) {
       notify("Ooops, we could not receive your request. Please try again or contact the admin.", { type: "error"})

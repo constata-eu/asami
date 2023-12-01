@@ -32,6 +32,8 @@ mod collab;
 use collab::*;
 mod claim_account_request;
 use claim_account_request::*;
+mod campaign_preference;
+use campaign_preference::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -52,13 +54,10 @@ pub async fn in_transaction(
   let app = tx.select().state;
 
   let Ok(session) = non_tx_current_session.0.reloaded().await else { return err() };
-  let Ok(user) = session.user().await else { return err() };
-  let user_id = user.attrs.id;
-  let Ok(account_ids) = user.account_ids().await else { return err() };
 
   let current_session = CurrentSession( session );
 
-  let response = request.execute(&*schema, &Context{ app, current_session, user_id, account_ids}).await;
+  let response = request.execute(&*schema, &Context{ app, current_session }).await;
 
   if tx.commit().await.is_err() {
     return err();
@@ -87,6 +86,7 @@ pub async fn introspect(
   let session = models::Session::new(app.inner().clone(), models::SessionAttrs{
     id: "".to_string(),
     user_id: 0,
+    account_id: "0x00000000000000000000000000000000".to_string(),
     auth_method_id: 0,
     pubkey: String::new(),
     nonce: 0,
@@ -97,8 +97,6 @@ pub async fn introspect(
   let ctx = Context{
     current_session: CurrentSession(session),
     app: app.inner().clone(),
-    user_id: 0,
-    account_ids: vec![],
   };
   let (res, _errors) = juniper::introspect(&*schema, &ctx, IntrospectionFormat::default())
     .map_err(|_| Error::Precondition(format!("Invalid GraphQL schema for introspection")))?;
@@ -108,16 +106,19 @@ pub async fn introspect(
 pub struct Context {
   app: App,
   current_session: CurrentSession,
-  user_id: i32,
-  account_ids: Vec<String>,
 }
 
 impl Context {
-  pub fn require_account_user(&self, account_id: &str) -> FieldResult<()> {
-    if !self.account_ids.iter().any(|s| s == account_id) {
-      return Err(field_error("no_access_to_account", &account_id.to_string()))
-    }
-    return Ok(())
+  pub fn user_id(&self) -> i32 {
+    *self.current_session.0.user_id()
+  }
+
+  pub fn account_id(&self) -> String {
+    self.current_session.0.attrs.account_id.clone()
+  }
+
+  pub async fn account(&self) -> sqlx::Result<models::Account> {
+    self.app.account().find(self.account_id()).await
   }
 }
 
@@ -274,6 +275,7 @@ make_graphql_query!{
     [HandleUpdateRequest, allHandleUpdateRequests, allHandleUpdateRequestsMeta, "_allHandleUpdateRequestsMeta", HandleUpdateRequestFilter, i32],
     [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, String],
     [ClaimAccountRequest, allClaimAccountRequests, allClaimAccountRequestsMeta, "_allClaimAccountRequestsMeta", ClaimAccountRequestFilter, i32],
+    [CampaignPreference, allCampaignPreferences, allCampaignPreferencesMeta, "_allCampaignPreferencesMeta", CampaignPreferenceFilter, i32],
   }
 }
 
@@ -298,6 +300,10 @@ impl Mutation {
   }
 
   pub async fn create_claim_account_request(context: &Context, input: CreateClaimAccountRequestInput) -> FieldResult<ClaimAccountRequest> {
+    input.process(context).await
+  }
+
+  pub async fn create_campaign_preference(context: &Context, input: CreateCampaignPreferenceInput) -> FieldResult<CampaignPreference> {
     input.process(context).await
   }
 }

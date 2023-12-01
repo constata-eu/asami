@@ -1,7 +1,21 @@
-input CampaignRequestFilter {
-  ids: [Int!]
-  idEq: Int
-  contentIdLike: String
+"A request to verify a handle for an account."
+type HandleUpdateRequest {
+  "Unique numeric identifier of this resource"
+  id: Int!
+  "The id of the account that created this."
+  accountId: String!
+  "The numeric id of the handle in the smart contract. Hex encoded uint256."
+  handleId: String!
+  "The username on the given social network. This may change by the user, it may not be a unique id."
+  username: String
+  "The price for each collab made with this handle. This is the price for a single repost."
+  price: String
+  "The score given to this handle by Asami's admin."
+  score: String
+  "If this request was created by the admin or by the user themselves"
+  createdByAdmin: Boolean!
+  "Status of this campaign request."
+  status: HandleUpdateRequestStatus!
 }
 
 enum Site {
@@ -10,14 +24,231 @@ enum Site {
   INSTAGRAM
 }
 
+input CampaignRequestFilter {
+  ids: [Int!]
+  idEq: Int
+  contentIdLike: String
+  statusIn: [CampaignRequestStatus!]
+}
+
+"A social network handle associated to an account."
+type Handle {
+  "Unique numeric identifier of this resource in the smart contract."
+  id: String!
+  "The id of the account that created this."
+  accountId: String!
+  "The social network of this handle: X, Instagram, Nostr."
+  site: Site!
+  "The username on the given social network. This may change by the user, it may not be a unique id."
+  username: String!
+  "The unique user_id in the given social network. This never changes."
+  userId: String!
+  "The price for each collab made with this handle. This is the price for a single repost."
+  price: String!
+  "The score given to this handle by Asami's admin."
+  score: String!
+  "The X coord of a nostr pubkey, for on-chain verification of nostr collabs."
+  nostrAffineX: String!
+  "The Y coord of a nostr pubkey, for on-chain verification of nostr collabs."
+  nostrAffineY: String!
+}
+
+input HandleFilter {
+  ids: [String!]
+  idEq: String
+  usernameLike: String
+  userIdLike: String
+  siteEq: Site
+  accountIdEq: String
+}
+
+input CollabFilter {
+  ids: [String!]
+  idEq: String
+  campaignIdEq: String
+  campaignIdIn: [String!]
+  advertiserIdEq: String
+  advertiserIdIn: [String!]
+  handleIdEq: String
+  handleIdIn: [String!]
+  memberIdEq: String
+  memberIdIn: [String!]
+}
+
+type Mutation {
+  createSession: Session!
+  createCampaignRequest(input: CreateCampaignRequestInput!): CampaignRequest!
+  createHandleRequest(input: CreateHandleRequestInput!): HandleRequest!
+  createHandleUpdateRequest(input: CreateHandleUpdateRequestInput!): HandleUpdateRequest!
+  createClaimAccountRequest(input: CreateClaimAccountRequestInput!): ClaimAccountRequest!
+  createCampaignPreference(input: CreateCampaignPreferenceInput!): CampaignPreference!
+}
+
+"A campaign started by an advertiser"
+type CampaignRequest {
+  "Unique numeric identifier of this resource"
+  id: Int!
+  "The id of the account that created this."
+  accountId: String!
+  "The total budget for this campaign to be split across users."
+  budget: String!
+  "The site where this campaign is to be run on."
+  site: Site!
+  "Status of this campaign request."
+  status: CampaignRequestStatus!
+  "When this campaigns's ERC20 DOC budget is 'approved', this field will show the transaction hash."
+  approvalTxHash: String
+  "When this campaign is submitted on-chain, this field will show the transaction hash."
+  submissionTxHash: String
+  "The content to share."
+  contentId: String!
+  "The date in which this campaign was created."
+  createdAt: DateTime!
+  "The last time this campaign received an update."
+  updatedAt: DateTime
+}
+
+input ClaimAccountRequestFilter {
+  ids: [Int!]
+  idEq: Int
+  addrEq: String
+  statusIn: [ClaimAccountRequestStatus!]
+}
+
+enum CampaignRequestStatus {
+  RECEIVED
+  PAID
+  APPROVED
+  SUBMITTED
+  DONE
+}
+
+"Internal UX preferences for specific campaigns"
+type CampaignPreference {
+  "Unique numeric identifier of this resource"
+  id: Int!
+  "The campaign this preferences apply to."
+  campaignId: String!
+  "Date in which the user marked to not be interested in this campaign."
+  notInterestedOn: DateTime
+  "Date in which the user attempted to retweet this campaign."
+  attemptedOn: DateTime
+}
+
+input HandleUpdateRequestFilter {
+  ids: [Int!]
+  idEq: Int
+  handleIdEq: String
+  usernameLike: String
+  createdByAdminEq: Boolean
+  statusIn: [HandleUpdateRequestStatus!]
+}
+
+type Query {
+  apiVersion: String!
+  CampaignRequest(id: Int!): CampaignRequest!
+  allCampaignRequests(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignRequestFilter): [CampaignRequest!]!
+  _allCampaignRequestsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignRequestFilter): ListMetadata!
+  Campaign(id: String!): Campaign!
+  allCampaigns(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignFilter): [Campaign!]!
+  _allCampaignsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignFilter): ListMetadata!
+  HandleRequest(id: Int!): HandleRequest!
+  allHandleRequests(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: HandleRequestFilter): [HandleRequest!]!
+  _allHandleRequestsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: HandleRequestFilter): ListMetadata!
+  Handle(id: String!): Handle!
+  allHandles(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: HandleFilter): [Handle!]!
+  _allHandlesMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: HandleFilter): ListMetadata!
+  HandleUpdateRequest(id: Int!): HandleUpdateRequest!
+  allHandleUpdateRequests(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: HandleUpdateRequestFilter): [HandleUpdateRequest!]!
+  _allHandleUpdateRequestsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: HandleUpdateRequestFilter): ListMetadata!
+  Collab(id: String!): Collab!
+  allCollabs(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CollabFilter): [Collab!]!
+  _allCollabsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CollabFilter): ListMetadata!
+  ClaimAccountRequest(id: Int!): ClaimAccountRequest!
+  allClaimAccountRequests(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: ClaimAccountRequestFilter): [ClaimAccountRequest!]!
+  _allClaimAccountRequestsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: ClaimAccountRequestFilter): ListMetadata!
+  CampaignPreference(id: Int!): CampaignPreference!
+  allCampaignPreferences(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignPreferenceFilter): [CampaignPreference!]!
+  _allCampaignPreferencesMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignPreferenceFilter): ListMetadata!
+}
+
+"The input for creating a new CampaignPreference."
+input CreateCampaignPreferenceInput {
+  campaignId: String!
+  notInterested: Boolean!
+  attempted: Boolean!
+}
+
+"A campaign started by an advertiser"
+type Session {
+  "The pubkey ID of this session."
+  id: String!
+  "The user associated to this session."
+  userId: Int!
+  "The account IDS associated with this user."
+  accountId: String!
+  "The pubkey associated to this session."
+  pubkey: String!
+  "The content to share."
+  nonce: String!
+  "The date in which this session was created."
+  createdAt: DateTime!
+  "The last time this session was updated."
+  updatedAt: DateTime
+}
+
+"A collab is created when a member reposts a campaign's content."
+type Collab {
+  "Unique numeric identifier of this resource in the smart contract."
+  id: String!
+  "The campaign whose content was reposted."
+  campaignId: String!
+  "The person that created the campaign."
+  advertiserId: String!
+  "The handle that reposted the content."
+  handleId: String!
+  "The member who owns the handle."
+  memberId: String!
+  "The gross amount paid by the advertiser (campaign creator) for this collab."
+  gross: String!
+  "The fee deducted by asami from the gross amount."
+  fee: String!
+}
+
+"The input for creating a new HandleUpdateRequest."
+input CreateHandleUpdateRequestInput {
+  handleId: String!
+  price: String!
+}
+
+enum HandleUpdateRequestStatus {
+  RECEIVED
+  SUBMITTED
+  DONE
+}
+
+input HandleRequestFilter {
+  ids: [Int!]
+  idEq: Int
+  usernameLike: String
+  statusIn: [HandleRequestStatus!]
+  siteEq: Site
+}
+
 "A campaign started by an advertiser"
 type Campaign {
-  "Unique numeric identifier of this werify point"
+  "Unique numeric identifier of this resource"
   id: String!
   "The id of the account that created this."
   accountId: String!
   "The total budget for this campaign to be split across users."
   budget: String!
+  "The amount remaining from the given budget."
+  remaining: String!
+  "The campaign is finished when it spends all its budget, or when the remaining amount is refunded to the advertiser"
+  finished: Boolean!
+  "Unspent budget can be reimbursed after this date."
+  validUntil: DateTime!
   "The site where this campaign is to be run on."
   site: Site!
   "The content to share."
@@ -31,44 +262,51 @@ type Campaign {
 input CampaignFilter {
   ids: [String!]
   idEq: String
+  accountIdIn: [String!]
+  finishedEq: Boolean
   contentIdLike: String
+  availableToAccountId: String
 }
 
-type Mutation {
-  createSession: Session!
-  createCampaignRequest(input: CreateCampaignRequestInput!): CampaignRequest!
+"The input for creating a new ClaimAccountRequest."
+input CreateClaimAccountRequestInput {
+  signature: String!
 }
 
-"A campaign started by an advertiser"
-type CampaignRequest {
-  "Unique numeric identifier of this werify point"
+"A request to verify a handle for an account."
+type HandleRequest {
+  "Unique numeric identifier of this resource"
   id: Int!
-  "The id of the account that created this."
+  "The id of the account that made the request."
   accountId: String!
-  "The total budget for this campaign to be split across users."
-  budget: String!
-  "The site where this campaign is to be run on."
+  "The social network of this handle: X, Instagram, Nostr."
   site: Site!
-  "The content to share."
-  contentId: String!
-  "The date in which this campaign was created."
-  createdAt: DateTime!
-  "The last time this campaign received an update."
-  updatedAt: DateTime
+  "The username on the given social network. This may change by the user, it may not be a unique id."
+  username: String!
+  "The unique user_id in the given social network. This never changes."
+  userId: String
+  "The price for each collab made with this handle. This is the price for a single repost."
+  price: String
+  "The score given to this handle by Asami's admin."
+  score: String
+  "The X coord of a nostr pubkey, for on-chain verification of nostr collabs."
+  nostrAffineX: String
+  "The Y coord of a nostr pubkey, for on-chain verification of nostr collabs."
+  nostrAffineY: String
+  "Status of this campaign request."
+  status: HandleRequestStatus!
+}
+
+enum HandleRequestStatus {
+  UNVERIFIED
+  VERIFIED
+  APPRAISED
+  SUBMITTED
+  DONE
 }
 
 type ListMetadata {
   count: Int!
-}
-
-type Query {
-  apiVersion: String!
-  CampaignRequest(id: Int!): CampaignRequest!
-  allCampaignRequests(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignRequestFilter): [CampaignRequest!]!
-  _allCampaignRequestsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignRequestFilter): ListMetadata!
-  Campaign(id: String!): Campaign!
-  allCampaigns(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignFilter): [Campaign!]!
-  _allCampaignsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignFilter): ListMetadata!
 }
 
 "The input for creating a new CampaignRequest."
@@ -81,20 +319,29 @@ input CreateCampaignRequestInput {
   validUntil: DateTime!
 }
 
-"A campaign started by an advertiser"
-type Session {
-  "The pubkey ID of this session."
-  id: String!
-  "The user associated to this session."
-  userId: Int!
-  "The pubkey associated to this session."
-  pubkey: String!
-  "The content to share."
-  nonce: String!
-  "The date in which this session was created."
-  createdAt: DateTime!
-  "The last time this session was updated."
-  updatedAt: DateTime
+"The input for creating a new HandleRequest."
+input CreateHandleRequestInput {
+  accountId: String!
+  username: String!
+  site: Site!
+}
+
+"A user claim to manage their own account"
+type ClaimAccountRequest {
+  "Unique numeric identifier of this resource"
+  id: Int!
+  "The id of the account that created this."
+  accountId: String!
+  "The address taking ownership."
+  addr: String!
+  "Status of this campaign request."
+  status: ClaimAccountRequestStatus!
+}
+
+enum ClaimAccountRequestStatus {
+  RECEIVED
+  SUBMITTED
+  DONE
 }
 
 """
@@ -112,6 +359,12 @@ type Session {
   [2]: https://docs.rs/chrono/latest/chrono/struct.DateTime.html
 """
 scalar DateTime
+
+input CampaignPreferenceFilter {
+  ids: [Int!]
+  idEq: Int
+  campaignIdEq: String
+}
 
 schema {
   query: Query
