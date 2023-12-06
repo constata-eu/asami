@@ -31,9 +31,13 @@ async fn main() {
     run!("blockchain_sync_tasks" { s.run_background_tasks().await });
   }];
 
-  every![600000, |s| {
+  every![settings.x.crawl_cooldown_minutes * 60 * 1000, |s| {
     run!("sync_x_collabs" { s.campaign().sync_x_collabs().await });
-    run!("verify_handles" { s.handle_request().verify_and_appraise_all().await });
+    run!("verify_and_appraise_x_handles" { s.handle_request().verify_and_appraise_x().await });
+  }];
+
+  every![settings.instagram.crawl_cooldown_minutes0 * 60 * 1000, |s| {
+    run!("ig_crawler do everything" { s.ig_crawl().do_everything().await });
   }];
 
   futures::future::join_all(handles).await;

@@ -28,6 +28,8 @@ pub mod campaign_preference;
 pub use campaign_preference::*;
 pub mod session;
 pub use session::*;
+pub mod ig_crawl;
+pub use ig_crawl::*;
 
 #[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
 #[sqlx(type_name = "site", rename_all = "snake_case")]

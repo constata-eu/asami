@@ -42,6 +42,10 @@ impl ApiClient {
     Self { session_key: None, session: None, client: Client::tracked(api::server(test_app.app.clone())).await.unwrap(), test_app }
   }
 
+  pub fn app(&self) -> api::App {
+    self.test_app.app.clone()
+  }
+
   pub async fn account(&self) -> models::Account {
     self.session.as_ref().unwrap().account().await.unwrap()
   }
@@ -91,22 +95,31 @@ impl ApiClient {
     let rate = u256(self.test_app.app.indexer_state().get().await.unwrap().suggested_price_per_point());
     let budget = || { rate * wei("200") };
 
-    let regular_campaign = self.build_campaign(budget(), rate).await;
-    let high_rate_campaign = self.build_campaign(budget(), rate * wei("2")).await;
-    let low_rate_campaign = self.build_campaign(budget(), rate / wei("2")).await;
-    let low_budget_campaign = self.build_campaign(rate * wei("1"), rate).await;
+    let regular_campaign = self.build_x_campaign(budget(), rate).await;
+    let high_rate_campaign = self.build_instagram_campaign(budget(), rate * wei("2")).await;
+    let low_rate_campaign = self.build_x_campaign(budget(), rate / wei("2")).await;
+    let low_budget_campaign = self.build_x_campaign(rate * wei("1"), rate).await;
 
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
 
     BaseLineScenario {
-      regular_campaign: regular_campaign.reloaded().await.unwrap().campaign().await.unwrap().unwrap(),
-      high_rate_campaign: high_rate_campaign.reloaded().await.unwrap().campaign().await.unwrap().unwrap(),
-      low_rate_campaign: low_rate_campaign.reloaded().await.unwrap().campaign().await.unwrap().unwrap(),
-      low_budget_campaign: low_budget_campaign.reloaded().await.unwrap().campaign().await.unwrap().unwrap(),
+      regular_campaign: regular_campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("regular"),
+      high_rate_campaign: high_rate_campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("high_rate"),
+      low_rate_campaign: low_rate_campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("low_rate"),
+      low_budget_campaign: low_budget_campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("low_budget"),
     }
   }
 
-  pub async fn build_campaign(&mut self, budget: U256, rate: U256) -> models::CampaignRequest {
+  pub async fn build_instagram_campaign(&mut self, budget: U256, rate: U256) -> models::CampaignRequest {
+    let post = "C0T1wKQMS0v"; // This is the post shortcode.
+    let two_days = Utc::now() + chrono::Duration::days(2);
+
+    self.account().await.create_campaign_request(models::Site::Instagram, post, budget, rate, two_days)
+      .await.unwrap().pay()
+      .await.unwrap()
+  }
+
+  pub async fn build_x_campaign(&mut self, budget: U256, rate: U256) -> models::CampaignRequest {
     let post = "1716421161867710954";
     let two_days = Utc::now() + chrono::Duration::days(2);
 
@@ -114,6 +127,7 @@ impl ApiClient {
       .await.unwrap().pay()
       .await.unwrap()
   }
+
 
   pub async fn build_x_handle(&mut self, username: &str) -> (models::HandleRequest, models::Handle) {
     let rate = u256(self.test_app.app.indexer_state().get().await.unwrap().suggested_price_per_point());
@@ -300,5 +314,10 @@ pub mod gql {
     AllCampaignPreferences,
     AllCampaignPreferencesMeta,
     CreateCampaignPreference,
+    CreateHandleRequest,
+    AllHandleRequests,
+    AllHandleRequestsMeta,
+    AllCollabs,
+    AllCollabsMeta,
   ];
 }

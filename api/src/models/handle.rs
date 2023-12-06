@@ -33,10 +33,43 @@ impl Handle {
     u256(self.price()) / u256(self.score())
   }
 
-  pub fn can_collaborate(&self, campaign: &Campaign) -> bool {
-    self.price_score_ratio() <= u256(campaign.price_score_ratio())
-      && u256(self.price()) < u256(campaign.remaining())
-      && self.site() == campaign.site()
+  pub async fn validate_collaboration(&self, campaign: &Campaign) -> AsamiResult<()> {
+    if self.price_score_ratio() > u256(campaign.price_score_ratio()) {
+      return Err(Error::validation("price_score_ratio", "campaign_pays_too_little"));
+    }
+
+    if u256(self.price()) > u256(campaign.remaining()) {
+      return Err(Error::validation("price", "campaign_funds_too_low"));
+    }
+
+    if *campaign.finished() {
+      return Err(Error::validation("site", "campaign_was_finished"));
+    }
+
+
+    if self.site() != campaign.site() {
+      return Err(Error::validation("site", "campaign_and_handle_sites_dont_match"));
+    }
+
+    let request_exists = self.state.collab_request().select()
+      .handle_id_eq(self.attrs.id.clone())
+      .campaign_id_eq(campaign.attrs.id.clone())
+      .count().await? > 0;
+
+    if request_exists {
+      return Err(Error::validation("all", "collab_request_exists"));
+    }
+
+    let collab_exists = self.state.collab().select()
+      .handle_id_eq(self.attrs.id.clone())
+      .campaign_id_eq(campaign.attrs.id.clone())
+      .count().await? > 0;
+
+    if collab_exists {
+      return Err(Error::validation("all", "collab_exists"));
+    }
+
+    Ok(())
   }
 }
 

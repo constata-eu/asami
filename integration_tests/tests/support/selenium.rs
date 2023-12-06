@@ -3,7 +3,7 @@ use super::ApiClient;
 use chrono::Utc;
 use thirtyfour::prelude::*;
 use api::models;
-use crate::support::{wait_here, pause_a_bit, try_until};
+use crate::support::try_until;
 
 pub struct Selenium{
   pub driver: WebDriver,
@@ -220,7 +220,7 @@ impl Selenium {
   pub async fn link_wallet_and_sign_login(&self) -> anyhow::Result<()> {
     self.click(".rlogin-provider-icon img[alt=MetaMask]").await;
 
-    try_until(10, "No other window opened", || async {
+    try_until(10, 200, "No other window opened", || async {
       self.driver.windows().await.unwrap().len() == 2
     }).await;
 
@@ -237,7 +237,7 @@ impl Selenium {
     self.driver.switch_to_window(handles[0].clone()).await.unwrap();
     self.click("button.rlogin-button.confirm").await;
 
-    try_until(10, "No other window opened", || async {
+    try_until(10, 200, "No other window opened", || async {
       self.driver.windows().await.unwrap().len() == 2
     }).await;
     handles = self.driver.windows().await.unwrap();

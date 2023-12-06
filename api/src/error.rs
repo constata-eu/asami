@@ -24,6 +24,16 @@ pub enum Error {
   Runtime(String),
 }
 
+impl Error {
+  pub fn service(name: &str, text: &str) -> Self {
+    Error::Service(name.to_string(), text.to_string())
+  }
+
+  pub fn validation(field: &str, value: &str) -> Self {
+    Error::Validation(field.to_string(), value.to_string())
+  }
+}
+
 impl<A: ethers::middleware::Middleware> From<ethers::contract::ContractError<A>> for Error {
   fn from(err: ethers::contract::ContractError<A>) -> Error {
     let desc = err.decode_revert::<String>().unwrap_or_else(|| err.to_string());
@@ -43,6 +53,17 @@ impl From<ethers::providers::ProviderError> for Error {
   }
 }
 
+impl From<ureq::Error> for Error {
+  fn from(err: ureq::Error) -> Error {
+    Error::Service("ureq".into(), err.to_string())
+  }
+}
+
+impl From<std::io::Error> for Error {
+  fn from(err: std::io::Error) -> Error {
+    Error::Service("io".into(), err.to_string())
+  }
+}
 
 impl From<rocket::figment::Error> for Error {
   fn from(err: rocket::figment::Error) -> Error {

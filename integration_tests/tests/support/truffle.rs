@@ -16,7 +16,7 @@ pub struct Addresses {
 impl Truffle {
   pub fn start(admin_address: &str) -> Self {
     Command::new("bash")
-      .args(&["-c", "kill -9 $(ps -ef | grep [g]anache | awk '{print $2}')"])
+      .args(&["-c", r#"pgrep -f "bin/ganache" | xargs -r kill -9"#])
       .output().expect("Could not kill previous server");
 
     let path_to_log = "/tmp/ganache.log";

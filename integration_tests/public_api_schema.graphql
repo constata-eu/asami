@@ -262,7 +262,7 @@ type Campaign {
 input CampaignFilter {
   ids: [String!]
   idEq: String
-  accountIdIn: [String!]
+  accountIdEq: String
   finishedEq: Boolean
   contentIdLike: String
   availableToAccountId: String
@@ -321,7 +321,6 @@ input CreateCampaignRequestInput {
 
 "The input for creating a new HandleRequest."
 input CreateHandleRequestInput {
-  accountId: String!
   username: String!
   site: Site!
 }

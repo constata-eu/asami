@@ -58,13 +58,10 @@ impl CampaignHub {
             .user_id_eq(&user.id.to_string())
             .optional().await? else { continue };
 
-          let not_exists = self.state.collab_request().select()
-            .handle_id_eq(handle.attrs.id.clone())
-            .campaign_id_eq(campaign.attrs.id.clone())
-            .count().await? == 0;
-
-          if not_exists {
-            reqs.push( campaign.make_collab(&handle).await? );
+          match campaign.make_collab(&handle).await {
+            Ok(req) => reqs.push(req),
+            Err(Error::Validation(_, _)) => (),
+            Err(e) => return Err(e),
           }
         }
 
@@ -87,11 +84,13 @@ impl CampaignHub {
 }
 
 impl Campaign {
-  pub async fn make_collab(&self, handle: &Handle) -> sqlx::Result<CollabRequest> {
-    self.state.collab_request().insert(InsertCollabRequest{
+  pub async fn make_collab(&self, handle: &Handle) -> AsamiResult<CollabRequest> {
+    handle.validate_collaboration(&self).await?;
+
+    Ok(self.state.collab_request().insert(InsertCollabRequest{
       campaign_id: self.attrs.id.clone(),
       handle_id: handle.attrs.id.clone(),
-    }).save().await
+    }).save().await?)
   }
 }
 

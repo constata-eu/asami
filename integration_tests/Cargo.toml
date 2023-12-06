@@ -27,6 +27,8 @@ base64 = "0.21.2"
 ethers = { version = "2.0.10", features = ["eip712"] }
 twitter-v2 = { version = "0.1.8", features = ["oauth2", "rustls-tls"] }
 rust_decimal = "*"
+image = { version = "0.24.7" }
+image_hasher = "1.1.0"
 
 [lib]
 name = "integration_tests"

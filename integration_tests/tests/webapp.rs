@@ -139,7 +139,7 @@ browser_test!{ account_is_web3_from_the_start (mut d)
 
   d.click("#submit-start-campaign-form").await;
 
-  try_until(10, "No other window opened", || async {
+  try_until(10, 200, "No other window opened", || async {
     d.driver.windows().await.unwrap().len() == 2
   }).await;
   let mut handles = d.driver.windows().await.unwrap();
@@ -154,7 +154,7 @@ browser_test!{ account_is_web3_from_the_start (mut d)
   d.wait_for_text(".MuiSnackbarContent-message", "Campaign budget approved.").await;
   d.wait_until_gone(".MuiSnackbarContent-message").await;
 
-  try_until(10, "No other window opened", || async {
+  try_until(10, 200, "No other window opened", || async {
     d.driver.windows().await.unwrap().len() == 2
   }).await;
   handles = d.driver.windows().await.unwrap();

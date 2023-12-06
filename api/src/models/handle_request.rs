@@ -39,10 +39,6 @@ model!{
 }
 
 impl HandleRequestHub {
-  pub async fn verify_and_appraise_all(&self) -> AsamiResult<Vec<HandleRequest>> {
-    self.verify_and_appraise_x().await
-  }
-
   pub async fn verify_and_appraise_x(&self) -> AsamiResult<Vec<HandleRequest>> {
     use twitter_v2::{TwitterApi, authorization::BearerToken, query::*, api_result::*};
     use rust_decimal::prelude::*;
@@ -50,7 +46,7 @@ impl HandleRequestHub {
 
     let mut handle_requests = vec![];
 
-    let msg_regex = regex::Regex::new(r#"\@asami_club \[(\d)\]"#)?;
+    let msg_regex = regex::Regex::new(r#"\@asami_club \[(\d*)\]"#)?;
     let conf = &self.state.settings.x;
     let auth = BearerToken::new(&conf.bearer_token);
     let api = TwitterApi::new(auth);

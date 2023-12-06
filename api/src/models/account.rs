@@ -46,14 +46,21 @@ impl Account {
       .into_iter().map(|x| x.attrs.campaign_id)
       .collect();
 
-    Ok(
-      self.state.campaign().select().finished_eq(false).all().await?.into_iter()
-        .filter(|c|{
-          !done.contains(c.id())
-            && !ignored.contains(c.id())
-            && handles.iter().any(|h| h.can_collaborate(c)) 
-        }).collect()
-    )
+    let mut campaigns = vec![];
+
+    for c in self.state.campaign().select().finished_eq(false).all().await?.into_iter() {
+      if ignored.contains(c.id()) { continue };
+      if done.contains(c.id()) { continue };
+
+      for h in &handles {
+        if h.validate_collaboration(&c).await.is_ok() {
+          campaigns.push(c);
+          break;
+        }
+      }
+    }
+
+    Ok(campaigns)
   }
 
   pub async fn create_handle_request(&self, site: Site, username: &str) -> sqlx::Result<HandleRequest> {

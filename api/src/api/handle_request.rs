@@ -88,7 +88,6 @@ impl Showable<models::HandleRequest, HandleRequestFilter> for HandleRequest {
 #[graphql(description = "The input for creating a new HandleRequest.")]
 #[serde(rename_all = "camelCase")]
 pub struct CreateHandleRequestInput {
-  pub account_id: String,
   pub username: String,
   pub site: Site,
 }

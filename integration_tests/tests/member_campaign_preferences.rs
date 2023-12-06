@@ -5,11 +5,8 @@ use support::{*, gql::{*, create_campaign_preference::*}};
 
 browser_test!{ hides_ignored_and_shows_attempted_repost (mut d)
   let scenario = d.api.build_baseline_scenario().await;
-
   d.login().await;
-
   d.api.build_x_handle("nubis_bruno").await;
-
   d.goto_member_dashboard().await;
 
   d.wait_for("#twitter-widget-1").await;
@@ -69,7 +66,7 @@ async fn get_campaign_offers(client: &mut ApiClient) -> all_campaigns::ResponseD
         available_to_account_id: Some(client.account().await.attrs.id),
         ids: None,
         id_eq: None,
-        account_id_in: None,
+        account_id_eq: None,
         finished_eq: None,
         content_id_like: None,
       }),

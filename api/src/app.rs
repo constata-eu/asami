@@ -73,6 +73,7 @@ pub struct XConfig {
   pub redirect_uri: String,
   pub bearer_token: String,
   pub asami_user_id: u64,
+  pub crawl_cooldown_minutes: u64,
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -80,13 +81,18 @@ pub struct InstagramConfig {
   pub client_id: String,
   pub client_secret: String,
   pub redirect_uri: String,
+  pub crawl_cooldown_minutes: i64,
+  pub apify_key: String,
+  pub verification_image_url: String,
+  pub verification_caption: String,
+  pub verification_posts_count: i64
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct Rsk {
   pub chain_id: u64,
   pub rpc_url: String,
-  pub start_sync_from_block: u64,
+  pub start_sync_from_block: i64,
   pub contract_address: String,
   pub doc_contract_address: String,
   pub wallet_mnemonic: String,
