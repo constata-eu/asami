@@ -40,6 +40,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import { getAuthKeys } from '../../lib/auth_provider';
 import ClaimAccountButton from '../claim_account';
 
+import InstagramIcon from '@mui/icons-material/Instagram';
+
 import asamiABI from "../../abi/Asami.json";
 import docABI from "../../abi/Doc.json";
 
@@ -77,6 +79,7 @@ const Dashboard = () => {
     <CampaignList handles={handles}/>
     <CollabList />
     <ConfigureXAccount handles={handles}/>
+    <ConfigureInstagramAccount handles={handles}/>
   </Container>;
 }
 
@@ -290,6 +293,61 @@ const CollabList = () => {
       </Card>
     </ListContextProvider>
   );
+}
+
+const ConfigureInstagramAccount = ({handles}) => {
+  const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
+
+  const reqs = useListController({
+    disableSyncWithLocation: true,
+    filter: {siteEq: "INSTAGRAM"},
+    queryOptions: {
+      refetchInterval: 10000,
+    },
+    perPage: 1,
+    resource: "HandleRequest",
+  });
+
+  useEffect(() => {
+    const refetchAll = async () => {
+      await handles.refetch();
+      await reqs.refetch();
+      setNeedsRefresh(false);
+    };
+    
+    if(needsRefresh) {
+      refetchAll()
+    }
+  }, [needsRefresh, setNeedsRefresh, handles, reqs]);
+
+  let content;
+
+  if (handles.isLoading || reqs.isLoading ){
+    content = (<>
+      <Skeleton />
+      <Skeleton />
+    </>);
+  } else if (handles.data[0]) {
+    content = <HandleStats handle={handles.data[0]} />;
+  } else {
+    const req = reqs.data[0];
+    if (req) {
+      if (req.status == "UNVERIFIED") {
+        content = <MakeVerificationPost />;
+      } else if (req.status != "DONE" ) {
+        content = <HandleSubmissionInProgress req={req} />;
+      }
+    } else {
+      content = <CreateHandleRequest {...{setNeedsRefresh}} />;
+    }
+  }
+
+  return (<Box>
+    <Card id="configure-x-handle-card" sx={{my:"3em"}}>
+      <CardTitle text="Your Instagram" />
+      { content }
+    </Card>
+  </Box>);
 }
 
 const ConfigureXAccount = ({handles}) => {

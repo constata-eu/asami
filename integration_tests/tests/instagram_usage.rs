@@ -16,9 +16,8 @@ use api::models::*;
 browser_test!{ browser_flow_until_instagram_reward (mut d)
   d.signup_with_one_time_token().await;
 
-  wait_here();
   d.click("#open-start-campaign-dialog").await;
-  d.fill_in("#contentUrl", "https://x.com/asami_club/status/1716421161867710954?s=20").await;
+  d.fill_in("#contentUrl", "https://www.instagram.com/p/C0T1wKQMS0v/?utm_source=ig_web_copy_link&igshid=MzRlODBiNWFlZA==").await;
   d.fill_in("#budget", "20").await;
   d.click("#submit-start-campaign-form").await;
   d.wait_for_text(".MuiSnackbarContent-message", "Campaign will be started soon").await;
@@ -38,7 +37,7 @@ browser_test!{ browser_flow_until_instagram_reward (mut d)
   d.goto("http://127.0.0.1:5173/#/?role=member").await;
   d.wait_for("#member-dashboard").await;
 
-
+  wait_here();
   d.fill_in("#username", "nubis_bruno").await;
   d.click("#submit-handle-request-form").await;
   d.wait_for(".MuiSnackbarContent-message").await;

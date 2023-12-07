@@ -61,17 +61,21 @@ const Dashboard = () => {
   return <Container maxWidth="md" id="advertiser-dashboard">
     <Head1 sx={{my:3}}>Hello Advertiser!</Head1>
     <Typography my="1em">
-      Just enter the URL of your X post and how much you want to spend.
+      Just enter the URL of an <strong>X or Instagram</strong> post and how much you want to spend.
       <br/>
-      You'll be paying between 0.001 and 0.005 USD for each <strong>real person</strong> reached.
+      The club will pay members for reposting it, at a rate of 0.001 - 0.005 USD for each <strong>real person</strong> reached.
+      <br/>
+      <strong>On X</strong> members will hit the "repost" button of your post.
+      <br/>
+      <strong>On Instagram</strong> members will copy your original post image and caption, and post it as their own. Make sure to use hashtags!
       <br/>
       Anyone will be able to participate reposting in the next 7 days.
     </Typography>
 
-    { !hasPendingClaim && <CreateCampaignRequest onSave={() => setNeedsRefresh(true) } /> }
+    { !hasPendingClaim && <CreateCampaign onSave={() => setNeedsRefresh(true) } /> }
 
     { hasPendingClaim && <Alert id="advertiser-claim-account-pending" sx={{ mt: "1em" }}>You'll be able to start new campaigns again once your WEB3 account setup is done.</Alert> }
-    { !hasClaim && <Alert id="advertiser-claim-account-none" sx={{ mt: "1em" }}>
+    { !hasClaim && <Alert severity="info" id="advertiser-claim-account-none" sx={{ mt: "1em" }}>
         Since you haven't connected your WEB3 wallet, your campaigns will be funded privately by the club's admin,
         subject to how much funds are available.
         Connect your wallet to claim your account and fund campaigns with your own budget.
@@ -161,7 +165,7 @@ const CampaignList = ({needsRefresh, setNeedsRefresh}) => {
   );
 }
 
-const CreateCampaignRequest = ({onSave}) => {
+const CreateCampaign = ({onSave}) => {
   const notify = useNotify();
   const dataProvider = useDataProvider();
   const { contracts } = useContracts();
@@ -210,15 +214,22 @@ const CreateCampaignRequest = ({onSave}) => {
   const validate = (values) => {
     let errors = {};
     let keys = getAuthKeys();
-    let input = { accountId: getAuthKeys().session.accountId, site: "X"};
+    let input = { accountId: getAuthKeys().session.accountId};
 
     try {
-      const u = new URL(values.contentUrl);
+      debugger;
+      const u = new URL(values.contentUrl.replace(/\/$/, ''));
       const path = u.pathname.split("/");
       const contentId = path[path.length - 1];
-      if ( (u.host != "x.com" && u.host != "twitter.com") || !contentId.match(/^\d*$/) ) {
-        errors.contentUrl = "The URL does not seem to be an X post that can be reposted";
+
+      if ( (u.host.match(/\.?x\.com$/) || u.host.match(/\.?twitter\.com#/)) && contentId.match(/^\d+$/) ) {
+        input.site = "X";
+      } else if (u.host.match(/\.?instagram.com/) && contentId.match(/^[\d\w\-_]+$/)) {
+        input.site = "INSTAGRAM";
+      } else {
+        errors.contentUrl = "The URL does not seem to be for an X nor Instagram post.";
       }
+
       input.contentId = contentId;
     } catch {
       errors.contentUrl = "Invalid URL";
@@ -255,8 +266,8 @@ const CreateCampaignRequest = ({onSave}) => {
     <Dialog id="start-campaign-dialog" open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <Box p="1em">
         <Form sanitizeEmptyValues validate={validate} onSubmit={onSubmit}>
-          <TextInput fullWidth required={true} size="large" variant="filled" source="contentUrl" label="Your post URL" />
-          <TextInput fullWidth required={true} size="large" variant="filled" source="budget" label="How much you have to spend, in DoC (USD)" />
+          <TextInput fullWidth required={true} size="large" variant="filled" source="contentUrl" label="Your Instagram or X post URL" />
+          <TextInput fullWidth required={true} size="large" variant="filled" source="budget" label="How much to spend, in DoC (USD)" />
           <Box width="100%" display="flex" gap="1em" justifyContent="space-between">
             <SaveButton id="submit-start-campaign-form" size="large" label="Start Campaign" icon={<CampaignIcon/>} />
             <Button size="large" variant="contained" color="grey" onClick={handleClose}>Cancel</Button>
