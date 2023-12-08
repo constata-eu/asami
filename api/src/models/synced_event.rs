@@ -75,7 +75,11 @@ impl SyncedEventHub {
   }
 
   pub async fn sync_account_saved(&self, contract: &AsamiContractSigner, from_block: U64, to_block: U64) ->  AsamiResult<()> {
-    let events = contract.account_saved_filter().from_block(from_block).to_block(to_block).query_with_meta().await?;
+    let events = contract.account_saved_filter()
+      .address(contract.address().into())
+      .from_block(from_block)
+      .to_block(to_block)
+      .query_with_meta().await?;
 
     for (e, meta) in events {
       if !self.save_unprocessed_event(&meta, &e).await? {
@@ -124,7 +128,11 @@ impl SyncedEventHub {
   }
 
   pub async fn sync_handle_saved(&self, contract: &AsamiContractSigner, from_block: U64, to_block: U64) ->  AsamiResult<()> {
-    let events = contract.handle_saved_filter().from_block(from_block).to_block(to_block).query_with_meta().await?;
+    let events = contract.handle_saved_filter()
+      .address(contract.address().into())
+      .from_block(from_block)
+      .to_block(to_block)
+      .query_with_meta().await?;
 
     for (e, meta) in events {
       if !self.save_unprocessed_event(&meta, &e).await? {
@@ -174,7 +182,7 @@ impl SyncedEventHub {
 
           let req = self.state.handle_request().select()
             .tx_hash_eq(meta.transaction_hash.encode_hex())
-            .username_eq(handle.attrs.username.clone())
+            .username_ilike(handle.attrs.username.clone())
             .status_eq(HandleRequestStatus::Submitted)
             .optional().await?;
 
@@ -188,7 +196,13 @@ impl SyncedEventHub {
   }
 
   pub async fn sync_approval(&self, contract: &AsamiContractSigner, from_block: U64, to_block: U64) ->  AsamiResult<()> {
-    let events = contract.approval_filter().from_block(from_block).to_block(to_block).query_with_meta().await?;
+    let doc = &self.state.on_chain.doc_contract;
+    let events = contract.approval_filter()
+      .address(doc.address().into())
+      .topic1(H256::from(contract.client().address()))
+      .from_block(from_block)
+      .to_block(to_block)
+      .query_with_meta().await?;
 
     for (e, meta) in events {
       if !self.save_unprocessed_event(&meta, &e).await? {
@@ -208,7 +222,11 @@ impl SyncedEventHub {
   }
 
   pub async fn sync_campaign_saved(&self, contract: &AsamiContractSigner, from_block: U64, to_block: U64) ->  AsamiResult<()> {
-    let events = contract.campaign_saved_filter().from_block(from_block).to_block(to_block).query_with_meta().await?;
+    let events = contract.campaign_saved_filter()
+      .address(contract.address().into())
+      .from_block(from_block)
+      .to_block(to_block)
+      .query_with_meta().await?;
 
     for (e, meta) in events {
       if !self.save_unprocessed_event(&meta, &e).await? {
@@ -259,7 +277,11 @@ impl SyncedEventHub {
   }
 
   pub async fn sync_collab_saved(&self, contract: &AsamiContractSigner, from_block: U64, to_block: U64) ->  AsamiResult<()> {
-    let events = contract.collab_saved_filter().from_block(from_block).to_block(to_block).query_with_meta().await?;
+    let events = contract.collab_saved_filter()
+      .address(contract.address().into())
+      .from_block(from_block)
+      .to_block(to_block)
+      .query_with_meta().await?;
 
     for (e, meta) in events {
       if !self.save_unprocessed_event(&meta, &e).await? {
@@ -301,7 +323,11 @@ impl SyncedEventHub {
   }
 
   pub async fn sync_handle_update_saved(&self, contract: &AsamiContractSigner, from_block: U64, to_block: U64) ->  AsamiResult<()> {
-    let events = contract.handle_update_saved_filter().from_block(from_block).to_block(to_block).query_with_meta().await?;
+    let events = contract.handle_update_saved_filter()
+      .address(contract.address().into())
+      .from_block(from_block)
+      .to_block(to_block)
+      .query_with_meta().await?;
 
     for (e, meta) in events {
       if !self.save_unprocessed_event(&meta, &e).await? {

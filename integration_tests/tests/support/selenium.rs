@@ -73,6 +73,9 @@ impl Selenium {
     driver.maximize_window().await.expect("to maximize window");
     Selenium{child, driver, api}
   }
+  pub fn app(&self) -> api::App {
+    self.api.app()
+  }
 
   pub async fn wait_for(&self, selector: &str) -> WebElement {
     let elem = self.driver

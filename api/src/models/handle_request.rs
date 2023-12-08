@@ -88,7 +88,7 @@ impl HandleRequestHub {
           let Some(req) = self.state.handle_request().select()
             .status_eq(&HandleRequestStatus::Unverified)
             .site_eq(&Site::X)
-            .username_eq(&author.username)
+            .username_ilike(&author.username)
             .account_id_eq(&account_id)
             .optional().await? else { continue };
 

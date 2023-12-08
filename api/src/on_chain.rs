@@ -22,7 +22,6 @@ abigen!(
   ]"#,
   derives(serde::Deserialize, serde::Serialize),
 );
-//event Approval(address indexed _owner, address indexed _spender, uint256 _value)
 
 pub type AsamiContractSigner = AsamiContract<SignerMiddleware<Provider<Http>, LocalWallet>>;
 

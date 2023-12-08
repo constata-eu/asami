@@ -17,6 +17,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs';
 import { nip19 } from 'nostr-tools'
 
+import { viewPostUrl } from '../../lib/campaign';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -114,11 +115,11 @@ const CampaignRequestList = ({needsRefresh, setNeedsRefresh}) => {
     <ListContextProvider value={listContext}>
       <Card id="campaign-request-list" sx={{my:"3em"}}>
         <CardTitle text="Requested campaigns" >
-          <Typography mt="1em">Since you're still using WEB2 login, we'll take care of publishing these for you.</Typography>
-          <Typography>Claim your account using your WEB3 wallet to save money and time on your next campaign.</Typography>
+          <Typography mt="1em">The club's admin will review and decide whether to fund your campaigns.</Typography>
+          <Typography>Claim your account using a WEB3 wallet to create campaigns yourself!</Typography>
         </CardTitle>
         <Datagrid bulkActionButtons={false}>
-          <FunctionField label="Post" render={record => <a target="_blank" href={`https://x.com/twitter/status/${record.contentId}`}>See post</a>} />
+          <FunctionField label="Post" render={record => <a target="_blank" href={viewPostUrl(record)}>See post</a>} />
           <TextField source="status" />
           <TextField source="site" />
           <FunctionField label="Budget" render={record => `${formatEther(record.budget)} DOC` } />
@@ -150,7 +151,6 @@ const CampaignList = ({needsRefresh, setNeedsRefresh}) => {
       <Card id="campaign-list" sx={{my:"3em"}}>
         <CardTitle text="Active campaigns" >
           <Typography mt="1em">The ASAMI club members will be reposting your content until the budget is fully spent.</Typography>
-          <Typography>Claim your WEB3 account to get reimbursed if the budget is not spent after the campaign due date.</Typography>
         </CardTitle>
         <Datagrid bulkActionButtons={false}>
           <FunctionField label="Post" render={record => <a target="_blank" href={`https://x.com/twitter/status/${record.contentId}`}>See post</a>} />
@@ -187,7 +187,7 @@ const CreateCampaign = ({onSave}) => {
       const { doc, asami, asamiAddress, signer } = await contracts();
       const input = values.campaignRequestInput;
       const budget = BigInt(input.budget);
-      const site = { 'X': 0, 'Nostr': 1, 'Instagram': 2 }[input.site];
+      const site = { 'X': 0, 'NOSTR': 1, 'INSTAGRAM': 2 }[input.site];
       const approval = await doc.approve(asamiAddress, budget, signer);
       await approval.wait();
       notify("Campaign budget approved.");
@@ -217,14 +217,13 @@ const CreateCampaign = ({onSave}) => {
     let input = { accountId: getAuthKeys().session.accountId};
 
     try {
-      debugger;
-      const u = new URL(values.contentUrl.replace(/\/$/, ''));
-      const path = u.pathname.split("/");
+      const u = new URL(values.contentUrl);
+      const path = u.pathname.replace(/\/$/, '').split("/");
       const contentId = path[path.length - 1];
 
       if ( (u.host.match(/\.?x\.com$/) || u.host.match(/\.?twitter\.com#/)) && contentId.match(/^\d+$/) ) {
         input.site = "X";
-      } else if (u.host.match(/\.?instagram.com/) && contentId.match(/^[\d\w\-_]+$/)) {
+      } else if (u.host.match(/\.?instagram.com$/) && contentId.match(/^[\d\w\-_]+$/)) {
         input.site = "INSTAGRAM";
       } else {
         errors.contentUrl = "The URL does not seem to be for an X nor Instagram post.";

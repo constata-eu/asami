@@ -67,13 +67,11 @@ impl IgCrawlHub {
       .into_iter().map(|h| format!("https://www.instagram.com/{}", h.attrs.username) )
     );
 
-    direct_urls.extend(self.state.campaign()
-      .select()
-      .site_eq(Site::Instagram)
-      .finished_eq(false)
-      .all().await?
-      .into_iter().map(|h| format!("https://www.instagram.com/p/{}", h.attrs.content_id) )
-    );
+    for c in self.state.campaign().select().site_eq(Site::Instagram).finished_eq(false).all().await? {
+      if c.is_missing_ig_rules().await? {
+        direct_urls.insert( format!("https://www.instagram.com/p/{}", c.attrs.content_id) );
+      }
+    }
 
     let input = serde_json::to_string(&serde_json::json![{
       "addParentData": true,
@@ -180,7 +178,7 @@ impl IgCrawlHub {
   }
 
   pub async fn process_for_handle_requests(&self) -> AsamiResult<()> {
-    let verification_image_hash = get_url_image_hash(&self.state.settings.instagram.verification_image_url)?;
+    let (_, verification_image_hash) = get_url_image_hash(&self.state.settings.instagram.verification_image_url)?;
 
     let verification_caption_regex = regex::Regex::new(
       &format!(r#"^[\n\r\s]*{} \[(\d*)\]"#, self.settings().verification_caption)
@@ -254,13 +252,15 @@ impl IgCrawlResult {
       .content_id_eq(post.short_code).optional()
       .await? else { return Ok(()) };
 
-    if self.state.ig_campaign_rule().select().campaign_id_eq(campaign.id()).count().await? > 0 {
-      return Ok(());
-    }
+    if !campaign.is_missing_ig_rules().await? { return Ok(()); }
+
+    let (image, hash) = get_url_image_hash(&post.display_url)?;
 
     self.state.ig_campaign_rule().insert(InsertIgCampaignRule{
       campaign_id: campaign.attrs.id,
-      image_hash: get_url_image_hash(&post.display_url)?.to_base64(),
+      display_url: post.display_url,
+      image_hash: hash.to_base64(),
+      image,
       caption: post.caption
     }).save().await?;
 
@@ -279,7 +279,7 @@ impl IgCrawlResult {
     let IgResult::IgProfile(profile) = ig_result else { return Ok(()) };
 
     let maybe_request = self.state.handle_request().select()
-      .username_eq(profile.username)
+      .username_ilike(profile.username)
       .site_eq(Site::Instagram)
       .status_eq(HandleRequestStatus::Unverified)
       .optional().await?;
@@ -303,7 +303,7 @@ impl IgCrawlResult {
             continue;
           }
 
-          let Ok(posted_hash) = get_url_image_hash(&post.display_url) else {
+          let Ok((_, posted_hash)) = get_url_image_hash(&post.display_url) else {
             self.log_post(&post, "could not fetch display_url").await?;
             return Err(Error::service("ig", &format!("Could not fetch display url for {}.{}", self.id(), &post.id )));
           };
@@ -353,9 +353,13 @@ impl IgCrawlResult {
               continue;
             }
 
-            let Ok(posted_hash) = post_hashes.entry(&post.id).or_insert_with(|| get_url_image_hash(&post.display_url)) else {
-              self.log_post(&post, "could not fetch display_url").await?;
-              return Err(Error::service("ig", &format!("Could not fetch display url for {}.{}", self.id(), &post.id )));
+            let posted_hash = match post_hashes.entry(&post.id).or_insert_with(|| get_url_image_hash(&post.display_url).map(|x| x.1) ) {
+              Ok(h) => h,
+              Err(e) => {
+                let description = format!("could not fetch display_url {:?} {:?}", post, e);
+                self.log_post(&post, &description).await?;
+                return Err(Error::service("ig", &description));
+              }
             };
 
             let distance = rule.get_image_hash()?.dist(&posted_hash);
@@ -407,6 +411,10 @@ model! {
     #[sqlx_model_hints(varchar)]
     campaign_id: String,
     #[sqlx_model_hints(text)]
+    display_url: String,
+    #[sqlx_model_hints(bytea)]
+    image: Vec<u8>,
+    #[sqlx_model_hints(text)]
     image_hash: String,
     #[sqlx_model_hints(text)]
     caption: String,
@@ -423,8 +431,7 @@ impl IgCampaignRule {
   }
 }
 
-
-pub fn get_url_image_hash(url: &str) -> AsamiResult<ImageHash> {
+pub fn get_url_image_hash(url: &str) -> AsamiResult<(Vec<u8>, ImageHash)> {
   use image::io::Reader as ImageReader;
   use std::io::Read;
 
@@ -438,10 +445,10 @@ pub fn get_url_image_hash(url: &str) -> AsamiResult<ImageHash> {
   let mut bytes: Vec<u8> = Vec::with_capacity(len);
   resp.into_reader().take(1024 * 1024 * 5).read_to_end(&mut bytes)?;
 
-  let image = ImageReader::with_format(Cursor::new(bytes), image::ImageFormat::Jpeg).decode()
+  let image = ImageReader::with_format(Cursor::new(&bytes), image::ImageFormat::Jpeg).decode()
     .map_err(|e| Error::service("image_hasher", &e.to_string()) )?;
 
-  Ok(hasher.hash_image(&image))
+  Ok((bytes, hasher.hash_image(&image)))
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

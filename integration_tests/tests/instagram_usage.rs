@@ -37,40 +37,35 @@ browser_test!{ browser_flow_until_instagram_reward (mut d)
   d.goto("http://127.0.0.1:5173/#/?role=member").await;
   d.wait_for("#member-dashboard").await;
 
-  wait_here();
-  d.fill_in("#username", "nubis_bruno").await;
-  d.click("#submit-handle-request-form").await;
+  d.fill_in("#ig_username", "nubis_bruno").await;
+  d.click("#submit-instagram-handle-request-form").await;
+
   d.wait_for(".MuiSnackbarContent-message").await;
   d.wait_until_gone(".MuiSnackbarContent-message").await;
 
-  d.api.test_app.mock_all_handles_being_verified_and_appraised().await;
-  d.wait_for("#handle-submission-in-progress-message").await;
-  d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
-  d.wait_for("#existing-x-handle-stats").await;
+  let hub = d.app().ig_crawl();
+  hub.schedule_new().await?;
+  let mut crawl = hub.find(1).await?;
+  hub.submit_scheduled().await?;
+  crawl.reload().await?;
+  try_until(90, 2000, "crawl was not done", || async {
+    hub.collect_all_responses().await.unwrap();
+    crawl.reloaded().await.unwrap().attrs.status == models::IgCrawlStatus::Responded
+  }).await;
 
-  d.api.test_app.mock_collab_on_all_campaigns_with_all_handles().await;
-  d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
+  hub.process_for_handle_requests().await?;
 
+  d.wait_for("#handle-instagram-submission-in-progress-message").await;
+  d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
+  d.wait_for("#existing-instagram-handle-stats").await;
   d.wait_for("#campaign-list-empty").await;
-  d.click("#collabs-claim-account-button").await;
 
-  // Claiming account.
-  d.wait_for("#account-summary-claim-none").await;
-  d.link_wallet_and_sign_login().await?;
-  d.wait_for(".MuiSnackbarContent-message").await;
-  d.wait_until_gone(".MuiSnackbarContent-message").await;
+  hub.process_for_campaign_rules().await?;
+  d.wait_for("#campaign-container-0x0000000000000000000000000000000000000000000000000000000000000001").await;
 
-  d.wait_for("#account-summary-claim-pending").await;
-
+  hub.process_for_collabs().await?;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
-  d.wait_for("#account-summary-claim-done").await;
-
-  // Now logging back in.
-  d.click("#logout-menu-item").await;
-  d.click("#button-login-as-member").await;
-  d.click("#wallet-login-button").await;
-  d.click("button[data-testid=page-container-footer-next]").await;
-  d.wait_for("#member-dashboard").await;
+  d.wait_for("#campaign-list-empty").await;
 }
 
 api_test! { supports_instagram_collaboration (mut c)
@@ -99,7 +94,7 @@ api_test! { supports_instagram_collaboration (mut c)
   assert!(direct_urls.contains(&"https://www.instagram.com/nubis_bruno".to_string()));
   assert!(direct_urls.contains(&"https://www.instagram.com/p/C0T1wKQMS0v".to_string()));
 
-  if true {
+  if false {
     crawl = crawl.update()
       .status(models::IgCrawlStatus::Submitted)
       .apify_id(Some("FWtqLuS4KucLLZVqc".to_string()))

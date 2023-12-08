@@ -23,7 +23,7 @@ pub struct Campaign {
   #[graphql(description = "The date in which this campaign was created.")]
   created_at: UtcDateTime,
   #[graphql(description = "The last time this campaign received an update.")]
-  updated_at: Option<UtcDateTime>,
+  updated_at: Option<UtcDateTime>
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]

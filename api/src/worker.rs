@@ -3,7 +3,7 @@ use std::time::Duration;
 #[tokio::main]
 async fn main() {
   let app = api::App::from_stdin_password().await.unwrap();
-  let settings = app.settings.clone();
+  let settings = *app.clone().settings;
   let mut handles = vec![];
 
   macro_rules! every {
@@ -36,7 +36,7 @@ async fn main() {
     run!("verify_and_appraise_x_handles" { s.handle_request().verify_and_appraise_x().await });
   }];
 
-  every![settings.instagram.crawl_cooldown_minutes0 * 60 * 1000, |s| {
+  every![3 * 60 * 1000, |s| {
     run!("ig_crawler do everything" { s.ig_crawl().do_everything().await });
   }];
 

@@ -36,7 +36,7 @@ impl Error {
 
 impl<A: ethers::middleware::Middleware> From<ethers::contract::ContractError<A>> for Error {
   fn from(err: ethers::contract::ContractError<A>) -> Error {
-    let desc = err.decode_revert::<String>().unwrap_or_else(|| err.to_string());
+    let desc = err.decode_revert::<String>().unwrap_or_else(|| format!("{:?}.{:?}", err, err.source()));
     Error::Service("rsk_contract".into(), desc)
   }
 }

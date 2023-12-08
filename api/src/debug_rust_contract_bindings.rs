@@ -29,6 +29,9 @@ fn rust_file_generation() {
         std::fs::remove_file(&out_file).unwrap();
     }
     dbg!(&out_file);
-    Abigen::new("ASAMI", abi_source).expect("abigen").generate().expect("generate").write_to_file(out_file).expect("write to file");
+    Abigen::new("ASAMI", abi_source).expect("abigen")
+      .add_derive("serde::Deserialize").expect("add_derive")
+      .add_derive("serde::Serialize").expect("add_derive")
+      .generate().expect("generate").write_to_file(out_file).expect("write to file");
 }
 

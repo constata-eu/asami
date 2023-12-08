@@ -34,6 +34,8 @@ mod claim_account_request;
 use claim_account_request::*;
 mod campaign_preference;
 use campaign_preference::*;
+mod ig_campaign_rule;
+use ig_campaign_rule::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -276,6 +278,7 @@ make_graphql_query!{
     [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, String],
     [ClaimAccountRequest, allClaimAccountRequests, allClaimAccountRequestsMeta, "_allClaimAccountRequestsMeta", ClaimAccountRequestFilter, i32],
     [CampaignPreference, allCampaignPreferences, allCampaignPreferencesMeta, "_allCampaignPreferencesMeta", CampaignPreferenceFilter, i32],
+    [IgCampaignRule, allIgCampaignRules, allIgCampaignRulesMeta, "_allIgCampaignRulesMeta", IgCampaignRuleFilter, i32],
   }
 }
 

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useDataProvider, useAuthenticated, useSafeSetState, useTranslate, ReferenceField, useGetAll, useGetOne, useGetList} from "react-admin";
 import { rLogin } from "../../lib/rLogin";
 import LoadingButton from '@mui/lab/LoadingButton';
+import { viewPostUrl } from '../../lib/campaign';
 import { Alert, Box, Button, Card, CardActions, CardContent, Container, FormControl, FormHelperText, InputLabel, MenuItem, Select, Skeleton, Typography, IconButton } from "@mui/material";
 import { Dialog, DialogContent, DialogTitle, DialogActions } from '@mui/material';
 import { ethers, parseUnits, formatEther, toQuantity, toBeHex, zeroPadValue, parseEther } from "ethers";
@@ -18,6 +19,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs';
 import { nip19 } from 'nostr-tools';
 import { TwitterTweetEmbed } from 'react-twitter-embed';
+import { Settings } from '../../settings';
 
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -53,11 +55,10 @@ const Dashboard = () => {
 
   const handles = useListController({
     disableSyncWithLocation: true,
-    filter: {accountIdEq: getAuthKeys().session.accountId, siteEq: "X"},
+    filter: {accountIdEq: getAuthKeys().session.accountId},
     queryOptions: {
       refetchInterval: 2000,
     },
-    perPage: 1,
     resource: "Handle",
   });
 
@@ -191,17 +192,68 @@ const CampaignList = ({handles}) => {
   return ( <>
     <Head1 sx={{ my: "1em" }}>Check out these campaigns</Head1>
     <Box id="campaign-list" display="flex" flexWrap="wrap" gap="2em">
-      { listContext.data.map((item, index) => {
-        const attemptedOn = prefsContext.data.find((x) => x.campaignId == item.id)?.attemptedOn;
-        return <Card sx={{ flex: "1 1 400px", p: "1em" }} key={item.id} id={`campaign-container-${item.id}`}>
-          <TwitterTweetEmbed tweetId={item.contentId} options={{ align: "center", width: "550px", conversation: "none"}} />
-          <RepostXCampaign attemptedOn={attemptedOn} campaignId={item.id} contentId={item.contentId} onAttempt={(id) => setPreference(id, false, true) } />
-          <ConfirmHideCampaign campaignId={item.id} onConfirm={(id) => setPreference(id, true, false) } />
-        </Card>;
-      })}
+      { listContext.data.map((item) => item.site == "X" ?
+        <XCampaign key={item.id} item={item} prefsContext={prefsContext} setPreference={setPreference} /> :
+        <InstagramCampaign key={item.id} item={item} prefsContext={prefsContext} setPreference={setPreference} />
+      )}
     </Box>
     </>
   );
+}
+
+const XCampaign = ({item, prefsContext, setPreference}) => {
+  const attemptedOn = prefsContext.data.find((x) => x.campaignId == item.id)?.attemptedOn;
+
+  return <Card sx={{ flex: "1 1 400px", p: "1em" }} key={item.id} id={`campaign-container-${item.id}`}>
+    <TwitterTweetEmbed tweetId={item.contentId} options={{ align: "center", width: "550px", conversation: "none"}} />
+    <RepostXCampaign attemptedOn={attemptedOn} campaignId={item.id} contentId={item.contentId} onAttempt={(id) => setPreference(id, false, true) } />
+    <ConfirmHideCampaign campaignId={item.id} onConfirm={(id) => setPreference(id, true, false) } />
+  </Card>;
+}
+
+const InstagramCampaign = ({item, prefsContext, setPreference}) => {
+  const notify = useNotify();
+  const {data, isLoading} = useGetList(
+    "IgCampaignRule",
+    { filter: {campaignIdEq: item.id}, perPage: 1,}
+  );
+
+  if (isLoading || !data[0]) {
+    return null;
+  }
+
+  const dataUri = "data:image/jpeg;base64,"+data[0].image;
+  const filename = `campaign_${data[0].campaignId}.jpg`;
+  const copyText = async () => {
+    notify("Caption copied");
+    await navigator.clipboard.writeText(data[0].caption);
+  }
+
+  const attemptedOn = prefsContext.data.find((x) => x.campaignId == item.id)?.attemptedOn;
+
+  return <Card sx={{ flex: "1 1 400px"}} key={item.id} id={`campaign-container-${item.id}`}>
+    <CardTitle text="Post this to Instagram.">
+      And keep it there for at least two weeks.
+    </CardTitle>
+    <CardContent>
+      <Box display="flex" flexDirection="column" alignItems="center">
+        <a href={ dataUri } target="_blank" download={filename}>
+          <img style={{maxWidth: "100%", maxHeight: "400px"}} src={dataUri} />
+        </a>
+        { !!data[0].caption && <Paper sx={{p:"1em", my:"1em"}}><Typography>{ data[0].caption }</Typography></Paper> }
+      </Box>
+      
+      <Button sx={{ mb: "1em" }} fullWidth size="large" variant="contained" target="_blank" href={ dataUri } rel="noopener noreferrer" download={filename}>
+        Download the image
+      </Button> 
+      { !!data[0].caption &&
+        <Button fullWidth size="large" onClick={() => copyText() } variant="contained" >
+          Copy the text
+        </Button> 
+      }
+      <ConfirmHideCampaign campaignId={item.id} onConfirm={(id) => setPreference(id, true, false) } />
+    </CardContent>
+  </Card>;
 }
 
 const RepostXCampaign = ({campaignId, contentId, attemptedOn, onAttempt}) => {
@@ -284,7 +336,7 @@ const CollabList = () => {
         </CardTitle>
         <Datagrid bulkActionButtons={false}>
           <ReferenceField source="campaignId" reference="Campaign">
-            <FunctionField label={false} render={record => <a target="_blank" href={`https://x.com/twitter/status/${record.contentId}`}>See post</a>} />
+            <FunctionField label={false} render={record => <a target="_blank" href={viewPostUrl(record)}>See post</a>} />
           </ReferenceField>
           <FunctionField label="Reward" render={record => `${formatEther(record.gross)} DOC`} />
           <FunctionField label="Asami Fee" render={record => `${formatEther(record.fee)} DOC`} />
@@ -321,34 +373,143 @@ const ConfigureInstagramAccount = ({handles}) => {
   }, [needsRefresh, setNeedsRefresh, handles, reqs]);
 
   let content;
+  const handle = handles.data?.filter((x) => x.site == "INSTAGRAM")[0];
 
   if (handles.isLoading || reqs.isLoading ){
     content = (<>
       <Skeleton />
       <Skeleton />
     </>);
-  } else if (handles.data[0]) {
-    content = <HandleStats handle={handles.data[0]} />;
+  } else if (handle) {
+    content = <InstagramHandleStats handle={handle} />;
   } else {
     const req = reqs.data[0];
     if (req) {
       if (req.status == "UNVERIFIED") {
-        content = <MakeVerificationPost />;
+        content = <MakeInstagramVerificationPost />;
       } else if (req.status != "DONE" ) {
-        content = <HandleSubmissionInProgress req={req} />;
+        content = <InstagramHandleSubmissionInProgress req={req} />;
       }
     } else {
-      content = <CreateHandleRequest {...{setNeedsRefresh}} />;
+      content = <CreateInstagramHandleRequest {...{setNeedsRefresh}} />;
     }
   }
 
   return (<Box>
-    <Card id="configure-x-handle-card" sx={{my:"3em"}}>
+    <Card id="configure-instagram-handle-card" sx={{my:"3em"}}>
       <CardTitle text="Your Instagram" />
       { content }
     </Card>
   </Box>);
 }
+
+const CreateInstagramHandleRequest = ({setNeedsRefresh}) => {
+  const notify = useNotify();
+
+  const transformIt = async (values) => {
+    return { input: values.handleRequestInput };
+  }
+
+  const onSuccess = () => {
+    notify("We've got your handle!");
+    setNeedsRefresh(true);
+  }
+
+  const validate = (values) => {
+    let errors = {};
+    let input = { site: "INSTAGRAM"};
+
+    if ( values.ig_username.match(/^(\w){1,15}$/) ) {
+      input.username = values.ig_username.replace("@","");
+    } else {
+      errors.ig_username = "That does not seem to be an instagram username. It should be something like 'mark_zuck'";
+    }
+
+    values.handleRequestInput = input;
+    return errors;
+  }
+
+  return <CreateBase resource="HandleRequest" transform={transformIt} mutationOptions={{ onSuccess }} >
+    <SimpleForm sanitizeEmptyValues validate={validate} toolbar={false}>
+      <Typography mb="1em">Let's set up your Instagram account in ASAMI so you can start getting paid for your reposts.</Typography>
+      <TextInput fullWidth required={true} size="large" variant="filled" source="ig_username" label="Tell us your instagram username." />
+      <SaveButton fullWidth id="submit-instagram-handle-request-form" size="large" label="Continue" icon={<></>} />
+    </SimpleForm>
+  </CreateBase>;
+}
+
+const MakeInstagramVerificationPost = () => {
+  const notify = useNotify();
+  const [config, setConfig] = useSafeSetState(null);
+  let accountId = BigInt(getAuthKeys().session.accountId);
+
+  useEffect(() => {
+    const load = async () => {
+      setConfig((await (await fetch(`${Settings.apiDomain}/config`)).json()));
+    }
+    load();
+  }, []);
+
+  if (!config) {
+    return <>
+      <Skeleton />
+      <Skeleton />
+    </>;
+  }
+
+  const caption = `${config.instagram_verification_caption} [${accountId}]`;
+
+  const copyText = async () => {
+    notify("Caption copied");
+    await navigator.clipboard.writeText(caption);
+  }
+
+  return <Box p="1em">
+    <Typography mb="0.5em">
+      Now, to verify your username, and your willingness to use it in ASAMI, we need you to post this image, with the given caption.
+    </Typography>
+    <Typography mb="0.5em">
+      Do not apply any filters. You can add more text after the caption if you want, but don't change it.
+    </Typography>
+    <Typography mb="0.5em">
+      Well look for it in your posts, <strong>not in your stories</strong>.
+    </Typography>
+    <Box>
+      <a href={config.instagram_verification_image_url} target="_blank" download>
+        <img style={{maxWidth: "100%", maxHeight: "400px"}} src={config.instagram_verification_image_url} />
+      </a>
+      <Paper sx={{p:"1em", my:"1em"}}><Typography>{ caption }</Typography></Paper>
+      <Button sx={{ mb: "1em" }} fullWidth size="large" variant="contained" target="_blank" href={config.instagram_verification_image_url} rel="noopener noreferrer" download>
+        Download the image
+      </Button> 
+      <Button fullWidth size="large" onClick={() => copyText() } variant="contained" >
+        Copy the text
+      </Button> 
+    </Box>
+  </Box>
+}
+
+const InstagramHandleSubmissionInProgress = ({req}) => 
+  <Box p="1em" id="handle-instagram-submission-in-progress-message">
+    <Typography>
+      We've verified {req.username}, and we're in process of publishing it to the blockchain.
+      Once we're done you can start participating in campaigns.
+      This shouldn't take long.
+    </Typography>
+  </Box>
+
+const InstagramHandleStats = ({handle}) => 
+  <Box pb="1em" id="existing-instagram-handle-stats">
+    <RecordContextProvider value={handle}>
+      <SimpleShowLayout>
+        <TextField label="Username" source="username" />
+        <TextField label="User ID" source="userId" />
+        <FunctionField label="Price per repost" render={ record => `${formatEther(record.price)} DOC` }  />
+        <FunctionField label="Score" render={ record => `${BigInt(handle.score)} ✭` }  />
+      </SimpleShowLayout>
+    </RecordContextProvider>
+  </Box>
+
 
 const ConfigureXAccount = ({handles}) => {
   const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
@@ -376,24 +537,25 @@ const ConfigureXAccount = ({handles}) => {
   }, [needsRefresh, setNeedsRefresh, handles, reqs]);
 
   let content;
+  const handle = handles.data?.filter((x) => x.site == "X")[0];
 
   if (handles.isLoading || reqs.isLoading ){
     content = (<>
       <Skeleton />
       <Skeleton />
     </>);
-  } else if (handles.data[0]) {
-    content = <HandleStats handle={handles.data[0]} />;
+  } else if (handle) {
+    content = <HandleStats handle={handle} />;
   } else {
     const req = reqs.data[0];
     if (req) {
       if (req.status == "UNVERIFIED") {
-        content = <MakeVerificationPost />;
+        content = <MakeXVerificationPost />;
       } else if (req.status != "DONE" ) {
-        content = <HandleSubmissionInProgress req={req} />;
+        content = <XHandleSubmissionInProgress req={req} />;
       }
     } else {
-      content = <CreateHandleRequest {...{setNeedsRefresh}} />;
+      content = <CreateXHandleRequest {...{setNeedsRefresh}} />;
     }
   }
 
@@ -405,7 +567,7 @@ const ConfigureXAccount = ({handles}) => {
   </Box>);
 }
 
-const CreateHandleRequest = ({setNeedsRefresh}) => {
+const CreateXHandleRequest = ({setNeedsRefresh}) => {
   const notify = useNotify();
 
   const transformIt = async (values) => {
@@ -419,7 +581,7 @@ const CreateHandleRequest = ({setNeedsRefresh}) => {
 
   const validate = (values) => {
     let errors = {};
-    let input = { accountId: getAuthKeys().session.accountId, site: "X"};
+    let input = { site: "X"};
 
     if ( values.username.match(/^@?(\w){1,15}$/) ) {
       input.username = values.username.replace("@","");
@@ -435,12 +597,12 @@ const CreateHandleRequest = ({setNeedsRefresh}) => {
     <SimpleForm sanitizeEmptyValues validate={validate} toolbar={false}>
       <Typography mb="1em">Let's set up your X account in ASAMI so you can start getting paid for your reposts.</Typography>
       <TextInput fullWidth required={true} size="large" variant="filled" source="username" label="Tell us your X username." />
-      <SaveButton fullWidth id="submit-handle-request-form" size="large" label="Continue" icon={<></>} />
+      <SaveButton fullWidth id="submit-x-handle-request-form" size="large" label="Continue" icon={<></>} />
     </SimpleForm>
   </CreateBase>;
 }
 
-const MakeVerificationPost = () => {
+const MakeXVerificationPost = () => {
   const [clicked, setClicked] = useSafeSetState(false);
 
   let accountId = BigInt(getAuthKeys().session.accountId);
@@ -459,7 +621,7 @@ const MakeVerificationPost = () => {
   </Box>
 }
 
-const HandleSubmissionInProgress = ({req}) => 
+const XHandleSubmissionInProgress = ({req}) => 
   <Box p="1em" id="handle-submission-in-progress-message">
     <Typography>
       We've verified {req.username}, and we're in process of publishing it to the blockchain.
@@ -468,7 +630,7 @@ const HandleSubmissionInProgress = ({req}) =>
     </Typography>
   </Box>
 
-const HandleStats = ({handle}) => 
+const XHandleStats = ({handle}) => 
   <Box pb="1em" id="existing-x-handle-stats">
     <RecordContextProvider value={handle}>
       <SimpleShowLayout>

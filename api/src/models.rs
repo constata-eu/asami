@@ -6,7 +6,7 @@ use sqlx_models_orm::model;
 pub use chrono::{DateTime, Duration, Utc, Datelike, TimeZone};
 pub type UtcDateTime = DateTime<Utc>;
 pub use juniper::GraphQLEnum;
-pub use ethers::{ types::{ U256, U64, H160, Signature, transaction::eip712::TypedData}, abi::{AbiEncode, AbiDecode}, middleware::Middleware};
+pub use ethers::{ types::{ U256, U64, H160, H256, Signature, transaction::eip712::TypedData}, abi::{AbiEncode, AbiDecode}, middleware::Middleware};
 use std::str::FromStr;
 
 pub mod hasher;

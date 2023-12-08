@@ -26,6 +26,9 @@ model!{
     created_at: UtcDateTime,
     #[sqlx_model_hints(timestamptz, default)]
     updated_at: Option<UtcDateTime>,
+  },
+  has_many {
+    IgCampaignRule(campaign_id)
   }
 }
 
@@ -91,6 +94,10 @@ impl Campaign {
       campaign_id: self.attrs.id.clone(),
       handle_id: handle.attrs.id.clone(),
     }).save().await?)
+  }
+
+  pub async fn is_missing_ig_rules(&self) -> AsamiResult<bool> {
+    Ok(self.ig_campaign_rule_scope().count().await? == 0 && self.attrs.site == Site::Instagram)
   }
 }
 
