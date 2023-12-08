@@ -332,8 +332,9 @@ impl ClaimAccountRequestHub {
 
     let tx_hash = self.state.on_chain.contract
       .claim_accounts(params)
-      .send().await?
-      .tx_hash()
+      .send().await?.await?
+      .ok_or_else(|| Error::service("rsk_blockchain", "no_tx_recepit_for_admin_make_handles"))?
+      .transaction_hash
       .encode_hex();
 
     for req in reqs {

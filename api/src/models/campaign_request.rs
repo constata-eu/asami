@@ -48,8 +48,11 @@ impl CampaignRequestHub {
 
     if reqs.is_empty() { return Ok(()); }
 
-    let tx_hash = rsk.doc_contract.approve( rsk.contract.address(), total).send().await?
-      .tx_hash().encode_hex();
+    let tx_hash = rsk.doc_contract.approve( rsk.contract.address(), total)
+      .send().await?.await?
+      .ok_or_else(|| Error::service("rsk_blockchain", "no_tx_recepit_for_submit_approvals"))?
+      .transaction_hash
+      .encode_hex();
 
     for r in reqs {
       r.update().status(CampaignRequestStatus::Approved).approval_tx_hash(Some(tx_hash.clone())).save().await?;
@@ -69,7 +72,11 @@ impl CampaignRequestHub {
       params.push(r.as_param().await?);
     }
 
-    let tx_hash = rsk.contract.admin_make_campaigns(params).send().await?.tx_hash().encode_hex();
+    let tx_hash = rsk.contract.admin_make_campaigns(params)
+      .send().await?.await?
+      .ok_or_else(|| Error::service("rsk_blockchain", "no_tx_recepit_for_admin_make_campaigns"))?
+      .transaction_hash
+      .encode_hex();
 
     for r in reqs {
       r.update().status(CampaignRequestStatus::Submitted).submission_tx_hash(Some(tx_hash.clone())).save().await?;

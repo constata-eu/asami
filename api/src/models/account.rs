@@ -49,6 +49,7 @@ impl Account {
     let mut campaigns = vec![];
 
     for c in self.state.campaign().select().finished_eq(false).all().await?.into_iter() {
+      if c.valid_until() <= &Utc::now() { continue };
       if ignored.contains(c.id()) { continue };
       if done.contains(c.id()) { continue };
       if c.is_missing_ig_rules().await? { continue };

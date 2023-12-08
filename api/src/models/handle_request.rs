@@ -125,8 +125,9 @@ impl HandleRequestHub {
 
     let tx_hash = rsk.contract
       .admin_make_handles(params)
-      .send().await?
-      .tx_hash()
+      .send().await?.await?
+      .ok_or_else(|| Error::service("rsk_blockchain", "no_tx_recepit_for_admin_make_handles"))?
+      .transaction_hash
       .encode_hex();
 
     for r in reqs {

@@ -178,7 +178,7 @@ const CreateCampaign = ({onSave}) => {
 
   const defaultValidUntil = () => {
     let currentDate = new Date();
-    currentDate.setTime(currentDate.getTime() + (7 * 24 * 60 * 60 * 1000));
+    currentDate.setTime(currentDate.getTime() + (30 * 24 * 60 * 60 * 1000));
     return currentDate;
   }
 

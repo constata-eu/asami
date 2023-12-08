@@ -34,9 +34,9 @@ impl CollabRequestHub {
 
     let tx_hash = self.state.on_chain.contract
       .admin_make_collabs(params)
-      .send().await?
-      .tx_hash()
-      .encode_hex();
+      .send().await?.await?
+      .ok_or_else(|| Error::service("rsk_blockchain", "no_tx_recepit_for_admin_make_collabs"))?
+      .transaction_hash.encode_hex();
 
     for req in reqs {
       submitted.push(
