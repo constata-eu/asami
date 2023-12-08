@@ -545,7 +545,7 @@ const ConfigureXAccount = ({handles}) => {
       <Skeleton />
     </>);
   } else if (handle) {
-    content = <HandleStats handle={handle} />;
+    content = <XHandleStats handle={handle} />;
   } else {
     const req = reqs.data[0];
     if (req) {
