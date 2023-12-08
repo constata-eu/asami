@@ -40,13 +40,13 @@ regex = "1"
 duplicate = "*"
 image = { version = "0.24.7" }
 image_hasher = "1.1.0"
+anyhow = "*"
 
 [dev-dependencies]
 galvanic-test = "0.2"
 galvanic-assert = "0.8.7"
 mockito = "0.28"
 time-test = "0.2.2"
-anyhow = "*"
 
 [[bin]]
 name = "api"
@@ -67,3 +67,8 @@ path = "src/debug_rust_contract_bindings.rs"
 [[bin]]
 name = "migrator"
 path = "src/migrator.rs"
+
+[[bin]]
+name = "trace_transaction"
+path = "src/trace_transaction.rs"
+

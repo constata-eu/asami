@@ -14,6 +14,8 @@ use support::{
 use api::models::*;
 
 browser_test!{ browser_flow_until_instagram_reward (mut d)
+  todo!("Handles are also sent, not only unverified handle requests.");
+
   d.signup_with_one_time_token().await;
 
   d.click("#open-start-campaign-dialog").await;

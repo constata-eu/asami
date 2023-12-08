@@ -67,6 +67,13 @@ impl IgCrawlHub {
       .into_iter().map(|h| format!("https://www.instagram.com/{}", h.attrs.username) )
     );
 
+    direct_urls.extend(self.state.handle()
+      .select()
+      .site_eq(Site::Instagram)
+      .all().await?
+      .into_iter().map(|h| format!("https://www.instagram.com/{}", h.attrs.username) )
+    );
+
     for c in self.state.campaign().select().site_eq(Site::Instagram).finished_eq(false).all().await? {
       if c.is_missing_ig_rules().await? {
         direct_urls.insert( format!("https://www.instagram.com/p/{}", c.attrs.content_id) );

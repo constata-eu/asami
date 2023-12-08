@@ -36,7 +36,7 @@ async fn main() {
     run!("verify_and_appraise_x_handles" { s.handle_request().verify_and_appraise_x().await });
   }];
 
-  every![3 * 60 * 1000, |s| {
+  every![1 * 60 * 1000, |s| {
     run!("ig_crawler do everything" { s.ig_crawl().do_everything().await });
   }];
 
