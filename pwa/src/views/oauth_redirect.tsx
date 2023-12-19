@@ -56,7 +56,7 @@ export const Eip712Login = () => {
   </BareLayout>);
 }
 
-export const InstagramLogin = () => {
+export const FacebookLogin = () => {
   const [searchParams,] = useSearchParams();
   const translate = useTranslate();
   const code = searchParams.get("code");
@@ -70,7 +70,7 @@ export const InstagramLogin = () => {
       minHeight="50vh"
     >
       { code ?
-        <RegularLogin authData={code} authMethodKind="Instagram" /> :
+        <RegularLogin authData={code} authMethodKind="Facebook" /> :
         <Errors error={ translate("components.oauth_redirect.invalid_redirect_state") } />
       }
     </Box>

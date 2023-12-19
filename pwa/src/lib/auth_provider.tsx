@@ -38,11 +38,6 @@ function clearAuthKeys() {
   }
 }
 
-export function makeInstagramUrl() {
-  const { clientId, redirectUri } = Settings.instagram;
-  return `https://api.instagram.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user_profile,user_media&response_type=code`;
-}
-
 export async function makeXUrl() {
   const { clientId, redirectUri } = Settings.x;
 

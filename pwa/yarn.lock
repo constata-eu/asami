@@ -1204,6 +1204,11 @@
   resolved "https://registry.yarnpkg.com/@graphql-typed-document-node/core/-/core-3.2.0.tgz#5f3d96ec6b2354ad6d8a28bf216a1d97b5426861"
   integrity sha512-mB9oAsNCm9aM3/SOv4YtBMqZbYj10R7dkq8byBqxGY/ncFwhf2oQzMV+LCRlWoDSEBJ3COiR1yeDvMtsoOsuFQ==
 
+"@greatsumini/react-facebook-login@^3.3.3":
+  version "3.3.3"
+  resolved "https://registry.yarnpkg.com/@greatsumini/react-facebook-login/-/react-facebook-login-3.3.3.tgz#466d3f0c55d10b962a06e30d7a445a15769f7498"
+  integrity sha512-Y5D7EncR3iy/X/OfWwjjpM5OW0XV6PCE08RZUV/yhAE413PEBIlML7S6z69BcpUPWO5XzEt7cytHChUdwXO4Dw==
+
 "@humanwhocodes/config-array@^0.11.10":
   version "0.11.10"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.11.10.tgz#5a3ffe32cc9306365fb3fd572596cd602d5e12d2"

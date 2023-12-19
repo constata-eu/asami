@@ -13,34 +13,13 @@ import { Head1 } from '../components/theme';
 import logo from '../assets/asami.png';
 import rootstock from '../assets/rootstock.png';
 import { useContracts } from "../components/contracts_context";
+import FacebookLogin from '@greatsumini/react-facebook-login';
+import { Settings } from '../settings';
 
 const Login = () => {
   const [role, setRole] = useStore('user.role', 'advertiser');
-  const [oauthVerifier, setOauthVerifier] = useStore('user.oauthChallenge');
   const [open, setOpen] = useSafeSetState(false);
-  const { signLoginMessage } = useContracts();
-
-  const checkAuth = useCheckAuth();
-  const navigate = useNavigate();
   const [error, setError] = useSafeSetState();
-
-  const startLoginFlow = async (method) => {
-    setOpen(false);
-    switch (method) {
-      case "Eip712":
-        const code = await signLoginMessage();
-        navigate(`/eip712_login?code=${code}`);
-        break;
-      case "X":
-        const { url, verifier } = await makeXUrl();
-        localStorage.setItem("oauthVerifier", verifier);
-        document.location.href = url;
-        break;
-      case "Instagram":
-        document.location.href = makeInstagramUrl();
-        break;
-    }
-  };
 
   const loginAs = async (role) => {
     try {
@@ -51,15 +30,8 @@ const Login = () => {
     }
   }
 
-/*
- * Authentic
-Social
-Amplification &
-Media
-Interaction
-*/
   return (<BareLayout>
-    <LoginSelector open={open} onSelect={startLoginFlow} />
+    <LoginSelector open={open} setOpen={setOpen} />
 
     <Box alignItems="center" m="1em 0 2em 0">
       <Typography variant="h1" fontSize="6em" margin="0" lineHeight="0.5em" fontFamily="Sacramento" fontWeight="bold">
@@ -70,19 +42,8 @@ Interaction
       </Typography>
     </Box>
 
-    <Alert severity="warning" sx={{my: "1em" }}>
-      <AlertTitle>This is a tech preview, you're seeing our staging environment now.</AlertTitle>
-      There's no real rewards and these are not real campaigns. It's just for testing.
-      <br/>
-      Any data you enter here may be deleted or abandoned in the RSK testnet.
-      The last reset of this staging environment was on november 22 2023.
-      <br/>
-      We have a github repo at <a href="https://github.com/constata-eu/asami">constata-eu/asami</a>
-    </Alert>
-
-    
     <Typography my="1em" fontSize="min(4em, 1em + 8vw)" flexBasis="300px" flexGrow="2" lineHeight="1em" fontFamily="LeagueSpartanBlack">
-      Get paid for sharing on social media in our club.
+      Share content. Get Paid.
     </Typography>
 
     <Box display="flex" flexWrap="wrap" gap="3em" mb="3em">
@@ -129,6 +90,16 @@ Interaction
         </Paper>
       </Box>
     </Box>
+
+    <Alert severity="warning" sx={{my: "1em" }}>
+      <AlertTitle>This is a tech preview, you're seeing our staging environment now.</AlertTitle>
+      There's no real rewards and these are not real campaigns. It's just for testing.
+      <br/>
+      Any data you enter here may be deleted or abandoned in the RSK testnet.
+      The last reset of this staging environment was on november 22 2023.
+      <br/>
+      We have a github repo at <a href="https://github.com/constata-eu/asami">constata-eu/asami</a>
+    </Alert>
 
     <Typography mb="0.5em" id="terms_and_policy" fontSize="2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
       It really is a club, and you're welcome to join!
@@ -240,7 +211,24 @@ Interaction
   </BareLayout>);
 };
 
-const LoginSelector = ({open, onSelect}) => {
+const LoginSelector = ({open, setOpen}) => {
+  const { signLoginMessage } = useContracts();
+  const navigate = useNavigate();
+  const [oauthVerifier, setOauthVerifier] = useStore('user.oauthChallenge');
+
+  const startXLogin = async (method) => {
+    setOpen(false);
+    const { url, verifier } = await makeXUrl();
+    localStorage.setItem("oauthVerifier", verifier);
+    document.location.href = url;
+  };
+
+  const startEip712Login = async (method) => {
+    setOpen(false);
+    const code = await signLoginMessage();
+    navigate(`/eip712_login?code=${code}`);
+  };
+
   return (<Dialog open={open} fullWidth maxWidth="sm">
     <Alert severity="warning" icon={false}>
       <Typography sx={{ color: "inherit" }} fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
@@ -256,28 +244,32 @@ const LoginSelector = ({open, onSelect}) => {
     <DialogContent>
       <Box p="0em 1em 0em 0em" display="flex" gap="1em" flexDirection="column">
         <Box>
-          <Typography fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
-            Login with X to start right away.
+          <Typography mb="1em" fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
+            Login with your social account and see what asami is about.
           </Typography>
-          <ul>
-            <li>Make campaigns with limited budgets as an advertiser.</li>
-            <li>Collaborate in campaigns as a member.</li>
-            <li>Accumulate your rewards, and setup your WEB3 wallet later to claim them.</li>
-          </ul>
-          <Button id="x-login-button" fullWidth variant="contained" onClick={() => onSelect("X")}>Accept and login with X</Button>
+          <Button sx={{mb: "1em"}} id="x-login-button" fullWidth variant="contained" onClick={startXLogin}>Accept and login with X</Button>
+          <FacebookLogin
+            appId={ Settings.facebook.appId }
+            useRedirect
+            render={ ({onClick}) => <Button onClick={onClick} id="facebook-login-button" fullWidth variant="contained">Login with Facebook</Button> }
+            scope="public_profile"
+            dialogParams={{
+              redirect_uri: Settings.facebook.redirectUri,
+              state: "FacebookLoginState",
+              response_type: "code"
+            }}
+          />
         </Box>
         <Divider light sx={{ m: "1em 0" }}/>
         <Box>
           <Typography fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
             Login as a full member with WEB3.
           </Typography>
-          <ul>
-            <li>Requires working and funded WEB3 wallet such as metamask.</li>
-            <li>Get paid immediately for your collaborations.</li>
-            <li>Get ASAMI tokens, passive income from the club fees, and more benefits.</li>
-            <li>Participate on the club governance.</li>
-          </ul>
-          <Button id="wallet-login-button" fullWidth variant="contained" onClick={() => onSelect("Eip712")}>Accept and login with WEB3</Button>
+          <Typography>
+            Get the full experience by using your own wallet whether you're an advertiser or a member of the club,
+            you'll get to be part of the governance and earn passive income from your involvement.
+          </Typography>
+          <Button id="wallet-login-button" fullWidth variant="contained" onClick={startEip712Login}>Accept and login with WEB3</Button>
         </Box>
       </Box>
     </DialogContent>

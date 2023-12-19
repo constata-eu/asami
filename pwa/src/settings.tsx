@@ -9,9 +9,9 @@ const development = {
     clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",
     redirectUri: "http://127.0.0.1:8000/x_login",
   },
-  instagram: {
-    clientId: "3539139656337829",
-    redirectUri: "https://127.0.0.1:8000/instagram_login",
+  facebook: {
+    appId: "376919484899990",
+    redirectUri: "http://localhost:8000/facebook_login",
   }
 };
 
@@ -26,9 +26,9 @@ const staging = {
     clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",
     redirectUri: "https://asami-staging.constata.eu/x_login",
   },
-  instagram: {
-    clientId: "3539139656337829",
-    redirectUri: "https://asami-staging.constata.eu/instagram_login",
+  facebook: {
+    appId: "376919484899990",
+    redirectUri: "https://asami-staging.constata.eu/facebook_login",
   }
 };
 

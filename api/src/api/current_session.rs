@@ -72,9 +72,13 @@ struct OauthCodeAndVerifier {
 }
 
 #[derive(serde::Deserialize)]
-struct InstagramOauthToken {
-  //access_token: String,
-  user_id: u64,
+struct FacebookAuthToken {
+  access_token: String,
+}
+#[derive(serde::Deserialize)]
+struct FacebookUserProfile {
+  id: String,
+  name: String
 }
 
 #[derive(Debug, PartialEq)]
@@ -227,18 +231,21 @@ impl CurrentSession {
         
         format!("{}", auth_some!(x.payload().data.as_ref(), "no_twitter_payload_data").id)
       },
-      AuthMethodKind::Instagram => {
-        let result = ureq::post("https://api.instagram.com/oauth/access_token")
-          .send_form(&[
-            ("client_id", &app.settings.instagram.client_id),
-            ("client_secret", &app.settings.instagram.client_secret),
-            ("grant_type", "authorization_code"),
-            ("redirect_uri", &app.settings.instagram.redirect_uri),
-            ("code", auth_data)
-          ]);
-
-        let response = auth_try!(result, "could_not_request_instagram_token");
-        auth_try!(response.into_json::<InstagramOauthToken>(), "instagram_token_was_not_json").user_id.to_string()
+      AuthMethodKind::Facebook => {
+        let token_result = ureq::get("https://graph.facebook.com/v18.0/oauth/access_token")
+          .query_pairs(vec![
+            ("client_id", app.settings.instagram.client_id.as_str()),
+            ("redirect_uri", &app.settings.instagram.redirect_uri.as_str()),
+            ("client_secret", &app.settings.instagram.client_secret.as_str()),
+            ("code", &auth_data),
+          ])
+          .call();
+        dbg!(&token_result);
+        let token_response = auth_try!(token_result, "could_not_request_facebook_access_token");
+        let access_token = auth_try!(token_response.into_json::<FacebookAuthToken>(), "could_not_get_facebook_auth_token").access_token;
+        let result = ureq::get(&format!("https://graph.facebook.com/me?access_token={access_token}")).call();
+        let response = auth_try!(result, "could_not_request_facebook_profile");
+        auth_try!(response.into_json::<FacebookUserProfile>(), "facebook_token_was_not_json").id
       },
       AuthMethodKind::Eip712 => {
         eip_712_sig_to_address(app.settings.rsk.chain_id, auth_data).map_err(ApiAuthError::Fail)?
