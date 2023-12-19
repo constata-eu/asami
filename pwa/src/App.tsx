@@ -30,7 +30,7 @@ import { Alert, AlertTitle, AppBar, Divider, Toolbar, IconButton, Box, Button, C
 import { Head1 } from './components/theme';
 import logo from './assets/asami.png';
 import rootstock from './assets/rootstock.png';
-import { XLogin, InstagramLogin, Eip712Login, OneTimeTokenLogin } from './views/oauth_redirect';
+import { XLogin, FacebookLogin, Eip712Login, OneTimeTokenLogin } from './views/oauth_redirect';
 
 const GoogleForm = () => {
   return <>
@@ -121,7 +121,7 @@ export const App = () => {
         <CustomRoutes>
           <Route path="/one_time_token_login" element={<OneTimeTokenLogin/>}/>
           <Route path="/x_login" element={<XLogin/>}/>
-          <Route path="/instagram_login" element={<InstagramLogin/>}/>
+          <Route path="/facebook_login" element={<FacebookLogin/>}/>
           <Route path="/eip712_login" element={<Eip712Login/>}/>
         </CustomRoutes>
       </Admin>

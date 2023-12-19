@@ -88,8 +88,7 @@ impl sqlx::postgres::PgHasArrayType for ClaimAccountRequestStatus {
 #[sqlx(type_name = "auth_method_kind", rename_all = "snake_case")]
 pub enum AuthMethodKind {
   X,
-  Google,
-  Instagram,
+  Facebook,
   Nostr,
   Eip712,
   OneTimeToken,
@@ -99,8 +98,7 @@ impl AuthMethodKind {
   pub fn from_str(s: &str) -> Option<AuthMethodKind> {
     match s {
       "X" => Some(AuthMethodKind::X),
-      "Google" => Some(AuthMethodKind::Google),
-      "Instagram" => Some(AuthMethodKind::Instagram),
+      "Facebook" => Some(AuthMethodKind::Facebook),
       "Nostr" => Some(AuthMethodKind::Nostr),
       "Eip712" => Some(AuthMethodKind::Eip712),
       "OneTimeToken" => Some(AuthMethodKind::OneTimeToken),

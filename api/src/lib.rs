@@ -30,9 +30,9 @@ pub async fn x_login(app: &State<App>, code: &str, state: &str) -> rocket::respo
   rocket::response::Redirect::permanent(uri)
 }
 
-#[rocket::get("/instagram_login?<code>")]
-pub async fn instagram_login(app: &State<App>, code: &str) -> rocket::response::Redirect {
-  let uri = format!( "{host}/#/instagram_login?code={code}", host = app.settings.pwa_host );
+#[rocket::get("/facebook_login?<code>")]
+pub async fn facebook_login(app: &State<App>, code: &str) -> rocket::response::Redirect {
+  let uri = format!( "{host}/#/facebook_login?code={code}", host = app.settings.pwa_host );
   rocket::response::Redirect::permanent(uri)
 }
 
@@ -77,6 +77,6 @@ pub fn server(app: App) -> rocket::Rocket<rocket::Build> {
     .attach(ReCaptcha::fairing())
     .manage(new_graphql_schema())
     .attach(cors)
-    .mount("/", routes![x_login, instagram_login, config])
+    .mount("/", routes![x_login, facebook_login, config])
     .mount("/graphql", routes![graphiql, post_handler, introspect])
 }

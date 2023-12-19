@@ -13,6 +13,7 @@
     "@apollo/client": "^3.8.4",
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "@greatsumini/react-facebook-login": "^3.3.3",
     "@mui/lab": "^5.0.0-alpha.142",
     "@mui/x-date-pickers": "^6.11.2",
     "@portis/web3": "^4.0.7",
