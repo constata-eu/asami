@@ -28,7 +28,6 @@ fn rust_file_generation() {
     if out_file.exists() {
         std::fs::remove_file(&out_file).unwrap();
     }
-    dbg!(&out_file);
     Abigen::new("ASAMI", abi_source).expect("abigen")
       .add_derive("serde::Deserialize").expect("add_derive")
       .add_derive("serde::Serialize").expect("add_derive")

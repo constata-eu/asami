@@ -16,7 +16,6 @@ async fn main() -> anyhow::Result<()> {
   let tx_hash = "0x4b8105da33f8e9b14ec1ac0dde9b1f6ad3c7f16ba4f052a52b4fca2a9e84327b";
   let h: H256 = H256::from_str(tx_hash)?;
 
-  dbg!("here");
   // default tracer
   //let options = GethDebugTracingOptions::default();
   //let traces = client.debug_trace_transaction(h, options).await?;

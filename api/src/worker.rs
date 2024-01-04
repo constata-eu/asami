@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-#[tokio::main]
+#[tokio::main(worker_threads = 10)]
 async fn main() {
   let app = api::App::from_stdin_password().await.unwrap();
   let settings = *app.clone().settings;

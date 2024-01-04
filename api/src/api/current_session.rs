@@ -78,7 +78,7 @@ struct FacebookAuthToken {
 #[derive(serde::Deserialize)]
 struct FacebookUserProfile {
   id: String,
-  name: String
+  //name: String
 }
 
 #[derive(Debug, PartialEq)]
@@ -240,7 +240,6 @@ impl CurrentSession {
             ("code", &auth_data),
           ])
           .call();
-        dbg!(&token_result);
         let token_response = auth_try!(token_result, "could_not_request_facebook_access_token");
         let access_token = auth_try!(token_response.into_json::<FacebookAuthToken>(), "could_not_get_facebook_auth_token").access_token;
         let result = ureq::get(&format!("https://graph.facebook.com/me?access_token={access_token}")).call();

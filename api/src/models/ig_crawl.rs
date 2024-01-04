@@ -311,8 +311,8 @@ impl IgCrawlResult {
           }
 
           let Ok((_, posted_hash)) = get_url_image_hash(&post.display_url) else {
-            self.log_post(&post, "could not fetch display_url").await?;
-            return Err(Error::service("ig", &format!("Could not fetch display url for {}.{}", self.id(), &post.id )));
+            self.log_post(&post, "could not fetch display_url at this time").await?;
+            continue;
           };
 
           let distance = verification_hash.dist(&posted_hash);
@@ -365,7 +365,7 @@ impl IgCrawlResult {
               Err(e) => {
                 let description = format!("could not fetch display_url {:?} {:?}", post, e);
                 self.log_post(&post, &description).await?;
-                return Err(Error::service("ig", &description));
+                continue;
               }
             };
 
