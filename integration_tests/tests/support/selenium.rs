@@ -5,16 +5,16 @@ use thirtyfour::prelude::*;
 use api::models;
 use crate::support::try_until;
 
-pub struct Selenium{
+pub struct Selenium<'a>{
   pub driver: WebDriver,
-  pub api: ApiClient,
+  pub api: ApiClient<'a>,
   child: Child,
 }
 
 pub const DOWNLOADS: &str = "/tmp/asami_tests_downloads";
 
-impl Selenium {
-  pub async fn start(api: ApiClient) -> Self {
+impl Selenium<'_> {
+  pub async fn start<'a>(api: ApiClient<'a>) -> Selenium<'a> {
     Command::new("rm").args(&["-r", "-f", "/tmp/asami_browser_datadir"])
       .output().expect("Could not delete downloads link");
     Command::new("cp").args(&["-r", "chromedrivers/profile", "/tmp/asami_browser_datadir"])

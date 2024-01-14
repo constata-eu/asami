@@ -18,10 +18,6 @@ model!{
     price: String,
     #[sqlx_model_hints(varchar)]
     score: String,
-    #[sqlx_model_hints(varchar)]
-    nostr_affine_x: String,
-    #[sqlx_model_hints(varchar)]
-    nostr_affine_y: String,
   },
   has_many {
     HandleTopic(handle_id),

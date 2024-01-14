@@ -18,10 +18,6 @@ pub struct Handle {
   price: String,
   #[graphql(description = "The score given to this handle by Asami's admin.")]
   score: String,
-  #[graphql(description = "The X coord of a nostr pubkey, for on-chain verification of nostr collabs.")]
-  nostr_affine_x: String,
-  #[graphql(description = "The Y coord of a nostr pubkey, for on-chain verification of nostr collabs.")]
-  nostr_affine_y: String,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -76,8 +72,6 @@ impl Showable<models::Handle, HandleFilter> for Handle {
       user_id: d.attrs.user_id,
       price: d.attrs.price,
       score: d.attrs.score,
-      nostr_affine_x: d.attrs.nostr_affine_x,
-      nostr_affine_y: d.attrs.nostr_affine_y,
     })
   }
 }

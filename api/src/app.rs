@@ -31,7 +31,7 @@ impl App {
     Ok(Self{ db, on_chain, settings: Box::new(config) })
   }
 
-  pub async fn run_background_tasks(&self) -> AsamiResult<()> {
+  pub async fn run_background_tasks(&self) -> anyhow::Result<()> {
     self.handle_request().submit_all().await?;
     self.campaign_request().submit_approvals().await?;
     self.campaign_request().submit_all().await?;

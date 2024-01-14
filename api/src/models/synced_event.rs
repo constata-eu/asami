@@ -105,8 +105,6 @@ impl SyncedEventHub {
             .addr(addr)
             .unclaimed_asami_tokens(a.unclaimed_asami_tokens.encode_hex())
             .unclaimed_doc_rewards(a.unclaimed_asami_tokens.encode_hex())
-            .nostr_self_managed(a.nostr_self_managed)
-            .nostr_abuse_proven(a.nostr_abuse_proven)
             .save().await?;
         },
         None => {
@@ -115,8 +113,6 @@ impl SyncedEventHub {
             name: None,
             unclaimed_asami_tokens: a.unclaimed_asami_tokens.encode_hex(),
             unclaimed_doc_rewards: a.unclaimed_asami_tokens.encode_hex(),
-            nostr_self_managed: a.nostr_self_managed,
-            nostr_abuse_proven: a.nostr_abuse_proven,
           })
           .save().await?
           .update().id(a.id.encode_hex())
@@ -169,8 +165,6 @@ impl SyncedEventHub {
             user_id: h.user_id,
             price: h.price.encode_hex(),
             score: h.score.encode_hex(),
-            nostr_affine_x: h.nostr_affine_x.encode_hex(),
-            nostr_affine_y: h.nostr_affine_y.encode_hex(),
           }).save().await?;
 
           for new in h.topics {

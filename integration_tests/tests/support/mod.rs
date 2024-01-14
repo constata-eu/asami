@@ -102,15 +102,12 @@ macro_rules! browser_test {
 
       let test_app = crate::support::TestApp::init().await;
       let mut vite_preview = VitePreview::start();
-      let server = TestApiServer::start(test_app.app.clone()).await;
-      let api = crate::support::ApiClient::new(test_app.clone()).await;
+      let api = test_app.client().await;
 
       #[allow(unused_mut)]
       let mut $browser = Selenium::start(api).await;
       {$($e)*};
 
-      server.abort();
-      assert!(server.await.unwrap_err().is_cancelled());
       vite_preview.stop();
       $browser.stop().await;
     }
@@ -122,8 +119,19 @@ macro_rules! api_test {
   ($test_name:ident(mut $client:ident) $($e:tt)* ) => {
     test!{ $test_name
       time_test::time_test!("api test");
-      let test_app = crate::support::TestApp::init().await;
-      let mut $client = crate::support::ApiClient::new(test_app.clone()).await;
+      let app = crate::support::TestApp::init().await;
+      let mut $client = app.client().await;
+      {$($e)*};
+    }
+  }
+}
+
+#[macro_export]
+macro_rules! app_test {
+  ($test_name:ident($test_app:ident) $($e:tt)* ) => {
+    test!{ $test_name
+      time_test::time_test!("api test");
+      let $test_app = crate::support::TestApp::init().await;
       {$($e)*};
     }
   }

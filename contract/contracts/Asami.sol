@@ -1,21 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./NostrUtils.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 
-contract Asami is Ownable, ERC20 {
-  NostrUtils public nostrUtils;
-
-  enum Site { X, Nostr, Instagram }
+contract Asami is Ownable, ERC20Capped {
+  enum Site { X, Instagram, LinkedIn, Facebook, Nostr}
 
   struct Account {
     uint256 id;
     address addr;
     uint256 unclaimedAsamiTokens;
     uint256 unclaimedDocRewards;
-    bool nostrSelfManaged;
-    bool nostrAbuseProven;
     uint256[] handles;
     uint256[] campaigns;
     uint256[] collabs;
@@ -34,9 +29,6 @@ contract Asami is Ownable, ERC20 {
     uint256[] topics;
     string username;
     string userId;
-    // Only when Site is Nostr.
-    uint256 nostrAffineX;
-    uint256 nostrAffineY;
   }
   Handle[] public handles;
   event HandleSaved(Handle handle);
@@ -79,37 +71,60 @@ contract Asami is Ownable, ERC20 {
   Collab[] public collabs;
   event CollabSaved(Collab collab);
 
-  uint256[] public votes;
-  mapping(uint256 => uint256) public voteIdByAccountId;
+  uint256 public feeRate = 10; // It's a percentage.
+  uint256 public defaultVotedFeeRate = 10 * 1e18;
+  uint256 public votedFeeRate = defaultVotedFeeRate;
+  uint256 public votedFeeRateVoteCount = 0;
+  /* To make the protocol more predictable, changes are applied only once every period */
+  uint256 public lastVotedFeeRateAppliedOn = 0;
+
+  struct FeeRateVote {
+    uint256 votes;
+    uint256 rate;
+  }
+  mapping(address => FeeRateVote) public feeRateVotes;
 
   string[] public topics;
 
   IERC20 internal doc;
   address[] public holders;
+  mapping(address => bool) public trackedHolders;
 
   address public admin; // An address that may be stored on a server.
   address public adminTreasury; // A cold storage address for admin money.
+
+  uint256 public claimedAsamiTokens;
 
   modifier onlyAdmin() {
     require(msg.sender == admin || msg.sender == owner());
     _;
   }
 
-  constructor(address _dollarOnChainAddress, address _nostrUtilsAddress) ERC20("AsamiToken", "ASAMI") {
+  constructor(address _dollarOnChainAddress) ERC20("AsamiToken", "ASAMI") ERC20Capped(21 * 1e24) {
     doc = IERC20(_dollarOnChainAddress);
-    nostrUtils = NostrUtils(_nostrUtilsAddress);
   }
 
   function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
     super._beforeTokenTransfer(from, to, amount);
-    if (balanceOf(to) == 0 && amount > 0) {
+    if (!trackedHolders[to] && amount > 0) {
       holders.push(to);
+      trackedHolders[to] = true;
     }
+
+    if (feeRateVotes[from].votes > 0) { removeFeeRateVoteHelper(from); }
   }
 
   function setAdmin(address _admin, address _adminTreasury) external onlyOwner {
     admin = _admin;
     adminTreasury = _adminTreasury;
+  }
+
+  function getHolders() public view returns (string[] memory) {
+    return topics;
+  }
+
+  function getClaimedAsamiTokens() public view returns (uint256) {
+    return claimedAsamiTokens;
   }
 
   function getTopics() public view returns (string[] memory) {
@@ -256,18 +271,12 @@ contract Asami is Ownable, ERC20 {
       require(handle.id > 0, "1");
       Account storage member = accounts[handle.accountId];
 
-      require(
-        handle.site != Site.Nostr ||
-        (!member.nostrSelfManaged && !member.nostrAbuseProven),
-        "2"
-      );
-
       Campaign storage campaign = campaigns[_collabs[i].campaignId - 1];
       require(campaign.id > 0, "3");
       require(campaign.validUntil > block.timestamp, "4");
       require(isSubset(handle.topics, campaign.topics), "5");
 
-      require(campaign.remaining > handle.price, "6");
+      require(campaign.remaining >= handle.price, "6");
       require(campaign.site == handle.site, "7");
       require((handle.price / handle.score) <= campaign.priceScoreRatio, "8");
 
@@ -292,26 +301,38 @@ contract Asami is Ownable, ERC20 {
       campaign.remaining -= gross;
       feePool += fee;
 
-      uint256 adminTokens = (fee * 75) / 100;
-      uint256 memberTokens = (fee * 15) / 100;
-      uint256 advertiserTokens = fee - adminTokens - memberTokens;
+      uint256 remainingToCap = cap() - claimedAsamiTokens;
+      uint256 newTokens = (fee > remainingToCap) ? remainingToCap : fee;
+      claimedAsamiTokens += newTokens;
 
-      _safeMint(adminTreasury, adminTokens);
+      uint256 advertiserTokens = (newTokens * 10) / 100;
+      uint256 memberTokens = (newTokens * 15) / 100;
+      uint256 adminTokens = newTokens - advertiserTokens - memberTokens;
+
+      if (adminTokens > 0) {
+        _safeMint(adminTreasury, adminTokens);
+      }
 
       if ( member.addr == address(0) ) {
-        member.unclaimedAsamiTokens += memberTokens;
+        if( memberTokens > 0) {
+          member.unclaimedAsamiTokens += memberTokens;
+        }
         member.unclaimedDocRewards += reward;
         emit AccountSaved(member);
       } else {
-        _safeMint(member.addr, memberTokens);
+        if( memberTokens > 0) {
+          _safeMint(member.addr, memberTokens);
+        }
         doc.transfer(member.addr, reward);
       }
 
-      if ( advertiser.addr == address(0) ) {
-        advertiser.unclaimedAsamiTokens += advertiserTokens;
-        emit AccountSaved(advertiser);
-      } else {
-        _safeMint(advertiser.addr, advertiserTokens);
+      if ( advertiserTokens > 0 ) {
+        if ( advertiser.addr == address(0) ) {
+          advertiser.unclaimedAsamiTokens += advertiserTokens;
+          emit AccountSaved(advertiser);
+        } else {
+          _safeMint(advertiser.addr, advertiserTokens);
+        }
       }
 
       emit CollabSaved(collab);
@@ -336,7 +357,7 @@ contract Asami is Ownable, ERC20 {
 
   // To prevent race conditions, we never mint while we're in the middle of a payout.
   function _safeMint(address _addr, uint256 _amount) private {
-    require(payoutsRemaining == 0);
+    require(payoutsRemaining == 0, "SM 0");
     _mint(_addr, _amount);
   }
 
@@ -498,186 +519,50 @@ contract Asami is Ownable, ERC20 {
     }
   }
 
-  uint256 public feeRate = 10; // It's a percentage.
+  function applyVotedFeeRate() external {
+    uint256 currentCycle = getCurrentCycle();
+    require(currentCycle != lastVotedFeeRateAppliedOn);
+    feeRate = votedFeeRate / 1e18;
+    lastVotedFeeRateAppliedOn = currentCycle;
+  }
 
-  function makeVote(
-    uint256 _feeRate
-  ) external {
-    _feeRate = max(50, _feeRate);
-    Account storage account = accounts[accountIdByAddress[msg.sender]];
-    require(account.addr != address(0));
-    uint256 voteId = voteIdByAccountId[account.id];
-    if(voteId == 0) {
-      votes.push(_feeRate);
-      voteIdByAccountId[account.id] = votes.length;
+  function submitFeeRateVote(uint256 _rate) external {
+    require(_rate > 0 && _rate < 100, "sfrv 0");
+
+    uint256 preciseRate = _rate * 1e18;
+
+    FeeRateVote storage vote = feeRateVotes[msg.sender];
+    if (vote.votes > 0) { removeFeeRateVoteHelper(msg.sender); }
+
+    uint256 votes = balanceOf(msg.sender);
+    require(votes > 0, "sfrv 1");
+
+    votedFeeRate = ((votedFeeRate * votedFeeRateVoteCount) + (votes * preciseRate)) / (votedFeeRateVoteCount + votes);
+    votedFeeRateVoteCount += votes;
+    vote.votes = votes;
+    vote.rate = preciseRate;
+  }
+
+  function removeFeeRateVote() external {
+    removeFeeRateVoteHelper(msg.sender);
+  }
+
+  function removeFeeRateVoteHelper(address _holder) private {
+    FeeRateVote storage vote = feeRateVotes[_holder];
+    require(vote.votes > 0, "rfrv 0");
+    uint256 nextVoteCount = votedFeeRateVoteCount - vote.votes;
+    uint256 currentVolume = votedFeeRate * votedFeeRateVoteCount;
+    uint256 removedVolume = vote.votes * vote.rate;
+    uint256 nextVolume = currentVolume > removedVolume ? currentVolume - removedVolume : 0;
+
+    if (nextVoteCount > 0) {
+      votedFeeRate = nextVolume / nextVoteCount;
+      votedFeeRateVoteCount = nextVoteCount;
     } else {
-      votes[voteId] = _feeRate;
+      votedFeeRate = defaultVotedFeeRate;
+      votedFeeRateVoteCount = 0;
     }
-  }
-
-  uint256 public votesTotal = 0;
-  uint256 public votesRemaining = 0;
-  uint256 public lastVoteCycle = 0;
-  uint256 public votedAverage = 0;
-
-  function tallyVotes() external {
-    if(votesRemaining == 0) {
-      // We're starting a new updates cycle.
-      // We can only start one payout in each 15 day period.
-      votesTotal = votes.length;
-      votesRemaining = votesTotal;
-      uint256 currentCycle = getCurrentCycle();
-      require(currentCycle != lastVoteCycle);
-      lastVoteCycle = currentCycle;
-    }
-
-    uint256 startAt = votesTotal - votesRemaining;
-    uint256 until = min((startAt + 100), votesTotal);
-
-    uint256 sum = 0;
-    for (uint256 i = startAt; i < until; i++) {
-      sum += votes[i];
-    }
-
-    votedAverage = ((votedAverage * startAt) + sum) / until;
-    votesRemaining -= until;
-
-    if(votesRemaining == 0) {
-      feeRate = votedAverage;
-      votesTotal = 0;
-      votedAverage = 0;
-      delete votes;
-    }
-  }
-
-  // Accounts can choose to submit their own Nostr collaborations.
-  // Sending the collaboration themselves is a bit more expensive in terms of on-chain fees.
-  // But they get a big discount in the Asami fee (they pay just one third).
-  // Also, all new tokens issued for that fee are split 60-40 between the member and the advertiser.
-  // The admin does not get any tokens issued for this transaction.
-  // Nostr collabs can be submitted by accounts themselves.
-
-  function makeNostrCollab(
-    uint256 _handleId,
-    uint256 _campaignId,
-    string memory _tagsAfterPostId,
-    uint256 _createdAt,
-    uint256 _sigR,
-    uint256 _sigS
-  ) external {
-    Handle storage handle = handles[_handleId - 1];
-    Account storage member = accounts[handle.accountId];
-    require(member.addr != address(0));
-
-    require(handle.site == Site.Nostr);
-    require(member.nostrSelfManaged);
-    require(!member.nostrAbuseProven);
-
-    Campaign storage campaign = campaigns[_campaignId - 1];
-    Account storage advertiser = accounts[campaign.accountId];
-
-    string memory messageId = nostrUtils.verifyRepost(
-      handle.userId,
-      campaign.contentId,
-      _tagsAfterPostId,
-      _createdAt,
-      handle.nostrAffineX,
-      handle.nostrAffineY,
-      _sigR,
-      _sigS
-    );
-
-    uint256 gross = handle.price;
-    uint256 fee = (gross * (feeRate / 3) ) / 100;
-    uint256 reward = gross - fee;
-
-    Collab memory collab = Collab({
-      id: collabs.length + 1,
-      handleId: handle.id,
-      campaignId: campaign.id,
-      gross: gross,
-      fee: fee,
-      proof: messageId,
-      createdAt: block.timestamp
-    });
-    collabs.push(collab);
-    member.collabs.push(collab.id);
-
-    campaign.remaining -= gross;
-    feePool += fee;
-
-    uint256 memberTokens = (fee * 60) / 100;
-    uint256 advertiserTokens = fee - memberTokens;
-
-    _safeMint(member.addr, memberTokens);
-    doc.transfer(member.addr, reward);
-
-    if ( advertiser.addr == address(0) ) {
-      advertiser.unclaimedAsamiTokens += advertiserTokens;
-      emit AccountSaved(advertiser);
-    } else {
-      _safeMint(advertiser.addr, advertiserTokens);
-    }
-
-    emit CollabSaved(collab);
-    emit CampaignSaved(campaign);
-  }
-
-  // If a Nostr handle is caught reposting and deleting their reposts
-  // to get paid without reposting, the deletion message may be posted which
-  // will disable their nostr handle for all future campaigns.
-  // The contract admin may re-enable their account.
-  function reportNostrAbuse(
-    uint256 _collabId,
-    string calldata _content,
-    string calldata _tags,
-    uint256 _createdAt,
-    uint256 _sigR,
-    uint256 _sigS
-  ) external {
-    Collab storage collab = collabs[_collabId - 1];
-    require((_createdAt - collab.createdAt) < 60 * 60 * 24 * 3);
-    require(nostrUtils.idInTags(collab.proof, _tags));
-
-    Handle storage handle = handles[collab.handleId - 1];
-    require(handle.site == Site.Nostr);
-
-    Account storage account = accounts[handle.accountId];
-    require(account.id > 0);
-
-    nostrUtils.verifyDeletionMessage(
-      handle.userId,
-      _content,
-      _tags,
-      _createdAt,
-      handle.nostrAffineX,
-      handle.nostrAffineY,
-      _sigR,
-      _sigS);
-    
-    account.nostrAbuseProven = true;
-    emit HandleSaved(handle);
-  }
-
-  function setNostrSelfManaged(
-    uint256 _handleId,
-    bool _value
-  ) external {
-    Handle storage handle = handles[_handleId - 1];
-    Account storage account = accounts[accountIdByAddress[msg.sender]];
-    require(account.addr != address(0));
-    require(account.id == handle.accountId);
-    require(handle.site == Site.Nostr);
-    account.nostrSelfManaged = _value;
-    emit HandleSaved(handle);
-  }
-
-  function max(uint256 _a, uint256 _b) public pure returns (uint256) {
-    return _a > _b ? _a : _b;
-  }
-
-  function min(uint256 _a, uint256 _b) public pure returns (uint256) {
-    return _a > _b ? _b : _a;
+    delete feeRateVotes[_holder];
   }
 
   function isSubset(uint256[] memory mainSet, uint256[] memory subset) public pure returns (bool) {

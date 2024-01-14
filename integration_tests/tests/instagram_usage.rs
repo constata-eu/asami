@@ -14,7 +14,7 @@ use support::{
 use api::models::*;
 
 browser_test!{ browser_flow_until_instagram_reward (mut d)
-  todo!("Handles are also sent, not only unverified handle requests.");
+  //todo!("Handles are also sent, not only unverified handle requests.");
 
   d.signup_with_one_time_token().await;
 
@@ -148,7 +148,7 @@ api_test! { supports_instagram_collaboration (mut c)
   assert_eq!(collab.gross, uhex("1"));
 }
 
-async fn get_handle_requests(c: &mut ApiClient, id: i64) -> ahr::AllHandleRequestsAllHandleRequests {
+async fn get_handle_requests(c: &mut ApiClient<'_>, id: i64) -> ahr::AllHandleRequestsAllHandleRequests {
   c.gql::<ahr::ResponseData, _>(
     &AllHandleRequests::build_query(ahr::Variables{
       filter: Some(ahr::HandleRequestFilter {
@@ -167,7 +167,7 @@ async fn get_handle_requests(c: &mut ApiClient, id: i64) -> ahr::AllHandleReques
   ).await.all_handle_requests.pop().unwrap()
 }
 
-async fn get_collabs(c: &mut ApiClient) -> ac::AllCollabsAllCollabs {
+async fn get_collabs(c: &mut ApiClient<'_>) -> ac::AllCollabsAllCollabs {
   c.gql::<ac::ResponseData, _>(
     &AllCollabs::build_query(ac::Variables{
       filter: None,

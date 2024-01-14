@@ -5,8 +5,7 @@ use support::{*, gql::{*, create_campaign_preference::*}};
 
 browser_test!{ hides_ignored_and_shows_attempted_repost (mut d)
   let scenario = d.api.build_baseline_scenario().await;
-  d.login().await;
-  d.api.build_x_handle("nubis_bruno").await;
+  d.api.create_x_handle("nubis_bruno", wei("10000000000000000")).await;
   d.goto_member_dashboard().await;
 
   d.wait_for("#twitter-widget-1").await;
@@ -21,7 +20,7 @@ browser_test!{ hides_ignored_and_shows_attempted_repost (mut d)
 
 api_test!{ filters_campaigns_for_account (mut c)
   let scenario = c.build_baseline_scenario().await;
-  c.build_x_handle("nubis_bruno").await;
+  c.create_x_handle("nubis_bruno", wei("10000000000000000")).await;
 
   let mut all = get_campaign_offers(&mut c).await;
 
@@ -59,7 +58,7 @@ api_test!{ filters_campaigns_for_account (mut c)
   assert_eq!(get_campaign_offers(&mut c).await.all_campaigns.len(), 1);
 }
 
-async fn get_campaign_offers(client: &mut ApiClient) -> all_campaigns::ResponseData {
+async fn get_campaign_offers(client: &mut ApiClient<'_>) -> all_campaigns::ResponseData {
   client.gql(
     &AllCampaigns::build_query(all_campaigns::Variables{
       filter: Some(all_campaigns::CampaignFilter {

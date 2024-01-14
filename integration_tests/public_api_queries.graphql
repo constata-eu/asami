@@ -34,8 +34,6 @@ mutation CreateHandleRequest($input: CreateHandleRequestInput!) {
     userId
     price
     score
-    nostrAffineX
-    nostrAffineY
     status
     __typename
   }
@@ -152,8 +150,6 @@ query HandleRequest($id: Int!) {
     userId
     price
     score
-    nostrAffineX
-    nostrAffineY
     status
     __typename
   }
@@ -167,8 +163,6 @@ query AllHandleRequests($page: Int, $perPage: Int, $sortField: String, $sortOrde
     userId
     price
     score
-    nostrAffineX
-    nostrAffineY
     status
     __typename
   }
@@ -188,8 +182,6 @@ query Handle($id: String!) {
     userId
     price
     score
-    nostrAffineX
-    nostrAffineY
     __typename
   }
 }
@@ -202,8 +194,6 @@ query AllHandles($page: Int, $perPage: Int, $sortField: String, $sortOrder: Stri
     userId
     price
     score
-    nostrAffineX
-    nostrAffineY
     __typename
   }
 }
@@ -319,6 +309,30 @@ query AllCampaignPreferences($page: Int, $perPage: Int, $sortField: String, $sor
 }
 query AllCampaignPreferencesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignPreferenceFilter) {
   _allCampaignPreferencesMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query IgCampaignRule($id: Int!) {
+  IgCampaignRule(id: $id) {
+    id
+    campaignId
+    image
+    caption
+    __typename
+  }
+}
+query AllIgCampaignRules($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: IgCampaignRuleFilter) {
+  allIgCampaignRules(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    campaignId
+    image
+    caption
+    __typename
+  }
+}
+query AllIgCampaignRulesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: IgCampaignRuleFilter) {
+  _allIgCampaignRulesMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
     count
     __typename
   }

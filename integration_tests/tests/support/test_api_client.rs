@@ -5,10 +5,13 @@ pub use galvanic_assert::{
   matchers::{collection::*, variant::*, *},
   *,
 };
-pub use api::models::{self, u, U256, u256, hasher, Utc, wei};
+pub use api::{
+  models::{self, u, U256, u256, hasher, Utc, wei},
+  on_chain::{AsamiContractSigner, AsamiContract, Provider, SignerMiddleware, Address, Http}
+};
 use rocket::{
   http::{Header, Status},
-  local::asynchronous::{Client, LocalResponse},
+  local::asynchronous::LocalResponse,
 };
 use jwt_simple::{ algorithms::*, prelude::*, };
 pub use serde::{Serialize, de::DeserializeOwned, Deserialize};
@@ -16,17 +19,21 @@ use graphql_client;
 use graphql_client::GraphQLQuery;
 pub use api::Decimal;
 
+use rand::thread_rng;
+use ethers::{middleware::Middleware, types::TransactionRequest, signers::{LocalWallet, Signer}};
+
 #[derive(Deserialize)]
 pub struct ApiError {
   pub error: String,
 }
 
 #[allow(dead_code)]
-pub struct ApiClient {
-  pub client: Client,
-  pub test_app: TestApp,
+pub struct ApiClient<'a> {
+  pub test_app: &'a TestApp,
   pub session_key: Option<ES256KeyPair>,
   pub session: Option<models::Session>,
+  pub local_wallet: Option<LocalWallet>,
+  pub contract: Option<AsamiContractSigner>,
 }
 
 #[derive(Clone)]
@@ -37,9 +44,15 @@ pub struct BaseLineScenario {
   pub low_budget_campaign: models::Campaign,
 }
 
-impl ApiClient {
-  pub async fn new(test_app: TestApp) -> Self {
-    Self { session_key: None, session: None, client: Client::tracked(api::server(test_app.app.clone())).await.unwrap(), test_app }
+impl<'b> ApiClient<'b> {
+  pub async fn new(test_app: &'b TestApp) -> ApiClient<'b> {
+    Self {
+      test_app,
+      local_wallet: None,
+      session_key: None, 
+      session: None,
+      contract: None,
+    }
   }
 
   pub fn app(&self) -> api::App {
@@ -54,8 +67,20 @@ impl ApiClient {
     self.session.as_ref().unwrap().user().await.unwrap()
   }
 
+  pub async fn x_handle(&self) -> models::Handle {
+    self.account().await.handle_scope().site_eq(models::Site::X).one().await.unwrap()
+  }
+
   pub async fn login(&mut self) {
-    self.login_with_key(self.test_app.private_key()).await
+    self.login_with_key( ES256KeyPair::generate() ).await
+  }
+
+  pub fn local_wallet(&self) -> &LocalWallet {
+    self.local_wallet.as_ref().unwrap()
+  }
+
+  pub fn contract(&self) -> &AsamiContractSigner {
+    self.contract.as_ref().unwrap()
   }
 
   pub async fn login_with_key(&mut self, key: ES256KeyPair) {
@@ -86,11 +111,6 @@ impl ApiClient {
   }
 
   pub async fn build_baseline_scenario(&mut self) -> BaseLineScenario {
-    // This is a full scenario to use in testing any integration.
-    // It replicates the application having run for a few cicles 
-    // All tests should at least be run in this scenario.
-    // ToDo: Can we just cache and load instead of re-running every time?
-
     self.login_with_key(ES256KeyPair::generate()).await;
     let rate = u256(self.test_app.app.indexer_state().get().await.unwrap().suggested_price_per_point());
     let budget = || { rate * wei("200") };
@@ -110,7 +130,7 @@ impl ApiClient {
     }
   }
 
-  pub async fn build_instagram_campaign(&mut self, budget: U256, rate: U256) -> models::CampaignRequest {
+  pub async fn build_instagram_campaign(&self, budget: U256, rate: U256) -> models::CampaignRequest {
     let post = "C0T1wKQMS0v"; // This is the post shortcode.
     let two_days = Utc::now() + chrono::Duration::days(2);
 
@@ -119,7 +139,7 @@ impl ApiClient {
       .await.unwrap()
   }
 
-  pub async fn build_x_campaign(&mut self, budget: U256, rate: U256) -> models::CampaignRequest {
+  pub async fn build_x_campaign(&self, budget: U256, rate: U256) -> models::CampaignRequest {
     let post = "1716421161867710954";
     let two_days = Utc::now() + chrono::Duration::days(2);
 
@@ -128,19 +148,68 @@ impl ApiClient {
       .await.unwrap()
   }
 
+  pub async fn create_x_campaign(&self, budget: U256, rate: U256) -> models::Campaign {
+    let campaign = self.build_x_campaign(budget, rate).await;
+    self.test_app.run_idempotent_background_tasks_a_few_times().await;
+    campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("campaign")
+  }
 
-  pub async fn build_x_handle(&mut self, username: &str) -> (models::HandleRequest, models::Handle) {
-    let rate = u256(self.test_app.app.indexer_state().get().await.unwrap().suggested_price_per_point());
-
-    let mut req = self.account().await.create_handle_request(models::Site::X, username).await.unwrap()
+  pub async fn create_x_handle(&self, username: &str, rate: U256) {
+    self.account().await.create_handle_request(models::Site::X, username).await.unwrap()
       .verify("179383862".into()).await.unwrap()
-      .appraise(rate * wei("10"), wei("10")).await.unwrap();
+      .appraise(rate, wei("10")).await.unwrap();
+
+    self.test_app.run_idempotent_background_tasks_a_few_times().await;
+  }
+
+  pub async fn claim_account(&mut self) { // Rsk address as string.
+    let rsk = &self.test_app.app.settings.rsk;
+    let wallet = LocalWallet::new(&mut thread_rng()).with_chain_id(rsk.chain_id);
+    let payload = models::make_login_to_asami_typed_data(rsk.chain_id).unwrap();
+    let signature = wallet.sign_typed_data(&payload).await.unwrap().to_string();
+
+    let _claim: gql::create_claim_account_request::ResponseData = self.gql(
+      &gql::CreateClaimAccountRequest::build_query(gql::create_claim_account_request::Variables{
+        input: gql::create_claim_account_request::CreateClaimAccountRequestInput{signature}
+      }),
+      vec![]
+    ).await;
+
+    let tx = TransactionRequest::new().to(wallet.address()).value(u("10"));
+    self.test_app.app.on_chain.contract.client()
+      .send_transaction(tx, None)
+      .await.expect("sending tx")
+      .await.expect("waiting tx confirmation")
+      .expect("tx result");
 
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
 
-    req.reload().await.unwrap();
-    let handle = req.handle().await.unwrap().unwrap();
-    (req, handle)
+    let provider = Provider::<Http>::try_from(&rsk.rpc_url).unwrap();
+    let client = std::sync::Arc::new(SignerMiddleware::new(provider, wallet.clone()));
+    let address: Address = rsk.contract_address.parse().unwrap();
+    self.contract = Some(AsamiContract::new(address, client.clone()));
+    self.local_wallet = Some(wallet);
+  }
+
+  pub async fn create_x_collab(&self, campaign: &models::Campaign) {
+    campaign.make_collab(&self.x_handle().await).await.unwrap();
+    self.test_app.run_idempotent_background_tasks_a_few_times().await;
+  }
+
+  pub async fn self_submit_fee_rate_vote(&self, rate: U256) -> api::AsamiResult<()> {
+    self.contract().submit_fee_rate_vote(rate)
+      .send().await?
+      .await?
+      .expect("extracting receipt");
+    Ok(())
+  }
+
+  pub async fn self_remove_fee_rate_vote(&self) -> api::AsamiResult<()> {
+    self.contract().remove_fee_rate_vote()
+      .send().await?
+      .await?
+      .expect("extracting receipt");
+    Ok(())
   }
 
   pub async fn gql<'a, T: core::fmt::Debug, Q>(&'a self, query: Q, extra_headers: Vec<Header<'static>>) -> T
@@ -176,7 +245,7 @@ impl ApiClient {
     B: AsRef<str> + AsRef<[u8]>,
   {
     let header = self.ok_auth_header(path, "POST", Some(body.as_ref()), None);
-    let mut req = self.client.post(path).body(body).header(header);
+    let mut req = self.test_app.rocket_client.post(path).body(body).header(header);
     for h in extra_headers {
       req = req.header(h);
     }
@@ -210,13 +279,6 @@ impl ApiClient {
     serde_json::from_str(&response).expect(&format!("Could not parse response {}", response))
   }
 
-  pub async fn get_magic_link(&self, path: &str) -> String {
-    self.client
-      .get(path)
-      .dispatch().await
-      .into_string().await.unwrap()
-  }
-
   pub async fn get_string(&self, path: &str) -> String {
     self.get_response(path).await.into_string().await.unwrap()
   }
@@ -230,7 +292,7 @@ impl ApiClient {
   }
 
   pub async fn get_response_with_auth<'a>(&'a self, path: &'a str, auth_header: Header<'static>) -> LocalResponse<'a> {
-    self.client
+    self.test_app.rocket_client
       .post(path)
       .header(auth_header)
       .dispatch().await
@@ -272,11 +334,6 @@ impl ApiClient {
     self.get_response_with_auth(path, Header::new("Authentication", jwt)).await
   }
 
-  pub async fn assert_unauthorized_get<P: std::fmt::Display>(&self, path: P) {
-    let response = self.client.get(path.to_string()).dispatch().await;
-    assert_eq!(response.status(), Status::Unauthorized);
-  }
-
   pub async fn assert_get_error<'a>(&'a self, path: &'a str, status: Status, msg: &'a str) {
     let response = self.get_response(path).await;
     assert_eq!(response.status(), status);
@@ -305,6 +362,7 @@ pub mod gql {
 
   make_graphql_queries![
     CreateSession,
+    CreateClaimAccountRequest,
     CreateCampaignRequest,
     CampaignRequest,
     Campaign,

@@ -17,10 +17,6 @@ model!{
     unclaimed_asami_tokens: String,
     #[sqlx_model_hints(varchar)]
     unclaimed_doc_rewards: String,
-    #[sqlx_model_hints(boolean)]
-    nostr_self_managed: bool,
-    #[sqlx_model_hints(boolean)]
-    nostr_abuse_proven: bool,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
     #[sqlx_model_hints(timestamptz, default)]

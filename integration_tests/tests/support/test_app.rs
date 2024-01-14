@@ -1,12 +1,18 @@
-use api::{models, App, AppConfig};
+use api::{models::{self, U256}, App, AppConfig};
 use jwt_simple::algorithms::*;
 use std::process::Command;
-use crate::support::Truffle;
+use crate::support::{Truffle, ApiClient};
+use ethers::{
+  abi::AbiEncode,
+  providers::{Http, Provider}
+};
+use rocket::local::asynchronous::Client as RocketClient;
 
-#[derive(Clone)]
 pub struct TestApp {
   pub app: App,
   pub truffle: Truffle,
+  pub provider: Provider<Http>,
+  pub rocket_client: RocketClient,
 }
 
 impl TestApp {
@@ -23,8 +29,29 @@ impl TestApp {
     let truffle = Truffle::start(&config.rsk.admin_address);
     config.rsk.contract_address = truffle.addresses.asami.clone();
     config.rsk.doc_contract_address = truffle.addresses.doc.clone();
+    let provider = Provider::<Http>::try_from(&config.rsk.rpc_url).unwrap();
+    let app = App::new("password".to_string(), config).await.unwrap();
+    let rocket_client = RocketClient::tracked(api::server(app.clone())).await.unwrap();
 
-    Self{ truffle, app: App::new("password".to_string(), config).await.unwrap() }
+    Self{ rocket_client, provider, truffle, app }
+  }
+
+  pub async fn evm_increase_time(&self, seconds: U256) -> u64 {
+    self.provider.request::<_, u64>("evm_increaseTime", vec![seconds.encode_hex()]).await.unwrap()
+  }
+
+  pub async fn evm_mine(&self) {
+    self.provider.request::<_, U256>("evm_mine", None::<()>).await.unwrap();
+  }
+
+  pub async fn client(&self) -> ApiClient {
+    let mut client = ApiClient::new(self.clone()).await;
+    client.login().await;
+    client
+  }
+
+  pub fn contract(&self) -> &api::on_chain::AsamiContractSigner {
+    &self.app.on_chain.contract
   }
 
   pub async fn mock_admin_setting_campaign_requests_as_paid(&self) {

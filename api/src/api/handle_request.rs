@@ -18,10 +18,6 @@ pub struct HandleRequest {
   price: Option<String>,
   #[graphql(description = "The score given to this handle by Asami's admin.")]
   score: Option<String>,
-  #[graphql(description = "The X coord of a nostr pubkey, for on-chain verification of nostr collabs.")]
-  nostr_affine_x: Option<String>,
-  #[graphql(description = "The Y coord of a nostr pubkey, for on-chain verification of nostr collabs.")]
-  nostr_affine_y: Option<String>,
   #[graphql(description = "Status of this campaign request.")]
   status: HandleRequestStatus,
 }
@@ -77,8 +73,6 @@ impl Showable<models::HandleRequest, HandleRequestFilter> for HandleRequest {
       user_id: d.attrs.user_id,
       price: d.attrs.price,
       score: d.attrs.score,
-      nostr_affine_x: d.attrs.nostr_affine_x,
-      nostr_affine_y: d.attrs.nostr_affine_y,
       status: d.attrs.status,
     })
   }

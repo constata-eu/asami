@@ -10,6 +10,10 @@ pub use ethers::{ types::{ U256, U64, H160, H256, Signature, transaction::eip712
 use std::str::FromStr;
 
 pub mod hasher;
+pub mod user;
+pub use user::*;
+pub mod claim_account_request;
+pub use claim_account_request::*;
 pub mod synced_event;
 pub use synced_event::*;
 pub mod campaign_request;
@@ -67,20 +71,6 @@ pub enum HandleUpdateRequestStatus {
 impl sqlx::postgres::PgHasArrayType for HandleUpdateRequestStatus {
   fn array_type_info() -> sqlx::postgres::PgTypeInfo {
     sqlx::postgres::PgTypeInfo::with_name("_handle_update_request_status")
-  }
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
-#[sqlx(type_name = "claim_account_request_status", rename_all = "snake_case")]
-pub enum ClaimAccountRequestStatus {
-  Received,
-  Submitted,
-  Done,
-}
-
-impl sqlx::postgres::PgHasArrayType for ClaimAccountRequestStatus {
-  fn array_type_info() -> sqlx::postgres::PgTypeInfo {
-    sqlx::postgres::PgTypeInfo::with_name("_claim_account_request_status")
   }
 }
 
@@ -157,34 +147,6 @@ model!{
     handle_update_request_id: i32,
     #[sqlx_model_hints(varchar)]
     topic_id: String,
-  }
-}
-
-model!{
-  state: App,
-  table: users,
-  struct User {
-    #[sqlx_model_hints(int4, default)]
-    id: i32,
-    name: String,
-    #[sqlx_model_hints(timestamptz, default)]
-    created_at: UtcDateTime,
-    #[sqlx_model_hints(timestamptz, default)]
-    updated_at: Option<UtcDateTime>,
-  },
-  has_many {
-    AccountUser(user_id)
-  }
-}
-
-impl User {
-  pub async fn account_id(&self) -> AsamiResult<String> {
-    let accounts = self.account_user_vec().await?;
-    let Some(first) = accounts.first() else {
-       return Err(Error::Runtime(format!("user has no account {}", &self.attrs.id)))
-    };
-
-    Ok(first.attrs.account_id.clone())
   }
 }
 
@@ -294,71 +256,6 @@ impl IndexerStateHub {
   }
 }
 
-model!{
-  state: App,
-  table: claim_account_requests,
-  struct ClaimAccountRequest {
-    #[sqlx_model_hints(int4, default)]
-    id: i32,
-    #[sqlx_model_hints(varchar)]
-    account_id: String,
-    #[sqlx_model_hints(varchar)]
-    addr: String,
-    #[sqlx_model_hints(varchar)]
-    signature: String,
-    #[sqlx_model_hints(varchar)]
-    session_id: String,
-    #[sqlx_model_hints(varchar, default)]
-    tx_hash: Option<String>,
-    #[sqlx_model_hints(claim_account_request_status, default)]
-    status: ClaimAccountRequestStatus,
-  },
-  belongs_to {
-    Account(account_id),
-    Session(account_id),
-  }
-}
-
-impl ClaimAccountRequestHub {
-  pub async fn submit_all(&self) -> AsamiResult<Vec<ClaimAccountRequest>> {
-    let mut submitted = vec![];
-    let reqs = self.select().status_eq(ClaimAccountRequestStatus::Received).all().await?;
-
-    if reqs.is_empty() { return Ok(submitted); }
-
-    let params = reqs.iter().map(|r| r.as_param() ).collect();
-
-    let tx_hash = self.state.on_chain.contract
-      .claim_accounts(params)
-      .send().await?.await?
-      .ok_or_else(|| Error::service("rsk_blockchain", "no_tx_recepit_for_admin_make_handles"))?
-      .transaction_hash
-      .encode_hex();
-
-    for req in reqs {
-      submitted.push(
-        req.update().status(ClaimAccountRequestStatus::Submitted).tx_hash(Some(tx_hash.clone())).save().await?
-      );
-    }
-
-    Ok(submitted)
-  }
-}
-
-impl ClaimAccountRequest {
-  pub async fn done(self) -> sqlx::Result<Self> {
-    self.update().status(ClaimAccountRequestStatus::Done).save().await
-  }
-
-  pub fn as_param(&self) -> on_chain::AdminClaimAccountsInput {
-    on_chain::AdminClaimAccountsInput {
-      account_id: u256(&self.attrs.account_id),
-      addr: H160::decode_hex(&self.attrs.addr).unwrap(),
-    }
-  }
-}
-
-
 // Unsafe conversion for values that we know for sure have an U256 hex encoded value.
 pub fn u256<T: AsRef<str> + std::fmt::Debug>(u: T) -> U256 {
   U256::decode_hex(u).unwrap_or(U256::zero())
@@ -397,7 +294,7 @@ fn d_to_u64(d: Decimal) -> U64 {
   U64::from_dec_str(&d.to_string()).unwrap_or(U64::zero())
 }
 
-pub fn eip_712_sig_to_address(chain_id: u64, signature: &str) -> Result<String, String> {
+pub fn make_login_to_asami_typed_data(chain_id: u64) -> Result<TypedData, String> {
   let json = serde_json::json!( {
     "types": {
       "EIP712Domain": [
@@ -414,7 +311,11 @@ pub fn eip_712_sig_to_address(chain_id: u64, signature: &str) -> Result<String, 
     "message": { "content": "Login to Asami" }
   });
 
-  let payload: TypedData = serde_json::from_value(json).map_err(|_| "unexpected_invalid_json".to_string())?;
+  serde_json::from_value(json).map_err(|_| "unexpected_invalid_json".to_string())
+}
+
+pub fn eip_712_sig_to_address(chain_id: u64, signature: &str) -> Result<String, String> {
+  let payload = make_login_to_asami_typed_data(chain_id)?;
   let sig = Signature::from_str(signature).map_err(|_| "invalid_auth_data_signature".to_string())?;
   sig.recover_typed_data(&payload)
     .map(|a| a.encode_hex() )

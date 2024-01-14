@@ -18,10 +18,6 @@ model!{
     price: Option<String>,
     #[sqlx_model_hints(varchar, default)]
     score: Option<String>,
-    #[sqlx_model_hints(varchar, default)]
-    nostr_affine_x: Option<String>,
-    #[sqlx_model_hints(varchar, default)]
-    nostr_affine_y: Option<String>,
     #[sqlx_model_hints(handle_request_status, default)]
     status: HandleRequestStatus,
     #[sqlx_model_hints(varchar, default)]
@@ -173,9 +169,6 @@ impl HandleRequest {
     let Some(score) = a.score.as_ref().map(u256) else { return invalid_state };
     let Some(user_id) = a.user_id.clone() else { return invalid_state };
 
-    let nostr_affine_x = a.nostr_affine_x.as_ref().map(u256).unwrap_or(0.into());
-    let nostr_affine_y = a.nostr_affine_y.as_ref().map(u256).unwrap_or(0.into());
-
     let topics = self.topic_ids().await?.iter().map(|i| u256(i) ).collect();
 
     Ok(on_chain::Handle {
@@ -186,9 +179,7 @@ impl HandleRequest {
       score,
       topics,
       username: a.username.clone(),
-      user_id: user_id,
-      nostr_affine_x,
-      nostr_affine_y,
+      user_id: user_id
     })
   }
 }

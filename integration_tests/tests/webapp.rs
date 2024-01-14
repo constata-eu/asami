@@ -63,11 +63,9 @@ browser_test!{ full_flow_to_reward_in_browser (mut d)
 }
 
 api_test!{ full_flow_to_reward_from_api (mut c)
-  c.login().await;
-  let (handle_req, handle) = c.build_x_handle("nubis_bruno").await;
+  c.create_x_handle("nubis_bruno", wei("10000000000000000")).await;
   let account = c.account().await;
-
-  assert_eq!(handle_req.attrs.status, HandleRequestStatus::Done);
+  let handle = c.x_handle().await;
 
   //"https://x.com/asami_club/status/1716421161867710954?s=20",
   let campaign_req = account.create_campaign_request(

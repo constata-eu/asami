@@ -117,8 +117,6 @@ impl CurrentSession {
             addr: None,
             unclaimed_asami_tokens: u("0").encode_hex(),
             unclaimed_doc_rewards: u("0").encode_hex(),
-            nostr_self_managed: false,
-            nostr_abuse_proven: false
           }).save().await,
           "could_not_create_account"
         );

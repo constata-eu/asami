@@ -2759,6 +2759,7 @@ dependencies = [
  "image",
  "image_hasher",
  "jwt-simple",
+ "rand",
  "regex",
  "rocket",
  "rust_decimal",

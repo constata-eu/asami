@@ -47,10 +47,6 @@ type Handle {
   price: String!
   "The score given to this handle by Asami's admin."
   score: String!
-  "The X coord of a nostr pubkey, for on-chain verification of nostr collabs."
-  nostrAffineX: String!
-  "The Y coord of a nostr pubkey, for on-chain verification of nostr collabs."
-  nostrAffineY: String!
 }
 
 input HandleFilter {
@@ -75,13 +71,10 @@ input CollabFilter {
   memberIdIn: [String!]
 }
 
-type Mutation {
-  createSession: Session!
-  createCampaignRequest(input: CreateCampaignRequestInput!): CampaignRequest!
-  createHandleRequest(input: CreateHandleRequestInput!): HandleRequest!
-  createHandleUpdateRequest(input: CreateHandleUpdateRequestInput!): HandleUpdateRequest!
-  createClaimAccountRequest(input: CreateClaimAccountRequestInput!): ClaimAccountRequest!
-  createCampaignPreference(input: CreateCampaignPreferenceInput!): CampaignPreference!
+input IgCampaignRuleFilter {
+  ids: [Int!]
+  idEq: Int
+  campaignIdEq: String
 }
 
 "A campaign started by an advertiser"
@@ -135,6 +128,15 @@ type CampaignPreference {
   attemptedOn: DateTime
 }
 
+type Mutation {
+  createSession: Session!
+  createCampaignRequest(input: CreateCampaignRequestInput!): CampaignRequest!
+  createHandleRequest(input: CreateHandleRequestInput!): HandleRequest!
+  createHandleUpdateRequest(input: CreateHandleUpdateRequestInput!): HandleUpdateRequest!
+  createClaimAccountRequest(input: CreateClaimAccountRequestInput!): ClaimAccountRequest!
+  createCampaignPreference(input: CreateCampaignPreferenceInput!): CampaignPreference!
+}
+
 input HandleUpdateRequestFilter {
   ids: [Int!]
   idEq: Int
@@ -170,6 +172,9 @@ type Query {
   CampaignPreference(id: Int!): CampaignPreference!
   allCampaignPreferences(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignPreferenceFilter): [CampaignPreference!]!
   _allCampaignPreferencesMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignPreferenceFilter): ListMetadata!
+  IgCampaignRule(id: Int!): IgCampaignRule!
+  allIgCampaignRules(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: IgCampaignRuleFilter): [IgCampaignRule!]!
+  _allIgCampaignRulesMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: IgCampaignRuleFilter): ListMetadata!
 }
 
 "The input for creating a new CampaignPreference."
@@ -195,6 +200,18 @@ type Session {
   createdAt: DateTime!
   "The last time this session was updated."
   updatedAt: DateTime
+}
+
+"Rules for posting a campaign"
+type IgCampaignRule {
+  "Unique Id for this campaign rules"
+  id: Int!
+  "The campaign this rules belong to"
+  campaignId: String!
+  "The base64 encoded image itself."
+  image: String!
+  "The caption the user must post for this image."
+  caption: String!
 }
 
 "A collab is created when a member reposts a campaign's content."
@@ -289,10 +306,6 @@ type HandleRequest {
   price: String
   "The score given to this handle by Asami's admin."
   score: String
-  "The X coord of a nostr pubkey, for on-chain verification of nostr collabs."
-  nostrAffineX: String
-  "The Y coord of a nostr pubkey, for on-chain verification of nostr collabs."
-  nostrAffineY: String
   "Status of this campaign request."
   status: HandleRequestStatus!
 }
