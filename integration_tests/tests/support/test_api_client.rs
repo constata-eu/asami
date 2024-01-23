@@ -212,6 +212,38 @@ impl<'b> ApiClient<'b> {
     Ok(())
   }
 
+  pub async fn self_submit_admin_vote(&self, candidate: Address) -> api::AsamiResult<()> {
+    self.contract().submit_admin_vote(candidate)
+      .send().await?
+      .await?
+      .expect("extracting receipt");
+    Ok(())
+  }
+
+  pub async fn self_remove_admin_vote(&self) -> api::AsamiResult<()> {
+    self.contract().remove_admin_vote()
+      .send().await?
+      .await?
+      .expect("extracting receipt");
+    Ok(())
+  }
+
+  pub async fn self_vest_admin_vote(&self, candidate: Address) -> api::AsamiResult<()> {
+    self.contract().vest_admin_votes(vec![candidate])
+      .send().await?
+      .await?
+      .expect("extracting receipt");
+    Ok(())
+  }
+
+  pub async fn self_set_admin_address(&self, address: Address) -> api::AsamiResult<()> {
+    self.contract().set_admin_address(address)
+      .send().await?
+      .await?
+      .expect("extracting receipt");
+    Ok(())
+  }
+
   pub async fn gql<'a, T: core::fmt::Debug, Q>(&'a self, query: Q, extra_headers: Vec<Header<'static>>) -> T
     where Q: Serialize, T: DeserializeOwned
   {

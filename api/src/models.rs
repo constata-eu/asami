@@ -34,6 +34,10 @@ pub mod session;
 pub use session::*;
 pub mod ig_crawl;
 pub use ig_crawl::*;
+pub mod audit_log_entry;
+pub use audit_log_entry::*;
+pub mod on_chain_tx;
+pub use on_chain_tx::*;
 
 #[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
 #[sqlx(type_name = "site", rename_all = "snake_case")]

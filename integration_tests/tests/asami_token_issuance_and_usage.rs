@@ -1,6 +1,6 @@
 #[macro_use]
 mod support;
-use ethers::signers::Signer;
+use ethers::{types::Address, signers::Signer};
 
 app_test!{ has_a_cap_on_token_supply (a) 
   /*
@@ -38,7 +38,7 @@ app_test!{ has_a_cap_on_token_supply (a)
 }
 
 app_test!{ rate_can_be_voted (a) 
-  assert_eq!(a.contract().fee_rate().call().await?, wei("10"));
+  assert_eq!(a.contract().fee_rate().call().await?, u("10"));
 
   let mut advertiser = a.client().await;
   let budget = u("3000");
@@ -50,114 +50,155 @@ app_test!{ rate_can_be_voted (a)
   bob.create_x_collab(&campaign).await;
   bob.claim_account().await;
 
-  advertiser.self_submit_fee_rate_vote(wei("20")).await?;
+  advertiser.self_submit_fee_rate_vote(u("20")).await?;
   assert_eq!(a.contract().voted_fee_rate_vote_count().call().await?, u("30"));
   assert_eq!(a.contract().voted_fee_rate().call().await?, u("20"));
-  assert_eq!(a.contract().fee_rate().call().await?, wei("10"));
+  assert_eq!(a.contract().fee_rate().call().await?, u("10"));
 
   a.contract().apply_voted_fee_rate().send().await.unwrap().await.unwrap().unwrap();
-  assert_eq!(a.contract().fee_rate().call().await?, wei("20"));
+  assert_eq!(a.contract().fee_rate().call().await?, u("20"));
 
-  bob.self_submit_fee_rate_vote(wei("1")).await?;
+  bob.self_submit_fee_rate_vote(u("1")).await?;
   assert_eq!(a.contract().voted_fee_rate_vote_count().call().await?, u("75"));
   assert_eq!(a.contract().voted_fee_rate().call().await?, wei("8600000000000000000"));
 
   assert!(a.contract().apply_voted_fee_rate().send().await.is_err());
-  assert_eq!(a.contract().fee_rate().call().await?, wei("20"));
+  assert_eq!(a.contract().fee_rate().call().await?, u("20"));
 
-  a.evm_increase_time(wei("60") * wei("60") * wei("24") * wei("15")).await;
-  a.evm_mine().await;
+  a.evm_forward_to_next_cycle().await;
 
   a.contract().apply_voted_fee_rate().send().await.unwrap().await.unwrap().unwrap();
-  assert_eq!(a.contract().fee_rate().call().await?, wei("8"));
+  assert_eq!(a.contract().fee_rate().call().await?, wei("8600000000000000000"));
 
   advertiser.self_remove_fee_rate_vote().await?;
   assert_eq!(a.contract().voted_fee_rate_vote_count().call().await?, u("45"));
   assert_eq!(a.contract().voted_fee_rate().call().await?, u("1"));
 
-  bob.self_submit_fee_rate_vote(wei("50")).await.unwrap();
+  bob.self_submit_fee_rate_vote(u("50")).await.unwrap();
   assert_eq!(a.contract().voted_fee_rate_vote_count().call().await?, u("45"));
   assert_eq!(a.contract().voted_fee_rate().call().await?, u("50"));
 
   // Cannot vote out of bound values.
-  assert!(advertiser.self_submit_fee_rate_vote(wei("0")).await.is_err());
-  assert!(advertiser.self_submit_fee_rate_vote(wei("100")).await.is_err());
+  assert!(advertiser.self_submit_fee_rate_vote(u("0")).await.is_err());
+  assert!(advertiser.self_submit_fee_rate_vote(u("100")).await.is_err());
 
   // Will remove the fee rate vote when the user moves their tokens.
   // Voted rate goes back to factory settings when no vote is applied.
   bob.contract().transfer(advertiser.local_wallet().address(), u("2")).send().await.unwrap().await.unwrap().unwrap();
   assert_eq!(a.contract().voted_fee_rate_vote_count().call().await?, u("0"));
   assert_eq!(a.contract().voted_fee_rate().call().await?, u("10"));
-
-
-  /*
-  dbg!(c.increase_time("100000").await);
-  c.evm_mine().await;
-  dbg!(c.provider.get_block(c.provider.get_block_number().await.unwrap()).await.unwrap())
-  */
-  // Remove vote.
-  // Sending tokens removes vote too.
-  // Vote over 99 fails.
-  // Vote under 1 fails.
 }
 
 app_test!{ admin_can_be_voted_via_vested_votes (a)
-  /*
-   *
-  
-  * Vote doing / undoing with vesting.
-  * Election result is stored on chain somewhere.
-  * Election result is applied by another call which is guarded to happen only once in a time period.
+  let admin_addr = a.app.on_chain.contract.client().address();
 
-  We make one collab to issue tokens to three entities.
+  let mut advertiser = a.client().await;
+  let budget = u("3000");
+  let campaign = advertiser.create_x_campaign(budget, budget).await;
+  advertiser.claim_account().await;
+  let advertiser_addr = advertiser.local_wallet().address();
 
-  A vote is for all issues:
-    map (address => Vote) adminElectionVotes;
-    address[] adminElectionVoters;
+  let mut bob = a.client().await;
+  bob.create_x_handle("bob_on_x", budget).await;
+  bob.create_x_collab(&campaign).await;
+  bob.claim_account().await;
+  let bob_addr = bob.local_wallet().address();
 
-    map (address => uint256) adminElectionVotesPerCandidate;
-    address[] adminElectionCandidates;
+  let mut last_admin_election = u("0");
+  assert_eq!(a.contract().last_admin_election().call().await?, last_admin_election);
+  assert_eq!(a.contract().vested_admin_votes_total().call().await?, u("0"));
+  assert_eq!(a.contract().get_latest_admin_elections().call().await?,
+    [Address::zero(), Address::zero(), Address::zero()]
+  );
+  assert!(a.app.on_chain_tx().proclaim_cycle_admin_winner().await?.is_none());
 
-    TallyAdminElectionVotes:
-      - Clear the adminElectionCandidates array. (or use an in-memory one?)
-      - What if counting votes goes over the gas limit?
-        
+  /* Advertiser starts the process of voting for himself */
+  advertiser.self_submit_admin_vote(advertiser_addr).await?;
+  assert!(a.app.on_chain_tx().proclaim_cycle_admin_winner().await?.is_none());
 
-      - For each admin election voter
-        - Check their vote.createdAt is lower than threshold.
-        - Add their token balance to the candidate.
-      
-    Revisamos el voto de todos los voters, contamos 
+  a.evm_forward_to_next_cycle().await;
+  bob.self_submit_admin_vote(bob_addr).await?;
 
+  // Advertiser is vesting and hurrying to claim victory.
+  assert!(advertiser.self_vest_admin_vote(advertiser_addr).await.is_ok());
+  a.contract().submitted_admin_votes(advertiser_addr).call().await?;
+  assert!(
+    a.app.on_chain_tx()
+      .proclaim_cycle_admin_winner().await?
+      .expect("on_chain_tx")
+      .success()
+  );
 
-    Vote:
-      Admin: 
-      Fee:
+  assert!(a.contract().last_admin_election().call().await? > last_admin_election);
+  last_admin_election = a.contract().last_admin_election().call().await?;
+  assert_eq!(a.contract().vested_admin_votes_total().call().await?, u("30"));
+  assert_eq!(a.contract().get_latest_admin_elections().call().await?,
+    [advertiser_addr, Address::zero(), Address::zero()]
+  );
 
+  a.evm_forward_to_next_cycle().await;
 
-  Test 1:
-    - Ballot is for a single address, to set both as the admin and admin treasury.
-    - One period passes, tallying votes does nothing.
-    - Two periods pass, tallying votes does nothing.
-    - Winner can go ahead and change the admin address.
+  // Advertiser is hurrying again to claim its win before other votes vest.
+  assert!(
+    a.app.on_chain_tx()
+      .proclaim_cycle_admin_winner().await?
+      .expect("on_chain_tx")
+      .success()
+  );
 
+  // Bob vested his votes late, so he cannot claim the election this cycle.
+  assert!(bob.self_vest_admin_vote(bob_addr).await.is_ok());
+  assert!(a.app.on_chain_tx().proclaim_cycle_admin_winner().await?.is_none());
 
-  Majority of votes held for three periods will change the admin.
+  assert!(a.contract().last_admin_election().call().await? > last_admin_election);
+  last_admin_election = a.contract().last_admin_election().call().await?;
+  assert_eq!(a.contract().vested_admin_votes_total().call().await?, u("75"));
+  assert_eq!(a.contract().get_latest_admin_elections().call().await?,
+    [advertiser_addr, advertiser_addr, Address::zero()]
+  );
 
-  Test 2: 
-   - Less than 50% vote for another candidate for 3 periods, the candidate does not change.
+  // Starting the next cycle, advertiser cannot claim the win anymore. 
+  a.evm_forward_to_next_cycle().await;
+  assert!(a.app.on_chain_tx().proclaim_cycle_admin_winner().await?.unwrap().success());
 
-  Test 3:
-    - Try voting more than 100%
-    - Try voting less than 0%
+  assert!(a.contract().last_admin_election().call().await? > last_admin_election);
+  last_admin_election = a.contract().last_admin_election().call().await?;
+  assert_eq!(a.contract().get_latest_admin_elections().call().await?, [bob_addr, advertiser_addr,advertiser_addr]);
+  assert_eq!(a.contract().admin().call().await?, admin_addr);
+  assert_eq!(a.contract().admin_treasury().call().await?, admin_addr);
 
-  */
+  // Bob keeps claiming the election two more times and becomes the new admin.
+  a.evm_forward_to_next_cycle().await;
+  assert!(a.app.on_chain_tx().proclaim_cycle_admin_winner().await?.unwrap().success());
+  assert_eq!(a.contract().get_latest_admin_elections().call().await?,
+    [bob_addr, bob_addr, advertiser_addr]
+  );
 
-  /*
-  dbg!(c.increase_time("100000").await);
-  c.evm_mine().await;
-  dbg!(c.provider.get_block(c.provider.get_block_number().await.unwrap()).await.unwrap())
-  */
+  a.evm_forward_to_next_cycle().await;
+  assert!(a.app.on_chain_tx().proclaim_cycle_admin_winner().await?.unwrap().success());
+  assert_eq!(a.contract().get_latest_admin_elections().call().await?,
+    [bob_addr, bob_addr, bob_addr]
+  );
+  assert_eq!(a.contract().admin().call().await?, bob_addr);
+  assert_eq!(a.contract().admin_treasury().call().await?, bob_addr);
+
+  // The new admin can change the hot wallet address to whatever it wants.
+  assert!(advertiser.self_set_admin_address(bob_addr).await.is_err());
+  assert!(bob.self_set_admin_address(advertiser_addr).await.is_ok());
+  assert_eq!(a.contract().admin().call().await?, advertiser_addr);
+
+  // Advertiser uses its tokens, which removes his votes.
+  advertiser.contract().transfer(bob_addr, u("2")).send().await.unwrap().await.unwrap().unwrap();
+  assert_eq!(a.contract().vested_admin_votes_total().call().await?, u("0"));
+
+  // Bob has no need to keep its stake, so it removes it
+  bob.self_remove_admin_vote().await?;
+  assert_eq!(a.contract().vested_admin_votes_total().call().await?, u("0"));
+
+  // Now that there are no votes, no claim is possible.
+  a.evm_forward_to_next_cycle().await;
+  assert!(a.app.on_chain_tx().proclaim_cycle_admin_winner().await?.is_none());
 }
 
-// A campaign paying rewards for 210000000000000000000000000 will issue all outstanding tokens.
+// ToDo: Make sure contract does not allow setting a cycle winner when there are no votes.
+// ToDo: Test actual vest_admin_votes with holders that never voted, votes that were already vested, and votes that have not met their cycle.

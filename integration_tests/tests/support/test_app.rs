@@ -40,6 +40,12 @@ impl TestApp {
     self.provider.request::<_, u64>("evm_increaseTime", vec![seconds.encode_hex()]).await.unwrap()
   }
 
+  pub async fn evm_forward_to_next_cycle(&self) {
+    use models::wei;
+    self.evm_increase_time(wei("60") * wei("60") * wei("24") * wei("15")).await;
+    self.evm_mine().await;
+  }
+
   pub async fn evm_mine(&self) {
     self.provider.request::<_, U256>("evm_mine", None::<()>).await.unwrap();
   }

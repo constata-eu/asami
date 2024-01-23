@@ -1,10 +1,5 @@
-# Nothing to see here
+# Global branch quick ToDo:
 
-- Cancel submissions when transaction is reverted.
-  - Log revert reason.
+- implement AuditableModel and implement for models.
+- Implement handle data updates and other periodic tasks.
 
-Trying to participate in an instagram campaign:
-- Sets campaign preferences.
-- Opens up a modal with instructions:
-  "You need to publish this image, with the following caption"
-  [Download the image 

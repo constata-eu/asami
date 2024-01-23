@@ -71,9 +71,9 @@ contract Asami is Ownable, ERC20Capped {
   Collab[] public collabs;
   event CollabSaved(Collab collab);
 
-  uint256 public feeRate = 10; // It's a percentage.
-  uint256 public defaultVotedFeeRate = 10 * 1e18;
-  uint256 public votedFeeRate = defaultVotedFeeRate;
+  uint256 public defaultFeeRate = 10 * 1e18;
+  uint256 public feeRate = defaultFeeRate;
+  uint256 public votedFeeRate = defaultFeeRate;
   uint256 public votedFeeRateVoteCount = 0;
   /* To make the protocol more predictable, changes are applied only once every period */
   uint256 public lastVotedFeeRateAppliedOn = 0;
@@ -83,6 +83,40 @@ contract Asami is Ownable, ERC20Capped {
     uint256 rate;
   }
   mapping(address => FeeRateVote) public feeRateVotes;
+
+  struct AdminVote {
+    uint256 votes;
+    address candidate;
+    uint256 cycle;
+    bool vested;
+  }
+  /* Maps holders to their vote */
+  mapping(address => AdminVote) public submittedAdminVotes;
+  event AdminVoteSaved(AdminVote vote);
+
+  struct AdminVoteCount {
+    uint256 votes;
+    address candidate;
+  }
+
+  /*
+  We're only storing all historic vote counts to have a view function that helps find out
+  which candidate to proclaim without relying on events.
+  */
+  AdminVoteCount[] public adminVoteCounts;
+  mapping(address => uint256) public adminVoteCountIdByCandidate;
+
+  function allAdminVoteCounts() public view returns (AdminVoteCount[] memory) {
+    return adminVoteCounts;
+  }
+
+  uint256 public vestedAdminVotesTotal;
+  uint256 public lastAdminElection;
+  address[3] public latestAdminElections;
+
+  function getLatestAdminElections() public view returns (address[3] memory) {
+    return latestAdminElections;
+  }
 
   string[] public topics;
 
@@ -112,9 +146,11 @@ contract Asami is Ownable, ERC20Capped {
     }
 
     if (feeRateVotes[from].votes > 0) { removeFeeRateVoteHelper(from); }
+    if (submittedAdminVotes[from].votes > 0) { removeAdminVoteHelper(from); }
   }
 
   function setAdmin(address _admin, address _adminTreasury) external onlyOwner {
+    require(admin == address(0) && adminTreasury == address(0));
     admin = _admin;
     adminTreasury = _adminTreasury;
   }
@@ -283,7 +319,7 @@ contract Asami is Ownable, ERC20Capped {
       Account storage advertiser = accounts[campaign.accountId];
 
       uint256 gross = handle.price;
-      uint256 fee = (gross * feeRate) / 100;
+      uint256 fee = (gross * feeRate) / 1e20;
       uint256 reward = gross - fee;
 
       Collab memory collab = Collab({
@@ -305,8 +341,8 @@ contract Asami is Ownable, ERC20Capped {
       uint256 newTokens = (fee > remainingToCap) ? remainingToCap : fee;
       claimedAsamiTokens += newTokens;
 
-      uint256 advertiserTokens = (newTokens * 10) / 100;
-      uint256 memberTokens = (newTokens * 15) / 100;
+      uint256 advertiserTokens = (newTokens * 10 * 1e18) / 100e18;
+      uint256 memberTokens = (newTokens * 15 * 1e18) / 100e18;
       uint256 adminTokens = newTokens - advertiserTokens - memberTokens;
 
       if (adminTokens > 0) {
@@ -522,14 +558,12 @@ contract Asami is Ownable, ERC20Capped {
   function applyVotedFeeRate() external {
     uint256 currentCycle = getCurrentCycle();
     require(currentCycle != lastVotedFeeRateAppliedOn);
-    feeRate = votedFeeRate / 1e18;
+    feeRate = votedFeeRate;
     lastVotedFeeRateAppliedOn = currentCycle;
   }
 
   function submitFeeRateVote(uint256 _rate) external {
-    require(_rate > 0 && _rate < 100, "sfrv 0");
-
-    uint256 preciseRate = _rate * 1e18;
+    require(_rate > 0 && _rate < 1e20, "sfrv 0");
 
     FeeRateVote storage vote = feeRateVotes[msg.sender];
     if (vote.votes > 0) { removeFeeRateVoteHelper(msg.sender); }
@@ -537,10 +571,10 @@ contract Asami is Ownable, ERC20Capped {
     uint256 votes = balanceOf(msg.sender);
     require(votes > 0, "sfrv 1");
 
-    votedFeeRate = ((votedFeeRate * votedFeeRateVoteCount) + (votes * preciseRate)) / (votedFeeRateVoteCount + votes);
+    votedFeeRate = ((votedFeeRate * votedFeeRateVoteCount) + (votes * _rate)) / (votedFeeRateVoteCount + votes);
     votedFeeRateVoteCount += votes;
     vote.votes = votes;
-    vote.rate = preciseRate;
+    vote.rate = _rate;
   }
 
   function removeFeeRateVote() external {
@@ -559,10 +593,98 @@ contract Asami is Ownable, ERC20Capped {
       votedFeeRate = nextVolume / nextVoteCount;
       votedFeeRateVoteCount = nextVoteCount;
     } else {
-      votedFeeRate = defaultVotedFeeRate;
+      votedFeeRate = defaultFeeRate;
       votedFeeRateVoteCount = 0;
     }
     delete feeRateVotes[_holder];
+  }
+
+  function submitAdminVote(address _candidate) external {
+    require(_candidate != address(0), "sav 0");
+    uint256 votes = balanceOf(msg.sender);
+    require(votes > 0, "sav 1");
+
+    AdminVote storage existing = submittedAdminVotes[msg.sender];
+    if (existing.votes > 0 ){
+      removeAdminVoteHelper(msg.sender);
+    }
+
+    submittedAdminVotes[msg.sender] = AdminVote({
+      candidate: _candidate,
+      votes: votes,
+      cycle: getCurrentCycle(),
+      vested: false
+    });
+
+    emit AdminVoteSaved(submittedAdminVotes[msg.sender]);
+  }
+
+  function vestAdminVotes(address[] calldata _holders) external {
+    uint256 thisCycle = getCurrentCycle();
+
+    for (uint256 i = 0; i < _holders.length; i++) {
+      AdminVote storage vote = submittedAdminVotes[_holders[i]];
+      require(vote.cycle > 0, "vav 0");
+      require(vote.cycle < thisCycle, "vav 1");
+      require(!vote.vested, "vav 2");
+      vote.vested = true;
+      vestedAdminVotesTotal += vote.votes;
+
+      uint256 voteCountId = adminVoteCountIdByCandidate[vote.candidate];
+      if (voteCountId > 0) {
+        AdminVoteCount storage count = adminVoteCounts[voteCountId - 1];
+        count.votes += vote.votes;
+      } else {
+        AdminVoteCount storage count = adminVoteCounts.push();
+        count.votes = vote.votes;
+        count.candidate = vote.candidate; 
+        adminVoteCountIdByCandidate[vote.candidate] = adminVoteCounts.length;
+      }
+      emit AdminVoteSaved(vote);
+    }
+  }
+
+  function proclaimCycleAdminWinner(address _candidate) external {
+    uint256 voteCountId = adminVoteCountIdByCandidate[_candidate];
+    require(voteCountId > 0);
+    AdminVoteCount storage count = adminVoteCounts[voteCountId - 1];
+
+    require(count.votes > vestedAdminVotesTotal / 2, "pcw 0");
+    require(vestedAdminVotesTotal > 0, "pcw 1");
+    uint256 thisCycle = getCurrentCycle();
+    require(lastAdminElection < thisCycle, "pcw 2");
+
+    lastAdminElection = thisCycle;
+    latestAdminElections[2] = latestAdminElections[1];
+    latestAdminElections[1] = latestAdminElections[0];
+    latestAdminElections[0] = _candidate;
+
+    if (_candidate == latestAdminElections[1] && _candidate == latestAdminElections[2]) {
+      admin = _candidate;
+      adminTreasury = _candidate;
+    }
+  }
+
+  function removeAdminVote() external {
+    removeAdminVoteHelper(msg.sender);
+  }
+
+  function removeAdminVoteHelper(address _holder) private {
+    AdminVote storage vote = submittedAdminVotes[_holder];
+    require(vote.votes > 0, "ravh 0");
+    if ( vote.vested ) {
+      vestedAdminVotesTotal -= vote.votes;
+
+      uint256 voteCountId = adminVoteCountIdByCandidate[vote.candidate];
+      require(voteCountId > 0);
+      adminVoteCounts[voteCountId - 1].votes -= vote.votes;
+    }
+    delete submittedAdminVotes[_holder];
+  }
+
+  function setAdminAddress(address _admin) external {
+    require(msg.sender == adminTreasury);
+    admin = _admin;
   }
 
   function isSubset(uint256[] memory mainSet, uint256[] memory subset) public pure returns (bool) {
