@@ -1,16 +1,19 @@
 CREATE TYPE site AS ENUM (
   'x',
   'instagram',
-  'nostr'
+  'nostr',
+  'facebook',
+  'tiktok',
+  'linkedin',
+  'youtube',
+  'bluesky'
 );
 
 CREATE TYPE auth_method_kind AS ENUM (
   'x',
-  'instagram',
-  'nostr',
+  'facebook',
   'eip712',
-  'one_time_token',
-  'google'
+  'one_time_token'
 );
 
 CREATE TYPE handle_request_status AS ENUM (
@@ -18,6 +21,7 @@ CREATE TYPE handle_request_status AS ENUM (
   'verified',
   'appraised',
   'submitted',
+  'failed',
   'done'
 );
 
@@ -26,33 +30,47 @@ CREATE TYPE campaign_request_status AS ENUM (
   'paid',
   'approved',
   'submitted',
+  'failed',
   'done'
 );
 
 CREATE TYPE handle_update_request_status AS ENUM (
   'received',
   'submitted',
+  'failed',
   'done'
 );
 
 CREATE TYPE collab_request_status AS ENUM (
   'received',
   'submitted',
+  'failed',
   'done'
 );
 
 CREATE TYPE claim_account_request_status AS ENUM (
   'received',
   'submitted',
+  'failed',
   'done'
 );
+
+CREATE TABLE on_chain_txs (
+  id SERIAL PRIMARY KEY NOT NULL,
+  success boolean NOT NULL default false,
+  function_name VARCHAR NOT NULL,
+  tx_hash VARCHAR,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_on_chain_txs_function_name ON on_chain_txs(function_name);
+CREATE INDEX idx_on_chain_txs_success ON on_chain_txs(success);
+CREATE INDEX idx_on_chain_txs_tx_hash ON on_chain_txs(tx_hash);
 
 CREATE TABLE synced_events (
   id SERIAL PRIMARY KEY NOT NULL,
   address VARCHAR NOT NULL,
   block_number DECIMAL NOT NULL,
   block_hash VARCHAR NOT NULL,
-  tx_hash VARCHAR NOT NULL,
   tx_index DECIMAL NOT NULL,
   log_index VARCHAR NOT NULL,
   data TEXT NOT NULL,
@@ -87,8 +105,6 @@ CREATE TABLE accounts (
     addr VARCHAR,
     unclaimed_asami_tokens VARCHAR NOT NULL DEFAULT to_u256(0),
     unclaimed_doc_rewards VARCHAR NOT NULL DEFAULT to_u256(0),
-    nostr_self_managed BOOLEAN NOT NULL DEFAULT FALSE,
-    nostr_abuse_proven BOOLEAN NOT NULL DEFAULT FALSE,
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
 );
@@ -127,10 +143,8 @@ CREATE TABLE handle_requests (
     user_id VARCHAR,
     price VARCHAR,
     score VARCHAR,
-    nostr_affine_x VARCHAR,
-    nostr_affine_y VARCHAR,
     status handle_request_status NOT NULL DEFAULT 'unverified',
-    tx_hash VARCHAR,
+    on_chain_tx_id INTEGER REFERENCES on_chain_txs(id),
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
 );
@@ -158,8 +172,6 @@ CREATE TABLE handles (
   user_id VARCHAR,
   price VARCHAR NOT NULL,
   score VARCHAR NOT NULL,
-  nostr_affine_x VARCHAR NOT NULL,
-  nostr_affine_y VARCHAR NOT NULL,
   created_at timestamp DEFAULT now() NOT NULL,
   updated_at timestamp
 );
@@ -187,7 +199,7 @@ CREATE TABLE handle_update_requests (
   score VARCHAR,
   status handle_update_request_status NOT NULL DEFAULT 'received',
   created_by_admin boolean NOT NULL DEFAULT FALSE,
-  tx_hash VARCHAR,
+  on_chain_tx_id INTEGER REFERENCES on_chain_txs(id),
   created_at timestamp DEFAULT now() NOT NULL,
   updated_at timestamp
 );
@@ -226,12 +238,12 @@ CREATE TABLE collab_requests (
   campaign_id VARCHAR REFERENCES campaigns(id) NOT NULL,
   handle_id VARCHAR REFERENCES handles(id) NOT NULL,
   status collab_request_status NOT NULL DEFAULT 'received',
-  tx_hash VARCHAR,
+  on_chain_tx_id INTEGER REFERENCES on_chain_txs(id),
   created_at timestamp DEFAULT now() NOT NULL,
   updated_at timestamp
 );
 CREATE INDEX idx_collab_requests_campaign_id ON collab_requests(campaign_id);
-CREATE INDEX idx_collab_requests_tx_hash ON collab_requests(tx_hash);
+CREATE INDEX idx_collab_requests_on_chain_tx_id ON collab_requests(on_chain_tx_id);
 CREATE INDEX idx_collab_requests_handle_id ON collab_requests(handle_id);
 
 CREATE TABLE collabs (
@@ -272,6 +284,7 @@ CREATE INDEX idx_auth_methods_lookup_key ON auth_methods(lookup_key);
 
 CREATE TABLE sessions (
     id VARCHAR PRIMARY KEY NOT NULL,
+    account_id VARCHAR REFERENCES accounts(id) NOT NULL,
     user_id INTEGER REFERENCES users(id) NOT NULL,
     auth_method_id INTEGER REFERENCES auth_methods(id) NOT NULL,
     pubkey TEXT NOT NULL,
@@ -311,18 +324,23 @@ CREATE TABLE indexer_states (
 CREATE TABLE campaign_requests (
     id SERIAL PRIMARY KEY NOT NULL,
     account_id VARCHAR REFERENCES accounts(id) NOT NULL,
+    campaign_id VARCHAR REFERENCES campaigns(id),
+    handle_id VARCHAR REFERENCES handles(id),
+    collab_id VARCHAR REFERENCES collabs(id),
     budget VARCHAR NOT NULL,
     site site NOT NULL,
     content_id VARCHAR NOT NULL,
     price_score_ratio VARCHAR NOT NULL,
     valid_until timestamp NOT NULL,
     status campaign_request_status NOT NULL DEFAULT 'received',
-    approval_tx_hash VARCHAR,
-    submission_tx_hash VARCHAR,
+    approval_id INTEGER REFERENCES on_chain_txs(id),
+    submission_id INTEGER REFERENCES on_chain_txs(id),
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
 );
-CREATE INDEX idx_campaign_requestcs_account_id ON campaign_requests(account_id);
+CREATE INDEX idx_campaign_requests_account_id ON campaign_requests(account_id);
+CREATE INDEX idx_campaign_requests_approval_id ON campaign_requests(approval_id);
+CREATE INDEX idx_campaign_requests_submission_id ON campaign_requests(submission_id);
 CREATE INDEX idx_campaign_requests_site ON campaign_requests(site);
 
 CREATE TABLE campaign_request_topics (
@@ -342,7 +360,81 @@ CREATE TABLE claim_account_requests (
     signature VARCHAR NOT NULL,
     session_id VARCHAR REFERENCES sessions(id) NOT NULL,
     status claim_account_request_status NOT NULL DEFAULT 'received',
-    tx_hash VARCHAR
+    on_chain_tx_id INTEGER REFERENCES on_chain_txs(id)
 );
 CREATE INDEX idx_claim_account_request_account_id ON claim_account_requests(account_id);
+CREATE INDEX idx_claim_account_request_on_chain_tx_id ON claim_account_requests(on_chain_tx_id);
 CREATE INDEX idx_claim_account_request_status ON claim_account_requests(status);
+
+CREATE TABLE campaign_preferences (
+  id SERIAL PRIMARY KEY NOT NULL,
+  account_id VARCHAR REFERENCES accounts(id) NOT NULL,
+  campaign_id VARCHAR REFERENCES campaigns(id) NOT NULL,
+  not_interested_on TIMESTAMPTZ,
+  attempted_on TIMESTAMPTZ
+);
+CREATE INDEX idx_campaign_preferences_account_id ON campaign_preferences(account_id);
+CREATE INDEX idx_campaign_preferences_campaign_id ON campaign_preferences(campaign_id);
+
+CREATE TABLE ig_campaign_rules (
+  id SERIAL PRIMARY KEY NOT NULL,
+  campaign_id VARCHAR REFERENCES campaigns(id) NOT NULL,
+  image BYTEA NOT NULL,
+  display_url TEXT NOT NULL,
+  image_hash TEXT NOT NULL,
+  caption TEXT NOT NULL
+);
+CREATE INDEX idx_ig_campaign_rules_campaign_id ON ig_campaign_rules(campaign_id);
+
+CREATE TYPE ig_crawl_status AS ENUM (
+  'scheduled',
+  'submitted',
+  'responded',
+  'cancelled'
+);
+
+CREATE TABLE ig_crawls (
+  id SERIAL PRIMARY KEY NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  status ig_crawl_status NOT NULL DEFAULT 'scheduled',
+  input TEXT NOT NULL,
+  apify_id VARCHAR,
+  processed_for_campaign_rules BOOLEAN NOT NULL DEFAULT false,
+  processed_for_handle_requests BOOLEAN NOT NULL DEFAULT false,
+  processed_for_collabs BOOLEAN NOT NULL DEFAULT false,
+  log_text TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX idx_ig_crawls_status ON ig_crawls(status);
+CREATE INDEX idx_ig_crawls_apify_id ON ig_crawls(apify_id);
+
+CREATE TABLE ig_crawl_results (
+  id SERIAL PRIMARY KEY NOT NULL,
+  crawl_id INTEGER REFERENCES ig_crawls(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  json_string TEXT NOT NULL,
+  processed_for_campaign_rules BOOLEAN NOT NULL DEFAULT false,
+  processed_for_handle_requests BOOLEAN NOT NULL DEFAULT false,
+  processed_for_collabs BOOLEAN NOT NULL DEFAULT false,
+  log_text TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX idx_ig_crawl_results_crawl_id ON ig_crawl_results(crawl_id);
+
+CREATE TYPE audit_log_severity AS ENUM (
+  'trace',
+  'debug',
+  'info',
+  'warn',
+  'error'
+);
+CREATE TABLE audit_log_entries (
+  id SERIAL PRIMARY KEY NOT NULL,
+  severity audit_log_severity NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  kind VARCHAR NOT NULL,
+  subkind VARCHAR NOT NULL,
+  description TEXT NOT NULL,
+  context TEXT NOT NULL
+);
+CREATE INDEX idx_audit_log_entries_severity ON audit_log_entries(severity);
+CREATE INDEX idx_audit_log_entries_kind ON audit_log_entries(kind);
+

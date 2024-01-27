@@ -32,18 +32,18 @@ impl App {
   }
 
   pub async fn run_background_tasks(&self) -> anyhow::Result<()> {
-    self.handle_request().submit_all().await?;
-    // self.proclaim_cycle_admin_winner_request().await?;
+    self.on_chain_tx().proclaim_cycle_admin_winner().await?;
+
     // self.admin_set_score_and_topics_request().submit_all().await?;
     // self.admin_set_price_request().submit_all().await?;
-    //
-    // These are singletons though:
     // self.reimburse_due_campaigns_request().submit_all().await?;
     // self.distribute_fee_pool_request().submit_all().await?;
     // self.apply_handle_updates_request().submit_all().await?;
     // self.apply_voted_fee_rate_request().submit_all().await?;
-    // self.vest_admin_votes_request().submit_all().await?;
-    // 
+    
+    // this one is optional. self.vest_admin_votes_request().submit_all().await?;
+    
+    self.handle_request().submit_all().await?;
     self.campaign_request().submit_approvals().await?;
     self.campaign_request().submit_all().await?;
     self.collab_request().submit_all().await?;

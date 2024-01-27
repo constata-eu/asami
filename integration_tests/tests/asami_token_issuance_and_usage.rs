@@ -84,7 +84,9 @@ app_test!{ rate_can_be_voted (a)
 
   // Will remove the fee rate vote when the user moves their tokens.
   // Voted rate goes back to factory settings when no vote is applied.
-  bob.contract().transfer(advertiser.local_wallet().address(), u("2")).send().await.unwrap().await.unwrap().unwrap();
+  bob.contract()
+    .transfer(advertiser.local_wallet().address(), u("2"))
+    .send().await.unwrap().await.unwrap().unwrap();
   assert_eq!(a.contract().voted_fee_rate_vote_count().call().await?, u("0"));
   assert_eq!(a.contract().voted_fee_rate().call().await?, u("10"));
 }
@@ -162,7 +164,6 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
   assert!(a.app.on_chain_tx().proclaim_cycle_admin_winner().await?.unwrap().success());
 
   assert!(a.contract().last_admin_election().call().await? > last_admin_election);
-  last_admin_election = a.contract().last_admin_election().call().await?;
   assert_eq!(a.contract().get_latest_admin_elections().call().await?, [bob_addr, advertiser_addr,advertiser_addr]);
   assert_eq!(a.contract().admin().call().await?, admin_addr);
   assert_eq!(a.contract().admin_treasury().call().await?, admin_addr);
@@ -189,7 +190,7 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
 
   // Advertiser uses its tokens, which removes his votes.
   advertiser.contract().transfer(bob_addr, u("2")).send().await.unwrap().await.unwrap().unwrap();
-  assert_eq!(a.contract().vested_admin_votes_total().call().await?, u("0"));
+  assert_eq!(a.contract().vested_admin_votes_total().call().await?, u("45"));
 
   // Bob has no need to keep its stake, so it removes it
   bob.self_remove_admin_vote().await?;
@@ -200,5 +201,45 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
   assert!(a.app.on_chain_tx().proclaim_cycle_admin_winner().await?.is_none());
 }
 
-// ToDo: Make sure contract does not allow setting a cycle winner when there are no votes.
+app_test!{ contract_cannot_set_cycle_winner_with_no_votes (a)
+  let mut bob = a.client().await;
+  bob.create_x_handle("bob_on_x", u("40")).await;
+  bob.claim_account().await;
+  let bob_addr = bob.local_wallet().address();
+  assert!(
+    a.app.on_chain.contract.proclaim_cycle_admin_winner(bob_addr)
+      .send().await.unwrap_err().is_revert()
+  );
+}
+
 // ToDo: Test actual vest_admin_votes with holders that never voted, votes that were already vested, and votes that have not met their cycle.
+app_test!{ admin_vote_vesting_validations (a)
+  let admin_addr = a.app.on_chain.contract.client().address();
+
+  let mut advertiser = a.client().await;
+  let budget = u("3000");
+  let campaign = advertiser.create_x_campaign(budget, budget).await;
+  advertiser.claim_account().await;
+  let advertiser_addr = advertiser.local_wallet().address();
+
+  let mut bob = a.client().await;
+  bob.create_x_handle("bob_on_x", budget).await;
+  bob.create_x_collab(&campaign).await;
+
+  // Cannot vest without having voted.
+  assert!(advertiser.self_vest_admin_vote(advertiser_addr).await.is_err());
+
+  // Cannot vest on the same cycle.
+  advertiser.self_submit_admin_vote(advertiser_addr).await?;
+  assert!(advertiser.self_vest_admin_vote(advertiser_addr).await.is_err());
+  assert_eq!(a.contract().vested_admin_votes_total().call().await?, u("0"));
+
+  // Can vest on the following cycle.
+  a.evm_forward_to_next_cycle().await;
+  assert!(advertiser.self_vest_admin_vote(advertiser_addr).await.is_ok());
+  assert_eq!(a.contract().vested_admin_votes_total().call().await?, u("30"));
+
+  // And cannot vest again
+  assert!(advertiser.self_vest_admin_vote(advertiser_addr).await.is_err());
+  assert_eq!(a.contract().vested_admin_votes_total().call().await?, u("30"));
+}

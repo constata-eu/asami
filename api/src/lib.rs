@@ -1,5 +1,6 @@
 use rocket::{
   self,
+  figment,
   fairing::AdHoc,
   routes,
   serde::json::Json,
@@ -48,6 +49,10 @@ pub async fn config(app: &State<App>) -> serde_json::Value {
 }
 
 pub fn server(app: App) -> rocket::Rocket<rocket::Build> {
+  custom_server(app, rocket::Config::figment())
+}
+
+pub fn custom_server(app: App, fig: figment::Figment) -> rocket::Rocket<rocket::Build> {
   let allowed = AllowedOrigins::some(
     &[
       "http://localhost:8000",
@@ -71,7 +76,7 @@ pub fn server(app: App) -> rocket::Rocket<rocket::Build> {
   }
   .to_cors().expect("Could not create cors.");
 
-  rocket::build()
+  rocket::custom(fig)
     .attach(AdHoc::on_ignite("app", |rocket| async move {
       rocket.manage(app)
     }))

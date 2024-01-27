@@ -7,6 +7,7 @@ use ethers::{
   providers::{Http, Provider}
 };
 use rocket::local::asynchronous::Client as RocketClient;
+use rocket::{Config, config::LogLevel};
 
 pub struct TestApp {
   pub app: App,
@@ -31,7 +32,9 @@ impl TestApp {
     config.rsk.doc_contract_address = truffle.addresses.doc.clone();
     let provider = Provider::<Http>::try_from(&config.rsk.rpc_url).unwrap();
     let app = App::new("password".to_string(), config).await.unwrap();
-    let rocket_client = RocketClient::tracked(api::server(app.clone())).await.unwrap();
+
+    let fig = Config::figment().merge((Config::LOG_LEVEL, LogLevel::Off));
+    let rocket_client = RocketClient::tracked( api::custom_server(app.clone(), fig) ).await.unwrap();
 
     Self{ rocket_client, provider, truffle, app }
   }
