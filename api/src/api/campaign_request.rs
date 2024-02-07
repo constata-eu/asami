@@ -14,10 +14,6 @@ pub struct CampaignRequest {
   site: Site,
   #[graphql(description = "Status of this campaign request.")]
   status: CampaignRequestStatus,
-  #[graphql(description = "When this campaigns's ERC20 DOC budget is 'approved', this field will show the transaction hash.")]
-  approval_tx_hash: Option<String>,
-  #[graphql(description = "When this campaign is submitted on-chain, this field will show the transaction hash.")]
-  submission_tx_hash: Option<String>,
   #[graphql(description = "The content to share.")]
   content_id: String,
   #[graphql(description = "The date in which this campaign was created.")]
@@ -74,8 +70,6 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
       account_id: d.attrs.account_id,
       budget: d.attrs.budget,
       status: d.attrs.status,
-      approval_tx_hash: d.attrs.approval_tx_hash,
-      submission_tx_hash: d.attrs.submission_tx_hash,
       site: d.attrs.site,
       content_id: d.attrs.content_id,
       created_at: d.attrs.created_at,

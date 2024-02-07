@@ -17,8 +17,6 @@ mutation CreateCampaignRequest($input: CreateCampaignRequestInput!) {
     budget
     site
     status
-    approvalTxHash
-    submissionTxHash
     contentId
     createdAt
     updatedAt
@@ -38,15 +36,12 @@ mutation CreateHandleRequest($input: CreateHandleRequestInput!) {
     __typename
   }
 }
-mutation CreateHandleUpdateRequest($input: CreateHandleUpdateRequestInput!) {
-  createHandleUpdateRequest(input: $input) {
+mutation CreateSetPriceRequest($input: CreateSetPriceRequestInput!) {
+  createSetPriceRequest(input: $input) {
     id
     accountId
     handleId
-    username
     price
-    score
-    createdByAdmin
     status
     __typename
   }
@@ -76,8 +71,6 @@ query CampaignRequest($id: Int!) {
     budget
     site
     status
-    approvalTxHash
-    submissionTxHash
     contentId
     createdAt
     updatedAt
@@ -91,8 +84,6 @@ query AllCampaignRequests($page: Int, $perPage: Int, $sortField: String, $sortOr
     budget
     site
     status
-    approvalTxHash
-    submissionTxHash
     contentId
     createdAt
     updatedAt
@@ -203,34 +194,28 @@ query AllHandlesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: 
     __typename
   }
 }
-query HandleUpdateRequest($id: Int!) {
-  HandleUpdateRequest(id: $id) {
+query SetPriceRequest($id: Int!) {
+  SetPriceRequest(id: $id) {
     id
     accountId
     handleId
-    username
     price
-    score
-    createdByAdmin
     status
     __typename
   }
 }
-query AllHandleUpdateRequests($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HandleUpdateRequestFilter) {
-  allHandleUpdateRequests(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+query AllSetPriceRequests($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: SetPriceRequestFilter) {
+  allSetPriceRequests(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
     id
     accountId
     handleId
-    username
     price
-    score
-    createdByAdmin
     status
     __typename
   }
 }
-query AllHandleUpdateRequestsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HandleUpdateRequestFilter) {
-  _allHandleUpdateRequestsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+query AllSetPriceRequestsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: SetPriceRequestFilter) {
+  _allSetPriceRequestsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
     count
     __typename
   }

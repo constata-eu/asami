@@ -33,6 +33,7 @@ impl App {
 
   pub async fn run_background_tasks(&self) -> anyhow::Result<()> {
     self.on_chain_tx().proclaim_cycle_admin_winner().await?;
+    self.on_chain_tx().apply_handle_updates().await?;
 
     // self.admin_set_score_and_topics_request().submit_all().await?;
     // self.admin_set_price_request().submit_all().await?;
@@ -44,6 +45,9 @@ impl App {
     // this one is optional. self.vest_admin_votes_request().submit_all().await?;
     
     self.handle_request().submit_all().await?;
+    self.set_price_request().submit_all().await?;
+    self.set_score_and_topics_request().submit_all().await?;
+    self.topic_request().submit_all().await?;
     self.campaign_request().submit_approvals().await?;
     self.campaign_request().submit_all().await?;
     self.collab_request().submit_all().await?;
@@ -56,8 +60,8 @@ impl App {
     let _ = self.audit_log_entry().info(kind, subkind, context).await;
   }
 
-  pub async fn error<S: serde::Serialize>(&self, kind: &str, subkind: &str, context: S) {
-    let _ = self.audit_log_entry().error(kind, subkind, context).await;
+  pub async fn fail<S: serde::Serialize>(&self, kind: &str, subkind: &str, context: S) {
+    let _ = self.audit_log_entry().fail(kind, subkind, context).await;
   }
 }
 

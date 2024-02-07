@@ -20,16 +20,17 @@ model!{
     score: Option<String>,
     #[sqlx_model_hints(handle_request_status, default)]
     status: HandleRequestStatus,
+    #[sqlx_model_hints(int4, default)]
+    on_chain_tx_id: Option<i32>,
     #[sqlx_model_hints(varchar, default)]
     handle_id: Option<String>,
-    #[sqlx_model_hints(varchar, default)]
-    tx_hash: Option<String>,
   },
   has_many {
     HandleRequestTopic(handle_request_id),
   },
   belongs_to {
     Account(account_id),
+    OnChainTx(on_chain_tx_id),
     Handle(handle_id),
   }
 }
@@ -109,7 +110,7 @@ impl HandleRequestHub {
     Ok(handle_requests)
   }
 
-  pub async fn submit_all(self) -> AsamiResult<()> {
+  pub async fn submit_all(self) -> anyhow::Result<()> {
     let rsk = &self.state.on_chain;
     let reqs = self.select().status_eq(HandleRequestStatus::Appraised).all().await?;
     if reqs.is_empty() { return Ok(()); }
@@ -119,15 +120,10 @@ impl HandleRequestHub {
       params.push(r.as_param().await?);
     }
 
-    let tx_hash = rsk.contract
-      .admin_make_handles(params)
-      .send().await?.await?
-      .ok_or_else(|| Error::service("rsk_blockchain", "no_tx_recepit_for_admin_make_handles"))?
-      .transaction_hash
-      .encode_hex();
+    let on_chain_tx = self.state.on_chain_tx().send(rsk.contract.admin_make_handles(params)).await?;
 
     for r in reqs {
-      r.update().status(HandleRequestStatus::Submitted).tx_hash(Some(tx_hash.clone())).save().await?;
+      r.update().status(HandleRequestStatus::Submitted).on_chain_tx_id(Some(on_chain_tx.attrs.id)).save().await?;
     }
 
     Ok(())
@@ -169,7 +165,7 @@ impl HandleRequest {
     let Some(score) = a.score.as_ref().map(u256) else { return invalid_state };
     let Some(user_id) = a.user_id.clone() else { return invalid_state };
 
-    let topics = self.topic_ids().await?.iter().map(|i| u256(i) ).collect();
+    let topics: Vec<U256> = self.topic_ids().await?.iter().map(|i| u256(i) ).collect();
 
     Ok(on_chain::Handle {
       id: 0.into(),
@@ -177,9 +173,15 @@ impl HandleRequest {
       site: a.site as u8,
       price,
       score,
-      topics,
+      topics: topics.clone(),
       username: a.username.clone(),
-      user_id: user_id
+      user_id: user_id,
+      last_updated: 0.into(),
+      new_score: score,
+      new_price: price,
+      new_topics: topics,
+      new_username: a.username.clone(),
+      needs_update: false,
     })
   }
 }
@@ -197,19 +199,13 @@ model!{
   }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
-#[sqlx(type_name = "handle_request_status", rename_all = "snake_case")]
-pub enum HandleRequestStatus {
-  Unverified, // Newly created, never sent on-chain.
-  Verified,   // Verified off-chain.
-  Appraised,  // Appraised off-chain.
-  Submitted,  // Sent, after this we listen for events regarding this handle.
-  Done,     // Local DB knows this handle is now on-chain.
-}
-
-impl sqlx::postgres::PgHasArrayType for HandleRequestStatus {
-  fn array_type_info() -> sqlx::postgres::PgTypeInfo {
-    sqlx::postgres::PgTypeInfo::with_name("_handle_request_status")
+make_sql_enum![
+  "handle_request_status",
+  pub enum HandleRequestStatus {
+    Unverified, // Newly created, never sent on-chain.
+    Verified,   // Verified off-chain.
+    Appraised,  // Appraised off-chain.
+    Submitted,  // Sent, after this we listen for events regarding this handle.
+    Done,     // Local DB knows this handle is now on-chain.
   }
-}
-
+];

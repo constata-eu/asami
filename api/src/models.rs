@@ -38,138 +38,43 @@ pub mod audit_log_entry;
 pub use audit_log_entry::*;
 pub mod on_chain_tx;
 pub use on_chain_tx::*;
+pub mod site;
+pub use site::*;
+pub mod set_score_and_topics_request;
+pub use set_score_and_topics_request::*;
+pub mod set_price_request;
+pub use set_price_request::*;
+pub mod auth_method;
+pub use auth_method::*;
+pub mod topic;
+pub use topic::*;
+pub mod topic_request;
+pub use topic_request::*;
 
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
-#[sqlx(type_name = "site", rename_all = "snake_case")]
-pub enum Site {
-  X,
-  Nostr,
-  Instagram,
-}
+#[macro_export]
+macro_rules! make_sql_enum {
+  ($sql_name:tt, pub enum $name:ident { $($variants:ident),* $(,)?}) => (
+    #[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
+    #[sqlx(type_name = $sql_name, rename_all = "snake_case")]
+    pub enum $name { $($variants),* }
 
-impl Site {
-  pub fn from_on_chain(o: u8) -> Self {
-    match o {
-      0 => Self::X,
-      1 => Self::Nostr,
-      2 => Self::Instagram,
-      _ => panic!("mismatched site on contract")
+    impl sqlx::postgres::PgHasArrayType for $name {
+      fn array_type_info() -> sqlx::postgres::PgTypeInfo {
+        sqlx::postgres::PgTypeInfo::with_name(concat!("_", $sql_name))
+      }
     }
+  )
+}
+
+make_sql_enum![
+  "generic_request_status",
+  pub enum GenericRequestStatus {
+    Received,
+    Submitted,
+    Failed,
+    Done,
   }
-}
-
-impl sqlx::postgres::PgHasArrayType for Site {
-  fn array_type_info() -> sqlx::postgres::PgTypeInfo {
-    sqlx::postgres::PgTypeInfo::with_name("_site")
-  }
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
-#[sqlx(type_name = "handle_update_request_status", rename_all = "snake_case")]
-pub enum HandleUpdateRequestStatus {
-  Received,
-  Submitted,
-  Done,
-}
-
-impl sqlx::postgres::PgHasArrayType for HandleUpdateRequestStatus {
-  fn array_type_info() -> sqlx::postgres::PgTypeInfo {
-    sqlx::postgres::PgTypeInfo::with_name("_handle_update_request_status")
-  }
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type)]
-#[sqlx(type_name = "auth_method_kind", rename_all = "snake_case")]
-pub enum AuthMethodKind {
-  X,
-  Facebook,
-  Nostr,
-  Eip712,
-  OneTimeToken,
-}
-
-impl AuthMethodKind {
-  pub fn from_str(s: &str) -> Option<AuthMethodKind> {
-    match s {
-      "X" => Some(AuthMethodKind::X),
-      "Facebook" => Some(AuthMethodKind::Facebook),
-      "Nostr" => Some(AuthMethodKind::Nostr),
-      "Eip712" => Some(AuthMethodKind::Eip712),
-      "OneTimeToken" => Some(AuthMethodKind::OneTimeToken),
-      _ => None
-    }
-  }
-}
-
-impl sqlx::postgres::PgHasArrayType for AuthMethodKind {
-  fn array_type_info() -> sqlx::postgres::PgTypeInfo {
-    sqlx::postgres::PgTypeInfo::with_name("_auth_method_kind")
-  }
-}
-
-model!{
-  state: App,
-  table: handle_update_requests,
-  struct HandleUpdateRequest {
-    #[sqlx_model_hints(int4, default)]
-    id: i32,
-    #[sqlx_model_hints(varchar)]
-    account_id: String,
-    #[sqlx_model_hints(varchar)]
-    handle_id: String,
-    #[sqlx_model_hints(varchar)]
-    username: Option<String>,
-    #[sqlx_model_hints(varchar)]
-    price: Option<String>,
-    #[sqlx_model_hints(varchar)]
-    score: Option<String>,
-    #[sqlx_model_hints(boolean)]
-    created_by_admin: bool,
-    #[sqlx_model_hints(handle_update_request_status, default)]
-    status: HandleUpdateRequestStatus,
-    #[sqlx_model_hints(varchar, default)]
-    tx_hash: Option<String>,
-  },
-  has_many {
-    HandleUpdateTopic(handle_update_request_id),
-  }
-}
-
-impl HandleUpdateRequest {
-  pub async fn done(self) -> sqlx::Result<Self> {
-    self.update().status(HandleUpdateRequestStatus::Done).save().await
-  }
-}
-
-model!{
-  state: App,
-  table: handle_update_request_topics,
-  struct HandleUpdateTopic {
-    #[sqlx_model_hints(int4, default)]
-    id: i32,
-    #[sqlx_model_hints(int4)]
-    handle_update_request_id: i32,
-    #[sqlx_model_hints(varchar)]
-    topic_id: String,
-  }
-}
-
-model!{
-  state: App,
-  table: auth_methods,
-  struct AuthMethod {
-    #[sqlx_model_hints(int4, default)]
-    id: i32,
-    user_id: i32,
-    #[sqlx_model_hints(auth_method_kind)]
-    kind: AuthMethodKind,
-    #[sqlx_model_hints(Varchar)]
-    lookup_key: String,
-  },
-  belongs_to {
-    User(user_id)
-  }
-}
+];
 
 model!{
   state: App,
@@ -221,17 +126,6 @@ model!{
     fee: String,
     #[sqlx_model_hints(varchar)]
     created_at: String,
-  }
-}
-
-model!{
-  state: App,
-  table: topics,
-  struct Topic {
-    #[sqlx_model_hints(varchar)]
-    id: String,
-    #[sqlx_model_hints(varchar)]
-    name: String,
   }
 }
 

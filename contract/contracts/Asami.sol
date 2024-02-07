@@ -29,21 +29,19 @@ contract Asami is Ownable, ERC20Capped {
     uint256[] topics;
     string username;
     string userId;
+    bool needsUpdate;
+    string newUsername;
+    uint256 newPrice;
+    uint256 newScore;
+    uint256[] newTopics;
+    uint256 lastUpdated;
   }
   Handle[] public handles;
   event HandleSaved(Handle handle);
 
-  struct HandleUpdate {
-    uint256 id;
-    uint256 handleId;
-    string username;
-    uint256 price;
-    uint256 score;
-    uint256[] topics;
+  function getHandles() public view returns (Handle[] memory) {
+    return handles;
   }
-  HandleUpdate[] public handleUpdates;
-  mapping(uint256 => uint256) public handleUpdateByHandleId;
-  event HandleUpdateSaved(HandleUpdate handleUpdate);
 
   struct Campaign {
     uint256 id;
@@ -119,6 +117,7 @@ contract Asami is Ownable, ERC20Capped {
   }
 
   string[] public topics;
+  event TopicSaved(uint256 id, string name);
 
   IERC20 internal doc;
   address[] public holders;
@@ -167,8 +166,11 @@ contract Asami is Ownable, ERC20Capped {
     return topics;
   }
 
-  function addTopic(string calldata _name) public onlyAdmin {
-    topics.push(_name);
+  function adminAddTopics(string[] calldata _names) public onlyAdmin {
+    for( uint256 i = 0; i < _names.length; i++) {
+      topics.push(_names[i]);
+      emit TopicSaved(topics.length, _names[i]);
+    }
   }
 
   function ensureAccount(uint256 _accountId) private {
@@ -197,13 +199,13 @@ contract Asami is Ownable, ERC20Capped {
       account.addr = claim.addr;
 
       if(account.unclaimedAsamiTokens > 0) {
-        _safeMint(claim.addr, account.unclaimedAsamiTokens);
         account.unclaimedAsamiTokens = 0;
+        _safeMint(claim.addr, account.unclaimedAsamiTokens);
       }
 
       if(account.unclaimedDocRewards > 0) {
-        doc.transfer(account.addr, account.unclaimedDocRewards);
         account.unclaimedDocRewards = 0;
+        doc.transfer(account.addr, account.unclaimedDocRewards);
       }
 
       emit AccountSaved(account);
@@ -397,12 +399,19 @@ contract Asami is Ownable, ERC20Capped {
     _mint(_addr, _amount);
   }
 
-  function adminSetPrice(uint256 _handleId, uint256 _price) external onlyAdmin {
-    Handle storage handle = handles[_handleId - 1];
-    Account storage account = accounts[handle.accountId];
-    require(account.addr == address(0) && account.id > 0);
+  struct AdminSetPriceInput {
+    uint256 handleId;
+    uint256 price;
+  }
 
-    _setPriceHelper(handle, _price);
+  function adminSetPrice(AdminSetPriceInput[] calldata _inputs) external onlyAdmin {
+    for( uint256 i = 0; i < _inputs.length; i++) {
+      Handle storage handle = handles[_inputs[i].handleId - 1];
+      Account storage account = accounts[handle.accountId];
+      require(account.addr == address(0) && account.id > 0);
+
+      _setPriceHelper(handle, _inputs[i].price);
+    }
   }
 
   function setPrice(uint256 _handleId, uint256 _price) external {
@@ -418,37 +427,26 @@ contract Asami is Ownable, ERC20Capped {
 
   function _setPriceHelper(Handle storage handle, uint256 _price) private {
     require(_price > 0);
-    HandleUpdate storage update = _getOrCreateHandleUpdate(handle.id);
-    update.price = _price;
-    emit HandleUpdateSaved(update);
+    handle.newPrice = _price;
+    handle.needsUpdate = true;
+    emit HandleSaved(handle);
+  }
+
+  struct AdminSetScoreAndTopicsInput {
+    uint256 handleId;
+    uint256 score;
+    uint256[] topics;
   }
 
   function adminSetScoreAndTopics(
-    uint256 _handleId,
-    uint256 _score,
-    uint256[] calldata _topics
+    AdminSetScoreAndTopicsInput[] calldata _inputs
   ) external onlyAdmin {
-    HandleUpdate storage update = _getOrCreateHandleUpdate(_handleId);
-    update.score = _score;
-    update.topics = _topics;
-    emit HandleUpdateSaved(update);
-  }
-
-  function _getOrCreateHandleUpdate(uint256 _handleId) private returns (HandleUpdate storage) {
-    // To prevent race conditions in the incremental updating process,
-    // handle updates are inaccesible while they are being applied to handles.
-    require(updatesRemaining == 0);
-
-    uint256 existingId = handleUpdateByHandleId[_handleId];
-
-    if(existingId > 0) {
-      return handleUpdates[existingId - 1];
-    } else {
-      HandleUpdate storage update = handleUpdates.push();
-      update.id = handleUpdates.length;
-      update.handleId = _handleId;
-      handleUpdateByHandleId[_handleId] = update.id;
-      return update;
+    for( uint256 i = 0; i < _inputs.length; i++) {
+      Handle storage handle = handles[_inputs[i].handleId - 1];
+      handle.newScore = _inputs[i].score;
+      handle.newTopics = _inputs[i].topics;
+      handle.needsUpdate = true;
+      emit HandleSaved(handle);
     }
   }
 
@@ -506,52 +504,34 @@ contract Asami is Ownable, ERC20Capped {
     }
   }
 
-  uint256 public updatesRemaining = 0;
-  uint256 public updatesTotal = 0;
-  uint256 public lastUpdateCycle = 0;
+  function applyHandleUpdates(uint256[] calldata _indexes) external {
+    uint256 currentCycle = getCurrentCycle();
 
-  function applyHandleUpdates() external {
-    if(updatesRemaining == 0) {
-      // We're starting a new updates cycle.
-      // We can only start one payout in each 15 day period.
-      updatesTotal = handleUpdates.length;
-      updatesRemaining = updatesTotal;
-      uint256 currentCycle = getCurrentCycle();
-      require(currentCycle != lastUpdateCycle);
-      lastUpdateCycle = currentCycle;
-    }
+    for (uint256 i = 0; i < _indexes.length; i++) {
+      Handle storage handle = handles[_indexes[i]];
+      require(handle.lastUpdated != currentCycle, "ahu 0");
+      require(handle.needsUpdate, "ahu 0");
 
-    uint256 startAt = updatesTotal - updatesRemaining;
+      handle.needsUpdate = false;
+      handle.lastUpdated = currentCycle;
 
-    uint256 until = (startAt + 100) <= updatesTotal ? (startAt + 100) : updatesTotal;
-
-    for (uint256 i = startAt; i < until; i++) {
-      HandleUpdate storage update = handleUpdates[i];
-      Handle storage handle = handles[update.handleId - 1];
-
-      if (bytes(update.username).length > 0) {
-        handle.username = update.username;
+      if (bytes(handle.newUsername).length > 0) {
+        handle.username = handle.newUsername;
       }
 
-      if (update.price != 0) {
-        handle.price = update.price;
+      if (handle.newPrice != 0) {
+        handle.price = handle.newPrice;
       }
 
-      if (update.score != 0) {
-        handle.score = update.score;
+      if (handle.score != 0) {
+        handle.score = handle.newScore;
       }
 
-      if (update.topics.length > 0) {
-        handle.topics = update.topics;
+      if (handle.newTopics.length > 0) {
+        handle.topics = handle.newTopics;
       }
 
       emit HandleSaved(handle);
-    }
-
-    updatesRemaining -= until;
-
-    if(updatesRemaining == 0) {
-      delete handleUpdates;
     }
   }
 

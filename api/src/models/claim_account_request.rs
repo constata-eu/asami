@@ -1,19 +1,5 @@
 use super::*;
 
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
-#[sqlx(type_name = "claim_account_request_status", rename_all = "snake_case")]
-pub enum ClaimAccountRequestStatus {
-  Received,
-  Submitted,
-  Done,
-}
-
-impl sqlx::postgres::PgHasArrayType for ClaimAccountRequestStatus {
-  fn array_type_info() -> sqlx::postgres::PgTypeInfo {
-    sqlx::postgres::PgTypeInfo::with_name("_claim_account_request_status")
-  }
-}
-
 model!{
   state: App,
   table: claim_account_requests,
@@ -28,36 +14,39 @@ model!{
     signature: String,
     #[sqlx_model_hints(varchar)]
     session_id: String,
-    #[sqlx_model_hints(varchar, default)]
-    tx_hash: Option<String>,
-    #[sqlx_model_hints(claim_account_request_status, default)]
-    status: ClaimAccountRequestStatus,
+    #[sqlx_model_hints(int4, default)]
+    on_chain_tx_id: Option<i32>,
+    #[sqlx_model_hints(generic_request_status, default)]
+    status: GenericRequestStatus,
   },
   belongs_to {
     Account(account_id),
-    Session(account_id),
+    Session(session_id),
+    OnChainTx(on_chain_tx_id),
   }
 }
 
+impl_loggable!(ClaimAccountRequest);
+
 impl ClaimAccountRequestHub {
-  pub async fn submit_all(&self) -> AsamiResult<Vec<ClaimAccountRequest>> {
+  pub async fn submit_all(&self) -> anyhow::Result<Vec<ClaimAccountRequest>> {
     let mut submitted = vec![];
-    let reqs = self.select().status_eq(ClaimAccountRequestStatus::Received).all().await?;
+    let reqs = self.select().status_eq(GenericRequestStatus::Received).all().await?;
 
     if reqs.is_empty() { return Ok(submitted); }
 
     let params = reqs.iter().map(|r| r.as_param() ).collect();
 
-    let tx_hash = self.state.on_chain.contract
-      .claim_accounts(params)
-      .send().await?.await?
-      .ok_or_else(|| Error::service("rsk_blockchain", "no_tx_recepit_for_admin_make_handles"))?
-      .transaction_hash
-      .encode_hex();
+    let on_chain_tx = self.state.on_chain_tx()
+      .send(self.state.on_chain.contract.claim_accounts(params))
+      .await?;
 
     for req in reqs {
       submitted.push(
-        req.update().status(ClaimAccountRequestStatus::Submitted).tx_hash(Some(tx_hash.clone())).save().await?
+        req.update()
+          .status(GenericRequestStatus::Submitted)
+          .on_chain_tx_id(Some(on_chain_tx.attrs.id))
+          .save().await?
       );
     }
 
@@ -67,7 +56,7 @@ impl ClaimAccountRequestHub {
 
 impl ClaimAccountRequest {
   pub async fn done(self) -> sqlx::Result<Self> {
-    self.update().status(ClaimAccountRequestStatus::Done).save().await
+    self.update().status(GenericRequestStatus::Done).save().await
   }
 
   pub fn as_param(&self) -> on_chain::AdminClaimAccountsInput {
@@ -77,4 +66,3 @@ impl ClaimAccountRequest {
     }
   }
 }
-

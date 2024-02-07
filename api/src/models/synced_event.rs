@@ -43,7 +43,7 @@ impl SyncedEventHub {
     self.sync_approval(contract, from_block, to_block).await?;
     self.sync_campaign_saved(contract, from_block, to_block).await?;
     self.sync_collab_saved(contract, from_block, to_block).await?;
-    self.sync_handle_update_saved(contract, from_block, to_block).await?;
+    self.sync_topic_saved(contract, from_block, to_block).await?;
 
     index_state.update().last_synced_block(u64_to_d(to_block)).save().await?;
 
@@ -90,9 +90,8 @@ impl SyncedEventHub {
       let addr = if a.addr.is_zero() { None } else { Some(a.addr.encode_hex()) };
 
       let maybe_claim_req = self.state.claim_account_request().select()
-        .tx_hash_eq(meta.transaction_hash.encode_hex())
         .account_id_eq(a.id.encode_hex())
-        .status_eq(ClaimAccountRequestStatus::Submitted)
+        .status_eq(GenericRequestStatus::Submitted)
         .optional().await?;
 
       if let Some(h) = maybe_claim_req {
@@ -144,9 +143,9 @@ impl SyncedEventHub {
 
           for new in h.topics {
             self.state.handle_topic().insert(InsertHandleTopic{
-              handle_id: handle.attrs.id.clone().encode_hex(),
+              handle_id: h.id.encode_hex(),
               topic_id: new.encode_hex(),
-            });
+            }).save().await?;
           }
 
           handle.update()
@@ -171,17 +170,22 @@ impl SyncedEventHub {
             self.state.handle_topic().insert(InsertHandleTopic{
               handle_id: h.id.encode_hex(),
               topic_id: new.encode_hex(),
-            });
+            }).save().await?;
           }
 
-          let req = self.state.handle_request().select()
-            .tx_hash_eq(meta.transaction_hash.encode_hex())
+          let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
+
+          for r in on_chain_tx.handle_request_scope()
             .username_ilike(handle.attrs.username.clone())
             .status_eq(HandleRequestStatus::Submitted)
-            .optional().await?;
+            .all().await?.into_iter() { r.done(&handle).await?; }
 
-          if let Some(r) = req {
-            r.done(&handle).await?;
+          for r in on_chain_tx.set_score_and_topics_request_scope().status_eq(GenericRequestStatus::Submitted).all().await?.into_iter() {
+            r.update().status(GenericRequestStatus::Done).save().await?;
+          }
+
+          for r in on_chain_tx.set_price_request_scope().status_eq(GenericRequestStatus::Submitted).all().await?.into_iter() {
+            r.update().status(GenericRequestStatus::Done).save().await?;
           }
         }
       }
@@ -203,9 +207,11 @@ impl SyncedEventHub {
         continue;
       }
 
+      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
+
       let req = self.state.campaign_request().select()
         .status_eq(CampaignRequestStatus::Paid)
-        .approval_tx_hash_eq(meta.transaction_hash.encode_hex())
+        .approval_id_eq(on_chain_tx.attrs.id)
         .optional().await?;
 
       if let Some(r) = req {
@@ -255,10 +261,12 @@ impl SyncedEventHub {
             });
           }
 
+          let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
+
           let req = self.state.campaign_request().select()
             .content_id_eq(&campaign.attrs.content_id.clone())
             .status_eq(CampaignRequestStatus::Submitted)
-            .submission_tx_hash_eq(meta.transaction_hash.encode_hex())
+            .submission_id_eq(on_chain_tx.attrs.id)
             .optional().await?;
 
           if let Some(r) = req {
@@ -301,11 +309,12 @@ impl SyncedEventHub {
         created_at: c.created_at.encode_hex(),
       }).save().await?;
 
-      let req = self.state.collab_request().select()
-        .status_eq(CollabRequestStatus::Submitted)
+      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
+
+      let req = on_chain_tx.collab_request_scope()
+        .status_eq(GenericRequestStatus::Submitted)
         .campaign_id_eq(c.campaign_id.encode_hex())
         .handle_id_eq(c.handle_id.encode_hex())
-        .tx_hash_eq(meta.transaction_hash.encode_hex())
         .optional().await?;
 
       if let Some(r) = req {
@@ -316,8 +325,8 @@ impl SyncedEventHub {
     Ok(())
   }
 
-  pub async fn sync_handle_update_saved(&self, contract: &AsamiContractSigner, from_block: U64, to_block: U64) ->  AsamiResult<()> {
-    let events = contract.handle_update_saved_filter()
+  pub async fn sync_topic_saved(&self, contract: &AsamiContractSigner, from_block: U64, to_block: U64) ->  AsamiResult<()> {
+    let events = contract.topic_saved_filter()
       .address(contract.address().into())
       .from_block(from_block)
       .to_block(to_block)
@@ -328,15 +337,17 @@ impl SyncedEventHub {
         continue;
       }
 
-      let req = self.state.handle_update_request().select()
-        .status_eq(HandleUpdateRequestStatus::Submitted)
-        .tx_hash_eq(meta.transaction_hash.encode_hex())
-        .optional().await?;
-
-      if let Some(r) = req {
-        r.done().await?;
-      }
+      self.state.topic().insert(InsertTopic{
+        id: e.id.encode_hex(),
+        name: e.name,
+      }).save().await?;
     }
+
     Ok(())
+  }
+
+  async fn find_on_chain_tx(&self, meta: &LogMeta) -> sqlx::Result<Option<OnChainTx>> {
+    let tx_hash = meta.transaction_hash.encode_hex();
+    self.state.on_chain_tx().select().tx_hash_eq(tx_hash).optional().await
   }
 }

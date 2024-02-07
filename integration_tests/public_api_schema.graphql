@@ -1,27 +1,7 @@
-"A request to verify a handle for an account."
-type HandleUpdateRequest {
-  "Unique numeric identifier of this resource"
-  id: Int!
-  "The id of the account that created this."
-  accountId: String!
-  "The numeric id of the handle in the smart contract. Hex encoded uint256."
-  handleId: String!
-  "The username on the given social network. This may change by the user, it may not be a unique id."
-  username: String
-  "The price for each collab made with this handle. This is the price for a single repost."
-  price: String
-  "The score given to this handle by Asami's admin."
-  score: String
-  "If this request was created by the admin or by the user themselves"
-  createdByAdmin: Boolean!
-  "Status of this campaign request."
-  status: HandleUpdateRequestStatus!
-}
-
 enum Site {
   X
-  NOSTR
   INSTAGRAM
+  NOSTR
 }
 
 input CampaignRequestFilter {
@@ -71,10 +51,11 @@ input CollabFilter {
   memberIdIn: [String!]
 }
 
-input IgCampaignRuleFilter {
+input SetPriceRequestFilter {
   ids: [Int!]
   idEq: Int
-  campaignIdEq: String
+  handleIdEq: String
+  statusIn: [GenericRequestStatus!]
 }
 
 "A campaign started by an advertiser"
@@ -89,10 +70,6 @@ type CampaignRequest {
   site: Site!
   "Status of this campaign request."
   status: CampaignRequestStatus!
-  "When this campaigns's ERC20 DOC budget is 'approved', this field will show the transaction hash."
-  approvalTxHash: String
-  "When this campaign is submitted on-chain, this field will show the transaction hash."
-  submissionTxHash: String
   "The content to share."
   contentId: String!
   "The date in which this campaign was created."
@@ -105,7 +82,7 @@ input ClaimAccountRequestFilter {
   ids: [Int!]
   idEq: Int
   addrEq: String
-  statusIn: [ClaimAccountRequestStatus!]
+  statusIn: [GenericRequestStatus!]
 }
 
 enum CampaignRequestStatus {
@@ -128,22 +105,19 @@ type CampaignPreference {
   attemptedOn: DateTime
 }
 
+input IgCampaignRuleFilter {
+  ids: [Int!]
+  idEq: Int
+  campaignIdEq: String
+}
+
 type Mutation {
   createSession: Session!
   createCampaignRequest(input: CreateCampaignRequestInput!): CampaignRequest!
   createHandleRequest(input: CreateHandleRequestInput!): HandleRequest!
-  createHandleUpdateRequest(input: CreateHandleUpdateRequestInput!): HandleUpdateRequest!
+  createSetPriceRequest(input: CreateSetPriceRequestInput!): SetPriceRequest!
   createClaimAccountRequest(input: CreateClaimAccountRequestInput!): ClaimAccountRequest!
   createCampaignPreference(input: CreateCampaignPreferenceInput!): CampaignPreference!
-}
-
-input HandleUpdateRequestFilter {
-  ids: [Int!]
-  idEq: Int
-  handleIdEq: String
-  usernameLike: String
-  createdByAdminEq: Boolean
-  statusIn: [HandleUpdateRequestStatus!]
 }
 
 type Query {
@@ -160,9 +134,9 @@ type Query {
   Handle(id: String!): Handle!
   allHandles(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: HandleFilter): [Handle!]!
   _allHandlesMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: HandleFilter): ListMetadata!
-  HandleUpdateRequest(id: Int!): HandleUpdateRequest!
-  allHandleUpdateRequests(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: HandleUpdateRequestFilter): [HandleUpdateRequest!]!
-  _allHandleUpdateRequestsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: HandleUpdateRequestFilter): ListMetadata!
+  SetPriceRequest(id: Int!): SetPriceRequest!
+  allSetPriceRequests(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: SetPriceRequestFilter): [SetPriceRequest!]!
+  _allSetPriceRequestsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: SetPriceRequestFilter): ListMetadata!
   Collab(id: String!): Collab!
   allCollabs(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CollabFilter): [Collab!]!
   _allCollabsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CollabFilter): ListMetadata!
@@ -232,18 +206,6 @@ type Collab {
   fee: String!
 }
 
-"The input for creating a new HandleUpdateRequest."
-input CreateHandleUpdateRequestInput {
-  handleId: String!
-  price: String!
-}
-
-enum HandleUpdateRequestStatus {
-  RECEIVED
-  SUBMITTED
-  DONE
-}
-
 input HandleRequestFilter {
   ids: [Int!]
   idEq: Int
@@ -283,6 +245,12 @@ input CampaignFilter {
   finishedEq: Boolean
   contentIdLike: String
   availableToAccountId: String
+}
+
+"The input for creating a new SetPriceRequest."
+input CreateSetPriceRequestInput {
+  handleId: String!
+  price: String!
 }
 
 "The input for creating a new ClaimAccountRequest."
@@ -346,14 +314,20 @@ type ClaimAccountRequest {
   accountId: String!
   "The address taking ownership."
   addr: String!
-  "Status of this campaign request."
-  status: ClaimAccountRequestStatus!
+  "Status of this request."
+  status: GenericRequestStatus!
 }
 
-enum ClaimAccountRequestStatus {
+enum GenericRequestStatus {
   RECEIVED
   SUBMITTED
   DONE
+}
+
+input CampaignPreferenceFilter {
+  ids: [Int!]
+  idEq: Int
+  campaignIdEq: String
 }
 
 """
@@ -372,10 +346,18 @@ enum ClaimAccountRequestStatus {
 """
 scalar DateTime
 
-input CampaignPreferenceFilter {
-  ids: [Int!]
-  idEq: Int
-  campaignIdEq: String
+"A request to set the price for an unclaimed account."
+type SetPriceRequest {
+  "Unique numeric identifier of this resource"
+  id: Int!
+  "The id of the account that created this."
+  accountId: String!
+  "The numeric id of the handle in the smart contract. Hex encoded uint256."
+  handleId: String!
+  "The price for each collab made with this handle. This is the price for a single repost."
+  price: String
+  "Status of this request."
+  status: GenericRequestStatus!
 }
 
 schema {

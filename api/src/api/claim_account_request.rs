@@ -10,8 +10,8 @@ pub struct ClaimAccountRequest {
   account_id: String,
   #[graphql(description = "The address taking ownership.")]
   addr: String,
-  #[graphql(description = "Status of this campaign request.")]
-  status: ClaimAccountRequestStatus,
+  #[graphql(description = "Status of this request.")]
+  status: GenericRequestStatus,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -20,7 +20,7 @@ pub struct ClaimAccountRequestFilter {
   ids: Option<Vec<i32>>,
   id_eq: Option<i32>,
   addr_eq: Option<String>,
-  status_in: Option<Vec<ClaimAccountRequestStatus>>,
+  status_in: Option<Vec<GenericRequestStatus>>,
 }
 
 #[rocket::async_trait]

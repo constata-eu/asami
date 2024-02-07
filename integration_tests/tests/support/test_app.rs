@@ -87,7 +87,7 @@ impl TestApp {
 
   pub async fn run_idempotent_background_tasks_a_few_times(&self) {
     for _ in 0..5 {
-      self.app.run_background_tasks().await.unwrap();
+      self.app.run_background_tasks().await.expect("error in test background tasks");
     }
   }
 

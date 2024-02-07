@@ -21,6 +21,9 @@ model!{
   },
   has_many {
     HandleTopic(handle_id),
+  },
+  belongs_to {
+    Account(account_id),
   }
 }
 

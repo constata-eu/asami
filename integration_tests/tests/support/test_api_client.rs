@@ -158,22 +158,26 @@ impl<'b> ApiClient<'b> {
     self.account().await.create_handle_request(models::Site::X, username).await.unwrap()
       .verify("179383862".into()).await.unwrap()
       .appraise(rate, wei("10")).await.unwrap();
-
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
   }
 
-  pub async fn claim_account(&mut self) { // Rsk address as string.
+  pub async fn gql_claim_account_request(&self, wallet: &LocalWallet) -> graphql_client::Response<gql::create_claim_account_request::ResponseData> {
     let rsk = &self.test_app.app.settings.rsk;
-    let wallet = LocalWallet::new(&mut thread_rng()).with_chain_id(rsk.chain_id);
     let payload = models::make_login_to_asami_typed_data(rsk.chain_id).unwrap();
     let signature = wallet.sign_typed_data(&payload).await.unwrap().to_string();
 
-    let _claim: gql::create_claim_account_request::ResponseData = self.gql(
+    self.gql_response(
       &gql::CreateClaimAccountRequest::build_query(gql::create_claim_account_request::Variables{
         input: gql::create_claim_account_request::CreateClaimAccountRequestInput{signature}
       }),
       vec![]
-    ).await;
+    ).await
+  }
+
+  pub async fn submit_claim_account_request(&mut self) {
+    let rsk = &self.test_app.app.settings.rsk;
+    let wallet = LocalWallet::new(&mut thread_rng()).with_chain_id(rsk.chain_id);
+    self.gql_claim_account_request(&wallet).await;
 
     let tx = TransactionRequest::new().to(wallet.address()).value(u("10"));
     self.test_app.app.on_chain.contract.client()
@@ -182,13 +186,16 @@ impl<'b> ApiClient<'b> {
       .await.expect("waiting tx confirmation")
       .expect("tx result");
 
-    self.test_app.run_idempotent_background_tasks_a_few_times().await;
-
     let provider = Provider::<Http>::try_from(&rsk.rpc_url).unwrap();
     let client = std::sync::Arc::new(SignerMiddleware::new(provider, wallet.clone()));
     let address: Address = rsk.contract_address.parse().unwrap();
     self.contract = Some(AsamiContract::new(address, client.clone()));
     self.local_wallet = Some(wallet);
+  }
+
+  pub async fn claim_account(&mut self) { // Rsk address as string.
+    self.submit_claim_account_request().await;
+    self.test_app.run_idempotent_background_tasks_a_few_times().await;
   }
 
   pub async fn create_x_collab(&self, campaign: &models::Campaign) {
@@ -247,10 +254,17 @@ impl<'b> ApiClient<'b> {
   pub async fn gql<'a, T: core::fmt::Debug, Q>(&'a self, query: Q, extra_headers: Vec<Header<'static>>) -> T
     where Q: Serialize, T: DeserializeOwned
   {
-    let query_str = serde_json::to_string(&query).expect("gql query was not JSON");
-    let response = self.post::<graphql_client::Response<T>, _>("/graphql/", query_str, extra_headers).await;
+    let response = self.gql_response(query, extra_headers).await;
     response.data.expect(&format!("No gql response. Error was {:?}", response.errors))
   }
+
+  pub async fn gql_response<'a, T: core::fmt::Debug, Q>(&'a self, query: Q, extra_headers: Vec<Header<'static>>) -> graphql_client::Response<T>
+    where Q: Serialize, T: DeserializeOwned
+  {
+    let query_str = serde_json::to_string(&query).expect("gql query was not JSON");
+    self.post::<graphql_client::Response<T>, _>("/graphql/", query_str, extra_headers).await
+  }
+
 
   pub fn make_auth_header<'a>(&'a self, path: &str, method: &str, nonce: i64, body: Option<&str>, query: Option<&str>) -> Header<'static> {
     let body_hash = body.map(|x| hasher::hexdigest(x.as_bytes()));

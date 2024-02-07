@@ -26,8 +26,8 @@ mod handle;
 use handle::*;
 mod handle_request;
 use handle_request::*;
-mod handle_update_request;
-use handle_update_request::*;
+mod set_price_request;
+use set_price_request::*;
 mod collab;
 use collab::*;
 mod claim_account_request;
@@ -274,7 +274,7 @@ make_graphql_query!{
     [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, String],
     [HandleRequest, allHandleRequests, allHandleRequestsMeta, "_allHandleRequestsMeta", HandleRequestFilter, i32],
     [Handle, allHandles, allHandlesMeta, "_allHandlesMeta", HandleFilter, String],
-    [HandleUpdateRequest, allHandleUpdateRequests, allHandleUpdateRequestsMeta, "_allHandleUpdateRequestsMeta", HandleUpdateRequestFilter, i32],
+    [SetPriceRequest, allSetPriceRequests, allSetPriceRequestsMeta, "_allSetPriceRequestsMeta", SetPriceRequestFilter, i32],
     [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, String],
     [ClaimAccountRequest, allClaimAccountRequests, allClaimAccountRequestsMeta, "_allClaimAccountRequestsMeta", ClaimAccountRequestFilter, i32],
     [CampaignPreference, allCampaignPreferences, allCampaignPreferencesMeta, "_allCampaignPreferencesMeta", CampaignPreferenceFilter, i32],
@@ -298,7 +298,7 @@ impl Mutation {
     input.process(context).await
   }
 
-  pub async fn create_handle_update_request(context: &Context, input: CreateHandleUpdateRequestInput) -> FieldResult<HandleUpdateRequest> {
+  pub async fn create_set_price_request(context: &Context, input: CreateSetPriceRequestInput) -> FieldResult<SetPriceRequest> {
     input.process(context).await
   }
 
