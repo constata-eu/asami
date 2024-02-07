@@ -27,7 +27,12 @@ model!{
   }
 }
 
-#[rocket::async_trait]
+use async_trait::async_trait;
+use std::pin::Pin;
+use futures::stream::Stream;
+
+
+#[rocket::async_trait(?Send)]
 impl OnChainTxRequest<CollabRequest, on_chain::AdminMakeCollabsInput> for CollabRequestHub {
   fn select_to_submit(&self) -> SelectCollabRequestHub {
     self.state.collab_request().select().status_eq(GenericRequestStatus::Received)

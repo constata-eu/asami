@@ -119,7 +119,7 @@ impl OnChainTxHub {
 
 pub type AsamiFunctionCall = FunctionCall<Arc<SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>>, SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>, ()>;
 
-#[rocket::async_trait]
+#[rocket::async_trait(?Send)]
 pub trait OnChainTxRequest<Model: SqlxModel<State=App>, Param: Send>: SqlxModelHub<Model> + Sized + Send {
   fn select_to_submit(&self) -> Model::SelectModelHub;
 
@@ -146,7 +146,7 @@ pub trait OnChainTxRequest<Model: SqlxModel<State=App>, Param: Send>: SqlxModelH
     let on_chain_tx = self.app().on_chain_tx().send(self.fn_call(params)).await?;
 
     for req in reqs {
-      //submitted.push(self.set_submitted(req, on_chain_tx.attrs.id).await?);
+      submitted.push(self.set_submitted(req, on_chain_tx.attrs.id).await?);
     }
 
     Ok(submitted)
