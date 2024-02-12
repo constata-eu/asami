@@ -1,8 +1,7 @@
 use super::*;
 use ethers::{
   abi::{Detokenize},
-  prelude::{abigen, Wallet, SignerMiddleware, LogMeta},
-  signers::{MnemonicBuilder, LocalWallet, coins_bip39::English, Signer},
+  prelude::{Wallet, SignerMiddleware},
   providers::{Http, Provider},
   middleware::{Middleware, contract::FunctionCall},
 };
@@ -23,12 +22,6 @@ model!{
     tx_hash: Option<String>,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
-  },
-  has_many {
-    SetScoreAndTopicsRequest(on_chain_tx_id),
-    SetPriceRequest(on_chain_tx_id),
-    HandleRequest(on_chain_tx_id),
-    CollabRequest(on_chain_tx_id),
   }
 }
 
@@ -81,6 +74,16 @@ impl OnChainTxHub {
     Ok(Some(self.send(c.apply_handle_updates(applicable)).await?))
   }
 
+  pub async fn apply_voted_fee_rate(&self) -> anyhow::Result<Option<OnChainTx>> {
+    let c = &self.state.on_chain.contract;
+    let this_cycle = c.get_current_cycle().call().await?;
+    let last_applied = c.last_voted_fee_rate_applied_on().await?;
+
+    if this_cycle == last_applied { return Ok(None); }
+    
+    Ok(Some(self.send(c.apply_voted_fee_rate()).await?))
+  }
+
   pub async fn proclaim_cycle_admin_winner(&self) -> anyhow::Result<Option<OnChainTx>> {
     let c = &self.state.on_chain.contract;
     let this_cycle = c.get_current_cycle().call().await?;
@@ -101,41 +104,67 @@ impl OnChainTxHub {
 
     Ok(None)
   }
+
+  pub async fn reimburse_due_campaigns(&self) -> anyhow::Result<Option<OnChainTx>> {
+    let c = &self.state.on_chain.contract;
+    let block_number = c.client().get_block_number().await?;
+    let Some(now) = c.client().get_block(block_number).await?.map(|b| b.timestamp) else { return Ok(None) };
+
+    let past_due: Vec<U256> = c.get_campaigns().call().await?
+      .iter()
+      .filter_map(|u| if u.valid_until > now { None } else { Some(u.id) })
+      .take(50)
+      .collect();
+
+    if past_due.is_empty() { return Ok(None); }
+    
+    Ok(Some(self.send(c.reimburse_due_campaigns(past_due)).await?))
+  }
 }
 
-/*
- * -> Requests are sent in bulk, logging results.
- *
- * -> Bulk "Submit all" is called in an on-chain transaction, and logged.
- *    -> Bulk submission should be pre-validated when building params.
- *    -> Instances that are not valid may be marked as "failed".
- *       -> Here's where we don't even try to send price, campaign, or claim account requests.
- *    -> If the on-chain tx fails, It should be retried later.
- *       SubmitAll is top level. Runs in a db transaction. It returns anyhow::Result,
- *          The only errors allowed are DB errors.
- *
- *       An app level "submit all" calls all submissions, never fails.
- */
-
-pub type AsamiFunctionCall = FunctionCall<Arc<SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>>, SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>, ()>;
+pub type AsamiSigner = SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>;
+pub type AsamiFunctionCall = FunctionCall<Arc<AsamiSigner>, AsamiSigner, ()>;
 
 #[rocket::async_trait(?Send)]
-pub trait OnChainTxRequest<Model: SqlxModel<State=App>, Param: Send>: SqlxModelHub<Model> + Sized + Send {
-  fn select_to_submit(&self) -> Model::SelectModelHub;
+pub trait OnChainTxRequest: SqlxModelHub<Self::Model> {
+  type Model: SqlxModel<State=App>;
+  type Update;
+  type Status;
+  type Param;
 
-  async fn as_param(&self, model: &Model) -> sqlx::Result<Param>;
+  async fn as_param(&self, model: &Self::Model) -> sqlx::Result<Self::Param>;
 
-  fn fn_call(&self, params: Vec<Param>) -> AsamiFunctionCall;
-
-  async fn set_submitted(&self, model: Model, txid: i32) -> sqlx::Result<Model>;
-
-  async fn set_done(&self, on_chain_tx_id: i32) -> sqlx::Result<()>;
+  fn fn_call(&self, params: Vec<Self::Param>) -> AsamiFunctionCall;
 
   fn app(&self) -> &App;
 
-  async fn submit_all(&self) -> sqlx::Result<Vec<Model>> {
+  fn update(model: Self::Model) -> Self::Update;
+
+  fn set_update_tx_id(update: Self::Update, txid: i32) -> Self::Update;
+
+  fn set_update_status(update: Self::Update, status: Self::Status) -> Self::Update;
+
+  async fn save_update(update: Self::Update) -> sqlx::Result<Self::Model>;
+
+  fn set_select_status(select: <Self::Model as SqlxModel>::SelectModelHub, status: Self::Status) ->
+    <Self::Model as SqlxModel>::SelectModelHub;
+
+  fn set_select_tx_id(select: <Self::Model as SqlxModel>::SelectModelHub, tx_id: i32) ->
+    <Self::Model as SqlxModel>::SelectModelHub;
+
+  fn submitted_status() -> Self::Status;
+  fn pending_status() -> Self::Status;
+  fn done_status() -> Self::Status;
+
+  async fn validate_before_submit_all(&self) -> sqlx::Result<()> {
+    Ok(())
+  }
+
+  async fn submit_all(&self) -> sqlx::Result<Vec<Self::Model>> {
+    self.validate_before_submit_all().await?;
     let mut submitted = vec![];
-    let reqs = self.select_to_submit().all().await?;
+    let reqs = Self::set_select_status(self.select(), Self::pending_status()).all().await?;
+
     if reqs.is_empty() { return Ok(submitted); }
 
     let mut params = vec![];
@@ -146,28 +175,57 @@ pub trait OnChainTxRequest<Model: SqlxModel<State=App>, Param: Send>: SqlxModelH
     let on_chain_tx = self.app().on_chain_tx().send(self.fn_call(params)).await?;
 
     for req in reqs {
-      submitted.push(self.set_submitted(req, on_chain_tx.attrs.id).await?);
+      let mut update = Self::update(req);
+      update = Self::set_update_tx_id(update, on_chain_tx.attrs.id);
+      update = Self::set_update_status(update, Self::submitted_status());
+
+      let updated = Self::save_update(update).await?;
+      submitted.push(updated);
     }
 
     Ok(submitted)
   }
+
+  async fn set_done(&self, tx_id: i32 ) -> sqlx::Result<()> {
+    for r in Self::set_select_tx_id(self.select(), tx_id).all().await? {
+      let mut update = Self::update(r);
+      update = Self::set_update_status(update, Self::done_status());
+      Self::save_update(update).await?;
+    }
+    Ok(())
+  }
 }
 
-/*
-pub trait OnChainTxRequest {
-  // They are all "sqlx_models::Model (or Hub?)"
-  // All have a "submit_all" 
-  // All have an "As param" method.
-  // All have a query to select all applicable items used for submit_all.
-  // All have a pre-validation or condition.
-  //
-  // All have a "set done" which macro implements as a call to the set_done in the model.
-  //
-  // Impl macro allows for overriding whatever is needed with regular syntax:(the pre-validation condition, the as_params).
-  //
-  // Excpetions:
-  //  CampaignRequest has its own two flows, maybe it's a custom impl of submit_all where it sends both approvals and submissions.
-  // 
-  submit_all();
+#[macro_export]
+macro_rules! impl_on_chain_tx_request {
+  ($struct:ident { $($items:tt)* }) => {
+    #[rocket::async_trait(?Send)]
+    impl OnChainTxRequest for $struct {
+      $($items)*
+
+      fn app(&self) -> &App { &self.state }
+      fn update(model: Self::Model) -> Self::Update { model.update() }
+      fn set_update_tx_id(update: Self::Update, txid: i32) -> Self::Update { update.on_chain_tx_id(Some(txid)) }
+      fn set_update_status(update: Self::Update, status: Self::Status) -> Self::Update { update.status(status) }
+      async fn save_update(update: Self::Update) -> sqlx::Result<Self::Model> { update.save().await }
+
+      fn set_select_status(
+        select: <Self::Model as sqlx_models_orm::SqlxModel>::SelectModelHub,
+        status: Self::Status
+      )
+        -> <Self::Model as sqlx_models_orm::SqlxModel>::SelectModelHub
+      {
+        select.status_eq(status)
+      }
+
+      fn set_select_tx_id(
+        select: <Self::Model as sqlx_models_orm::SqlxModel>::SelectModelHub,
+        tx_id: i32
+      )
+        -> <Self::Model as sqlx_models_orm::SqlxModel>::SelectModelHub
+      {
+        select.on_chain_tx_id_eq(tx_id)
+      }
+    }
+  };
 }
-*/

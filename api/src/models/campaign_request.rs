@@ -23,9 +23,7 @@ model! {
     #[sqlx_model_hints(int4, default)]
     approval_id: Option<i32>,
     #[sqlx_model_hints(int4, default)]
-    submission_id: Option<i32>,
-    #[sqlx_model_hints(varchar, default)]
-    campaign_id: Option<String>,
+    on_chain_tx_id: Option<i32>,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
     #[sqlx_model_hints(timestamptz, default)]
@@ -35,12 +33,60 @@ model! {
     CampaignRequestTopic(campaign_request_id)
   },
   belongs_to {
-    Campaign(campaign_id),
     Account(account_id),
+    OnChainTx(on_chain_tx_id),
   }
 }
 
 impl_loggable!(CampaignRequest);
+
+impl_on_chain_tx_request!{ CampaignRequestHub {
+  type Model = CampaignRequest;
+  type Update = UpdateCampaignRequestHub;
+  type Status = CampaignRequestStatus;
+  type Param = on_chain::AdminCampaignInput;
+
+  async fn as_param(&self, model: &Self::Model) -> sqlx::Result<Self::Param> {
+    let topics = model.campaign_request_topic_vec().await?
+      .into_iter().map(|t| u256(t.attrs.topic_id) ).collect();
+ 
+    Ok(Self::Param {
+      account_id: u256(&model.attrs.account_id),
+      attrs: on_chain::CampaignInput {
+        site: model.attrs.site as u8,
+        budget: u256(&model.attrs.budget),
+        content_id: model.attrs.content_id.clone(),
+        price_score_ratio: u256(&model.attrs.price_score_ratio),
+        topics,
+        valid_until: utc_to_i(model.attrs.valid_until)
+      }
+    })
+  }
+
+  async fn validate_before_submit_all(&self) -> sqlx::Result<()> {
+    let pending = self.select().status_not_in(vec![
+      CampaignRequestStatus::Submitted,
+      CampaignRequestStatus::Failed,
+      CampaignRequestStatus::Done,
+    ]).all().await?;
+
+    for p in pending {
+      if p.account().await?.is_claimed_or_claiming().await? {
+        p.fail("cannot_submit_for_claimed_account", &p).await?;
+        p.update().status(CampaignRequestStatus::Failed).save().await?;
+      }
+    }
+    Ok(())
+  }
+
+  fn fn_call(&self, params: Vec<Self::Param>) -> AsamiFunctionCall {
+    self.state.on_chain.contract.admin_make_campaigns(params)
+  }
+
+  fn pending_status() -> Self::Status { CampaignRequestStatus::Approved }
+  fn submitted_status() -> Self::Status { CampaignRequestStatus::Submitted }
+  fn done_status() -> Self::Status { CampaignRequestStatus::Done }
+}}
 
 impl CampaignRequestHub {
   pub async fn submit_approvals(&self) -> anyhow::Result<()> {
@@ -62,93 +108,37 @@ impl CampaignRequestHub {
 
     Ok(())
   }
-
-  pub async fn validate_before_submit_all(&self) -> sqlx::Result<()> {
-    let pending = self.select().status_not_in(vec![
-      CampaignRequestStatus::Submitted,
-      CampaignRequestStatus::Failed,
-      CampaignRequestStatus::Done,
-    ]).all().await?;
-
-    for p in pending {
-      if p.account().await?.is_claimed_or_claiming().await? {
-        p.mark_failed().await?;
-      }
-    }
-    Ok(())
-  }
-
-  pub async fn submit_all(&self) -> anyhow::Result<()> {
-    self.validate_before_submit_all().await?;
-
-    let reqs = self.select().status_eq(CampaignRequestStatus::Approved).all().await?;
-
-    if reqs.is_empty() { return Ok(()); }
-
-    let mut params = vec![];
-    for r in &reqs {
-      params.push(r.as_param().await?);
-    }
-
-    let on_chain_tx = self.state.on_chain_tx()
-      .send(self.state.on_chain.contract.admin_make_campaigns(params)).await?;
-
-    for r in reqs {
-      r.update()
-        .status(CampaignRequestStatus::Submitted)
-        .submission_id(Some(on_chain_tx.attrs.id))
-        .save().await?;
-    }
-
-    Ok(())
-  }
 }
 
 impl CampaignRequest {
+  pub async fn campaign(&self) -> sqlx::Result<Option<Campaign>> {
+    let Some(on_chain_tx) = self.on_chain_tx().await? else { return Ok(None) };
+    let Some(tx_hash) = on_chain_tx.tx_hash() else { return Ok(None) };
+
+    self.state.campaign()
+      .select()
+      .tx_hash_eq(tx_hash)
+      .site_eq(self.site())
+      .content_id_eq(self.content_id())
+      .account_id_eq(self.account_id())
+      .optional().await
+  }
+
   pub async fn approval(&self) -> sqlx::Result<Option<OnChainTx>> {
     let Some(id) = self.approval_id().as_ref() else { return Ok(None) };
     self.state.on_chain_tx().find_optional(id).await
   }
 
   pub async fn submission(&self) -> sqlx::Result<Option<OnChainTx>> {
-    let Some(id) = self.submission_id().as_ref() else { return Ok(None) };
-    self.state.on_chain_tx().find_optional(id).await
+    self.on_chain_tx().await
   }
 
   pub async fn pay(self) -> AsamiResult<Self> {
     Ok(self.update().status(CampaignRequestStatus::Paid).save().await?)
   }
 
-  pub async fn mark_failed(self) -> sqlx::Result<Self> {
-    self.fail("cannot_submit_for_claimed_account", &self).await?;
-    self.update().status(CampaignRequestStatus::Failed).save().await
-  }
-
   pub async fn approve(self) -> sqlx::Result<Self> {
     self.update().status(CampaignRequestStatus::Approved).save().await
-  }
-
-  pub async fn done(self, campaign: &Campaign) -> sqlx::Result<Self> {
-    self.update().status(CampaignRequestStatus::Done)
-      .campaign_id(Some(campaign.attrs.id.clone()))
-      .save().await
-  }
-
-  pub async fn as_param(&self) -> AsamiResult<on_chain::AdminCampaignInput> {
-    let topics = self.campaign_request_topic_vec().await?
-      .into_iter().map(|t| u256(t.attrs.topic_id) ).collect();
-
-    Ok(on_chain::AdminCampaignInput{
-      account_id: u256(&self.attrs.account_id),
-      attrs: on_chain::CampaignInput {
-        site: self.attrs.site as u8,
-        budget: u256(&self.attrs.budget),
-        content_id: self.attrs.content_id.clone(),
-        price_score_ratio: u256(&self.attrs.price_score_ratio),
-        topics,
-        valid_until: utc_to_i(self.attrs.valid_until)
-      }
-    })
   }
 }
 

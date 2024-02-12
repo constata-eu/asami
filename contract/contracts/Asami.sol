@@ -53,9 +53,13 @@ contract Asami is Ownable, ERC20Capped {
     uint256 priceScoreRatio;
     uint256[] topics;
     uint256 validUntil;
+    bool fundedByAdmin;
   }
   Campaign[] public campaigns;
   event CampaignSaved(Campaign campaign);
+  function getCampaigns() public view returns (Campaign[] memory) {
+    return campaigns;
+  }
 
   struct Collab {
     uint256 id;
@@ -199,13 +203,15 @@ contract Asami is Ownable, ERC20Capped {
       account.addr = claim.addr;
 
       if(account.unclaimedAsamiTokens > 0) {
+        uint256 unclaimed = account.unclaimedAsamiTokens;
         account.unclaimedAsamiTokens = 0;
-        _safeMint(claim.addr, account.unclaimedAsamiTokens);
+        _safeMint(claim.addr, unclaimed);
       }
 
       if(account.unclaimedDocRewards > 0) {
+        uint256 unclaimed = account.unclaimedDocRewards;
         account.unclaimedDocRewards = 0;
-        doc.transfer(account.addr, account.unclaimedDocRewards);
+        doc.transfer(account.addr, unclaimed);
       }
 
       emit AccountSaved(account);
@@ -238,7 +244,7 @@ contract Asami is Ownable, ERC20Capped {
     CampaignInput[] calldata _inputs
   ) public {
     Account storage account = accounts[accountIdByAddress[msg.sender]];
-    require(account.addr != address(0));
+    require(account.addr != address(0), "mc 0");
 
     for( uint i = 0; i < _inputs.length; i++) {
       CampaignInput memory input = _inputs[i];
@@ -251,7 +257,8 @@ contract Asami is Ownable, ERC20Capped {
         contentId: input.contentId,
         priceScoreRatio: input.priceScoreRatio,
         topics: input.topics,
-        validUntil: input.validUntil
+        validUntil: input.validUntil,
+        fundedByAdmin: false
       }));
     }
   }
@@ -280,7 +287,8 @@ contract Asami is Ownable, ERC20Capped {
         contentId: input.attrs.contentId,
         priceScoreRatio: input.attrs.priceScoreRatio,
         topics: input.attrs.topics,
-        validUntil: input.attrs.validUntil
+        validUntil: input.attrs.validUntil,
+        fundedByAdmin: true
       }));
     }
   }
@@ -386,9 +394,10 @@ contract Asami is Ownable, ERC20Capped {
       require(campaign.validUntil < block.timestamp);
 
       Account storage advertiser = accounts[campaign.accountId];
-      require(doc.transfer(advertiser.addr, campaign.remaining));
-
+      uint256 remaining = campaign.remaining;
       campaign.remaining = 0;
+      address fundedBy = campaign.fundedByAdmin ? admin : advertiser.addr;
+      require(doc.transfer(fundedBy, remaining));
       emit CampaignSaved(campaign);
     }
   }

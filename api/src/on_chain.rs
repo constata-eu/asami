@@ -19,16 +19,19 @@ abigen!(
   IERC20,
   r#"[
     function approve(address spender, uint256 value) public virtual returns (bool)
+    function balanceOf(address account) external view returns (uint256)
+    function transfer(address receiver, uint256 value) public virtual returns (bool)
   ]"#,
   derives(serde::Deserialize, serde::Serialize),
 );
 
 pub type AsamiContractSigner = AsamiContract<SignerMiddleware<Provider<Http>, LocalWallet>>;
+pub type DocContract = IERC20<SignerMiddleware<Provider<Http>, LocalWallet>>;
 
 #[derive(Clone)]
 pub struct OnChain {
   pub contract: AsamiContractSigner,
-  pub doc_contract: IERC20<SignerMiddleware<Provider<Http>, LocalWallet>>,
+  pub doc_contract: DocContract,
 }
 
 impl OnChain {

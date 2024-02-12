@@ -81,22 +81,13 @@ impl SyncedEventHub {
       .to_block(to_block)
       .query_with_meta().await?;
 
-    for (e, meta) in events {
+    for (e, meta) in &events {
       if !self.save_unprocessed_event(&meta, &e).await? {
         continue;
       }
 
-      let a = e.account;
+      let a = &e.account;
       let addr = if a.addr.is_zero() { None } else { Some(a.addr.encode_hex()) };
-
-      let maybe_claim_req = self.state.claim_account_request().select()
-        .account_id_eq(a.id.encode_hex())
-        .status_eq(GenericRequestStatus::Submitted)
-        .optional().await?;
-
-      if let Some(h) = maybe_claim_req {
-        h.done().await?;
-      }
 
       match self.state.account().find_optional(a.id.encode_hex()).await? {
         Some(account) => {
@@ -119,6 +110,12 @@ impl SyncedEventHub {
         }
       }
     }
+
+    for (_, meta) in &events {
+      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
+      self.state.claim_account_request().set_done(on_chain_tx.attrs.id).await?;
+    }
+
     Ok(())
   }
 
@@ -129,19 +126,19 @@ impl SyncedEventHub {
       .to_block(to_block)
       .query_with_meta().await?;
 
-    for (e, meta) in events {
+    for (e, meta) in &events {
       if !self.save_unprocessed_event(&meta, &e).await? {
         continue;
       }
 
       match self.state.handle().find_optional(e.handle.id.encode_hex()).await? {
         Some(handle) => {
-          let h = e.handle;
+          let h = &e.handle;
           for old in handle.handle_topic_vec().await? {
             old.delete().await?;
           }
 
-          for new in h.topics {
+          for new in &h.topics {
             self.state.handle_topic().insert(InsertHandleTopic{
               handle_id: h.id.encode_hex(),
               topic_id: new.encode_hex(),
@@ -149,47 +146,40 @@ impl SyncedEventHub {
           }
 
           handle.update()
-            .username(h.username)
+            .username(h.username.clone())
             .price(h.price.encode_hex())
             .score(h.score.encode_hex())
             .save().await?;
         },
         None => {
-          let h = e.handle;
-          let handle = self.state.handle().insert(InsertHandle {
+          let h = &e.handle;
+          self.state.handle().insert(InsertHandle {
             id: h.id.encode_hex(),
             account_id: h.account_id.encode_hex(),
             site: Site::from_on_chain(h.site),
-            username: h.username,
-            user_id: h.user_id,
+            username: h.username.clone(),
+            user_id: h.user_id.clone(),
             price: h.price.encode_hex(),
             score: h.score.encode_hex(),
           }).save().await?;
 
-          for new in h.topics {
+          for new in &h.topics {
             self.state.handle_topic().insert(InsertHandleTopic{
               handle_id: h.id.encode_hex(),
               topic_id: new.encode_hex(),
             }).save().await?;
           }
-
-          let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
-
-          for r in on_chain_tx.handle_request_scope()
-            .username_ilike(handle.attrs.username.clone())
-            .status_eq(HandleRequestStatus::Submitted)
-            .all().await?.into_iter() { r.done(&handle).await?; }
-
-          for r in on_chain_tx.set_score_and_topics_request_scope().status_eq(GenericRequestStatus::Submitted).all().await?.into_iter() {
-            r.update().status(GenericRequestStatus::Done).save().await?;
-          }
-
-          for r in on_chain_tx.set_price_request_scope().status_eq(GenericRequestStatus::Submitted).all().await?.into_iter() {
-            r.update().status(GenericRequestStatus::Done).save().await?;
-          }
         }
       }
     }
+
+    for (_, meta) in events {
+      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
+      self.state.handle_request().set_done(on_chain_tx.attrs.id).await?;
+      self.state.set_score_and_topics_request().set_done(on_chain_tx.attrs.id).await?;
+      self.state.set_price_request().set_done(on_chain_tx.attrs.id).await?;
+    }
+
     Ok(())
   }
 
@@ -228,7 +218,7 @@ impl SyncedEventHub {
       .to_block(to_block)
       .query_with_meta().await?;
 
-    for (e, meta) in events {
+    for (e, meta) in &events {
       if !self.save_unprocessed_event(&meta, &e).await? {
         continue;
       }
@@ -242,38 +232,34 @@ impl SyncedEventHub {
             .save().await?;
         },
         None => {
-          let c = e.campaign;
-          let campaign = self.state.campaign().insert(InsertCampaign{
+          let c = &e.campaign;
+
+          self.state.campaign().insert(InsertCampaign{
             id: c.id.encode_hex(),
             account_id: c.account_id.encode_hex(),
             site: Site::from_on_chain(c.site),
             budget: c.budget.encode_hex(),
             remaining: c.remaining.encode_hex(),
-            content_id: c.content_id,
+            content_id: c.content_id.clone(),
             price_score_ratio: c.price_score_ratio.encode_hex(),
+            funded_by_admin: c.funded_by_admin,
             valid_until: i_to_utc(c.valid_until),
+            tx_hash: meta.transaction_hash.encode_hex()
           }).save().await?;
 
-          for new in c.topics {
+          for new in &c.topics {
             self.state.campaign_topic().insert(InsertCampaignTopic{
               campaign_id: c.id.encode_hex(),
               topic_id: new.encode_hex(),
             });
           }
-
-          let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
-
-          let req = self.state.campaign_request().select()
-            .content_id_eq(&campaign.attrs.content_id.clone())
-            .status_eq(CampaignRequestStatus::Submitted)
-            .submission_id_eq(on_chain_tx.attrs.id)
-            .optional().await?;
-
-          if let Some(r) = req {
-            r.done(&campaign).await?;
-          }
         }
       }
+    }
+
+    for (_, meta) in &events {
+      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
+      self.state.campaign_request().set_done(on_chain_tx.attrs.id).await?;
     }
     Ok(())
   }
@@ -285,7 +271,7 @@ impl SyncedEventHub {
       .to_block(to_block)
       .query_with_meta().await?;
 
-    for (e, meta) in events {
+    for (e, meta) in &events {
       if !self.save_unprocessed_event(&meta, &e).await? {
         continue;
       }
@@ -294,11 +280,11 @@ impl SyncedEventHub {
         continue;
       }
 
-      let c = e.collab;
+      let c = &e.collab;
       let campaign = self.state.campaign().find(c.campaign_id.encode_hex()).await?;
       let handle = self.state.handle().find(c.handle_id.encode_hex()).await?;
 
-      let collab = self.state.collab().insert(InsertCollab{
+      self.state.collab().insert(InsertCollab{
         id: c.id.encode_hex(),
         campaign_id: campaign.attrs.id,
         advertiser_id: campaign.attrs.account_id,
@@ -308,18 +294,11 @@ impl SyncedEventHub {
         fee: c.fee.encode_hex(),
         created_at: c.created_at.encode_hex(),
       }).save().await?;
+    }
 
+    for (_, meta) in events {
       let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
-
-      let req = on_chain_tx.collab_request_scope()
-        .status_eq(GenericRequestStatus::Submitted)
-        .campaign_id_eq(c.campaign_id.encode_hex())
-        .handle_id_eq(c.handle_id.encode_hex())
-        .optional().await?;
-
-      if let Some(r) = req {
-        r.done(&collab).await?;
-      }
+      self.state.collab_request().set_done(on_chain_tx.attrs.id).await?;
     }
 
     Ok(())
@@ -332,15 +311,20 @@ impl SyncedEventHub {
       .to_block(to_block)
       .query_with_meta().await?;
 
-    for (e, meta) in events {
+    for (e, meta) in &events {
       if !self.save_unprocessed_event(&meta, &e).await? {
         continue;
       }
 
       self.state.topic().insert(InsertTopic{
         id: e.id.encode_hex(),
-        name: e.name,
+        name: e.name.clone(),
       }).save().await?;
+    }
+
+    for (_, meta) in &events {
+      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
+      self.state.topic_request().set_done(on_chain_tx.attrs.id).await?;
     }
 
     Ok(())

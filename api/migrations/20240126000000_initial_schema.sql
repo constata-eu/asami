@@ -158,7 +158,6 @@ CREATE TABLE handle_requests (
     score VARCHAR,
     status handle_request_status NOT NULL DEFAULT 'unverified',
     on_chain_tx_id INTEGER REFERENCES on_chain_txs(id),
-    handle_id VARCHAR REFERENCES handles(id),
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
 );
@@ -167,7 +166,6 @@ CREATE INDEX idx_handle_requests_site ON handle_requests(site);
 CREATE INDEX idx_handle_requests_status ON handle_requests(status);
 CREATE INDEX idx_handle_requests_username ON handle_requests(username);
 CREATE INDEX idx_handle_requests_user_id ON handle_requests(user_id);
-CREATE INDEX idx_handle_requests_handle_id ON handle_requests(handle_id);
 
 CREATE TABLE handle_request_topics (
     id SERIAL PRIMARY KEY NOT NULL,
@@ -238,7 +236,9 @@ CREATE TABLE campaigns (
   valid_until timestamp NOT NULL,
   finished BOOLEAN NOT NULL DEFAULT FALSE,
   created_at timestamp DEFAULT now() NOT NULL,
-  updated_at timestamp
+  tx_hash VARCHAR NOT NULL,
+  updated_at timestamp,
+  funded_by_admin boolean NOT NULL
 );
 CREATE INDEX idx_campaigns_account_id ON campaigns(account_id);
 CREATE INDEX idx_campaigns_site ON campaigns(site);
@@ -264,14 +264,12 @@ CREATE TABLE collab_requests (
   handle_id VARCHAR REFERENCES handles(id) NOT NULL,
   status generic_request_status NOT NULL DEFAULT 'received',
   on_chain_tx_id INTEGER REFERENCES on_chain_txs(id),
-  collab_id VARCHAR REFERENCES collabs(id),
   created_at timestamp DEFAULT now() NOT NULL,
   updated_at timestamp
 );
 CREATE INDEX idx_collab_requests_campaign_id ON collab_requests(campaign_id);
 CREATE INDEX idx_collab_requests_on_chain_tx_id ON collab_requests(on_chain_tx_id);
 CREATE INDEX idx_collab_requests_handle_id ON collab_requests(handle_id);
-CREATE INDEX idx_collab_requests_collab_id ON collab_requests(collab_id);
 
 CREATE TABLE campaign_topics (
   id SERIAL PRIMARY KEY NOT NULL,
@@ -337,7 +335,6 @@ CREATE TABLE indexer_states (
 CREATE TABLE campaign_requests (
     id SERIAL PRIMARY KEY NOT NULL,
     account_id VARCHAR REFERENCES accounts(id) NOT NULL,
-    campaign_id VARCHAR REFERENCES campaigns(id),
     handle_id VARCHAR REFERENCES handles(id),
     collab_id VARCHAR REFERENCES collabs(id),
     budget VARCHAR NOT NULL,
@@ -347,13 +344,13 @@ CREATE TABLE campaign_requests (
     valid_until timestamp NOT NULL,
     status campaign_request_status NOT NULL DEFAULT 'received',
     approval_id INTEGER REFERENCES on_chain_txs(id),
-    submission_id INTEGER REFERENCES on_chain_txs(id),
+    on_chain_tx_id INTEGER REFERENCES on_chain_txs(id),
     created_at timestamp DEFAULT now() NOT NULL,
     updated_at timestamp
 );
 CREATE INDEX idx_campaign_requests_account_id ON campaign_requests(account_id);
 CREATE INDEX idx_campaign_requests_approval_id ON campaign_requests(approval_id);
-CREATE INDEX idx_campaign_requests_submission_id ON campaign_requests(submission_id);
+CREATE INDEX idx_campaign_requests_on_chain_tx_id ON campaign_requests(on_chain_tx_id);
 CREATE INDEX idx_campaign_requests_site ON campaign_requests(site);
 
 CREATE TABLE campaign_request_topics (

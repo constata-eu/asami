@@ -63,6 +63,18 @@ impl TestApp {
     &self.app.on_chain.contract
   }
 
+  pub fn doc_contract(&self) -> &api::on_chain::DocContract {
+    &self.app.on_chain.doc_contract
+  }
+
+  pub async fn admin_doc_balance(&self) -> U256 {
+    self.doc_contract().balance_of(self.doc_contract().client().address()).call().await.unwrap()
+  }
+
+  pub async fn contract_doc_balance(&self) -> U256 {
+    self.doc_contract().balance_of(self.contract().address()).call().await.unwrap()
+  }
+
   pub async fn mock_admin_setting_campaign_requests_as_paid(&self) {
     let all = self.app.campaign_request().select().status_eq(models::CampaignRequestStatus::Received).all().await.unwrap();
     for r in all {

@@ -7,7 +7,7 @@ pub use galvanic_assert::{
 };
 pub use api::{
   models::{self, u, U256, u256, hasher, Utc, wei},
-  on_chain::{AsamiContractSigner, AsamiContract, Provider, SignerMiddleware, Address, Http}
+  on_chain::{self, AsamiContractSigner, DocContract, AsamiContract, IERC20, Provider, SignerMiddleware, Address, Http}
 };
 use rocket::{
   http::{Header, Status},
@@ -34,6 +34,7 @@ pub struct ApiClient<'a> {
   pub session: Option<models::Session>,
   pub local_wallet: Option<LocalWallet>,
   pub contract: Option<AsamiContractSigner>,
+  pub doc_contract: Option<DocContract>,
 }
 
 #[derive(Clone)]
@@ -52,6 +53,7 @@ impl<'b> ApiClient<'b> {
       session_key: None, 
       session: None,
       contract: None,
+      doc_contract: None
     }
   }
 
@@ -81,6 +83,10 @@ impl<'b> ApiClient<'b> {
 
   pub fn contract(&self) -> &AsamiContractSigner {
     self.contract.as_ref().unwrap()
+  }
+
+  pub fn doc_contract(&self) -> &DocContract {
+    self.doc_contract.as_ref().unwrap()
   }
 
   pub async fn login_with_key(&mut self, key: ES256KeyPair) {
@@ -154,6 +160,33 @@ impl<'b> ApiClient<'b> {
     campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("campaign")
   }
 
+  pub async fn create_self_managed_x_campaign(&self, budget: U256, rate: U256) -> models::Campaign {
+    let two_days = Utc::now() + chrono::Duration::days(2);
+
+    self.doc_contract()
+      .approve(self.contract().address(), budget)
+      .send().await.expect("sending approval")
+      .await.expect("getting approval receipt")
+      .expect("approval receipt");
+
+    let tx = self.app().on_chain_tx().send(
+      self.contract().make_campaigns(vec![on_chain::CampaignInput{
+        site: models::Site::X as u8,
+        budget: budget,
+        content_id: "1716421161867710954".to_string(),
+        price_score_ratio: rate,
+        topics: vec![],
+        valid_until: models::utc_to_i(two_days),
+      }])
+    ).await.unwrap();
+
+    assert!(tx.success(), "not successful tx {}", tx.attrs.id);
+
+    self.test_app.run_idempotent_background_tasks_a_few_times().await;
+
+    self.test_app.app.campaign().select().order_by(models::CampaignOrderBy::Id).desc(true).one().await.unwrap()
+  }
+
   pub async fn create_x_handle(&self, username: &str, rate: U256) {
     self.account().await.create_handle_request(models::Site::X, username).await.unwrap()
       .verify("179383862".into()).await.unwrap()
@@ -190,6 +223,9 @@ impl<'b> ApiClient<'b> {
     let client = std::sync::Arc::new(SignerMiddleware::new(provider, wallet.clone()));
     let address: Address = rsk.contract_address.parse().unwrap();
     self.contract = Some(AsamiContract::new(address, client.clone()));
+
+    let doc_address: Address = rsk.doc_contract_address.parse().unwrap();
+    self.doc_contract = Some(IERC20::new(doc_address, client.clone()));
     self.local_wallet = Some(wallet);
   }
 
@@ -385,6 +421,10 @@ impl<'b> ApiClient<'b> {
     assert_eq!(response.status(), status);
     let err: ApiError = serde_json::from_str(&response.into_string().await.unwrap()).unwrap();
     assert_that!(&err.error.contains(msg));
+  }
+
+  pub async fn doc_balance(&self) -> U256 {
+    self.test_app.doc_contract().balance_of(self.local_wallet().address()).call().await.unwrap()
   }
 }
 

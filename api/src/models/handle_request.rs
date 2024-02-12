@@ -22,8 +22,6 @@ model!{
     status: HandleRequestStatus,
     #[sqlx_model_hints(int4, default)]
     on_chain_tx_id: Option<i32>,
-    #[sqlx_model_hints(varchar, default)]
-    handle_id: Option<String>,
   },
   has_many {
     HandleRequestTopic(handle_request_id),
@@ -31,7 +29,6 @@ model!{
   belongs_to {
     Account(account_id),
     OnChainTx(on_chain_tx_id),
-    Handle(handle_id),
   }
 }
 
@@ -109,26 +106,50 @@ impl HandleRequestHub {
 
     Ok(handle_requests)
   }
-
-  pub async fn submit_all(self) -> anyhow::Result<()> {
-    let rsk = &self.state.on_chain;
-    let reqs = self.select().status_eq(HandleRequestStatus::Appraised).all().await?;
-    if reqs.is_empty() { return Ok(()); }
-
-    let mut params = vec![];
-    for r in &reqs {
-      params.push(r.as_param().await?);
-    }
-
-    let on_chain_tx = self.state.on_chain_tx().send(rsk.contract.admin_make_handles(params)).await?;
-
-    for r in reqs {
-      r.update().status(HandleRequestStatus::Submitted).on_chain_tx_id(Some(on_chain_tx.attrs.id)).save().await?;
-    }
-
-    Ok(())
-  }
 }
+
+impl_on_chain_tx_request!{HandleRequestHub {
+  type Model = HandleRequest;
+  type Update = UpdateHandleRequestHub;
+  type Status = HandleRequestStatus;
+  type Param = on_chain::Handle;
+
+  async fn as_param(&self, model: &Self::Model) -> sqlx::Result<Self::Param> {
+    let a = &model.attrs;
+
+    let price = a.price.as_ref().map(u256).unwrap_or_else(|| u("0"));
+    let score = a.score.as_ref().map(u256).unwrap_or_else(|| u("0"));
+    let user_id = a.user_id.clone().unwrap_or_else(|| String::new());
+
+    let topics: Vec<U256> = model.topic_ids().await?.iter().map(|i| u256(i) ).collect();
+
+    Ok(Self::Param {
+      id: 0.into(),
+      account_id: u256(&a.account_id), 
+      site: a.site as u8,
+      price,
+      score,
+      topics: topics.clone(),
+      username: a.username.clone(),
+      user_id: user_id,
+      last_updated: 0.into(),
+      new_score: score,
+      new_price: price,
+      new_topics: topics,
+      new_username: a.username.clone(),
+      needs_update: false,
+    })
+  }
+
+  fn fn_call(&self, params: Vec<Self::Param>) -> AsamiFunctionCall {
+    self.state.on_chain.contract.admin_make_handles(params)
+  }
+
+  fn pending_status() -> Self::Status { HandleRequestStatus::Appraised }
+  fn submitted_status() -> Self::Status { HandleRequestStatus::Submitted }
+  fn done_status() -> Self::Status { HandleRequestStatus::Done }
+}}
+
 
 impl HandleRequest {
   pub async fn verify(self, user_id: String) -> sqlx::Result<Self> {
@@ -146,43 +167,8 @@ impl HandleRequest {
       .save().await
   }
 
-  pub async fn done(self, handle: &Handle) -> sqlx::Result<Self> {
-    self.update().status(HandleRequestStatus::Done)
-      .handle_id(Some(handle.attrs.id.clone()))
-      .save().await
-  }
-
   pub async fn topic_ids(&self) -> sqlx::Result<Vec<String>> {
     Ok(self.handle_request_topic_vec().await?.into_iter().map(|t| t.attrs.topic_id ).collect())
-  }
-
-  pub async fn as_param(&self) -> AsamiResult<on_chain::Handle> {
-    let a = &self.attrs;
-
-    let invalid_state = Err(Error::Runtime("Invalid state on appraised handle request".into()));
-
-    let Some(price) = a.price.as_ref().map(u256) else { return invalid_state };
-    let Some(score) = a.score.as_ref().map(u256) else { return invalid_state };
-    let Some(user_id) = a.user_id.clone() else { return invalid_state };
-
-    let topics: Vec<U256> = self.topic_ids().await?.iter().map(|i| u256(i) ).collect();
-
-    Ok(on_chain::Handle {
-      id: 0.into(),
-      account_id: u256(&a.account_id), 
-      site: a.site as u8,
-      price,
-      score,
-      topics: topics.clone(),
-      username: a.username.clone(),
-      user_id: user_id,
-      last_updated: 0.into(),
-      new_score: score,
-      new_price: price,
-      new_topics: topics,
-      new_username: a.username.clone(),
-      needs_update: false,
-    })
   }
 }
 

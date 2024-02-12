@@ -25,6 +25,44 @@ model!{
 
 impl_loggable!(SetPriceRequest);
 
+impl_on_chain_tx_request!{SetPriceRequestHub {
+  type Model = SetPriceRequest;
+  type Update = UpdateSetPriceRequestHub;
+  type Status = GenericRequestStatus;
+  type Param = on_chain::AdminSetPriceInput;
+
+  async fn as_param(&self, model: &Self::Model) -> sqlx::Result<Self::Param> {
+    Ok(on_chain::AdminSetPriceInput{
+      handle_id: u256(model.handle_id()),
+      price: u256(model.price()),
+    })
+  }
+
+  fn fn_call(&self, params: Vec<Self::Param>) -> AsamiFunctionCall {
+    self.state.on_chain.contract.admin_set_price(params)
+  }
+
+  fn pending_status() -> Self::Status { GenericRequestStatus::Received }
+  fn submitted_status() -> Self::Status { GenericRequestStatus::Submitted }
+  fn done_status() -> Self::Status { GenericRequestStatus::Done }
+
+  async fn validate_before_submit_all(&self) -> sqlx::Result<()> {
+    let pending = self.select().status_not_in(vec![
+      GenericRequestStatus::Submitted,
+      GenericRequestStatus::Failed,
+      GenericRequestStatus::Done,
+    ]).all().await?;
+
+    for p in pending {
+      if p.account().await?.is_claimed_or_claiming().await? {
+        p.fail("cannot_submit_for_claimed_account", &p).await?;
+        p.update().status(GenericRequestStatus::Failed).save().await?;
+      }
+    }
+    Ok(())
+  }
+}}
+
 impl SetPriceRequestHub {
   pub async fn create(&self, handle: &Handle, price: U256) -> AsamiResult<SetPriceRequest> {
     if handle.account().await?.is_claimed_or_claiming().await? {
@@ -36,59 +74,5 @@ impl SetPriceRequestHub {
       account_id: handle.account().await?.attrs.id,
       handle_id: handle.attrs.id.clone(),
     }).save().await?)
-  }
-
-  pub async fn validate_before_submit_all(&self) -> sqlx::Result<()> {
-    let pending = self.select().status_not_in(vec![
-      GenericRequestStatus::Submitted,
-      GenericRequestStatus::Failed,
-      GenericRequestStatus::Done,
-    ]).all().await?;
-
-    for p in pending {
-      if p.account().await?.is_claimed_or_claiming().await? {
-        p.mark_failed().await?;
-      }
-    }
-    Ok(())
-  }
-
-  pub async fn submit_all(&self) -> sqlx::Result<Vec<SetPriceRequest>> {
-    self.validate_before_submit_all().await?;
-
-    let mut submitted = vec![];
-    let reqs = self.select().status_eq(GenericRequestStatus::Received).all().await?;
-    if reqs.is_empty() { return Ok(submitted); }
-
-    let params = reqs.iter().map(|r| r.as_param() ).collect();
-
-    let on_chain_tx = self.state.on_chain_tx()
-      .send(self.state.on_chain.contract.admin_set_price(params))
-      .await?;
-
-    for req in reqs {
-      submitted.push(
-        req.update()
-          .status(GenericRequestStatus::Submitted)
-          .on_chain_tx_id(Some(on_chain_tx.attrs.id))
-          .save().await?
-      );
-    }
-
-    Ok(submitted)
-  }
-}
-
-impl SetPriceRequest {
-  pub fn as_param(&self) -> on_chain::AdminSetPriceInput {
-    on_chain::AdminSetPriceInput{
-      handle_id: u256(&self.attrs.handle_id),
-      price: u256(&self.attrs.price),
-    }
-  }
-
-  pub async fn mark_failed(self) -> sqlx::Result<Self> {
-    self.fail("cannot_submit_for_claimed_account", &self).await?;
-    self.update().status(GenericRequestStatus::Failed).save().await
   }
 }

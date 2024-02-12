@@ -22,10 +22,14 @@ model!{
     valid_until: UtcDateTime,
     #[sqlx_model_hints(boolean, default)]
     finished: bool,
+    #[sqlx_model_hints(boolean)]
+    funded_by_admin: bool,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
     #[sqlx_model_hints(timestamptz, default)]
     updated_at: Option<UtcDateTime>,
+    #[sqlx_model_hints(varchar)]
+    tx_hash: String,
   },
   has_many {
     IgCampaignRule(campaign_id)

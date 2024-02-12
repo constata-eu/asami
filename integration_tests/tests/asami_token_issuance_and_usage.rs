@@ -1,6 +1,6 @@
 #[macro_use]
 mod support;
-use ethers::{types::Address, signers::Signer};
+use ethers::signers::Signer;
 
 app_test!{ has_a_cap_on_token_supply (a) 
   /*
@@ -50,24 +50,28 @@ app_test!{ rate_can_be_voted (a)
   bob.create_x_collab(&campaign).await;
   bob.claim_account().await;
 
-  advertiser.self_submit_fee_rate_vote(u("20")).await?;
+  assert!(a.contract().apply_voted_fee_rate().send().await.is_err());
+
+  a.evm_forward_to_next_cycle().await;
+
+  advertiser.self_submit_fee_rate_vote(u("20")).await.unwrap();
   assert_eq!(a.contract().voted_fee_rate_vote_count().call().await?, u("30"));
   assert_eq!(a.contract().voted_fee_rate().call().await?, u("20"));
   assert_eq!(a.contract().fee_rate().call().await?, u("10"));
 
-  a.contract().apply_voted_fee_rate().send().await.unwrap().await.unwrap().unwrap();
+  a.app.on_chain_tx().apply_voted_fee_rate().await.unwrap();
   assert_eq!(a.contract().fee_rate().call().await?, u("20"));
 
-  bob.self_submit_fee_rate_vote(u("1")).await?;
+  bob.self_submit_fee_rate_vote(u("1")).await.unwrap();
   assert_eq!(a.contract().voted_fee_rate_vote_count().call().await?, u("75"));
   assert_eq!(a.contract().voted_fee_rate().call().await?, wei("8600000000000000000"));
 
-  assert!(a.contract().apply_voted_fee_rate().send().await.is_err());
+  a.app.on_chain_tx().apply_voted_fee_rate().await.unwrap();
   assert_eq!(a.contract().fee_rate().call().await?, u("20"));
 
   a.evm_forward_to_next_cycle().await;
 
-  a.contract().apply_voted_fee_rate().send().await.unwrap().await.unwrap().unwrap();
+  a.app.on_chain_tx().apply_voted_fee_rate().await.unwrap();
   assert_eq!(a.contract().fee_rate().call().await?, wei("8600000000000000000"));
 
   advertiser.self_remove_fee_rate_vote().await?;
@@ -214,15 +218,13 @@ app_test!{ contract_cannot_set_cycle_winner_with_no_votes (a)
 
 // ToDo: Test actual vest_admin_votes with holders that never voted, votes that were already vested, and votes that have not met their cycle.
 app_test!{ admin_vote_vesting_validations (a)
-  let admin_addr = a.app.on_chain.contract.client().address();
-
   let mut advertiser = a.client().await;
   let budget = u("3000");
   let campaign = advertiser.create_x_campaign(budget, budget).await;
   advertiser.claim_account().await;
   let advertiser_addr = advertiser.local_wallet().address();
 
-  let mut bob = a.client().await;
+  let bob = a.client().await;
   bob.create_x_handle("bob_on_x", budget).await;
   bob.create_x_collab(&campaign).await;
 

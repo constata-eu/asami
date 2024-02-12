@@ -34,24 +34,24 @@ impl App {
   pub async fn run_background_tasks(&self) -> anyhow::Result<()> {
     self.on_chain_tx().proclaim_cycle_admin_winner().await?;
     self.on_chain_tx().apply_handle_updates().await?;
+    self.on_chain_tx().apply_voted_fee_rate().await?;
+    self.on_chain_tx().reimburse_due_campaigns().await?;
 
-    // self.admin_set_score_and_topics_request().submit_all().await?;
-    // self.admin_set_price_request().submit_all().await?;
     // self.reimburse_due_campaigns_request().submit_all().await?;
     // self.distribute_fee_pool_request().submit_all().await?;
-    // self.apply_handle_updates_request().submit_all().await?;
     // self.apply_voted_fee_rate_request().submit_all().await?;
     
     // this one is optional. self.vest_admin_votes_request().submit_all().await?;
     
+    self.collab_request().submit_all().await?;
     self.handle_request().submit_all().await?;
     self.set_price_request().submit_all().await?;
     self.set_score_and_topics_request().submit_all().await?;
     self.topic_request().submit_all().await?;
+    self.claim_account_request().submit_all().await?;
     self.campaign_request().submit_approvals().await?;
     self.campaign_request().submit_all().await?;
-    self.collab_request().submit_all().await?;
-    self.claim_account_request().submit_all().await?;
+
     self.synced_event().sync_on_chain_events().await?;
     Ok(())
   }

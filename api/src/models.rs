@@ -180,15 +180,15 @@ fn i_to_utc(u: U256) -> UtcDateTime {
   Utc.timestamp_opt(u.as_u64() as i64, 0).unwrap()
 }
 
-fn utc_to_i(d: UtcDateTime) -> U256 {
+pub fn utc_to_i(d: UtcDateTime) -> U256 {
   d.timestamp().into()
 }
 
-fn u64_to_d(u: U64) -> Decimal {
+pub fn u64_to_d(u: U64) -> Decimal {
   Decimal::from_u64(u.as_u64()).unwrap_or(Decimal::ZERO)
 }
 
-fn d_to_u64(d: Decimal) -> U64 {
+pub fn d_to_u64(d: Decimal) -> U64 {
   U64::from_dec_str(&d.to_string()).unwrap_or(U64::zero())
 }
 
