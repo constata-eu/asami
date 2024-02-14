@@ -216,7 +216,6 @@ app_test!{ contract_cannot_set_cycle_winner_with_no_votes (a)
   );
 }
 
-// ToDo: Test actual vest_admin_votes with holders that never voted, votes that were already vested, and votes that have not met their cycle.
 app_test!{ admin_vote_vesting_validations (a)
   let mut advertiser = a.client().await;
   let budget = u("3000");
@@ -233,12 +232,13 @@ app_test!{ admin_vote_vesting_validations (a)
 
   // Cannot vest on the same cycle.
   advertiser.self_submit_admin_vote(advertiser_addr).await?;
+  a.run_idempotent_background_tasks_a_few_times().await;
   assert!(advertiser.self_vest_admin_vote(advertiser_addr).await.is_err());
   assert_eq!(a.contract().vested_admin_votes_total().call().await?, u("0"));
 
   // Can vest on the following cycle.
   a.evm_forward_to_next_cycle().await;
-  assert!(advertiser.self_vest_admin_vote(advertiser_addr).await.is_ok());
+  a.run_idempotent_background_tasks_a_few_times().await;
   assert_eq!(a.contract().vested_admin_votes_total().call().await?, u("30"));
 
   // And cannot vest again

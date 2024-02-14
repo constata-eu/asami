@@ -34,7 +34,7 @@ impl Showable<models::CampaignPreference, CampaignPreferenceFilter> for Campaign
   fn filter_to_select(context: &Context, filter: Option<CampaignPreferenceFilter>) -> models::SelectCampaignPreference {
     if let Some(f) = filter {
       models::SelectCampaignPreference {
-        account_id_eq: Some(context.account_id().to_string()),
+        account_id_eq: Some(context.account_id()),
         id_in: f.ids,
         campaign_id_eq: f.campaign_id_eq,
         id_eq: f.id_eq,
@@ -42,14 +42,14 @@ impl Showable<models::CampaignPreference, CampaignPreferenceFilter> for Campaign
       }
     } else {
       models::SelectCampaignPreference {
-        account_id_eq: Some(context.account_id().to_string()),
+        account_id_eq: Some(context.account_id()),
         ..Default::default()
       }
     }
   }
 
   fn select_by_id(context: &Context, id: i32) -> models::SelectCampaignPreference {
-    models::SelectCampaignPreference { id_eq: Some(id), account_id_eq: Some(context.account_id().to_string()), ..Default::default() }
+    models::SelectCampaignPreference { id_eq: Some(id), account_id_eq: Some(context.account_id()), ..Default::default() }
   }
 
   async fn db_to_graphql(d: models::CampaignPreference) -> AsamiResult<Self> {

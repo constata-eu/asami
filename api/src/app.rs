@@ -36,12 +36,8 @@ impl App {
     self.on_chain_tx().apply_handle_updates().await?;
     self.on_chain_tx().apply_voted_fee_rate().await?;
     self.on_chain_tx().reimburse_due_campaigns().await?;
-
-    // self.reimburse_due_campaigns_request().submit_all().await?;
-    // self.distribute_fee_pool_request().submit_all().await?;
-    // self.apply_voted_fee_rate_request().submit_all().await?;
-    
-    // this one is optional. self.vest_admin_votes_request().submit_all().await?;
+    self.on_chain_tx().vest_admin_votes().await?;
+    self.on_chain_tx().distribute_fee_pool().await?;
     
     self.collab_request().submit_all().await?;
     self.handle_request().submit_all().await?;

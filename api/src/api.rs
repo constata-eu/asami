@@ -59,7 +59,7 @@ pub async fn in_transaction(
 
   let current_session = CurrentSession( session );
 
-  let response = request.execute(&*schema, &Context{ app, current_session }).await;
+  let response = request.execute(schema, &Context{ app, current_session }).await;
 
   if tx.commit().await.is_err() {
     return err();
@@ -101,7 +101,7 @@ pub async fn introspect(
     app: app.inner().clone(),
   };
   let (res, _errors) = juniper::introspect(&*schema, &ctx, IntrospectionFormat::default())
-    .map_err(|_| Error::Precondition(format!("Invalid GraphQL schema for introspection")))?;
+    .map_err(|_| Error::Precondition("Invalid GraphQL schema for introspection".to_string()))?;
   Ok(Json(res))
 }
 

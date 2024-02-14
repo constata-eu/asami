@@ -159,7 +159,7 @@ impl IgCrawlHub {
               .map_err(|_| Error::Runtime("IgProfile not serializable?".into()))?;
 
             self.state.ig_crawl_result().insert(InsertIgCrawlResult{
-              crawl_id: crawl.attrs.id.clone(),
+              crawl_id: crawl.attrs.id,
               json_string,
             }).save().await?;
           }
@@ -295,29 +295,29 @@ impl IgCrawlResult {
       None => { self.log("Skipped. No pending handle request").await?; },
       Some(handle_request) => {
         for post in &profile.latest_posts {
-          if let Some(capture) = caption_regex.captures(&post.caption.trim()) {
+          if let Some(capture) = caption_regex.captures(post.caption.trim()) {
             let Ok(account_id) = capture[1].parse::<String>().map(weihex) else {
-              self.log_post(&post, "no discernable account id in caption").await?;
+              self.log_post(post, "no discernable account id in caption").await?;
               continue;
             };
 
             if &account_id != handle_request.account_id() {
-              self.log_post(&post, "account id in caption did not match request account").await?;
+              self.log_post(post, "account id in caption did not match request account").await?;
               continue;
             }
           } else {
-            self.log_post(&post, "post had no matching caption").await?;
+            self.log_post(post, "post had no matching caption").await?;
             continue;
           }
 
           let Ok((_, posted_hash)) = get_url_image_hash(&post.display_url) else {
-            self.log_post(&post, "could not fetch display_url at this time").await?;
+            self.log_post(post, "could not fetch display_url at this time").await?;
             continue;
           };
 
           let distance = verification_hash.dist(&posted_hash);
           if distance > 200 {
-            self.log_post(&post, &format!("Distance was {}", distance)).await?;
+            self.log_post(post, &format!("Distance was {}", distance)).await?;
             continue;
           }
 
@@ -326,7 +326,7 @@ impl IgCrawlResult {
           let price = u256(suggested_ppp) * score;
           handle_request.verify(profile.id).await?.appraise(price, score).await?;
 
-          self.log_post(&post, "verified and appraised").await?;
+          self.log_post(post, "verified and appraised").await?;
           break;
         }
       }
@@ -356,7 +356,7 @@ impl IgCrawlResult {
         for post in &profile.latest_posts {
           for (campaign, rule) in campaigns {
             if !post.caption.trim().starts_with(rule.attrs.caption.trim()) {
-              self.log_post(&post, &format!("did not match caption for {}", campaign.id())).await?;
+              self.log_post(post, &format!("did not match caption for {}", campaign.id())).await?;
               continue;
             }
 
@@ -364,24 +364,24 @@ impl IgCrawlResult {
               Ok(h) => h,
               Err(e) => {
                 let description = format!("could not fetch display_url {:?} {:?}", post, e);
-                self.log_post(&post, &description).await?;
+                self.log_post(post, &description).await?;
                 continue;
               }
             };
 
-            let distance = rule.get_image_hash()?.dist(&posted_hash);
+            let distance = rule.get_image_hash()?.dist(posted_hash);
             if distance > 200 {
-              self.log_post(&post, &format!("Distance was {}", distance)).await?;
+              self.log_post(post, &format!("Distance was {}", distance)).await?;
               continue;
             }
 
             match campaign.make_collab(&handle).await {
               Err(Error::Validation(field, value)) => {
-                self.log_post(&post, &format!("could be a collab, but was invalid {} {}", field, value)).await?;
+                self.log_post(post, &format!("could be a collab, but was invalid {} {}", field, value)).await?;
               },
               Err(e) => return Err(e) ,
               Ok(collab) => {
-                self.log_post(&post, &format!("Made collab request {}", collab.attrs.id)).await?;
+                self.log_post(post, &format!("Made collab request {}", collab.attrs.id)).await?;
               }
             }
           }

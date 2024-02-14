@@ -92,7 +92,7 @@ impl CampaignHub {
 
 impl Campaign {
   pub async fn make_collab(&self, handle: &Handle) -> AsamiResult<CollabRequest> {
-    handle.validate_collaboration(&self).await?;
+    handle.validate_collaboration(self).await?;
 
     Ok(self.state.collab_request().insert(InsertCollabRequest{
       campaign_id: self.attrs.id.clone(),

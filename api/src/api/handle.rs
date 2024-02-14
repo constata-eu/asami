@@ -53,7 +53,7 @@ impl Showable<models::Handle, HandleFilter> for Handle {
       }
     } else {
       models::SelectHandle {
-        account_id_eq: Some(context.account_id().to_string()),
+        account_id_eq: Some(context.account_id()),
         ..Default::default()
       }
     }

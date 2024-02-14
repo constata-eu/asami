@@ -31,12 +31,12 @@ model!{
 
 impl Account {
   pub async fn is_claimed_or_claiming(&self) -> sqlx::Result<bool> {
-    Ok(self.addr().is_some() || self.claim_account_request_vec().await?.len() > 0)
+    Ok(self.addr().is_some() || self.claim_account_request_vec().await?.is_empty())
   }
 
   pub async fn campaign_offers(&self) -> AsamiResult<Vec<Campaign>> {
     let handles = self.handle_vec().await?;
-    if handles.len() == 0 { return Ok(vec![]); }
+    if handles.is_empty() { return Ok(vec![]); }
 
     let done: Vec<String> = self.state.collab().select().member_id_eq(self.id()).all().await?
       .into_iter().map(|x| x.attrs.campaign_id).collect();
@@ -70,7 +70,7 @@ impl Account {
     self.state.handle_request().insert(InsertHandleRequest{
       account_id: self.attrs.id.clone(),
       username: username.to_string(),
-      site: site,
+      site,
     }).save().await
   }
 
@@ -101,7 +101,7 @@ impl Account {
 
     Ok(self.state.campaign_request().insert(InsertCampaignRequest{
       account_id: self.attrs.id.clone(),
-      site: site,
+      site,
       budget: budget.encode_hex(),
       content_id: content_id.to_string(),
       price_score_ratio: price_score_ratio.encode_hex(),

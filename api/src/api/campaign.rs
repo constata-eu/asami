@@ -64,7 +64,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     filter: Option<CampaignFilter>
   ) -> FieldResult<Vec<Self>> {
     if let Some(account_id) = filter.as_ref().and_then(|f| f.available_to_account_id.clone() ) {
-      let id_filter = make_available_to_account_id_filter(&context, account_id).await?;
+      let id_filter = make_available_to_account_id_filter(context, account_id).await?;
       Self::base_collection(context, page, per_page, sort_field, sort_order, Some(id_filter)).await
     } else {
       Self::base_collection(context, page, per_page, sort_field, sort_order, filter).await
@@ -74,7 +74,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
   async fn count(context: &Context, filter: Option<CampaignFilter>) -> FieldResult<ListMetadata>
   {
     if let Some(account_ids) = filter.as_ref().and_then(|f| f.available_to_account_id.clone() ) {
-      let ids_filter = make_available_to_account_id_filter(&context, account_ids).await?;
+      let ids_filter = make_available_to_account_id_filter(context, account_ids).await?;
       Self::base_count(context, Some(ids_filter)).await
     } else {
       Self::base_count(context, filter).await

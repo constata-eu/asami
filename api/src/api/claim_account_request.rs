@@ -36,7 +36,7 @@ impl Showable<models::ClaimAccountRequest, ClaimAccountRequestFilter> for ClaimA
     if let Some(f) = filter {
       models::SelectClaimAccountRequest {
         id_in: f.ids,
-        account_id_eq: Some(context.account_id().to_string()),
+        account_id_eq: Some(context.account_id()),
         status_in: f.status_in,
         id_eq: f.id_eq,
         addr_eq: f.addr_eq,
@@ -44,14 +44,14 @@ impl Showable<models::ClaimAccountRequest, ClaimAccountRequestFilter> for ClaimA
       }
     } else {
       models::SelectClaimAccountRequest {
-        account_id_eq: Some(context.account_id().to_string()),
+        account_id_eq: Some(context.account_id()),
         ..Default::default()
       }
     }
   }
 
   fn select_by_id(context: &Context, id: i32) -> models::SelectClaimAccountRequest {
-    models::SelectClaimAccountRequest { id_eq: Some(id), account_id_eq: Some(context.account_id().to_string()), ..Default::default() }
+    models::SelectClaimAccountRequest { id_eq: Some(id), account_id_eq: Some(context.account_id()), ..Default::default() }
   }
 
   async fn db_to_graphql(d: models::ClaimAccountRequest) -> AsamiResult<Self> {

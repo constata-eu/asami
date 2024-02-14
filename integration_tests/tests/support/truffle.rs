@@ -30,7 +30,7 @@ impl Truffle {
 
     let child_vec = Command::new("ganache")
       .current_dir(&dir)
-      .args(["-D", &format!("--logging.file={path_to_log}")])
+      .args(["-D", &format!("--logging.file={path_to_log}"), "--miner.instamine", "strict"])
       .output()
       .unwrap()
       .stdout;

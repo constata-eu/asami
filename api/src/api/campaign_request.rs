@@ -46,7 +46,7 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
     if let Some(f) = filter {
       models::SelectCampaignRequest {
         id_in: f.ids,
-        account_id_eq: Some(context.account_id().to_string()),
+        account_id_eq: Some(context.account_id()),
         status_in: f.status_in,
         id_eq: f.id_eq,
         content_id_like: into_like_search(f.content_id_like),
@@ -54,14 +54,14 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
       }
     } else {
       models::SelectCampaignRequest {
-        account_id_eq: Some(context.account_id().to_string()),
+        account_id_eq: Some(context.account_id()),
         ..Default::default()
       }
     }
   }
 
   fn select_by_id(context: &Context, id: i32) -> models::SelectCampaignRequest {
-    models::SelectCampaignRequest { id_eq: Some(id), account_id_eq: Some(context.account_id().to_string()), ..Default::default() }
+    models::SelectCampaignRequest { id_eq: Some(id), account_id_eq: Some(context.account_id()), ..Default::default() }
   }
 
   async fn db_to_graphql(d: models::CampaignRequest) -> AsamiResult<Self> {

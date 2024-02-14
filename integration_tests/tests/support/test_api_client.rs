@@ -18,8 +18,6 @@ pub use serde::{Serialize, de::DeserializeOwned, Deserialize};
 use graphql_client;
 use graphql_client::GraphQLQuery;
 pub use api::Decimal;
-
-use rand::thread_rng;
 use ethers::{middleware::Middleware, types::TransactionRequest, signers::{LocalWallet, Signer}};
 
 #[derive(Deserialize)]
@@ -121,10 +119,10 @@ impl<'b> ApiClient<'b> {
     let rate = u256(self.test_app.app.indexer_state().get().await.unwrap().suggested_price_per_point());
     let budget = || { rate * wei("200") };
 
-    let regular_campaign = self.build_x_campaign(budget(), rate).await;
+    let regular_campaign = self.build_x_campaign(budget(), rate, 2).await;
     let high_rate_campaign = self.build_instagram_campaign(budget(), rate * wei("2")).await;
-    let low_rate_campaign = self.build_x_campaign(budget(), rate / wei("2")).await;
-    let low_budget_campaign = self.build_x_campaign(rate * wei("1"), rate).await;
+    let low_rate_campaign = self.build_x_campaign(budget(), rate / wei("2"), 2).await;
+    let low_budget_campaign = self.build_x_campaign(rate * wei("1"), rate, 2).await;
 
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
 
@@ -145,23 +143,27 @@ impl<'b> ApiClient<'b> {
       .await.unwrap()
   }
 
-  pub async fn build_x_campaign(&self, budget: U256, rate: U256) -> models::CampaignRequest {
+  pub async fn build_x_campaign(&self, budget: U256, rate: U256, days: i64) -> models::CampaignRequest {
     let post = "1716421161867710954";
-    let two_days = Utc::now() + chrono::Duration::days(2);
+    let valid_until = Utc::now() + chrono::Duration::days(days);
 
-    self.account().await.create_campaign_request(models::Site::X, post, budget, rate, two_days)
+    self.account().await.create_campaign_request(models::Site::X, post, budget, rate, valid_until)
       .await.unwrap().pay()
       .await.unwrap()
   }
 
   pub async fn create_x_campaign(&self, budget: U256, rate: U256) -> models::Campaign {
-    let campaign = self.build_x_campaign(budget, rate).await;
+    self.create_x_campaign_valid_until(budget, rate, 2).await
+  }
+
+  pub async fn create_x_campaign_valid_until(&self, budget: U256, rate: U256, days: i64) -> models::Campaign {
+    let campaign = self.build_x_campaign(budget, rate, days).await;
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
     campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("campaign")
   }
 
-  pub async fn create_self_managed_x_campaign(&self, budget: U256, rate: U256) -> models::Campaign {
-    let two_days = Utc::now() + chrono::Duration::days(2);
+  pub async fn create_self_managed_x_campaign(&self, budget: U256, rate: U256, days: i64) -> models::Campaign {
+    let two_days = Utc::now() + chrono::Duration::days(days);
 
     self.doc_contract()
       .approve(self.contract().address(), budget)
@@ -208,8 +210,8 @@ impl<'b> ApiClient<'b> {
   }
 
   pub async fn submit_claim_account_request(&mut self) {
-    let rsk = &self.test_app.app.settings.rsk;
-    let wallet = LocalWallet::new(&mut thread_rng()).with_chain_id(rsk.chain_id);
+    let rsk = &self.app().settings.rsk;
+    let wallet = self.test_app.make_wallet();
     self.gql_claim_account_request(&wallet).await;
 
     let tx = TransactionRequest::new().to(wallet.address()).value(u("10"));
@@ -421,6 +423,10 @@ impl<'b> ApiClient<'b> {
     assert_eq!(response.status(), status);
     let err: ApiError = serde_json::from_str(&response.into_string().await.unwrap()).unwrap();
     assert_that!(&err.error.contains(msg));
+  }
+
+  pub async fn asami_balance(&self) -> U256 {
+    self.test_app.contract().balance_of(self.local_wallet().address()).call().await.unwrap()
   }
 
   pub async fn doc_balance(&self) -> U256 {

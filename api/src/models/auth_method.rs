@@ -29,7 +29,7 @@ make_sql_enum![
 ];
 
 impl AuthMethodKind {
-  pub fn from_str(s: &str) -> Option<AuthMethodKind> {
+  pub fn from_text(s: &str) -> Option<AuthMethodKind> {
     match s {
       "X" => Some(AuthMethodKind::X),
       "Facebook" => Some(AuthMethodKind::Facebook),

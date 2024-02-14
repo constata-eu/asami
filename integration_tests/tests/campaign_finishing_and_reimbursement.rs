@@ -42,7 +42,7 @@ app_test!{ reimburses_to_advertiser (a)
   assert_eq!( a.admin_doc_balance().await, u("419999900"));
   assert_eq!( advertiser.doc_balance().await, u("100"));
 
-  let campaign = advertiser.create_self_managed_x_campaign(u("10"), u("10")).await;
+  let campaign = advertiser.create_self_managed_x_campaign(u("10"), u("10"), 2).await;
   assert_eq!( a.contract_doc_balance().await, u("10"));
   assert_eq!( advertiser.doc_balance().await, u("90"));
 

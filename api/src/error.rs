@@ -91,7 +91,7 @@ impl From<twitter_v2::Error> for Error {
 
 impl From<regex::Error> for Error {
   fn from(err: regex::Error) -> Error {
-    Error::Precondition(format!("Error in regex {}", err.to_string()))
+    Error::Precondition(format!("Error in regex {}", err))
   }
 }
 

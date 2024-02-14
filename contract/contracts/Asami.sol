@@ -158,8 +158,8 @@ contract Asami is Ownable, ERC20Capped {
     adminTreasury = _adminTreasury;
   }
 
-  function getHolders() public view returns (string[] memory) {
-    return topics;
+  function getHolders() public view returns (address[] memory) {
+    return holders;
   }
 
   function getClaimedAsamiTokens() public view returns (uint256) {
@@ -386,18 +386,18 @@ contract Asami is Ownable, ERC20Capped {
     }
   }
 
-  function reimburseDueCampaigns(uint256[] calldata _campaignIds) public {
+  function reimburseDueCampaigns(uint256[] calldata _campaignIds) external {
     for(uint i = 0; i < _campaignIds.length; i++) {
       Campaign storage campaign = campaigns[_campaignIds[i] - 1];
-      require(campaign.id > 0);
-      require(campaign.remaining > 0);
-      require(campaign.validUntil < block.timestamp);
+      require(campaign.id > 0, "rdc 0");
+      require(campaign.remaining > 0, "rdc 1");
+      require(campaign.validUntil < block.timestamp, "rdc 2");
 
       Account storage advertiser = accounts[campaign.accountId];
       uint256 remaining = campaign.remaining;
       campaign.remaining = 0;
       address fundedBy = campaign.fundedByAdmin ? admin : advertiser.addr;
-      require(doc.transfer(fundedBy, remaining));
+      require(doc.transfer(fundedBy, remaining), "rdc 3");
       emit CampaignSaved(campaign);
     }
   }
@@ -480,36 +480,53 @@ contract Asami is Ownable, ERC20Capped {
   uint256 public feePool;
   uint256 public payoutsRemaining = 0;
   uint256 public payoutsTotal = 0;
+  uint256 public feePoolRemainder = 0;
   uint256 public lastPayoutCycle = 0;
+  uint256 public batchSize = 100;
 
   function distributeFeePool() external {
     uint256 totalSupply = totalSupply();
+    uint256 currentCycle = getCurrentCycle();
+
+    require(totalSupply > 0, "dfp 0");
+    require(currentCycle != lastPayoutCycle || payoutsRemaining > 0 , "dfp 1");
+
+    /* Just mark the distribution was attempted on this cycle if there's nothing ot distribute */
+    if (feePool == 0) {
+      lastPayoutCycle = currentCycle;
+      return;
+    }
 
     if(payoutsRemaining == 0) {
       // We're starting a new payout of the feePool.
       // We can only start one payout in each 15 day period.
       payoutsTotal = holders.length;
+      feePoolRemainder = feePool;
       payoutsRemaining = payoutsTotal;
-      uint256 currentCycle = getCurrentCycle();
-      require(currentCycle != lastPayoutCycle);
       lastPayoutCycle = currentCycle;
     }
 
     uint256 startAt = payoutsTotal - payoutsRemaining;
 
-    uint256 until = (startAt + 100) <= payoutsRemaining ? (startAt + 100) : payoutsRemaining;
+    uint256 until = (batchSize > payoutsRemaining) ? (startAt + payoutsRemaining) : (startAt + batchSize);
+
+    uint256 localFeePoolRemainder = feePoolRemainder;
+    uint256 localPayoutsRemaining = payoutsRemaining;
 
     for (uint256 i = startAt; i < until; i++) {
       address holder = holders[i];
       uint256 balance = balanceOf(holder);
       uint256 reward = (balance * feePool) / totalSupply;
-      require(doc.transfer(holder, reward));
+      localFeePoolRemainder -= reward;
+      localPayoutsRemaining -= 1;
+      require(doc.transfer(holder, reward), "dfp 3");
     }
 
-    payoutsRemaining -= until;
+    feePoolRemainder = localFeePoolRemainder;
+    payoutsRemaining = localPayoutsRemaining;
 
     if(payoutsRemaining == 0) {
-      feePool = 0;
+      feePool = feePoolRemainder;
     }
   }
 

@@ -1,6 +1,6 @@
 use super::*;
 use ethers::{
-  abi::{Detokenize},
+  abi::{Address, Detokenize},
   prelude::{Wallet, SignerMiddleware},
   providers::{Http, Provider},
   middleware::{Middleware, contract::FunctionCall},
@@ -38,7 +38,7 @@ impl OnChainTxHub {
       Err(e) => {
         let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("{:?}; {:?}", e, e.source()));
         unsent.fail("contract_error", desc).await?;
-        return Ok(unsent);
+        Ok(unsent)
       }
       Ok(pending_tx) => {
         let sent = unsent.update().tx_hash(Some(pending_tx.tx_hash().encode_hex())).save().await?;
@@ -46,7 +46,7 @@ impl OnChainTxHub {
         match pending_tx.await {
           Err(e) => {
             sent.fail("provider_error", format!("{e:?}")).await?;
-            return Ok(sent);
+            Ok(sent)
           }
           Ok(receipt) => {
             let success = receipt.as_ref().map(|r| r.status.map(|s| s == U64::one()).unwrap_or(true) ).unwrap_or(false);
@@ -112,13 +112,53 @@ impl OnChainTxHub {
 
     let past_due: Vec<U256> = c.get_campaigns().call().await?
       .iter()
-      .filter_map(|u| if u.valid_until > now { None } else { Some(u.id) })
+      .filter_map(|c| if (c.valid_until >= now) || (c.remaining == u("0")) { None } else { Some(c.id) })
       .take(50)
       .collect();
 
     if past_due.is_empty() { return Ok(None); }
     
     Ok(Some(self.send(c.reimburse_due_campaigns(past_due)).await?))
+  }
+
+  pub async fn vest_admin_votes(&self) -> anyhow::Result<Option<OnChainTx>> {
+    let c = &self.state.on_chain.contract;
+    let this_cycle = c.get_current_cycle().call().await?;
+
+    let mut vestable: Vec<Address> = vec![];
+
+    for holder in c.get_holders().call().await? {
+      let vote = c.submitted_admin_votes(holder).call().await?;
+      if vote.2 > u("0") && vote.2 < this_cycle && !vote.3 {
+        vestable.push(holder);
+      }
+
+      if vestable.len() > 50 {
+        break;
+      }
+    }
+
+    if vestable.is_empty() { return Ok(None); }
+    
+    Ok(Some(self.send(c.vest_admin_votes(vestable)).await?))
+  }
+
+  pub async fn distribute_fee_pool(&self) -> anyhow::Result<Option<OnChainTx>> {
+    let c = &self.state.on_chain.contract;
+    let total_supply = c.total_supply().call().await?;
+    let this_cycle = c.get_current_cycle().call().await?;
+    let last_cycle = c.last_payout_cycle().call().await?;
+    let remaining = c.payouts_remaining().call().await?;
+
+    if total_supply == u("0") {
+      return Ok(None);
+    }
+
+    if this_cycle == last_cycle && remaining == u("0") {
+      return Ok(None);
+    }
+
+    Ok(Some(self.send(c.distribute_fee_pool()).await?))
   }
 }
 
@@ -168,8 +208,8 @@ pub trait OnChainTxRequest: SqlxModelHub<Self::Model> {
     if reqs.is_empty() { return Ok(submitted); }
 
     let mut params = vec![];
-    for p in reqs.iter() {
-      params.push(self.as_param(&p).await?);
+    for p in &reqs {
+      params.push(self.as_param(p).await?);
     }
 
     let on_chain_tx = self.app().on_chain_tx().send(self.fn_call(params)).await?;

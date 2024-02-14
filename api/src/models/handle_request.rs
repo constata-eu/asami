@@ -47,7 +47,7 @@ impl HandleRequestHub {
     let indexer_state = self.state.indexer_state().get().await?;
 
     let mentions = api
-      .get_user_mentions(&conf.asami_user_id)
+      .get_user_mentions(conf.asami_user_id)
       .since_id(indexer_state.attrs.x_handle_verification_checkpoint.to_u64().unwrap_or(0))
       .max_results(100)
       .user_fields(vec![ UserField::Id, UserField::Username, UserField::PublicMetrics ])
@@ -80,8 +80,8 @@ impl HandleRequestHub {
           let Ok(account_id) = U256::from_dec_str(&account_id_str).map(U256::encode_hex) else { continue };
 
           let Some(req) = self.state.handle_request().select()
-            .status_eq(&HandleRequestStatus::Unverified)
-            .site_eq(&Site::X)
+            .status_eq(HandleRequestStatus::Unverified)
+            .site_eq(Site::X)
             .username_ilike(&author.username)
             .account_id_eq(&account_id)
             .optional().await? else { continue };
@@ -119,9 +119,9 @@ impl_on_chain_tx_request!{HandleRequestHub {
 
     let price = a.price.as_ref().map(u256).unwrap_or_else(|| u("0"));
     let score = a.score.as_ref().map(u256).unwrap_or_else(|| u("0"));
-    let user_id = a.user_id.clone().unwrap_or_else(|| String::new());
+    let user_id = a.user_id.clone().unwrap_or_else(String::new);
 
-    let topics: Vec<U256> = model.topic_ids().await?.iter().map(|i| u256(i) ).collect();
+    let topics: Vec<U256> = model.topic_ids().await?.iter().map(u256).collect();
 
     Ok(Self::Param {
       id: 0.into(),
@@ -131,7 +131,7 @@ impl_on_chain_tx_request!{HandleRequestHub {
       score,
       topics: topics.clone(),
       username: a.username.clone(),
-      user_id: user_id,
+      user_id,
       last_updated: 0.into(),
       new_score: score,
       new_price: price,

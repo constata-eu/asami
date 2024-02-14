@@ -27,7 +27,7 @@ pub async fn x_login(app: &State<App>, code: &str, state: &str) -> rocket::respo
   let uri = format!(
     "{host}/#/x_login?code={code}&state={state}",
     host = app.settings.pwa_host,
-    state = state.replace(" ", "+"),
+    state = state.replace(' ', "+"),
   );
   rocket::response::Redirect::permanent(uri)
 }

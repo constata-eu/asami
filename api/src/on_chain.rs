@@ -38,7 +38,7 @@ impl OnChain {
   pub async fn new(config: &AppConfig, password: &str) -> AsamiResult<Self> {
     let wallet = MnemonicBuilder::<English>::default()
       .phrase(config.rsk.wallet_mnemonic.as_str())
-      .password(&password)
+      .password(password)
       .build()?;
 
    let wallet_address: String = serde_json::to_string(&wallet.address())

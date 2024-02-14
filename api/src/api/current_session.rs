@@ -58,6 +58,7 @@ macro_rules! auth_some {
 
 macro_rules! auth_assert {
   ($expr:expr, $error:literal) => (
+    #[allow(clippy::neg_cmp_op_on_partial_ord)]
     if (!$expr) {
       return Err(ApiAuthError::Fail($error.to_string()));
     }
@@ -93,8 +94,8 @@ impl CurrentSession {
     ).to_string();
 
     let session = match req.headers().get_one("Auth-Action") {
-      Some("Login") => Self::login(&app, &jwt, req, body).await?,
-      _ => Self::identify(&app, &jwt,  req, body).await?,
+      Some("Login") => Self::login(app, &jwt, req, body).await?,
+      _ => Self::identify(app, &jwt,  req, body).await?,
     };
 
     Ok(Self(session))
@@ -103,10 +104,10 @@ impl CurrentSession {
   async fn login(app: &App, jwt: &str, req: &Request<'_>, body: Option<&[u8]>) -> Result<Session, ApiAuthError> {
     Self::validate_recaptcha(req, app).await?;
     let pubkey = Self::get_login_pubkey(req)?;
-    let nonce = Self::validate_jwt(&jwt, &pubkey, req, &body).await?;
+    let nonce = Self::validate_jwt(jwt, &pubkey, req, &body).await?;
     let (kind, lookup_key, auth_data) = Self::validate_auth_data(app, req).await?;
 
-    let maybe_auth_method = app.auth_method().select().kind_eq(&kind).lookup_key_eq(&lookup_key).optional().await?;
+    let maybe_auth_method = app.auth_method().select().kind_eq(kind).lookup_key_eq(&lookup_key).optional().await?;
 
     let (auth_method, new_account) = match maybe_auth_method {
       Some(method) => (method, None),
@@ -141,7 +142,7 @@ impl CurrentSession {
       }
     };
 
-    let key_id = hasher::hexdigest(&pubkey.as_bytes());
+    let key_id = hasher::hexdigest(pubkey.as_bytes());
 
     let maybe_existing = auth_try!(
       app.session().find_optional(&key_id).await,
@@ -179,7 +180,7 @@ impl CurrentSession {
     let session = auth_try!(app.session().find(key_id).await, "session_for_kid_not_found");
     auth_assert!( session.deletion_id().is_none(), "session_was_deleted");
     let nonce = Self::validate_jwt(jwt, &session.attrs.pubkey, req, &body).await?;
-    auth_assert!(nonce > session.attrs.nonce as i64, "invalid_nonce");
+    auth_assert!(nonce > session.attrs.nonce, "invalid_nonce");
     Ok(auth_try!(session.update().nonce(nonce).save().await, "could_not_update_nonce"))
   }
 
@@ -189,7 +190,7 @@ impl CurrentSession {
       "no_auth_method_kind_in_headers"
     );
     let auth_method_kind: AuthMethodKind = auth_some!(
-      AuthMethodKind::from_str(&auth_method_kind_string),
+      AuthMethodKind::from_text(auth_method_kind_string),
       "invalid_auth_method_kind"
     );
     let auth_data = auth_some!(req.headers().get_one("Auth-Data"), "no_auth_data_in_headers");
@@ -197,14 +198,14 @@ impl CurrentSession {
     let lookup_key = match auth_method_kind {
       AuthMethodKind::OneTimeToken => {
         let token = auth_try!(
-          app.one_time_token().select().used_eq(&false).value_eq(&auth_data.to_string()).one().await,
+          app.one_time_token().select().used_eq(false).value_eq(&auth_data.to_string()).one().await,
           "invalid_one_time_token"
         );
         format!("one_time_token:{}", token.attrs.id)
       },
       AuthMethodKind::X => {
         let oauth_data: OauthCodeAndVerifier = auth_try!(
-          serde_json::from_str(&auth_data),
+          serde_json::from_str(auth_data),
           "could_not_parse_oauth_data"
         );
 
@@ -233,9 +234,9 @@ impl CurrentSession {
         let token_result = ureq::get("https://graph.facebook.com/v18.0/oauth/access_token")
           .query_pairs(vec![
             ("client_id", app.settings.instagram.client_id.as_str()),
-            ("redirect_uri", &app.settings.instagram.redirect_uri.as_str()),
-            ("client_secret", &app.settings.instagram.client_secret.as_str()),
-            ("code", &auth_data),
+            ("redirect_uri", app.settings.instagram.redirect_uri.as_str()),
+            ("client_secret", app.settings.instagram.client_secret.as_str()),
+            ("code", auth_data),
           ])
           .call();
         let token_response = auth_try!(token_result, "could_not_request_facebook_access_token");
@@ -247,7 +248,7 @@ impl CurrentSession {
       AuthMethodKind::Eip712 => {
         eip_712_sig_to_address(app.settings.rsk.chain_id, auth_data).map_err(ApiAuthError::Fail)?
       },
-      _ => return Err(ApiAuthError::Fail(format!("auth_method_not_supported_yet"))),
+      _ => return Err(ApiAuthError::Fail("auth_method_not_supported_yet".to_string())),
     };
 
     Ok((auth_method_kind, lookup_key, auth_data.to_string()))

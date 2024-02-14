@@ -71,7 +71,7 @@ impl SyncedEventHub {
       data
     }).save().await?;
 
-    return Ok(true);
+    Ok(true)
   }
 
   pub async fn sync_account_saved(&self, contract: &AsamiContractSigner, from_block: U64, to_block: U64) ->  AsamiResult<()> {
@@ -82,7 +82,7 @@ impl SyncedEventHub {
       .query_with_meta().await?;
 
     for (e, meta) in &events {
-      if !self.save_unprocessed_event(&meta, &e).await? {
+      if !self.save_unprocessed_event(meta, &e).await? {
         continue;
       }
 
@@ -112,7 +112,7 @@ impl SyncedEventHub {
     }
 
     for (_, meta) in &events {
-      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
+      let Some(on_chain_tx) = self.find_on_chain_tx(meta).await? else { continue };
       self.state.claim_account_request().set_done(on_chain_tx.attrs.id).await?;
     }
 
@@ -127,7 +127,7 @@ impl SyncedEventHub {
       .query_with_meta().await?;
 
     for (e, meta) in &events {
-      if !self.save_unprocessed_event(&meta, &e).await? {
+      if !self.save_unprocessed_event(meta, &e).await? {
         continue;
       }
 
@@ -219,7 +219,7 @@ impl SyncedEventHub {
       .query_with_meta().await?;
 
     for (e, meta) in &events {
-      if !self.save_unprocessed_event(&meta, &e).await? {
+      if !self.save_unprocessed_event(meta, &e).await? {
         continue;
       }
 
@@ -258,7 +258,7 @@ impl SyncedEventHub {
     }
 
     for (_, meta) in &events {
-      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
+      let Some(on_chain_tx) = self.find_on_chain_tx(meta).await? else { continue };
       self.state.campaign_request().set_done(on_chain_tx.attrs.id).await?;
     }
     Ok(())
@@ -272,7 +272,7 @@ impl SyncedEventHub {
       .query_with_meta().await?;
 
     for (e, meta) in &events {
-      if !self.save_unprocessed_event(&meta, &e).await? {
+      if !self.save_unprocessed_event(meta, &e).await? {
         continue;
       }
 
@@ -312,7 +312,7 @@ impl SyncedEventHub {
       .query_with_meta().await?;
 
     for (e, meta) in &events {
-      if !self.save_unprocessed_event(&meta, &e).await? {
+      if !self.save_unprocessed_event(meta, &e).await? {
         continue;
       }
 
@@ -323,7 +323,7 @@ impl SyncedEventHub {
     }
 
     for (_, meta) in &events {
-      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
+      let Some(on_chain_tx) = self.find_on_chain_tx(meta).await? else { continue };
       self.state.topic_request().set_done(on_chain_tx.attrs.id).await?;
     }
 

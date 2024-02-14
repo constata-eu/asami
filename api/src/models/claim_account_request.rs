@@ -36,8 +36,8 @@ impl_on_chain_tx_request!{ ClaimAccountRequestHub {
 
   async fn as_param(&self, model: &Self::Model) -> sqlx::Result<Self::Param> {
     Ok(Self::Param {
-      account_id: u256(&model.account_id()),
-      addr: H160::decode_hex(&model.addr()).unwrap(),
+      account_id: u256(model.account_id()),
+      addr: H160::decode_hex(model.addr()).unwrap(),
     })
   }
 

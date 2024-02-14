@@ -47,14 +47,14 @@ impl AuditLogEntryHub {
         "reference": reference.to_string(),
       }].to_string());
 
-    Ok(self.insert(InsertAuditLogEntry{
+    self.insert(InsertAuditLogEntry{
       severity,
       context,
       kind: kind.to_string(),
       subkind: subkind.to_string(),
       loggable_type,
       loggable_id,
-    }).save().await?)
+    }).save().await
   }
 }
 
@@ -100,7 +100,7 @@ pub trait Loggable: Send {
 #[macro_export]
 macro_rules! impl_loggable {
   ($model:ident) => (
-    impl crate::models::audit_log_entry::Loggable for $model {
+    impl $crate::models::audit_log_entry::Loggable for $model {
       fn loggable_type(&self) -> String {
         stringify!($model).to_string()
       }

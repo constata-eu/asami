@@ -1,11 +1,18 @@
-use api::{models::{self, U256}, App, AppConfig};
+use api::{
+  on_chain::Signer,
+  models::{self, U256},
+  App,
+  AppConfig
+};
 use jwt_simple::algorithms::*;
 use std::process::Command;
 use crate::support::{Truffle, ApiClient};
 use ethers::{
-  abi::AbiEncode,
+  abi::{Address, AbiEncode},
+  prelude::LocalWallet,
   providers::{Http, Provider}
 };
+use rand::thread_rng;
 use rocket::local::asynchronous::Client as RocketClient;
 use rocket::{Config, config::LogLevel};
 
@@ -59,8 +66,20 @@ impl TestApp {
     client
   }
 
+  pub fn make_wallet(&self) -> LocalWallet {
+    LocalWallet::new(&mut thread_rng()).with_chain_id(self.app.settings.rsk.chain_id)
+  }
+
   pub fn contract(&self) -> &api::on_chain::AsamiContractSigner {
     &self.app.on_chain.contract
+  }
+
+  pub async fn admin_asami_balance(&self) -> U256 {
+    self.contract().balance_of(self.contract().client().address()).call().await.unwrap()
+  }
+
+  pub async fn asami_balance_of(&self, addr: &Address) -> U256 {
+    self.contract().balance_of(*addr).await.unwrap()
   }
 
   pub fn doc_contract(&self) -> &api::on_chain::DocContract {
@@ -74,6 +93,11 @@ impl TestApp {
   pub async fn contract_doc_balance(&self) -> U256 {
     self.doc_contract().balance_of(self.contract().address()).call().await.unwrap()
   }
+
+  pub async fn doc_balance_of(&self, addr: &Address) -> U256 {
+    self.doc_contract().balance_of(*addr).await.unwrap()
+  }
+
 
   pub async fn mock_admin_setting_campaign_requests_as_paid(&self) {
     let all = self.app.campaign_request().select().status_eq(models::CampaignRequestStatus::Received).all().await.unwrap();
