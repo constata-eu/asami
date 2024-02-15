@@ -1,4 +1,7 @@
-use super::{*, models::{self, *}};
+use super::{
+  models::{self, *},
+  *,
+};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -14,7 +17,9 @@ pub struct Collab {
   handle_id: String,
   #[graphql(description = "The member who owns the handle.")]
   member_id: String,
-  #[graphql(description = "The gross amount paid by the advertiser (campaign creator) for this collab.")]
+  #[graphql(
+    description = "The gross amount paid by the advertiser (campaign creator) for this collab."
+  )]
   gross: String,
   #[graphql(description = "The fee deducted by asami from the gross amount.")]
   fee: String,
@@ -65,7 +70,10 @@ impl Showable<models::Collab, CollabFilter> for Collab {
   }
 
   fn select_by_id(_context: &Context, id: String) -> models::SelectCollab {
-    models::SelectCollab { id_eq: Some(id), ..Default::default() }
+    models::SelectCollab {
+      id_eq: Some(id),
+      ..Default::default()
+    }
   }
 
   async fn db_to_graphql(d: models::Collab) -> AsamiResult<Self> {

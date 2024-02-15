@@ -1,6 +1,6 @@
 use super::*;
 
-model!{
+model! {
   state: App,
   table: collab_requests,
   struct CollabRequest {
@@ -9,7 +9,7 @@ model!{
     #[sqlx_model_hints(varchar)]
     campaign_id: String,
     #[sqlx_model_hints(varchar)]
-    handle_id: String, 
+    handle_id: String,
     #[sqlx_model_hints(int4, default)]
     on_chain_tx_id: Option<i32>,
     #[sqlx_model_hints(generic_request_status, default)]
@@ -22,7 +22,7 @@ model!{
   }
 }
 
-impl_on_chain_tx_request!{ CollabRequestHub {
+impl_on_chain_tx_request! { CollabRequestHub {
   type Model = CollabRequest;
   type Update = UpdateCollabRequestHub;
   type Status = GenericRequestStatus;
@@ -43,4 +43,3 @@ impl_on_chain_tx_request!{ CollabRequestHub {
   fn submitted_status() -> Self::Status { GenericRequestStatus::Submitted }
   fn done_status() -> Self::Status { GenericRequestStatus::Done }
 }}
-

@@ -1,6 +1,6 @@
 use super::*;
 
-model!{
+model! {
   state: App,
   table: campaigns,
   struct Campaign {
@@ -38,16 +38,26 @@ model!{
 
 impl CampaignHub {
   pub async fn sync_x_collabs(&self) -> AsamiResult<Vec<CollabRequest>> {
-    use twitter_v2::{TwitterApi, authorization::BearerToken, api_result::*};
+    use twitter_v2::{api_result::*, authorization::BearerToken, TwitterApi};
 
     let mut reqs = vec![];
     let conf = &self.state.settings.x;
     let auth = BearerToken::new(&conf.bearer_token);
     let api = TwitterApi::new(auth);
-    
-    for campaign in self.select().finished_eq(false).site_eq(Site::X).all().await? {
-      let post_id = campaign.attrs.content_id.parse::<u64>()
-        .map_err(|_| Error::Validation("content_id".into(), "was stored in the db not as u64".into()))?;
+
+    for campaign in self
+      .select()
+      .finished_eq(false)
+      .site_eq(Site::X)
+      .all()
+      .await?
+    {
+      let post_id = campaign.attrs.content_id.parse::<u64>().map_err(|_| {
+        Error::Validation(
+          "content_id".into(),
+          "was stored in the db not as u64".into(),
+        )
+      })?;
 
       let reposts = api.get_tweet_retweeted_by(post_id).send().await?;
 
@@ -94,10 +104,17 @@ impl Campaign {
   pub async fn make_collab(&self, handle: &Handle) -> AsamiResult<CollabRequest> {
     handle.validate_collaboration(self).await?;
 
-    Ok(self.state.collab_request().insert(InsertCollabRequest{
-      campaign_id: self.attrs.id.clone(),
-      handle_id: handle.attrs.id.clone(),
-    }).save().await?)
+    Ok(
+      self
+        .state
+        .collab_request()
+        .insert(InsertCollabRequest {
+          campaign_id: self.attrs.id.clone(),
+          handle_id: handle.attrs.id.clone(),
+        })
+        .save()
+        .await?,
+    )
   }
 
   pub async fn is_missing_ig_rules(&self) -> AsamiResult<bool> {
@@ -105,7 +122,7 @@ impl Campaign {
   }
 }
 
-model!{
+model! {
   state: App,
   table: campaign_topics,
   struct CampaignTopic {

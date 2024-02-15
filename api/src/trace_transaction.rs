@@ -1,7 +1,7 @@
 use ethers::{
-    core::types::{GethDebugTracingOptions, H256},
-    providers::Middleware,
-    types::{GethDebugBuiltInTracerType, GethDebugTracerType},
+  core::types::{GethDebugTracingOptions, H256},
+  providers::Middleware,
+  types::{GethDebugBuiltInTracerType, GethDebugTracerType},
 };
 use std::str::FromStr;
 

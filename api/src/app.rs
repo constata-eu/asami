@@ -1,12 +1,15 @@
-use super::*;
-use sqlx::{ ConnectOptions, postgres::{PgPoolOptions, PgConnectOptions}};
-pub use serde::{Serialize, Deserialize};
-use sqlx_models_orm::Db;
-use std::str::FromStr;
-use rocket::Config;
-use super::on_chain::OnChain;
 use super::models::*;
+use super::on_chain::OnChain;
+use super::*;
+use rocket::Config;
+pub use serde::{Deserialize, Serialize};
+use sqlx::{
+  postgres::{PgConnectOptions, PgPoolOptions},
+  ConnectOptions,
+};
+use sqlx_models_orm::Db;
 use std::io::{stdin, Read};
+use std::str::FromStr;
 
 #[derive(Clone)]
 pub struct App {
@@ -18,17 +21,22 @@ pub struct App {
 impl App {
   pub async fn from_stdin_password() -> AsamiResult<Self> {
     let mut password = String::new();
-    stdin().read_to_string(&mut password)
-      .map_err(|_| Error::Init("Could not get password from stdin".to_string()) )?;
+    stdin()
+      .read_to_string(&mut password)
+      .map_err(|_| Error::Init("Could not get password from stdin".to_string()))?;
     password.pop(); // Remove newline
-    let config = AppConfig::default()?;
+    let config = AppConfig::default_figment()?;
     Self::new(password, config).await
   }
 
   pub async fn new(password: String, config: AppConfig) -> AsamiResult<Self> {
     let db = config.db().await?;
     let on_chain = OnChain::new(&config, &password).await?;
-    Ok(Self{ db, on_chain, settings: Box::new(config) })
+    Ok(Self {
+      db,
+      on_chain,
+      settings: Box::new(config),
+    })
   }
 
   pub async fn run_background_tasks(&self) -> anyhow::Result<()> {
@@ -38,7 +46,7 @@ impl App {
     self.on_chain_tx().reimburse_due_campaigns().await?;
     self.on_chain_tx().vest_admin_votes().await?;
     self.on_chain_tx().distribute_fee_pool().await?;
-    
+
     self.collab_request().submit_all().await?;
     self.handle_request().submit_all().await?;
     self.set_price_request().submit_all().await?;
@@ -72,7 +80,7 @@ pub struct AppConfig {
 }
 
 impl AppConfig {
-  pub fn default() -> AsamiResult<Self> {
+  pub fn default_figment() -> AsamiResult<Self> {
     Ok(Config::figment().extract::<Self>()?)
   }
 
@@ -81,7 +89,10 @@ impl AppConfig {
     options.disable_statement_logging();
     let pool_options = PgPoolOptions::new().max_connections(5);
     let pool = pool_options.connect_with(options).await?;
-    Ok(Db{ pool, transaction: None })
+    Ok(Db {
+      pool,
+      transaction: None,
+    })
   }
 }
 
@@ -104,7 +115,7 @@ pub struct InstagramConfig {
   pub apify_key: String,
   pub verification_image_url: String,
   pub verification_caption: String,
-  pub verification_posts_count: i64
+  pub verification_posts_count: i64,
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]

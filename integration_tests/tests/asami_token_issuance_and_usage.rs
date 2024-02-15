@@ -1,5 +1,5 @@
 #[macro_use]
-mod support;
+pub mod support;
 use ethers::signers::Signer;
 
 app_test!{ has_a_cap_on_token_supply (a) 
@@ -127,7 +127,7 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
 
   // Advertiser is vesting and hurrying to claim victory.
   assert!(advertiser.self_vest_admin_vote(advertiser_addr).await.is_ok());
-  a.contract().submitted_admin_votes(advertiser_addr).call().await?;
+
   assert!(
     a.app.on_chain_tx()
       .proclaim_cycle_admin_winner().await?

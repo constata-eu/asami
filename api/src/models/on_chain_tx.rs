@@ -1,14 +1,14 @@
 use super::*;
 use ethers::{
   abi::{Address, Detokenize},
-  prelude::{Wallet, SignerMiddleware},
+  middleware::{contract::FunctionCall, Middleware},
+  prelude::{SignerMiddleware, Wallet},
   providers::{Http, Provider},
-  middleware::{Middleware, contract::FunctionCall},
 };
-use std::{ error::Error, borrow::Borrow, sync::Arc};
 use sqlx_models_orm::{SqlxModel, SqlxModelHub, SqlxSelectModelHub};
+use std::{borrow::Borrow, error::Error, sync::Arc};
 
-model!{
+model! {
   state: App,
   table: on_chain_txs,
   struct OnChainTx {
@@ -28,28 +28,41 @@ model!{
 impl_loggable!(OnChainTx);
 
 impl OnChainTxHub {
-  pub async fn send<B,M,D>(&self, fn_call: FunctionCall<B,M,D>) -> sqlx::Result<OnChainTx> 
-    where B: Borrow<M>, M: Middleware, D: Detokenize,
+  pub async fn send_tx<B, M, D>(&self, fn_call: FunctionCall<B, M, D>) -> sqlx::Result<OnChainTx>
+  where
+    B: Borrow<M>,
+    M: Middleware,
+    D: Detokenize,
   {
-    let unsent = self.insert(InsertOnChainTx{ function_name: fn_call.function.name.clone() }).save().await?;
+    let unsent = self
+      .insert(InsertOnChainTx {
+        function_name: fn_call.function.name.clone(),
+      })
+      .save()
+      .await?;
     unsent.info("typed_transaction", &fn_call.tx).await?;
 
     match fn_call.send().await {
       Err(e) => {
-        let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("{:?}; {:?}", e, e.source()));
+        let desc = e
+          .decode_revert::<String>()
+          .unwrap_or_else(|| format!("{:?}; {:?}", e, e.source()));
         unsent.fail("contract_error", desc).await?;
         Ok(unsent)
       }
       Ok(pending_tx) => {
-        let sent = unsent.update().tx_hash(Some(pending_tx.tx_hash().encode_hex())).save().await?;
-
+        let tx_hash = pending_tx.tx_hash().encode_hex();
+        let sent = unsent.update().tx_hash(Some(tx_hash)).save().await?;
         match pending_tx.await {
           Err(e) => {
             sent.fail("provider_error", format!("{e:?}")).await?;
             Ok(sent)
           }
           Ok(receipt) => {
-            let success = receipt.as_ref().map(|r| r.status.map(|s| s == U64::one()).unwrap_or(true) ).unwrap_or(false);
+            let success = receipt
+              .as_ref()
+              .map(|r| r.status.map(|s| s == U64::one()).unwrap_or(true))
+              .unwrap_or(false);
             sent.info("receipt", &receipt).await?;
             Ok(sent.update().success(success).save().await?)
           }
@@ -62,16 +75,29 @@ impl OnChainTxHub {
     let c = &self.state.on_chain.contract;
     let this_cycle = c.get_current_cycle().call().await?;
 
-    let applicable: Vec<U256> = c.get_handles().call().await?
+    let applicable: Vec<U256> = c
+      .get_handles()
+      .call()
+      .await?
       .iter()
       .enumerate()
-      .filter_map(|(i, u)| if (u.last_updated == this_cycle) || !u.needs_update { None } else { Some(i.into()) } )
+      .filter_map(|(i, u)| {
+        if (u.last_updated == this_cycle) || !u.needs_update {
+          None
+        } else {
+          Some(i.into())
+        }
+      })
       .take(50)
       .collect();
 
-    if applicable.is_empty() { return Ok(None); }
-    
-    Ok(Some(self.send(c.apply_handle_updates(applicable)).await?))
+    if applicable.is_empty() {
+      return Ok(None);
+    }
+
+    Ok(Some(
+      self.send_tx(c.apply_handle_updates(applicable)).await?,
+    ))
   }
 
   pub async fn apply_voted_fee_rate(&self) -> anyhow::Result<Option<OnChainTx>> {
@@ -79,9 +105,11 @@ impl OnChainTxHub {
     let this_cycle = c.get_current_cycle().call().await?;
     let last_applied = c.last_voted_fee_rate_applied_on().await?;
 
-    if this_cycle == last_applied { return Ok(None); }
-    
-    Ok(Some(self.send(c.apply_voted_fee_rate()).await?))
+    if this_cycle == last_applied {
+      return Ok(None);
+    }
+
+    Ok(Some(self.send_tx(c.apply_voted_fee_rate()).await?))
   }
 
   pub async fn proclaim_cycle_admin_winner(&self) -> anyhow::Result<Option<OnChainTx>> {
@@ -98,7 +126,11 @@ impl OnChainTxHub {
 
     for i in &admin_vote_counts {
       if i.votes > vested_votes / wei("2") {
-        return Ok(Some(self.send(c.proclaim_cycle_admin_winner(i.candidate)).await?));
+        return Ok(Some(
+          self
+            .send_tx(c.proclaim_cycle_admin_winner(i.candidate))
+            .await?,
+        ));
       }
     }
 
@@ -110,15 +142,28 @@ impl OnChainTxHub {
     let block_number = c.client().get_block_number().await?;
     let Some(now) = c.client().get_block(block_number).await?.map(|b| b.timestamp) else { return Ok(None) };
 
-    let past_due: Vec<U256> = c.get_campaigns().call().await?
+    let past_due: Vec<U256> = c
+      .get_campaigns()
+      .call()
+      .await?
       .iter()
-      .filter_map(|c| if (c.valid_until >= now) || (c.remaining == u("0")) { None } else { Some(c.id) })
+      .filter_map(|c| {
+        if (c.valid_until >= now) || (c.remaining == u("0")) {
+          None
+        } else {
+          Some(c.id)
+        }
+      })
       .take(50)
       .collect();
 
-    if past_due.is_empty() { return Ok(None); }
-    
-    Ok(Some(self.send(c.reimburse_due_campaigns(past_due)).await?))
+    if past_due.is_empty() {
+      return Ok(None);
+    }
+
+    Ok(Some(
+      self.send_tx(c.reimburse_due_campaigns(past_due)).await?,
+    ))
   }
 
   pub async fn vest_admin_votes(&self) -> anyhow::Result<Option<OnChainTx>> {
@@ -138,9 +183,11 @@ impl OnChainTxHub {
       }
     }
 
-    if vestable.is_empty() { return Ok(None); }
-    
-    Ok(Some(self.send(c.vest_admin_votes(vestable)).await?))
+    if vestable.is_empty() {
+      return Ok(None);
+    }
+
+    Ok(Some(self.send_tx(c.vest_admin_votes(vestable)).await?))
   }
 
   pub async fn distribute_fee_pool(&self) -> anyhow::Result<Option<OnChainTx>> {
@@ -158,19 +205,22 @@ impl OnChainTxHub {
       return Ok(None);
     }
 
-    Ok(Some(self.send(c.distribute_fee_pool()).await?))
+    Ok(Some(self.send_tx(c.distribute_fee_pool()).await?))
   }
 }
 
-pub type AsamiSigner = SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>;
+pub type AsamiSigner =
+  SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>;
 pub type AsamiFunctionCall = FunctionCall<Arc<AsamiSigner>, AsamiSigner, ()>;
 
-#[rocket::async_trait(?Send)]
-pub trait OnChainTxRequest: SqlxModelHub<Self::Model> {
-  type Model: SqlxModel<State=App>;
-  type Update;
-  type Status;
-  type Param;
+#[rocket::async_trait]
+pub trait OnChainTxRequest:
+  SqlxModelHub<Self::Model> + std::marker::Send + std::marker::Sync
+{
+  type Model: SqlxModel<State = App> + std::marker::Send + std::marker::Sync;
+  type Update: std::marker::Send + std::marker::Sync;
+  type Status: std::marker::Send + std::marker::Sync;
+  type Param: std::marker::Send + std::marker::Sync;
 
   async fn as_param(&self, model: &Self::Model) -> sqlx::Result<Self::Param>;
 
@@ -186,11 +236,15 @@ pub trait OnChainTxRequest: SqlxModelHub<Self::Model> {
 
   async fn save_update(update: Self::Update) -> sqlx::Result<Self::Model>;
 
-  fn set_select_status(select: <Self::Model as SqlxModel>::SelectModelHub, status: Self::Status) ->
-    <Self::Model as SqlxModel>::SelectModelHub;
+  fn set_select_status(
+    select: <Self::Model as SqlxModel>::SelectModelHub,
+    status: Self::Status,
+  ) -> <Self::Model as SqlxModel>::SelectModelHub;
 
-  fn set_select_tx_id(select: <Self::Model as SqlxModel>::SelectModelHub, tx_id: i32) ->
-    <Self::Model as SqlxModel>::SelectModelHub;
+  fn set_select_tx_id(
+    select: <Self::Model as SqlxModel>::SelectModelHub,
+    tx_id: i32,
+  ) -> <Self::Model as SqlxModel>::SelectModelHub;
 
   fn submitted_status() -> Self::Status;
   fn pending_status() -> Self::Status;
@@ -203,16 +257,24 @@ pub trait OnChainTxRequest: SqlxModelHub<Self::Model> {
   async fn submit_all(&self) -> sqlx::Result<Vec<Self::Model>> {
     self.validate_before_submit_all().await?;
     let mut submitted = vec![];
-    let reqs = Self::set_select_status(self.select(), Self::pending_status()).all().await?;
+    let reqs = Self::set_select_status(self.select(), Self::pending_status())
+      .all()
+      .await?;
 
-    if reqs.is_empty() { return Ok(submitted); }
+    if reqs.is_empty() {
+      return Ok(submitted);
+    }
 
     let mut params = vec![];
     for p in &reqs {
       params.push(self.as_param(p).await?);
     }
 
-    let on_chain_tx = self.app().on_chain_tx().send(self.fn_call(params)).await?;
+    let on_chain_tx = self
+      .app()
+      .on_chain_tx()
+      .send_tx(self.fn_call(params))
+      .await?;
 
     for req in reqs {
       let mut update = Self::update(req);
@@ -226,7 +288,7 @@ pub trait OnChainTxRequest: SqlxModelHub<Self::Model> {
     Ok(submitted)
   }
 
-  async fn set_done(&self, tx_id: i32 ) -> sqlx::Result<()> {
+  async fn set_done(&self, tx_id: i32) -> sqlx::Result<()> {
     for r in Self::set_select_tx_id(self.select(), tx_id).all().await? {
       let mut update = Self::update(r);
       update = Self::set_update_status(update, Self::done_status());
@@ -239,7 +301,7 @@ pub trait OnChainTxRequest: SqlxModelHub<Self::Model> {
 #[macro_export]
 macro_rules! impl_on_chain_tx_request {
   ($struct:ident { $($items:tt)* }) => {
-    #[rocket::async_trait(?Send)]
+    #[rocket::async_trait]
     impl OnChainTxRequest for $struct {
       $($items)*
 

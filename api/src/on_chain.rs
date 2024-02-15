@@ -1,10 +1,10 @@
 use super::*;
 
 pub use ethers::{
-  signers::{MnemonicBuilder, LocalWallet, coins_bip39::English, Signer},
-  prelude::{abigen, SignerMiddleware, LogMeta},
-  types::Address,
+  prelude::{abigen, LogMeta, SignerMiddleware},
   providers::{Http, Provider},
+  signers::{coins_bip39::English, LocalWallet, MnemonicBuilder, Signer},
+  types::Address,
   types::U64,
 };
 use std::sync::Arc;
@@ -41,27 +41,36 @@ impl OnChain {
       .password(password)
       .build()?;
 
-   let wallet_address: String = serde_json::to_string(&wallet.address())
-      .and_then(|s| serde_json::from_str::<String>(&s) )
-      .map_err(|_| Error::Init("Could not serialize wallet address to json".to_string()) )?;
+    let wallet_address: String = serde_json::to_string(&wallet.address())
+      .and_then(|s| serde_json::from_str::<String>(&s))
+      .map_err(|_| Error::Init("Could not serialize wallet address to json".to_string()))?;
 
     if wallet_address != config.rsk.admin_address {
-      return Err(Error::Init("Bad wallet password. Address does not match mnemonic.".to_string()));
+      return Err(Error::Init(
+        "Bad wallet password. Address does not match mnemonic.".to_string(),
+      ));
     }
 
     let provider = Provider::<Http>::try_from(&config.rsk.rpc_url)
-      .map_err(|_| Error::Init("Invalid rsk rpc_url in config".to_string()) )?;
+      .map_err(|_| Error::Init("Invalid rsk rpc_url in config".to_string()))?;
 
-    let client = Arc::new(
-      SignerMiddleware::new(provider, wallet.with_chain_id(config.rsk.chain_id))
-    );
-    let address: Address = config.rsk.contract_address.parse()
-      .map_err(|_| Error::Init("Invalid asami contract address in config".to_string()) )?;
+    let client = Arc::new(SignerMiddleware::new(
+      provider,
+      wallet.with_chain_id(config.rsk.chain_id),
+    ));
+    let address: Address = config
+      .rsk
+      .contract_address
+      .parse()
+      .map_err(|_| Error::Init("Invalid asami contract address in config".to_string()))?;
 
-    let doc_address: Address = config.rsk.doc_contract_address.parse()
-      .map_err(|_| Error::Init("Invalid doc contract address in config".to_string()) )?;
+    let doc_address: Address = config
+      .rsk
+      .doc_contract_address
+      .parse()
+      .map_err(|_| Error::Init("Invalid doc contract address in config".to_string()))?;
 
-    Ok(Self{
+    Ok(Self {
       contract: AsamiContract::new(address, client.clone()),
       doc_contract: IERC20::new(doc_address, client),
     })

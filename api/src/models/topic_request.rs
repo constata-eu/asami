@@ -1,6 +1,6 @@
 use super::*;
 
-model!{
+model! {
   state: App,
   table: topic_requests,
   struct TopicRequest {
@@ -15,7 +15,7 @@ model!{
   }
 }
 
-impl_on_chain_tx_request!{ TopicRequestHub {
+impl_on_chain_tx_request! { TopicRequestHub {
   type Model = TopicRequest;
   type Update = UpdateTopicRequestHub;
   type Status = GenericRequestStatus;
@@ -36,6 +36,11 @@ impl_on_chain_tx_request!{ TopicRequestHub {
 
 impl TopicRequestHub {
   pub async fn create(&self, name: &str) -> sqlx::Result<TopicRequest> {
-    self.insert(InsertTopicRequest{ name: name.to_string() }).save().await
+    self
+      .insert(InsertTopicRequest {
+        name: name.to_string(),
+      })
+      .save()
+      .await
   }
 }

@@ -1,6 +1,6 @@
 use super::*;
 
-model!{
+model! {
   state: App,
   table: claim_account_requests,
   struct ClaimAccountRequest {
@@ -28,7 +28,7 @@ model!{
 
 impl_loggable!(ClaimAccountRequest);
 
-impl_on_chain_tx_request!{ ClaimAccountRequestHub {
+impl_on_chain_tx_request! { ClaimAccountRequestHub {
   type Model = ClaimAccountRequest;
   type Update = UpdateClaimAccountRequestHub;
   type Status = GenericRequestStatus;
@@ -49,4 +49,3 @@ impl_on_chain_tx_request!{ ClaimAccountRequestHub {
   fn submitted_status() -> Self::Status { GenericRequestStatus::Submitted }
   fn done_status() -> Self::Status { GenericRequestStatus::Done }
 }}
-

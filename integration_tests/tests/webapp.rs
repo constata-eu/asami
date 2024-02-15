@@ -1,5 +1,5 @@
 #[macro_use]
-mod support;
+pub mod support;
 use ::api::models::*;
 
 browser_test!{ full_flow_to_reward_in_browser (mut d)

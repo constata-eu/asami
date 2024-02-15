@@ -1,4 +1,7 @@
-use super::{*, models::{self, *}};
+use super::{
+  models::{self, *},
+  *,
+};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -8,9 +11,13 @@ pub struct SetPriceRequest {
   id: i32,
   #[graphql(description = "The id of the account that created this.")]
   account_id: String,
-  #[graphql(description = "The numeric id of the handle in the smart contract. Hex encoded uint256.")]
+  #[graphql(
+    description = "The numeric id of the handle in the smart contract. Hex encoded uint256."
+  )]
   handle_id: String,
-  #[graphql(description = "The price for each collab made with this handle. This is the price for a single repost.")]
+  #[graphql(
+    description = "The price for each collab made with this handle. This is the price for a single repost."
+  )]
   price: String,
   #[graphql(description = "Status of this request.")]
   status: GenericRequestStatus,
@@ -34,7 +41,10 @@ impl Showable<models::SetPriceRequest, SetPriceRequestFilter> for SetPriceReques
     }
   }
 
-  fn filter_to_select(context: &Context, filter: Option<SetPriceRequestFilter>) -> models::SelectSetPriceRequest {
+  fn filter_to_select(
+    context: &Context,
+    filter: Option<SetPriceRequestFilter>,
+  ) -> models::SelectSetPriceRequest {
     if let Some(f) = filter {
       models::SelectSetPriceRequest {
         id_in: f.ids,
@@ -53,7 +63,11 @@ impl Showable<models::SetPriceRequest, SetPriceRequestFilter> for SetPriceReques
   }
 
   fn select_by_id(context: &Context, id: i32) -> models::SelectSetPriceRequest {
-    models::SelectSetPriceRequest { id_eq: Some(id), account_id_eq: Some(context.account_id()), ..Default::default() }
+    models::SelectSetPriceRequest {
+      id_eq: Some(id),
+      account_id_eq: Some(context.account_id()),
+      ..Default::default()
+    }
   }
 
   async fn db_to_graphql(d: models::SetPriceRequest) -> AsamiResult<Self> {
@@ -77,13 +91,24 @@ pub struct CreateSetPriceRequestInput {
 
 impl CreateSetPriceRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<SetPriceRequest> {
-    let handle = context.account().await?.handle_scope().id_eq(&self.handle_id).one().await?;
+    let handle = context
+      .account()
+      .await?
+      .handle_scope()
+      .id_eq(&self.handle_id)
+      .one()
+      .await?;
 
-    let req = context.app.set_price_request().insert(InsertSetPriceRequest{
-      account_id: handle.attrs.account_id,
-      handle_id: handle.attrs.id,
-      price: self.price,
-    }).save().await?;
+    let req = context
+      .app
+      .set_price_request()
+      .insert(InsertSetPriceRequest {
+        account_id: handle.attrs.account_id,
+        handle_id: handle.attrs.id,
+        price: self.price,
+      })
+      .save()
+      .await?;
 
     Ok(SetPriceRequest::db_to_graphql(req).await?)
   }

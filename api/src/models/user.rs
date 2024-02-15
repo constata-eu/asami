@@ -1,6 +1,6 @@
 use super::*;
 
-model!{
+model! {
   state: App,
   table: users,
   struct User {
@@ -27,4 +27,3 @@ impl User {
     Ok(first.attrs.account_id.clone())
   }
 }
-

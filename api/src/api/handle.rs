@@ -1,4 +1,7 @@
-use super::{*, models::{self, *}};
+use super::{
+  models::{self, *},
+  *,
+};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -10,11 +13,15 @@ pub struct Handle {
   account_id: String,
   #[graphql(description = "The social network of this handle: X, Instagram, Nostr.")]
   site: Site,
-  #[graphql(description = "The username on the given social network. This may change by the user, it may not be a unique id.")]
+  #[graphql(
+    description = "The username on the given social network. This may change by the user, it may not be a unique id."
+  )]
   username: String,
   #[graphql(description = "The unique user_id in the given social network. This never changes.")]
   user_id: String,
-  #[graphql(description = "The price for each collab made with this handle. This is the price for a single repost.")]
+  #[graphql(
+    description = "The price for each collab made with this handle. This is the price for a single repost."
+  )]
   price: String,
   #[graphql(description = "The score given to this handle by Asami's admin.")]
   score: String,
@@ -60,7 +67,10 @@ impl Showable<models::Handle, HandleFilter> for Handle {
   }
 
   fn select_by_id(_context: &Context, id: String) -> models::SelectHandle {
-    models::SelectHandle { id_eq: Some(id), ..Default::default() }
+    models::SelectHandle {
+      id_eq: Some(id),
+      ..Default::default()
+    }
   }
 
   async fn db_to_graphql(d: models::Handle) -> AsamiResult<Self> {

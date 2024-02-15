@@ -1,4 +1,7 @@
-use super::{*, models::{self, *}};
+use super::{
+  models::{self, *},
+  *,
+};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,7 +45,10 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
     }
   }
 
-  fn filter_to_select(context: &Context, filter: Option<CampaignRequestFilter>) -> models::SelectCampaignRequest {
+  fn filter_to_select(
+    context: &Context,
+    filter: Option<CampaignRequestFilter>,
+  ) -> models::SelectCampaignRequest {
     if let Some(f) = filter {
       models::SelectCampaignRequest {
         id_in: f.ids,
@@ -61,7 +67,11 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
   }
 
   fn select_by_id(context: &Context, id: i32) -> models::SelectCampaignRequest {
-    models::SelectCampaignRequest { id_eq: Some(id), account_id_eq: Some(context.account_id()), ..Default::default() }
+    models::SelectCampaignRequest {
+      id_eq: Some(id),
+      account_id_eq: Some(context.account_id()),
+      ..Default::default()
+    }
   }
 
   async fn db_to_graphql(d: models::CampaignRequest) -> AsamiResult<Self> {
@@ -73,7 +83,7 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
       site: d.attrs.site,
       content_id: d.attrs.content_id,
       created_at: d.attrs.created_at,
-      updated_at:d.attrs.updated_at,
+      updated_at: d.attrs.updated_at,
     })
   }
 }
@@ -87,20 +97,22 @@ pub struct CreateCampaignRequestInput {
   pub account_id: String,
   pub site: Site,
   pub price_score_ratio: String,
-  pub valid_until: UtcDateTime
+  pub valid_until: UtcDateTime,
 }
 
 impl CreateCampaignRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<CampaignRequest> {
     let account = context.app.account().find(&self.account_id).await?;
 
-    let req = account.create_campaign_request(
-      self.site,
-      &self.content_id,
-      u256(self.budget),
-      u256(self.price_score_ratio),
-      self.valid_until,
-    ).await?;
+    let req = account
+      .create_campaign_request(
+        self.site,
+        &self.content_id,
+        u256(self.budget),
+        u256(self.price_score_ratio),
+        self.valid_until,
+      )
+      .await?;
 
     Ok(CampaignRequest::db_to_graphql(req).await?)
   }

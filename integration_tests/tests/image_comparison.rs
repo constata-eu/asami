@@ -1,5 +1,5 @@
 #[macro_use]
-mod support;
+pub mod support;
 
 use image_hasher::{HasherConfig, HashAlg};
 

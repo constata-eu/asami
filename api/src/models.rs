@@ -1,12 +1,16 @@
-use super::*;
 use super::on_chain::{self, AsamiContractSigner, LogMeta};
+use super::*;
+pub use chrono::{DateTime, Datelike, Duration, TimeZone, Utc};
+pub use serde::{Deserialize, Serialize};
 pub use sqlx::{self, types::Decimal};
-pub use serde::{Serialize, Deserialize};
 use sqlx_models_orm::model;
-pub use chrono::{DateTime, Duration, Utc, Datelike, TimeZone};
 pub type UtcDateTime = DateTime<Utc>;
+pub use ethers::{
+  abi::{AbiDecode, AbiEncode},
+  middleware::Middleware,
+  types::{transaction::eip712::TypedData, Signature, H160, H256, U256, U64},
+};
 pub use juniper::GraphQLEnum;
-pub use ethers::{ types::{ U256, U64, H160, H256, Signature, transaction::eip712::TypedData}, abi::{AbiEncode, AbiDecode}, middleware::Middleware};
 use std::str::FromStr;
 
 pub mod hasher;
@@ -76,7 +80,7 @@ make_sql_enum![
   }
 ];
 
-model!{
+model! {
   state: App,
   table: account_users,
   struct AccountUser {
@@ -93,7 +97,7 @@ model!{
  * The authentication strategy will only check that the string exists and has not been used.
  * This token's id is referenced in the lookup key of (at least one) AuthMethod.
  */
-model!{
+model! {
   state: App,
   table: one_time_tokens,
   struct OneTimeToken {
@@ -106,7 +110,7 @@ model!{
   }
 }
 
-model!{
+model! {
   state: App,
   table: collabs,
   struct Collab {
@@ -117,7 +121,7 @@ model!{
     #[sqlx_model_hints(varchar)]
     advertiser_id: String,
     #[sqlx_model_hints(varchar)]
-    handle_id: String, 
+    handle_id: String,
     #[sqlx_model_hints(varchar)]
     member_id: String,
     #[sqlx_model_hints(varchar)]
@@ -130,7 +134,7 @@ model!{
 }
 
 // This is an account profile when taking the Collaborator role.
-model!{
+model! {
   state: App,
   table: indexer_states,
   struct IndexerState {
@@ -147,9 +151,7 @@ model!{
 
 impl IndexerStateHub {
   pub async fn get(&self) -> sqlx::Result<IndexerState> {
-    let Some(existing) = self.find_optional(1).await? else { 
-      return self.insert(InsertIndexerState{id: 1}).save().await
-    };
+    let Some(existing) = self.find_optional(1).await? else { return self.insert(InsertIndexerState{id: 1}).save().await };
     Ok(existing)
   }
 }
@@ -214,8 +216,10 @@ pub fn make_login_to_asami_typed_data(chain_id: u64) -> Result<TypedData, String
 
 pub fn eip_712_sig_to_address(chain_id: u64, signature: &str) -> Result<String, String> {
   let payload = make_login_to_asami_typed_data(chain_id)?;
-  let sig = Signature::from_str(signature).map_err(|_| "invalid_auth_data_signature".to_string())?;
-  sig.recover_typed_data(&payload)
-    .map(|a| a.encode_hex() )
+  let sig =
+    Signature::from_str(signature).map_err(|_| "invalid_auth_data_signature".to_string())?;
+  sig
+    .recover_typed_data(&payload)
+    .map(|a| a.encode_hex())
     .map_err(|_| "could_not_recover_typed_data_from_sig".to_string())
 }

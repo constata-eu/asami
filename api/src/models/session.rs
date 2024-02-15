@@ -1,6 +1,6 @@
 use super::*;
 
-model!{
+model! {
   state: App,
   table: sessions,
   struct Session {
@@ -28,4 +28,3 @@ model!{
     User(user_id),
   }
 }
-

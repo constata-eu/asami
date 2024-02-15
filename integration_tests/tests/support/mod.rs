@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 pub mod selenium;
 pub mod test_api_server;
 pub mod vite_preview;
@@ -120,6 +118,7 @@ macro_rules! api_test {
     test!{ $test_name
       time_test::time_test!("api test");
       let app = crate::support::TestApp::init().await;
+      #[allow(unused_mut)]
       let mut $client = app.client().await;
       {$($e)*};
     }

@@ -1,6 +1,6 @@
 use super::*;
 
-model!{
+model! {
   state: App,
   table: set_score_and_topics_requests,
   struct SetScoreAndTopicsRequest {
@@ -25,7 +25,7 @@ model!{
   }
 }
 
-impl_on_chain_tx_request!{SetScoreAndTopicsRequestHub {
+impl_on_chain_tx_request! {SetScoreAndTopicsRequestHub {
   type Model = SetScoreAndTopicsRequest;
   type Update = UpdateSetScoreAndTopicsRequestHub;
   type Status = GenericRequestStatus;
@@ -54,25 +54,38 @@ impl_on_chain_tx_request!{SetScoreAndTopicsRequestHub {
 }}
 
 impl SetScoreAndTopicsRequestHub {
-  pub async fn create(&self, handle: &Handle, score: U256, topics: &[&Topic]) -> anyhow::Result<SetScoreAndTopicsRequest> {
-    let req = self.insert(InsertSetScoreAndTopicsRequest{
-      score: score.encode_hex(),
-      account_id: handle.account().await?.attrs.id,
-      handle_id: handle.attrs.id.clone(),
-    }).save().await?;
+  pub async fn create(
+    &self,
+    handle: &Handle,
+    score: U256,
+    topics: &[&Topic],
+  ) -> anyhow::Result<SetScoreAndTopicsRequest> {
+    let req = self
+      .insert(InsertSetScoreAndTopicsRequest {
+        score: score.encode_hex(),
+        account_id: handle.account().await?.attrs.id,
+        handle_id: handle.attrs.id.clone(),
+      })
+      .save()
+      .await?;
 
     for t in topics {
-      self.state.set_score_and_topics_request_topic().insert(InsertSetScoreAndTopicsRequestTopic{
-        set_score_and_topics_request_id: req.attrs.id,
-        topic_id: t.attrs.id.clone(),
-      }).save().await?;
+      self
+        .state
+        .set_score_and_topics_request_topic()
+        .insert(InsertSetScoreAndTopicsRequestTopic {
+          set_score_and_topics_request_id: req.attrs.id,
+          topic_id: t.attrs.id.clone(),
+        })
+        .save()
+        .await?;
     }
 
     Ok(req)
   }
 }
 
-model!{
+model! {
   state: App,
   table: set_score_and_topics_request_topics,
   struct SetScoreAndTopicsRequestTopic {

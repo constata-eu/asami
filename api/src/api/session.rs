@@ -1,4 +1,7 @@
-use super::{*, models::{self, *}};
+use super::{
+  models::{self, *},
+  *,
+};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -57,7 +60,11 @@ impl Showable<models::Session, SessionFilter> for Session {
   }
 
   fn select_by_id(context: &Context, id: String) -> models::SelectSession {
-    models::SelectSession { id_eq: Some(id), user_id_eq: Some(context.user_id()), ..Default::default() }
+    models::SelectSession {
+      id_eq: Some(id),
+      user_id_eq: Some(context.user_id()),
+      ..Default::default()
+    }
   }
 
   async fn db_to_graphql(d: models::Session) -> AsamiResult<Self> {

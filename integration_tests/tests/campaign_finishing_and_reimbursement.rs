@@ -1,5 +1,5 @@
 #[macro_use]
-mod support;
+pub mod support;
 use api::on_chain::Signer;
 
 app_test!{ reimburses_to_admin (a) 

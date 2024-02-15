@@ -1,6 +1,6 @@
 use super::*;
 
-model!{
+model! {
   state: App,
   table: handle_requests,
   struct HandleRequest {
@@ -34,9 +34,9 @@ model!{
 
 impl HandleRequestHub {
   pub async fn verify_and_appraise_x(&self) -> AsamiResult<Vec<HandleRequest>> {
-    use twitter_v2::{TwitterApi, authorization::BearerToken, query::*, api_result::*};
     use rust_decimal::prelude::*;
     use tokio::time::*;
+    use twitter_v2::{api_result::*, authorization::BearerToken, query::*, TwitterApi};
 
     let mut handle_requests = vec![];
 
@@ -48,15 +48,27 @@ impl HandleRequestHub {
 
     let mentions = api
       .get_user_mentions(conf.asami_user_id)
-      .since_id(indexer_state.attrs.x_handle_verification_checkpoint.to_u64().unwrap_or(0))
+      .since_id(
+        indexer_state
+          .attrs
+          .x_handle_verification_checkpoint
+          .to_u64()
+          .unwrap_or(0),
+      )
       .max_results(100)
-      .user_fields(vec![ UserField::Id, UserField::Username, UserField::PublicMetrics ])
-      .expansions(vec![ TweetExpansion::AuthorId, ])
-      .send().await?;
+      .user_fields(vec![
+        UserField::Id,
+        UserField::Username,
+        UserField::PublicMetrics,
+      ])
+      .expansions(vec![TweetExpansion::AuthorId])
+      .send()
+      .await?;
 
-    let checkpoint: i64 = mentions.meta()
-      .and_then(|m| m.oldest_id.clone() )
-      .and_then(|i| i.parse().ok() )
+    let checkpoint: i64 = mentions
+      .meta()
+      .and_then(|m| m.oldest_id.clone())
+      .and_then(|i| i.parse().ok())
       .unwrap_or(0);
 
     let mut page = Some(mentions);
@@ -89,7 +101,11 @@ impl HandleRequestHub {
           let score = U256::from(public_metrics.followers_count) * wei("85") / wei("100");
           let price = u256(indexer_state.suggested_price_per_point()) * score;
           handle_requests.push(
-            req.verify(author_id.to_string()).await?.appraise(price, score).await?
+            req
+              .verify(author_id.to_string())
+              .await?
+              .appraise(price, score)
+              .await?,
           );
         }
       }
@@ -97,18 +113,24 @@ impl HandleRequestHub {
       // We only fetch a backlog of 700 tweets.
       // Older mentions are dropped and should be tried again by the users.
       pages += 1;
-      if pages == 5 { break; }
+      if pages == 5 {
+        break;
+      }
       tokio::time::sleep(Duration::from_millis(3 * 60 * 1000)).await;
       page = mentions.next_page().await?;
     }
 
-    indexer_state.update().x_handle_verification_checkpoint(checkpoint).save().await?;
+    indexer_state
+      .update()
+      .x_handle_verification_checkpoint(checkpoint)
+      .save()
+      .await?;
 
     Ok(handle_requests)
   }
 }
 
-impl_on_chain_tx_request!{HandleRequestHub {
+impl_on_chain_tx_request! {HandleRequestHub {
   type Model = HandleRequest;
   type Update = UpdateHandleRequestHub;
   type Status = HandleRequestStatus;
@@ -119,13 +141,13 @@ impl_on_chain_tx_request!{HandleRequestHub {
 
     let price = a.price.as_ref().map(u256).unwrap_or_else(|| u("0"));
     let score = a.score.as_ref().map(u256).unwrap_or_else(|| u("0"));
-    let user_id = a.user_id.clone().unwrap_or_else(String::new);
+    let user_id = a.user_id.clone().unwrap_or_default();
 
     let topics: Vec<U256> = model.topic_ids().await?.iter().map(u256).collect();
 
     Ok(Self::Param {
       id: 0.into(),
-      account_id: u256(&a.account_id), 
+      account_id: u256(&a.account_id),
       site: a.site as u8,
       price,
       score,
@@ -150,29 +172,39 @@ impl_on_chain_tx_request!{HandleRequestHub {
   fn done_status() -> Self::Status { HandleRequestStatus::Done }
 }}
 
-
 impl HandleRequest {
   pub async fn verify(self, user_id: String) -> sqlx::Result<Self> {
-    self.update()
+    self
+      .update()
       .user_id(Some(user_id))
       .status(HandleRequestStatus::Verified)
-      .save().await
+      .save()
+      .await
   }
 
   pub async fn appraise(self, price: U256, score: U256) -> sqlx::Result<Self> {
-    self.update()
+    self
+      .update()
       .price(Some(price.encode_hex()))
       .score(Some(score.encode_hex()))
       .status(HandleRequestStatus::Appraised)
-      .save().await
+      .save()
+      .await
   }
 
   pub async fn topic_ids(&self) -> sqlx::Result<Vec<String>> {
-    Ok(self.handle_request_topic_vec().await?.into_iter().map(|t| t.attrs.topic_id ).collect())
+    Ok(
+      self
+        .handle_request_topic_vec()
+        .await?
+        .into_iter()
+        .map(|t| t.attrs.topic_id)
+        .collect(),
+    )
   }
 }
 
-model!{
+model! {
   state: App,
   table: handle_request_topics,
   struct HandleRequestTopic {
@@ -192,6 +224,6 @@ make_sql_enum![
     Verified,   // Verified off-chain.
     Appraised,  // Appraised off-chain.
     Submitted,  // Sent, after this we listen for events regarding this handle.
-    Done,     // Local DB knows this handle is now on-chain.
+    Done,       // Local DB knows this handle is now on-chain.
   }
 ];

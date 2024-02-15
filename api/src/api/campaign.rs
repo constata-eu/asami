@@ -1,4 +1,7 @@
-use super::{*, models::{self, *}};
+use super::{
+  models::{self, *},
+  *,
+};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -12,7 +15,9 @@ pub struct Campaign {
   budget: String,
   #[graphql(description = "The amount remaining from the given budget.")]
   remaining: String,
-  #[graphql(description = "The campaign is finished when it spends all its budget, or when the remaining amount is refunded to the advertiser")]
+  #[graphql(
+    description = "The campaign is finished when it spends all its budget, or when the remaining amount is refunded to the advertiser"
+  )]
   finished: bool,
   #[graphql(description = "Unspent budget can be reimbursed after this date.")]
   valid_until: UtcDateTime,
@@ -23,7 +28,7 @@ pub struct Campaign {
   #[graphql(description = "The date in which this campaign was created.")]
   created_at: UtcDateTime,
   #[graphql(description = "The last time this campaign received an update.")]
-  updated_at: Option<UtcDateTime>
+  updated_at: Option<UtcDateTime>,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -37,11 +42,25 @@ pub struct CampaignFilter {
   available_to_account_id: Option<String>,
 }
 
-async fn make_available_to_account_id_filter(context: &Context, account_id: String) -> FieldResult<CampaignFilter> {
-  let offers = context.app.account().find(account_id).await?
-    .campaign_offers().await?
-    .into_iter().map(|x| x.attrs.id ).collect();
-  Ok(CampaignFilter{ finished_eq: Some(false), ids: Some(offers), ..Default::default() })
+async fn make_available_to_account_id_filter(
+  context: &Context,
+  account_id: String,
+) -> FieldResult<CampaignFilter> {
+  let offers = context
+    .app
+    .account()
+    .find(account_id)
+    .await?
+    .campaign_offers()
+    .await?
+    .into_iter()
+    .map(|x| x.attrs.id)
+    .collect();
+  Ok(CampaignFilter {
+    finished_eq: Some(false),
+    ids: Some(offers),
+    ..Default::default()
+  })
 }
 
 #[rocket::async_trait]
@@ -61,19 +80,32 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     per_page: Option<i32>,
     sort_field: Option<String>,
     sort_order: Option<String>,
-    filter: Option<CampaignFilter>
+    filter: Option<CampaignFilter>,
   ) -> FieldResult<Vec<Self>> {
-    if let Some(account_id) = filter.as_ref().and_then(|f| f.available_to_account_id.clone() ) {
+    if let Some(account_id) = filter
+      .as_ref()
+      .and_then(|f| f.available_to_account_id.clone())
+    {
       let id_filter = make_available_to_account_id_filter(context, account_id).await?;
-      Self::base_collection(context, page, per_page, sort_field, sort_order, Some(id_filter)).await
+      Self::base_collection(
+        context,
+        page,
+        per_page,
+        sort_field,
+        sort_order,
+        Some(id_filter),
+      )
+      .await
     } else {
       Self::base_collection(context, page, per_page, sort_field, sort_order, filter).await
     }
   }
 
-  async fn count(context: &Context, filter: Option<CampaignFilter>) -> FieldResult<ListMetadata>
-  {
-    if let Some(account_ids) = filter.as_ref().and_then(|f| f.available_to_account_id.clone() ) {
+  async fn count(context: &Context, filter: Option<CampaignFilter>) -> FieldResult<ListMetadata> {
+    if let Some(account_ids) = filter
+      .as_ref()
+      .and_then(|f| f.available_to_account_id.clone())
+    {
       let ids_filter = make_available_to_account_id_filter(context, account_ids).await?;
       Self::base_count(context, Some(ids_filter)).await
     } else {
@@ -81,7 +113,10 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     }
   }
 
-  fn filter_to_select(_context: &Context, filter: Option<CampaignFilter>) -> models::SelectCampaign {
+  fn filter_to_select(
+    _context: &Context,
+    filter: Option<CampaignFilter>,
+  ) -> models::SelectCampaign {
     if let Some(f) = filter {
       models::SelectCampaign {
         id_in: f.ids,
@@ -97,7 +132,10 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
   }
 
   fn select_by_id(_context: &Context, id: String) -> models::SelectCampaign {
-    models::SelectCampaign { id_eq: Some(id), ..Default::default() }
+    models::SelectCampaign {
+      id_eq: Some(id),
+      ..Default::default()
+    }
   }
 
   async fn db_to_graphql(d: models::Campaign) -> AsamiResult<Self> {
@@ -111,7 +149,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
       site: d.attrs.site,
       content_id: d.attrs.content_id,
       created_at: d.attrs.created_at,
-      updated_at:d.attrs.updated_at,
+      updated_at: d.attrs.updated_at,
     })
   }
 }

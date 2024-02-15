@@ -1,6 +1,6 @@
 use super::*;
 
-model!{
+model! {
   state: App,
   table: auth_methods,
   struct AuthMethod {
@@ -36,7 +36,7 @@ impl AuthMethodKind {
       "Nostr" => Some(AuthMethodKind::Nostr),
       "Eip712" => Some(AuthMethodKind::Eip712),
       "OneTimeToken" => Some(AuthMethodKind::OneTimeToken),
-      _ => None
+      _ => None,
     }
   }
 }

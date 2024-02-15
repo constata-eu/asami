@@ -1,6 +1,6 @@
 use super::*;
 
-model!{
+model! {
   state: App,
   table: audit_log_entries,
   struct AuditLogEntry {
@@ -24,12 +24,26 @@ model!{
 }
 
 impl AuditLogEntryHub {
-  pub async fn info<S: serde::Serialize>(&self, kind: &str, subkind: &str, context: S) -> sqlx::Result<AuditLogEntry> {
-    self.log(AuditLogSeverity::Info, kind, subkind, context, None, None).await
+  pub async fn info<S: serde::Serialize>(
+    &self,
+    kind: &str,
+    subkind: &str,
+    context: S,
+  ) -> sqlx::Result<AuditLogEntry> {
+    self
+      .log(AuditLogSeverity::Info, kind, subkind, context, None, None)
+      .await
   }
 
-  pub async fn fail<S: serde::Serialize>(&self, kind: &str, subkind: &str, context: S) -> sqlx::Result<AuditLogEntry> {
-    self.log(AuditLogSeverity::Fail, kind, subkind, context, None, None).await
+  pub async fn fail<S: serde::Serialize>(
+    &self,
+    kind: &str,
+    subkind: &str,
+    context: S,
+  ) -> sqlx::Result<AuditLogEntry> {
+    self
+      .log(AuditLogSeverity::Fail, kind, subkind, context, None, None)
+      .await
   }
 
   pub async fn log<S: serde::Serialize>(
@@ -41,20 +55,25 @@ impl AuditLogEntryHub {
     loggable_type: Option<String>,
     loggable_id: Option<String>,
   ) -> sqlx::Result<AuditLogEntry> {
-    let context = serde_json::to_string(&context_obj)
-      .unwrap_or_else(|reference| serde_json::json![{
+    let context = serde_json::to_string(&context_obj).unwrap_or_else(|reference| {
+      serde_json::json![{
         "error": "could not serialize context",
         "reference": reference.to_string(),
-      }].to_string());
+      }]
+      .to_string()
+    });
 
-    self.insert(InsertAuditLogEntry{
-      severity,
-      context,
-      kind: kind.to_string(),
-      subkind: subkind.to_string(),
-      loggable_type,
-      loggable_id,
-    }).save().await
+    self
+      .insert(InsertAuditLogEntry {
+        severity,
+        context,
+        kind: kind.to_string(),
+        subkind: subkind.to_string(),
+        loggable_type,
+        loggable_id,
+      })
+      .save()
+      .await
   }
 }
 
@@ -76,30 +95,56 @@ pub trait Loggable: Send {
   fn app(&self) -> &App;
 
   async fn audit_log_entries(&self) -> sqlx::Result<Vec<AuditLogEntry>> {
-    self.app().audit_log_entry().select()
+    self
+      .app()
+      .audit_log_entry()
+      .select()
       .loggable_type_eq(self.loggable_type())
       .loggable_id_eq(self.loggable_id())
-      .all().await
+      .all()
+      .await
   }
 
-  async fn info<S: serde::Serialize + Send>(&self, subkind: &str, context: S) -> sqlx::Result<AuditLogEntry> {
+  async fn info<S: serde::Serialize + Send>(
+    &self,
+    subkind: &str,
+    context: S,
+  ) -> sqlx::Result<AuditLogEntry> {
     self.log(AuditLogSeverity::Info, subkind, context).await
   }
 
-  async fn fail<S: serde::Serialize + Send>(&self, subkind: &str, context: S) -> sqlx::Result<AuditLogEntry> {
+  async fn fail<S: serde::Serialize + Send>(
+    &self,
+    subkind: &str,
+    context: S,
+  ) -> sqlx::Result<AuditLogEntry> {
     self.log(AuditLogSeverity::Fail, subkind, context).await
   }
 
-  async fn log<S: serde::Serialize + Send>(&self, severity: AuditLogSeverity, subkind: &str, context: S) -> sqlx::Result<AuditLogEntry> {
-    self.app().audit_log_entry()
-      .log(severity, &self.loggable_type(), subkind, context, Some(self.loggable_type()), Some(self.loggable_id()))
+  async fn log<S: serde::Serialize + Send>(
+    &self,
+    severity: AuditLogSeverity,
+    subkind: &str,
+    context: S,
+  ) -> sqlx::Result<AuditLogEntry> {
+    self
+      .app()
+      .audit_log_entry()
+      .log(
+        severity,
+        &self.loggable_type(),
+        subkind,
+        context,
+        Some(self.loggable_type()),
+        Some(self.loggable_id()),
+      )
       .await
   }
 }
 
 #[macro_export]
 macro_rules! impl_loggable {
-  ($model:ident) => (
+  ($model:ident) => {
     impl $crate::models::audit_log_entry::Loggable for $model {
       fn loggable_type(&self) -> String {
         stringify!($model).to_string()
@@ -113,5 +158,5 @@ macro_rules! impl_loggable {
         &self.state
       }
     }
-  )
+  };
 }

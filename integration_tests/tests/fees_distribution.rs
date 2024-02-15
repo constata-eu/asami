@@ -1,5 +1,5 @@
 #[macro_use]
-mod support;
+pub mod support;
 use ethers::signers::Signer;
 
 app_test!{ distributes_fees_to_holders (a) 

@@ -1,4 +1,7 @@
-use super::{*, models::{self, *}};
+use super::{
+  models::{self, *},
+  *,
+};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -31,7 +34,10 @@ impl Showable<models::CampaignPreference, CampaignPreferenceFilter> for Campaign
     }
   }
 
-  fn filter_to_select(context: &Context, filter: Option<CampaignPreferenceFilter>) -> models::SelectCampaignPreference {
+  fn filter_to_select(
+    context: &Context,
+    filter: Option<CampaignPreferenceFilter>,
+  ) -> models::SelectCampaignPreference {
     if let Some(f) = filter {
       models::SelectCampaignPreference {
         account_id_eq: Some(context.account_id()),
@@ -49,7 +55,11 @@ impl Showable<models::CampaignPreference, CampaignPreferenceFilter> for Campaign
   }
 
   fn select_by_id(context: &Context, id: i32) -> models::SelectCampaignPreference {
-    models::SelectCampaignPreference { id_eq: Some(id), account_id_eq: Some(context.account_id()), ..Default::default() }
+    models::SelectCampaignPreference {
+      id_eq: Some(id),
+      account_id_eq: Some(context.account_id()),
+      ..Default::default()
+    }
   }
 
   async fn db_to_graphql(d: models::CampaignPreference) -> AsamiResult<Self> {
@@ -73,26 +83,44 @@ pub struct CreateCampaignPreferenceInput {
 
 impl CreateCampaignPreferenceInput {
   pub async fn process(self, context: &Context) -> FieldResult<CampaignPreference> {
-    let maybe = context.app.campaign_preference().select()
+    let maybe = context
+      .app
+      .campaign_preference()
+      .select()
       .account_id_eq(context.account_id())
       .campaign_id_eq(self.campaign_id.clone())
-      .optional().await?;
+      .optional()
+      .await?;
 
-    let not_interested_on = if self.not_interested { Some(Utc::now()) } else { None };
-    let attempted_on = if self.attempted { Some(Utc::now()) } else { None };
+    let not_interested_on = if self.not_interested {
+      Some(Utc::now())
+    } else {
+      None
+    };
+    let attempted_on = if self.attempted {
+      Some(Utc::now())
+    } else {
+      None
+    };
 
     let preference = if let Some(p) = maybe {
       p.update()
         .not_interested_on(not_interested_on)
         .attempted_on(attempted_on)
-        .save().await?
+        .save()
+        .await?
     } else {
-      context.app.campaign_preference().insert(InsertCampaignPreference{
-        account_id: context.account_id(),
-        campaign_id: self.campaign_id.clone(),
-        not_interested_on,
-        attempted_on,
-      }).save().await?
+      context
+        .app
+        .campaign_preference()
+        .insert(InsertCampaignPreference {
+          account_id: context.account_id(),
+          campaign_id: self.campaign_id.clone(),
+          not_interested_on,
+          attempted_on,
+        })
+        .save()
+        .await?
     };
 
     Ok(CampaignPreference::db_to_graphql(preference).await?)

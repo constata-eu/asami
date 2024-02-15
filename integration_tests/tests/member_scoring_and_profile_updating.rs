@@ -1,5 +1,5 @@
 #[macro_use]
-mod support;
+pub mod support;
 use support::TestApp;
 use api::models::*;
 

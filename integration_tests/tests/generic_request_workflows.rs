@@ -1,5 +1,5 @@
 #[macro_use]
-mod support;
+pub mod support;
 use api::models::*;
 
 app_test!{ logs_on_chain_txs (a) 

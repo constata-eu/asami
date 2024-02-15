@@ -1,7 +1,6 @@
 use super::*;
 
-
-model!{
+model! {
   state: App,
   table: campaign_preferences,
   struct CampaignPreference {

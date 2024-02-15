@@ -1,5 +1,4 @@
-use juniper::{FieldError, IntoFieldError, ScalarValue, graphql_value};
-use std::error::Error as ErrorTrait;
+use juniper::{graphql_value, FieldError, IntoFieldError, ScalarValue};
 use rocket::{
   http::Status,
   request::Request,
@@ -7,6 +6,7 @@ use rocket::{
   serde::json::{json, Json},
   warn,
 };
+use std::error::Error as ErrorTrait;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -36,13 +36,17 @@ impl Error {
 
 impl<A: ethers::middleware::Middleware> From<ethers::contract::ContractError<A>> for Error {
   fn from(err: ethers::contract::ContractError<A>) -> Error {
-    let desc = err.decode_revert::<String>().unwrap_or_else(|| format!("{:?}.{:?}", err, err.source()));
+    let desc = err
+      .decode_revert::<String>()
+      .unwrap_or_else(|| format!("{:?}.{:?}", err, err.source()));
     Error::Service("rsk_contract".into(), desc)
   }
 }
 
-impl<M: ethers::providers::Middleware, S: ethers::signers::Signer> From<ethers::middleware::signer::SignerMiddlewareError<M,S>> for Error {
-  fn from(err: ethers::middleware::signer::SignerMiddlewareError<M,S>) -> Error {
+impl<M: ethers::providers::Middleware, S: ethers::signers::Signer>
+  From<ethers::middleware::signer::SignerMiddlewareError<M, S>> for Error
+{
+  fn from(err: ethers::middleware::signer::SignerMiddlewareError<M, S>) -> Error {
     Error::Service("rsk_api".into(), err.to_string())
   }
 }
@@ -112,7 +116,7 @@ impl<S: ScalarValue> IntoFieldError<S> for Error {
           &self,
           &self.source()
         );
-        FieldError::new( "unexpected error", graphql_value!(None))
+        FieldError::new("unexpected error", graphql_value!(None))
       }
     }
   }
@@ -121,7 +125,7 @@ impl<S: ScalarValue> IntoFieldError<S> for Error {
 impl<'r> Responder<'r, 'static> for Error {
   fn respond_to(self, request: &'r Request<'_>) -> response::Result<'static> {
     let response = match self {
-      Error::Validation( field, message ) => (
+      Error::Validation(field, message) => (
         Status::UnprocessableEntity,
         Json(json![{"error": { "field": field, "message": message}}]),
       ),

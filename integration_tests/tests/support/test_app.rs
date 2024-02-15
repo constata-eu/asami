@@ -25,7 +25,7 @@ pub struct TestApp {
 
 impl TestApp {
   pub async fn init() -> Self {
-    let mut config = AppConfig::default().expect("config to exist");
+    let mut config = AppConfig::default_figment().expect("config to exist");
 
     Command::new("sqlx")
       .current_dir("../api")
