@@ -44,30 +44,30 @@ impl Showable<models::SetPriceRequest, SetPriceRequestFilter> for SetPriceReques
   fn filter_to_select(
     context: &Context,
     filter: Option<SetPriceRequestFilter>,
-  ) -> models::SelectSetPriceRequest {
+  ) -> FieldResult<models::SelectSetPriceRequest> {
     if let Some(f) = filter {
-      models::SelectSetPriceRequest {
+      Ok(models::SelectSetPriceRequest {
         id_in: f.ids,
-        account_id_eq: Some(context.account_id()),
+        account_id_eq: Some(context.account_id()?),
         status_in: f.status_in,
         id_eq: f.id_eq,
         handle_id_eq: f.handle_id_eq,
         ..Default::default()
-      }
+      })
     } else {
-      models::SelectSetPriceRequest {
-        account_id_eq: Some(context.account_id()),
+      Ok(models::SelectSetPriceRequest {
+        account_id_eq: Some(context.account_id()?),
         ..Default::default()
-      }
+      })
     }
   }
 
-  fn select_by_id(context: &Context, id: i32) -> models::SelectSetPriceRequest {
-    models::SelectSetPriceRequest {
+  fn select_by_id(context: &Context, id: i32) -> FieldResult<models::SelectSetPriceRequest> {
+    Ok(models::SelectSetPriceRequest {
       id_eq: Some(id),
-      account_id_eq: Some(context.account_id()),
+      account_id_eq: Some(context.account_id()?),
       ..Default::default()
-    }
+    })
   }
 
   async fn db_to_graphql(d: models::SetPriceRequest) -> AsamiResult<Self> {

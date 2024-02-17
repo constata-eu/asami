@@ -42,183 +42,41 @@ fontFaces.push(` @font-face {
 
 import _ from 'lodash';
 
-const darkPink = '#fc6b70';
-const regularPink = '#fc798f';
-const darkBlue = '#13445d';
+export const light = '#fafafb';
+export const green = '#2ec4b6';
+export const yellow = '#ff9f1c';
+export const dark = '#011627';
+export const red = '#e71d36';
+// Opacity: 7%.
+//
 
-export default createTheme(
-  merge({}, defaultTheme, {
+const theme = {
+  ...defaultTheme,
   typography: {
     fontFamily: '"LeagueSpartanLight", serif',
-    allVariants: {
-      color: darkBlue,
-    },
   },
   palette: {
-    primary: {
-      main: regularPink,
-      light: '#fff',
-      contrastText: '#fff',
-      otherContrastText: '#000',
-    },
-    secondary: {
-      main: '#1f4668',
-    },
-    inverted: {
-      main: '#fafafa',
-      light: '#13445d',
-      contrastText: '#13445d',
-      otherContrastText: '#000',
-    },
-    highlight: {
-      main: darkBlue,
-      light: '#fff',
-      contrastText: '#fff',
-      otherContrastText: '#000',
-    },
+    mode: 'dark',
+    primary: { main: green },
+    secondary: { main: yellow },
+    inverted: { main: light },
+    error: { main: red },
   },
   components: {
-    MuiCssBaseline: {
-      styleOverrides: fontFaces.join("\n")
-    },
-    MuiCard: {
+    MuiBox: {
       styleOverrides: {
-        root: {
-          boxShadow: `4px 3px 0px 3px ${regularPink}`,
-          borderRadius: "0.9375rem !important",
-          borderWidth: "2px",
-          borderStyle: "solid",
-          borderColor: darkPink,
-        },
-      }
-    },
-    MuiCardActions: {
-      styleOverrides: {
-        spacing: {
-          margin: "0 1em 2em 1em ",
-          padding: 0,
-        },
-      }
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          borderRadius: "4px 0 4px 0",
-        },
-      }
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: "9999px",
-          textTransform: "none",
-          fontWeight: "400",
-        },
-        contained: {
-          boxShadow: "none",
-        },
-        outlined: {
-          border: "2px solid",
-          '&:hover': {
-            borderWidth: "2px",
-          },
-        },
-      }
-    },
-    RaListToolbar: {
-      styleOverrides: {
-        root: {
-          marginBottom: "1em",
-          marginTop: "1em",
-        },
-      }
-    },
-    RaFilterForm: {
-      styleOverrides: {
-        root: {
-          marginLeft: "1em",
-        },
-      }
-    },
-    RaList: {
-      styleOverrides: {
-        root: {
-          "overflow": "auto",
-          "& .RaList-content": {
-            borderRadius: "0 !important",
-            borderWidth: "0",
-            boxShadow: "none !important",
-          }
-        },
-      }
-    },
-    RaSimpleShowLayout: {
-      styleOverrides: {
-        root: {
-          "& .RaSimpleShowLayout-stack": {
-            flexDirection: "row",
-            flexWrap: "wrap",
-          },
-          "& .RaSimpleShowLayout-row": {
-            borderRadius: "4px",
-            background: "#f0f0f0",
-            padding: "0.5em",
-            margin: "0.5em 0.5em 0 0",
-          }
-        },
-      }
-    },
-    RaShow: {
-      styleOverrides: {
-        root: {
-          "& pre": {
-            whiteSpace: "break-spaces",
-          },
-          "& .RaShow-card": {
-            borderRadius: "0 !important",
-            borderWidth: "0",
-            boxShadow: "none !important",
-          }
-        },
-      }
-    },
-    MuiTableBody: {
-      styleOverrides: {
-        root: {
-          "& .column-createdAt": {
-            minWidth: 130,
-          },
-          "& .params": {
-            display: "flex",
-            flexWrap: "wrap",
-          },
-          "& .column-params": {
-            minWidth: "300px",
-            maxWidth: "400px",
-          },
-          "& .column-rowNumber": {
-            maxWidth: "100px",
-          },
-          "& .column-statistics": {
-            minWidth: "140px",
-          },
-          "& .column-copyLink": {
-            display: "block",
-            minWidth: "100px",
-          }
+        "& iframe body": {
+          background: "red",
         }
       }
     },
-    MuiAppBar: {
-      styleOverrides: {
-        root: {
-          background: "#fff",
-          boxShadow: "none"
-        },
-      }
-    }
-  },
-}));
+    MuiCssBaseline: {
+      styleOverrides: `.twitter-tweet iframe { border-radius: 13px; } ${fontFaces.join("\n")}`
+    },
+  }
+};
+
+export default theme;
 
 export const Head1 = styled("h1")(({ theme }) => ({
   fontFamily: "'LeagueSpartanBold'",
@@ -233,7 +91,7 @@ export const Head1 = styled("h1")(({ theme }) => ({
 
 export const Head2 = styled("h2")(({ theme }) => ({
   fontFamily: "'LeagueSpartanBold'",
-  color: darkBlue,
+  color: light,
   fontSize: "20px",
   lineHeight: "1.1em",
   letterSpacing: "-0.05em",
@@ -247,7 +105,7 @@ export const CardTitle = ({text, ...props}) => {
   const [theme] = useTheme();
   const translate = useTranslate();
 
-  return(<Box {...props} sx={{ p: 2, borderBottom: "2px solid", borderColor: darkPink }}>
+  return(<Box {...props} sx={{ p: 2, borderBottom: "2px solid", borderColor: green }}>
     <Head2>{ translate(text, { _: text }) }</Head2>
     { props.children }
   </Box>)

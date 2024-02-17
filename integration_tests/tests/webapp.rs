@@ -2,6 +2,57 @@
 pub mod support;
 use ::api::models::*;
 
+browser_test!{ shows_campaigns_in_dashboard (mut d)
+  let a = d.test_app();
+  let advertiser = a.client().await;
+  let account = advertiser.account().await;
+  let valid_until = Utc::now() + chrono::Duration::days(10);
+
+  for post in &[
+    "1716421161867710954",
+    "1758208064467935359",
+    "1758116416606163059",
+    "1752961229407375400",
+    "1758192957386342435",
+    "1758192965703647443",
+    "1758506690213732795",
+  ] {
+    account.create_campaign_request(models::Site::X, post, u("100"), u("1"), valid_until)
+      .await.unwrap().pay()
+      .await.unwrap();
+  }
+
+  for post in &[
+    "C2w6_ThRgkY",
+    "C3TJIgLgULU",
+    "C3PuyCPKNWT",
+    "C3GOsATrTTb",
+    "C3Ai4_KLqo7",
+    "C3SaabGsI1j",
+    "C222POpvKho",
+  ] {
+    account.create_campaign_request(models::Site::Instagram, post, u("100"), u("1"), valid_until)
+      .await.unwrap().pay()
+      .await.unwrap();
+  }
+
+  a.run_idempotent_background_tasks_a_few_times().await;
+
+  a.app.ig_crawl().do_everything().await.unwrap();
+  let crawl = a.app.ig_crawl().find(1).await?;
+
+  assert_eq!(*crawl.processed_for_campaign_rules(), false);
+
+  try_until(100, 5000, "no ig crawl", || async {
+    a.app.ig_crawl().do_everything().await.unwrap();
+    *crawl.reloaded().await.unwrap().processed_for_campaign_rules()
+  }).await;
+
+
+  d.goto("http://127.0.0.1:5173").await;
+  wait_here();
+}
+
 browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.signup_with_one_time_token().await;
 

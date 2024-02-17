@@ -73,8 +73,13 @@ impl Selenium<'_> {
     driver.maximize_window().await.expect("to maximize window");
     Selenium{child, driver, api}
   }
+
   pub fn app(&self) -> api::App {
     self.api.app()
+  }
+
+  pub fn test_app(&self) -> &super::TestApp {
+    self.api.test_app
   }
 
   pub async fn wait_for(&self, selector: &str) -> WebElement {
@@ -117,12 +122,6 @@ impl Selenium<'_> {
     gone.expect(&format!("{selector} was still displayed"));
   }
 
-  /*
-  pub async fn not_exists(&self, selector: &str) {
-    self.driver.query(By::Css(selector)).not_exists().await.expect(&format!("{selector} exists"));
-  }
-  */
-
   pub async fn click(&self, selector: &str) {
     let elem = self.wait_for(selector).await;
     elem.wait_until().enabled().await.expect(&format!("{selector} not clickable"));
@@ -136,27 +135,6 @@ impl Selenium<'_> {
     elem.send_keys(value).await.expect(&format!("Error sending {value} to {selector}"));
   }
 
-  /*
-  pub async fn delete_letters_and_send_new_keys(&self, selector: &str, times: i32, new_keys: &str) {
-    let element = self.driver.find(By::Css(selector)).await.expect("to find {selector} for deletion");
-    for _ in 0..times {
-      let _ = element.send_keys(Key::Backspace.to_string()).await;
-    }
-    self.driver.find(By::Css(selector)).await
-      .expect("to find {selector} after deletion and possible redraw.")
-      .send_keys(new_keys).await
-      .expect(&format!("to fill in {selector}")); 
-  }
-  */
-
-  /*
-  pub async fn close_window_and_go_to_handle_zero(&self) {
-    let handles = self.driver.windows().await.expect("to get the window handles");
-    self.driver.close_window().await.expect("to close window");
-    self.driver.switch_to_window(handles[0].clone()).await.expect("to switch window zero");
-  }
-  */
-
   pub async fn open_metamask(&self) {
     self.goto("chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/popup.html").await;
   }
@@ -169,22 +147,6 @@ impl Selenium<'_> {
     let _dontcare = self.driver.quit().await;
     let _dontcare_either = self.child.kill();
   }
-
-  /*
-  pub async fn select_dropdown_item(&self, selector: &str, i: i32) {
-    self.click(selector).await;
-    let mut chain = self.driver.action_chain();
-
-    for _ in 0..i {
-      chain = chain.key_down(thirtyfour::Key::Down)
-      .key_up(thirtyfour::Key::Down);
-    }
-
-    chain.key_down(thirtyfour::Key::Enter)
-      .key_up(thirtyfour::Key::Enter)
-      .perform().await.expect("to select item sucessfully");
-  }
-  */
 
   pub async fn signup_with_one_time_token(&self) {
     self.api.test_app.app.one_time_token()

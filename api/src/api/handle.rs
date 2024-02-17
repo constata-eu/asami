@@ -47,9 +47,9 @@ impl Showable<models::Handle, HandleFilter> for Handle {
     }
   }
 
-  fn filter_to_select(context: &Context, filter: Option<HandleFilter>) -> models::SelectHandle {
+  fn filter_to_select(_context: &Context, filter: Option<HandleFilter>) -> FieldResult<models::SelectHandle> {
     if let Some(f) = filter {
-      models::SelectHandle {
+      Ok(models::SelectHandle {
         id_in: f.ids,
         account_id_eq: f.account_id_eq,
         id_eq: f.id_eq,
@@ -57,20 +57,17 @@ impl Showable<models::Handle, HandleFilter> for Handle {
         user_id_like: f.user_id_like,
         site_eq: f.site_eq,
         ..Default::default()
-      }
+      })
     } else {
-      models::SelectHandle {
-        account_id_eq: Some(context.account_id()),
-        ..Default::default()
-      }
+      Ok(Default::default())
     }
   }
 
-  fn select_by_id(_context: &Context, id: String) -> models::SelectHandle {
-    models::SelectHandle {
+  fn select_by_id(_context: &Context, id: String) -> FieldResult<models::SelectHandle> {
+    Ok(models::SelectHandle {
       id_eq: Some(id),
       ..Default::default()
-    }
+    })
   }
 
   async fn db_to_graphql(d: models::Handle) -> AsamiResult<Self> {

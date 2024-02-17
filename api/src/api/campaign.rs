@@ -116,26 +116,23 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
   fn filter_to_select(
     _context: &Context,
     filter: Option<CampaignFilter>,
-  ) -> models::SelectCampaign {
+  ) -> FieldResult<models::SelectCampaign> {
     if let Some(f) = filter {
-      models::SelectCampaign {
+      Ok(models::SelectCampaign {
         id_in: f.ids,
         account_id_eq: f.account_id_eq,
         id_eq: f.id_eq,
         finished_eq: f.finished_eq,
         content_id_like: into_like_search(f.content_id_like),
         ..Default::default()
-      }
+      })
     } else {
-      Default::default()
+      Ok(Default::default())
     }
   }
 
-  fn select_by_id(_context: &Context, id: String) -> models::SelectCampaign {
-    models::SelectCampaign {
-      id_eq: Some(id),
-      ..Default::default()
-    }
+  fn select_by_id(_context: &Context, id: String) -> FieldResult<models::SelectCampaign> {
+    Ok(models::SelectCampaign { id_eq: Some(id), ..Default::default() })
   }
 
   async fn db_to_graphql(d: models::Campaign) -> AsamiResult<Self> {

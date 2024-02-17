@@ -48,30 +48,30 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
   fn filter_to_select(
     context: &Context,
     filter: Option<CampaignRequestFilter>,
-  ) -> models::SelectCampaignRequest {
+  ) -> FieldResult<models::SelectCampaignRequest> {
     if let Some(f) = filter {
-      models::SelectCampaignRequest {
+      Ok(models::SelectCampaignRequest {
         id_in: f.ids,
-        account_id_eq: Some(context.account_id()),
+        account_id_eq: Some(context.account_id()?),
         status_in: f.status_in,
         id_eq: f.id_eq,
         content_id_like: into_like_search(f.content_id_like),
         ..Default::default()
-      }
+      })
     } else {
-      models::SelectCampaignRequest {
-        account_id_eq: Some(context.account_id()),
+      Ok(models::SelectCampaignRequest {
+        account_id_eq: Some(context.account_id()?),
         ..Default::default()
-      }
+      })
     }
   }
 
-  fn select_by_id(context: &Context, id: i32) -> models::SelectCampaignRequest {
-    models::SelectCampaignRequest {
+  fn select_by_id(context: &Context, id: i32) -> FieldResult<models::SelectCampaignRequest> {
+    Ok(models::SelectCampaignRequest {
       id_eq: Some(id),
-      account_id_eq: Some(context.account_id()),
+      account_id_eq: Some(context.account_id()?),
       ..Default::default()
-    }
+    })
   }
 
   async fn db_to_graphql(d: models::CampaignRequest) -> AsamiResult<Self> {

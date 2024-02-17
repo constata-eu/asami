@@ -38,30 +38,30 @@ impl Showable<models::ClaimAccountRequest, ClaimAccountRequestFilter> for ClaimA
   fn filter_to_select(
     context: &Context,
     filter: Option<ClaimAccountRequestFilter>,
-  ) -> models::SelectClaimAccountRequest {
+  ) -> FieldResult<models::SelectClaimAccountRequest> {
     if let Some(f) = filter {
-      models::SelectClaimAccountRequest {
+      Ok(models::SelectClaimAccountRequest {
         id_in: f.ids,
-        account_id_eq: Some(context.account_id()),
+        account_id_eq: Some(context.account_id()?),
         status_in: f.status_in,
         id_eq: f.id_eq,
         addr_eq: f.addr_eq,
         ..Default::default()
-      }
+      })
     } else {
-      models::SelectClaimAccountRequest {
-        account_id_eq: Some(context.account_id()),
+      Ok(models::SelectClaimAccountRequest {
+        account_id_eq: Some(context.account_id()?),
         ..Default::default()
-      }
+      })
     }
   }
 
-  fn select_by_id(context: &Context, id: i32) -> models::SelectClaimAccountRequest {
-    models::SelectClaimAccountRequest {
+  fn select_by_id(context: &Context, id: i32) -> FieldResult<models::SelectClaimAccountRequest> {
+    Ok(models::SelectClaimAccountRequest {
       id_eq: Some(id),
-      account_id_eq: Some(context.account_id()),
+      account_id_eq: Some(context.account_id()?),
       ..Default::default()
-    }
+    })
   }
 
   async fn db_to_graphql(d: models::ClaimAccountRequest) -> AsamiResult<Self> {
@@ -92,7 +92,7 @@ impl CreateClaimAccountRequestInput {
       .create_claim_account_request(
         address.clone(),
         self.signature,
-        context.current_session.0.attrs.id.clone(),
+        context.current_session()?.0.attrs.id.clone(),
       )
       .await?;
 
@@ -100,7 +100,7 @@ impl CreateClaimAccountRequestInput {
       .app
       .auth_method()
       .insert(InsertAuthMethod {
-        user_id: context.user_id(),
+        user_id: context.user_id()?,
         lookup_key: address,
         kind: AuthMethodKind::Eip712,
       })

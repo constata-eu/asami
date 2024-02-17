@@ -51,31 +51,31 @@ impl Showable<models::HandleRequest, HandleRequestFilter> for HandleRequest {
   fn filter_to_select(
     context: &Context,
     filter: Option<HandleRequestFilter>,
-  ) -> models::SelectHandleRequest {
+  ) -> FieldResult<models::SelectHandleRequest> {
     if let Some(f) = filter {
-      models::SelectHandleRequest {
+      Ok(models::SelectHandleRequest {
         id_in: f.ids,
-        account_id_eq: Some(context.account_id()),
+        account_id_eq: Some(context.account_id()?),
         status_in: f.status_in,
         id_eq: f.id_eq,
         site_eq: f.site_eq,
         username_like: into_like_search(f.username_like),
         ..Default::default()
-      }
+      })
     } else {
-      models::SelectHandleRequest {
-        account_id_eq: Some(context.account_id()),
+      Ok(models::SelectHandleRequest {
+        account_id_eq: Some(context.account_id()?),
         ..Default::default()
-      }
+      })
     }
   }
 
-  fn select_by_id(context: &Context, id: i32) -> models::SelectHandleRequest {
-    models::SelectHandleRequest {
+  fn select_by_id(context: &Context, id: i32) -> FieldResult<models::SelectHandleRequest> {
+    Ok(models::SelectHandleRequest {
       id_eq: Some(id),
-      account_id_eq: Some(context.account_id()),
+      account_id_eq: Some(context.account_id()?),
       ..Default::default()
-    }
+    })
   }
 
   async fn db_to_graphql(d: models::HandleRequest) -> AsamiResult<Self> {

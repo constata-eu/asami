@@ -99,6 +99,7 @@ macro_rules! browser_test {
       time_test::time_test!("integration test");
 
       let test_app = crate::support::TestApp::init().await;
+      let server = TestApiServer::start(test_app.app.clone()).await;
       let mut vite_preview = VitePreview::start();
       let api = test_app.client().await;
 
@@ -106,6 +107,8 @@ macro_rules! browser_test {
       let mut $browser = Selenium::start(api).await;
       {$($e)*};
 
+      server.abort();
+      assert!(server.await.unwrap_err().is_cancelled());
       vite_preview.stop();
       $browser.stop().await;
     }

@@ -41,7 +41,7 @@ pub fn graphiql() -> rocket::response::content::RawHtml<String> {
 pub async fn in_transaction(
   app: &App,
   request: juniper::http::GraphQLBatchRequest,
-  non_tx_current_session: CurrentSession,
+  non_tx_current_session: Option<CurrentSession>,
   schema: &Schema,
 ) -> GraphQLResponse {
   let err = || GraphQLResponse::error(field_error("unexpected_error_in_graphql", ""));
@@ -49,19 +49,21 @@ pub async fn in_transaction(
   let Ok(tx) = app.user().transactional().await else { return err() };
   let app = tx.select().state;
 
-  let Ok(session) = non_tx_current_session.0.reloaded().await else { return err() };
-
-  let current_session = CurrentSession(session);
-
-  let response = request
-    .execute(
-      schema,
-      &Context {
+  let context = match non_tx_current_session {
+    Some(current) => {
+      let Ok(session) = current.0.reloaded().await else { return err() };
+      Context {
         app,
-        current_session,
-      },
-    )
-    .await;
+        current_session: Some(CurrentSession(session)),
+      }
+    }
+    None => Context {
+      app,
+      current_session: None,
+    },
+  };
+
+  let response = request.execute(schema, &context).await;
 
   if tx.commit().await.is_err() {
     return err();
@@ -87,25 +89,7 @@ pub async fn post_handler(
 
 #[rocket::get("/introspect")]
 pub async fn introspect(app: &State<App>, schema: &State<Schema>) -> JsonResult<juniper::Value> {
-  // We use a mock session for introspection queries only.
-  let session = models::Session::new(
-    app.inner().clone(),
-    models::SessionAttrs {
-      id: "".to_string(),
-      user_id: 0,
-      account_id: "0x00000000000000000000000000000000".to_string(),
-      auth_method_id: 0,
-      pubkey: String::new(),
-      nonce: 0,
-      deletion_id: Some(0),
-      created_at: chrono::Utc::now(),
-      updated_at: None,
-    },
-  );
-  let ctx = Context {
-    current_session: CurrentSession(session),
-    app: app.inner().clone(),
-  };
+  let ctx = Context { current_session: None, app: app.inner().clone() };
   let (res, _errors) = juniper::introspect(schema, &ctx, IntrospectionFormat::default())
     .map_err(|_| Error::Precondition("Invalid GraphQL schema for introspection".to_string()))?;
   Ok(Json(res))
@@ -113,20 +97,24 @@ pub async fn introspect(app: &State<App>, schema: &State<Schema>) -> JsonResult<
 
 pub struct Context {
   app: App,
-  current_session: CurrentSession,
+  current_session: Option<CurrentSession>,
 }
 
 impl Context {
-  pub fn user_id(&self) -> i32 {
-    *self.current_session.0.user_id()
+  pub fn current_session(&self) -> FieldResult<CurrentSession> {
+    self.current_session.clone().ok_or(field_error("authentication", "authentication_needed"))
   }
 
-  pub fn account_id(&self) -> String {
-    self.current_session.0.attrs.account_id.clone()
+  pub fn user_id(&self) -> FieldResult<i32> {
+    Ok(*self.current_session()?.0.user_id())
   }
 
-  pub async fn account(&self) -> sqlx::Result<models::Account> {
-    self.app.account().find(self.account_id()).await
+  pub fn account_id(&self) -> FieldResult<String> {
+    Ok(self.current_session()?.0.attrs.account_id.clone())
+  }
+
+  pub async fn account(&self) -> FieldResult<models::Account> {
+    Ok(self.app.account().find(self.account_id()?).await?)
   }
 }
 
@@ -138,11 +126,11 @@ const DEFAULT_PAGE: i32 = 0;
 #[rocket::async_trait]
 trait Showable<Model: SqlxModel<State = App>, Filter: Send>: Sized {
   fn sort_field_to_order_by(field: &str) -> Option<<Model as SqlxModel>::ModelOrderBy>;
-  fn filter_to_select(context: &Context, f: Option<Filter>) -> <Model as SqlxModel>::SelectModel;
+  fn filter_to_select(context: &Context, f: Option<Filter>) -> FieldResult<<Model as SqlxModel>::SelectModel>;
   fn select_by_id(
     context: &Context,
     id: <Model as SqlxModel>::Id,
-  ) -> <Model as SqlxModel>::SelectModel;
+  ) -> FieldResult<<Model as SqlxModel>::SelectModel>;
   async fn db_to_graphql(d: Model) -> AsamiResult<Self>;
 
   async fn resource(context: &Context, id: <Model as SqlxModel>::Id) -> FieldResult<Self>
@@ -151,7 +139,7 @@ trait Showable<Model: SqlxModel<State = App>, Filter: Send>: Sized {
   {
     let resource = <<Model as SqlxModel>::ModelHub>::from_state(context.app.clone())
       .select()
-      .use_struct(Self::select_by_id(context, id))
+      .use_struct(Self::select_by_id(context, id)?)
       .one()
       .await?;
     Ok(Self::db_to_graphql(resource).await?)
@@ -206,7 +194,7 @@ trait Showable<Model: SqlxModel<State = App>, Filter: Send>: Sized {
     };
 
     let selected = <Model as SqlxModel>::SelectModelHub::from_state(context.app.clone())
-      .use_struct(Self::filter_to_select(context, filter))
+      .use_struct(Self::filter_to_select(context, filter)?)
       .maybe_order_by(maybe_order_by)
       .limit(limit.into())
       .offset(offset.into())
@@ -233,7 +221,7 @@ trait Showable<Model: SqlxModel<State = App>, Filter: Send>: Sized {
     Filter: 'async_trait,
   {
     let count = <Model as SqlxModel>::SelectModelHub::from_state(context.app.clone())
-      .use_struct(Self::filter_to_select(context, filter))
+      .use_struct(Self::filter_to_select(context, filter)?)
       .count()
       .await?
       .to_i32()
@@ -306,7 +294,7 @@ pub struct Mutation;
 #[graphql_object(context=Context)]
 impl Mutation {
   pub async fn create_session(context: &Context) -> FieldResult<Session> {
-    Ok(Session::db_to_graphql(context.current_session.0.clone()).await?)
+    Ok(Session::db_to_graphql(context.current_session()?.0.clone()).await?)
   }
 
   pub async fn create_campaign_request(

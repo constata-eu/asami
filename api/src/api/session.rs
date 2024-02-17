@@ -42,29 +42,29 @@ impl Showable<models::Session, SessionFilter> for Session {
     }
   }
 
-  fn filter_to_select(context: &Context, filter: Option<SessionFilter>) -> models::SelectSession {
+  fn filter_to_select(context: &Context, filter: Option<SessionFilter>) -> FieldResult<models::SelectSession> {
     if let Some(f) = filter {
-      models::SelectSession {
+      Ok(models::SelectSession {
         id_in: f.ids,
-        user_id_eq: Some(context.user_id()),
+        user_id_eq: Some(context.user_id()?),
         id_eq: f.id_eq,
         pubkey_eq: f.pubkey_eq,
         ..Default::default()
-      }
+      })
     } else {
-      models::SelectSession {
-        user_id_eq: Some(context.user_id()),
+      Ok(models::SelectSession {
+        user_id_eq: Some(context.user_id()?),
         ..Default::default()
-      }
+      })
     }
   }
 
-  fn select_by_id(context: &Context, id: String) -> models::SelectSession {
-    models::SelectSession {
+  fn select_by_id(context: &Context, id: String) -> FieldResult<models::SelectSession> {
+    Ok(models::SelectSession {
       id_eq: Some(id),
-      user_id_eq: Some(context.user_id()),
+      user_id_eq: Some(context.user_id()?),
       ..Default::default()
-    }
+    })
   }
 
   async fn db_to_graphql(d: models::Session) -> AsamiResult<Self> {

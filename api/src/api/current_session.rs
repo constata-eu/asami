@@ -82,7 +82,7 @@ struct FacebookUserProfile {
   //name: String
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CurrentSession(pub Session);
 
 impl CurrentSession {
@@ -456,12 +456,12 @@ impl<'r> FromRequest<'r> for CurrentSession {
 
 #[derive(Debug, PartialEq)]
 pub struct CurrentSessionAndJson<T> {
-  pub session: CurrentSession,
+  pub session: Option<CurrentSession>,
   pub json: T,
 }
 
 #[rocket::async_trait]
-impl<'r, T: DeserializeOwned> FromData<'r> for CurrentSessionAndJson<T> {
+impl<'r, T: DeserializeOwned + std::marker::Send > FromData<'r> for CurrentSessionAndJson<T> {
   type Error = ApiAuthError;
 
   async fn from_data(req: &'r Request<'_>, data: Data<'r>) -> data::Outcome<'r, Self> {
@@ -478,18 +478,15 @@ impl<'r, T: DeserializeOwned> FromData<'r> for CurrentSessionAndJson<T> {
       }
     };
 
-    match CurrentSession::build(req, Some(&body_bytes)).await {
-      Ok(current) => match serde_json::from_str(&String::from_utf8_lossy(&body_bytes)) {
-        Ok(value) => Outcome::Success(CurrentSessionAndJson {
-          session: current,
-          json: value,
-        }),
-        Err(_) => Outcome::Failure((
-          Status::BadRequest,
-          ApiAuthError::Unexpected("invalid_body_json"),
-        )),
+    match serde_json::from_str(&String::from_utf8_lossy(&body_bytes)) {
+      Ok(value) => {
+        let session = CurrentSession::build(req, Some(&body_bytes)).await.ok();
+        Outcome::Success(CurrentSessionAndJson { session, json: value })
       },
-      Err(e) => Outcome::Failure((Status::Unauthorized, e)),
+      Err(_) => Outcome::Failure((
+        Status::BadRequest,
+        ApiAuthError::Unexpected("invalid_body_json"),
+      ))
     }
   }
 }

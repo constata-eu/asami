@@ -47,7 +47,7 @@ const ResponsiveAppBar = ({loggedIn}) => {
   </Box>
 
   return (
-    <AppBar position="static" color="inverted">
+    <AppBar position="static" color="">
       <Container maxWidth="md" style={{ padding: 0}}>
         <Toolbar sx={{ minHeight: "0 !important" }}>
           <Box display="flex" gap="5px" alignItems="center" fontFamily="Sacramento" fontSize="5em" lineHeight="1em" fontWeight="bold" >
@@ -102,7 +102,7 @@ export const BareLayout = ({children}) => {
       flexDirection: "column",
     }}>
       <CssBaseline/>
-      <Container maxWidth="md">
+      <Container maxWidth="xl">
         { children }
       </Container>
     </Box>
@@ -114,7 +114,6 @@ export const ToolbarLayout = ({children, loggedIn}) => {
     <Root>
       <CssBaseline/>
       <AppFrame>
-        <ResponsiveAppBar loggedIn={loggedIn} />
         <Content>
           {children}
         </Content>

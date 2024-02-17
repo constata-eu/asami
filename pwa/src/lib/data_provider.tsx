@@ -14,6 +14,13 @@ const schema = async () => {
   return {"schema": (await (await fetch(`${apiUrl}introspect`)).json()).__schema }
 }
 
+export const publicDataProvider = async () => {
+  const httpLink = new HttpLink({ uri: apiUrl, });
+  const client = new ApolloClient({ link: from([ httpLink ]), cache: new InMemoryCache(), });
+  const introspection = await schema();
+  return (await buildGraphQLProvider({ client, introspection }));
+}
+
 export const defaultDataProvider = async () => {
   const httpLink = new HttpLink({
     uri: apiUrl,

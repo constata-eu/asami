@@ -1,12 +1,18 @@
 CREATE TYPE site AS ENUM (
   'x',
   'instagram',
-  'nostr',
+  'linkedin',
   'facebook',
   'tiktok',
-  'linkedin',
   'youtube',
-  'bluesky'
+  'nostr',
+  'bluesky',
+  'reserved1',
+  'reserved2',
+  'reserved3',
+  'reserved4',
+  'reserved5',
+  'reserved6'
 );
 
 CREATE TYPE auth_method_kind AS ENUM (

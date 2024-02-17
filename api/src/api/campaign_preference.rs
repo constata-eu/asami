@@ -37,29 +37,31 @@ impl Showable<models::CampaignPreference, CampaignPreferenceFilter> for Campaign
   fn filter_to_select(
     context: &Context,
     filter: Option<CampaignPreferenceFilter>,
-  ) -> models::SelectCampaignPreference {
+  ) -> FieldResult<models::SelectCampaignPreference> {
+    let account_id = context.account_id()?;
+
     if let Some(f) = filter {
-      models::SelectCampaignPreference {
-        account_id_eq: Some(context.account_id()),
+      Ok(models::SelectCampaignPreference {
+        account_id_eq: Some(account_id),
         id_in: f.ids,
         campaign_id_eq: f.campaign_id_eq,
         id_eq: f.id_eq,
         ..Default::default()
-      }
+      })
     } else {
-      models::SelectCampaignPreference {
-        account_id_eq: Some(context.account_id()),
+      Ok(models::SelectCampaignPreference {
+        account_id_eq: Some(account_id),
         ..Default::default()
-      }
+      })
     }
   }
 
-  fn select_by_id(context: &Context, id: i32) -> models::SelectCampaignPreference {
-    models::SelectCampaignPreference {
+  fn select_by_id(context: &Context, id: i32) -> FieldResult<models::SelectCampaignPreference> {
+    Ok(models::SelectCampaignPreference {
       id_eq: Some(id),
-      account_id_eq: Some(context.account_id()),
+      account_id_eq: Some(context.account_id()?),
       ..Default::default()
-    }
+    })
   }
 
   async fn db_to_graphql(d: models::CampaignPreference) -> AsamiResult<Self> {
@@ -87,7 +89,7 @@ impl CreateCampaignPreferenceInput {
       .app
       .campaign_preference()
       .select()
-      .account_id_eq(context.account_id())
+      .account_id_eq(context.account_id()?)
       .campaign_id_eq(self.campaign_id.clone())
       .optional()
       .await?;
@@ -114,7 +116,7 @@ impl CreateCampaignPreferenceInput {
         .app
         .campaign_preference()
         .insert(InsertCampaignPreference {
-          account_id: context.account_id(),
+          account_id: context.account_id()?,
           campaign_id: self.campaign_id.clone(),
           not_interested_on,
           attempted_on,
