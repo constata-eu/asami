@@ -48,9 +48,8 @@ browser_test!{ shows_campaigns_in_dashboard (mut d)
     *crawl.reloaded().await.unwrap().processed_for_campaign_rules()
   }).await;
 
-
   d.goto("http://127.0.0.1:5173").await;
-  wait_here();
+  d.wait_for("#button-login-as-member").await;
 }
 
 browser_test!{ full_flow_to_reward_in_browser (mut d)
@@ -69,7 +68,7 @@ browser_test!{ full_flow_to_reward_in_browser (mut d)
 
   d.wait_for("#campaign-list").await;
   d.click("#logout-menu-item").await;
-  d.wait_for("#button-login-as-advertiser").await;
+  d.wait_for(".submit-your-post").await;
   
   d.api.test_app.app.one_time_token().insert(InsertOneTimeToken{value: "member-token".to_string() }).save().await?;
   d.goto("http://127.0.0.1:5173/#/one_time_token_login?token=member-token").await;
@@ -79,7 +78,7 @@ browser_test!{ full_flow_to_reward_in_browser (mut d)
 
 
   d.fill_in("#username", "nubis_bruno").await;
-  d.click("#submit-handle-request-form").await;
+  d.click("#submit-x-handle-request-form").await;
   d.wait_for(".MuiSnackbarContent-message").await;
   d.wait_until_gone(".MuiSnackbarContent-message").await;
 
@@ -173,7 +172,7 @@ browser_test!{ advertiser_claims_account (mut d)
 
 browser_test!{ account_is_web3_from_the_start (mut d)
   d.goto("http://127.0.0.1:5173").await;
-  d.click("#button-login-as-advertiser").await;
+  d.click(".submit-your-post").await;
   d.click("#wallet-login-button").await;
   d.link_wallet_and_sign_login().await?;
   d.wait_for("#advertiser-dashboard").await;

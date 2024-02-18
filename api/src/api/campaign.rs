@@ -15,6 +15,8 @@ pub struct Campaign {
   budget: String,
   #[graphql(description = "The amount remaining from the given budget.")]
   remaining: String,
+  #[graphql(description = "The maximum amout the advertiser is willing to pay for each member's scored point.")]
+  price_score_ratio: String,
   #[graphql(
     description = "The campaign is finished when it spends all its budget, or when the remaining amount is refunded to the advertiser"
   )]
@@ -141,6 +143,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
       account_id: d.attrs.account_id,
       budget: d.attrs.budget,
       remaining: d.attrs.remaining,
+      price_score_ratio: d.attrs.price_score_ratio,
       finished: d.attrs.finished,
       valid_until: d.attrs.valid_until,
       site: d.attrs.site,

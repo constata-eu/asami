@@ -20,6 +20,7 @@ import { Route, useSearchParams } from "react-router-dom";
 import { authProvider } from "./lib/auth_provider";
 import { defaultDataProvider } from "./lib/data_provider";
 import Login from "./views/login";
+import About from "./views/about";
 import asamiTheme from './components/theme';
 import { AsamiLayout } from './views/layout';
 
@@ -70,6 +71,7 @@ export const App = () => {
         dataProvider={dataProvider}
       >
         <CustomRoutes>
+          <Route path="/about" element={<About/>}/>
           <Route path="/one_time_token_login" element={<OneTimeTokenLogin/>}/>
           <Route path="/x_login" element={<XLogin/>}/>
           <Route path="/facebook_login" element={<FacebookLogin/>}/>
