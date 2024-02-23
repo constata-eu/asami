@@ -197,7 +197,7 @@ const CreateCampaign = ({onSave}) => {
           budget: BigInt(input.budget),
           contentId: input.contentId,
           priceScoreRatio: BigInt(input.priceScoreRatio),
-          topics: [],
+          topics: input.topicIds,
           validUntil: BigInt(Math.floor(defaultValidUntil().getTime() / 1000))
         }
       ]);
@@ -246,8 +246,8 @@ const CreateCampaign = ({onSave}) => {
     }
 
     input.priceScoreRatio = zeroPadValue(toBeHex(parseEther("0.02")), 32);
-
     input.validUntil = defaultValidUntil().toISOString();
+    input.topicIds = [];
 
     values.campaignRequestInput = input;
     return errors;

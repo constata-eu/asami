@@ -143,7 +143,7 @@ const ClaimedAccountState = () => {
   }
 
   return <Box id="account-summary-claim-done" display="flex" alignItems="center" flexWrap="wrap" gap="1em" flex="1 1">
-    <SimpleShowLayout record={balances} sx={{ ".ra-field": {flex: "1 1"}}}>
+    <SimpleShowLayout record={balances} sx={{ ".RaSimpleShowLayout-stack": {gap: "2em", display: "flex", flexDirection: "row"} ,".ra-field": {flex: "1 1"}}}>
       <FunctionField label="ASAMI token balance" render={ record => `${formatEther(record.asami)}` }  />
       <FunctionField label="DOC balance" render={ record => `${formatEther(record.doc)}` }  />
     </SimpleShowLayout>

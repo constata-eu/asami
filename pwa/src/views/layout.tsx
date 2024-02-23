@@ -51,7 +51,7 @@ const ResponsiveAppBar = ({loggedIn}) => {
     <AppBar position="static" color="">
       <Container maxWidth="md" style={{ padding: "0.5em 0" }}>
         <Toolbar sx={{ minHeight: "0 !important" }}>
-          <a href="https://asami.club" style={{lineHeight: 0}} target="_blank" rel="noreferrer">
+          <a href="https://asami.club" style={{lineHeight: 0}} rel="noreferrer">
             <AsamiLogo width="50px" height="auto" />
           </a>
           {loggedIn && <>

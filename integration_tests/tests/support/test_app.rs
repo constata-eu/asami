@@ -109,7 +109,7 @@ impl TestApp {
   pub async fn mock_all_handles_being_verified_and_appraised(&self) {
     let all = self.app.handle_request().select().status_eq(models::HandleRequestStatus::Unverified).all().await.unwrap();
     for r in all.into_iter() {
-      r.verify("179383862".into()).await.unwrap().appraise(models::u("1"), models::wei("10")).await.unwrap();
+      r.verify("179383862".into()).await.unwrap().appraise(models::u("1"), models::wei("10000")).await.unwrap();
     }
   }
 

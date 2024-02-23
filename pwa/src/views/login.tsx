@@ -6,6 +6,7 @@ import {
   IconButton, Box, Button, Container, Paper, styled,
   Toolbar, Typography, Skeleton, useMediaQuery
 } from '@mui/material';
+import { makeXUrl,  } from '../lib/auth_provider';
 import { ethers, parseUnits, formatEther, toBeHex, zeroPadValue, parseEther } from "ethers";
 import { publicDataProvider } from "../lib/data_provider";
 import {  
@@ -72,8 +73,8 @@ const Login = () => {
           <LoginSelector open={open} setOpen={setOpen} />
 
           <Box sx={{columnCount: { xs: 1, sm: 2, md: 3, lg: 4, xl: 5}, columnGap:"1em"}}>
-            <Box p="1em" mb="1em">
-              <AsamiLogo width="100%" height="100%"/>
+            <Box sx={{ breakInside: "avoid", p:"1em", mb:"1em", display:"flex", flexDirection:"column", alignItems:"center" }}>
+              <AsamiLogo margin="auto" width="250px" height="100%"/>
               <Box my="1em">
                 <Button
                   color="primary"

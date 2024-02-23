@@ -17,7 +17,7 @@ browser_test!{ shows_campaigns_in_dashboard (mut d)
     "1758192965703647443",
     "1758506690213732795",
   ] {
-    account.create_campaign_request(models::Site::X, post, u("100"), u("1"), valid_until)
+    account.create_campaign_request(models::Site::X, post, u("100"), u("1"), valid_until, &[])
       .await.unwrap().pay()
       .await.unwrap();
   }
@@ -31,7 +31,7 @@ browser_test!{ shows_campaigns_in_dashboard (mut d)
     "C3SaabGsI1j",
     "C222POpvKho",
   ] {
-    account.create_campaign_request(models::Site::Instagram, post, u("100"), u("1"), valid_until)
+    account.create_campaign_request(models::Site::Instagram, post, u("100"), u("1"), valid_until, &[])
       .await.unwrap().pay()
       .await.unwrap();
   }
@@ -76,11 +76,11 @@ browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.goto("http://127.0.0.1:5173/#/?role=member").await;
   d.wait_for("#member-dashboard").await;
 
-
   d.fill_in("#username", "nubis_bruno").await;
   d.click("#submit-x-handle-request-form").await;
   d.wait_for(".MuiSnackbarContent-message").await;
   d.wait_until_gone(".MuiSnackbarContent-message").await;
+  wait_here();
 
   d.api.test_app.mock_all_handles_being_verified_and_appraised().await;
   d.wait_for("#handle-submission-in-progress-message").await;
@@ -124,6 +124,7 @@ api_test!{ full_flow_to_reward_from_api (mut c)
     u("50"),
     u("2"),
     Utc::now() + chrono::Duration::days(2),
+    &[],
   ).await?
   .pay().await?;
 
