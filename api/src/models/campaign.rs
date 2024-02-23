@@ -32,6 +32,7 @@ model! {
     tx_hash: String,
   },
   has_many {
+    CampaignTopic(campaign_id),
     IgCampaignRule(campaign_id)
   }
 }
@@ -45,19 +46,12 @@ impl CampaignHub {
     let auth = BearerToken::new(&conf.bearer_token);
     let api = TwitterApi::new(auth);
 
-    for campaign in self
-      .select()
-      .finished_eq(false)
-      .site_eq(Site::X)
-      .all()
-      .await?
-    {
-      let post_id = campaign.attrs.content_id.parse::<u64>().map_err(|_| {
-        Error::Validation(
-          "content_id".into(),
-          "was stored in the db not as u64".into(),
-        )
-      })?;
+    for campaign in self.select().finished_eq(false).site_eq(Site::X).all().await? {
+      let post_id = campaign
+        .attrs
+        .content_id
+        .parse::<u64>()
+        .map_err(|_| Error::Validation("content_id".into(), "was stored in the db not as u64".into()))?;
 
       let reposts = api.get_tweet_retweeted_by(post_id).send().await?;
 
@@ -70,10 +64,9 @@ impl CampaignHub {
         };
 
         for user in data {
-          let Some(handle) = self.state.handle()
-            .select()
-            .user_id_eq(&user.id.to_string())
-            .optional().await? else { continue };
+          let Some(handle) = self.state.handle().select().user_id_eq(&user.id.to_string()).optional().await? else {
+            continue;
+          };
 
           match campaign.make_collab(&handle).await {
             Ok(req) => reqs.push(req),
@@ -101,6 +94,10 @@ impl CampaignHub {
 }
 
 impl Campaign {
+  pub async fn topic_ids(&self) -> sqlx::Result<Vec<String>> {
+    Ok(self.campaign_topic_vec().await?.into_iter().map(|t| t.attrs.topic_id).collect())
+  }
+
   pub async fn make_collab(&self, handle: &Handle) -> AsamiResult<CollabRequest> {
     handle.validate_collaboration(self).await?;
 

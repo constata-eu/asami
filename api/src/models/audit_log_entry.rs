@@ -24,26 +24,12 @@ model! {
 }
 
 impl AuditLogEntryHub {
-  pub async fn info<S: serde::Serialize>(
-    &self,
-    kind: &str,
-    subkind: &str,
-    context: S,
-  ) -> sqlx::Result<AuditLogEntry> {
-    self
-      .log(AuditLogSeverity::Info, kind, subkind, context, None, None)
-      .await
+  pub async fn info<S: serde::Serialize>(&self, kind: &str, subkind: &str, context: S) -> sqlx::Result<AuditLogEntry> {
+    self.log(AuditLogSeverity::Info, kind, subkind, context, None, None).await
   }
 
-  pub async fn fail<S: serde::Serialize>(
-    &self,
-    kind: &str,
-    subkind: &str,
-    context: S,
-  ) -> sqlx::Result<AuditLogEntry> {
-    self
-      .log(AuditLogSeverity::Fail, kind, subkind, context, None, None)
-      .await
+  pub async fn fail<S: serde::Serialize>(&self, kind: &str, subkind: &str, context: S) -> sqlx::Result<AuditLogEntry> {
+    self.log(AuditLogSeverity::Fail, kind, subkind, context, None, None).await
   }
 
   pub async fn log<S: serde::Serialize>(
@@ -105,19 +91,11 @@ pub trait Loggable: Send {
       .await
   }
 
-  async fn info<S: serde::Serialize + Send>(
-    &self,
-    subkind: &str,
-    context: S,
-  ) -> sqlx::Result<AuditLogEntry> {
+  async fn info<S: serde::Serialize + Send>(&self, subkind: &str, context: S) -> sqlx::Result<AuditLogEntry> {
     self.log(AuditLogSeverity::Info, subkind, context).await
   }
 
-  async fn fail<S: serde::Serialize + Send>(
-    &self,
-    subkind: &str,
-    context: S,
-  ) -> sqlx::Result<AuditLogEntry> {
+  async fn fail<S: serde::Serialize + Send>(&self, subkind: &str, context: S) -> sqlx::Result<AuditLogEntry> {
     self.log(AuditLogSeverity::Fail, subkind, context).await
   }
 

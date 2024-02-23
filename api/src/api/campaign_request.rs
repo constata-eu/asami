@@ -21,6 +21,8 @@ pub struct CampaignRequest {
   content_id: String,
   #[graphql(description = "The date in which this campaign was created.")]
   created_at: UtcDateTime,
+  #[graphql(description = "The topic ids this campaign is restricted to.")]
+  topic_ids: Vec<String>,
   #[graphql(description = "The last time this campaign received an update.")]
   updated_at: Option<UtcDateTime>,
 }
@@ -75,12 +77,14 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
   }
 
   async fn db_to_graphql(d: models::CampaignRequest) -> AsamiResult<Self> {
+    let topic_ids = d.topic_ids().await?;
     Ok(CampaignRequest {
       id: d.attrs.id,
       account_id: d.attrs.account_id,
       budget: d.attrs.budget,
       status: d.attrs.status,
       site: d.attrs.site,
+      topic_ids,
       content_id: d.attrs.content_id,
       created_at: d.attrs.created_at,
       updated_at: d.attrs.updated_at,
@@ -98,11 +102,14 @@ pub struct CreateCampaignRequestInput {
   pub site: Site,
   pub price_score_ratio: String,
   pub valid_until: UtcDateTime,
+  pub topic_ids: Vec<String>,
 }
 
 impl CreateCampaignRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<CampaignRequest> {
     let account = context.app.account().find(&self.account_id).await?;
+
+    let topics = context.app.topic().select().id_in(&self.topic_ids).all().await?;
 
     let req = account
       .create_campaign_request(
@@ -111,6 +118,7 @@ impl CreateCampaignRequestInput {
         u256(self.budget),
         u256(self.price_score_ratio),
         self.valid_until,
+        &topics,
       )
       .await?;
 

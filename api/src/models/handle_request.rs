@@ -48,28 +48,14 @@ impl HandleRequestHub {
 
     let mentions = api
       .get_user_mentions(conf.asami_user_id)
-      .since_id(
-        indexer_state
-          .attrs
-          .x_handle_verification_checkpoint
-          .to_u64()
-          .unwrap_or(0),
-      )
+      .since_id(indexer_state.attrs.x_handle_verification_checkpoint.to_u64().unwrap_or(0))
       .max_results(100)
-      .user_fields(vec![
-        UserField::Id,
-        UserField::Username,
-        UserField::PublicMetrics,
-      ])
+      .user_fields(vec![UserField::Id, UserField::Username, UserField::PublicMetrics])
       .expansions(vec![TweetExpansion::AuthorId])
       .send()
       .await?;
 
-    let checkpoint: i64 = mentions
-      .meta()
-      .and_then(|m| m.oldest_id.clone())
-      .and_then(|i| i.parse().ok())
-      .unwrap_or(0);
+    let checkpoint: i64 = mentions.meta().and_then(|m| m.oldest_id.clone()).and_then(|i| i.parse().ok()).unwrap_or(0);
 
     let mut page = Some(mentions);
     let mut pages = 0;
@@ -80,33 +66,41 @@ impl HandleRequestHub {
 
       for post in data {
         let Some(author_id) = post.author_id else { continue };
-        let Some(author) = payload.includes()
-          .and_then(|i| i.users.as_ref() )
-          .and_then(|i| i.iter().find(|x| x.id == author_id ) )
-          else { continue };
+        let Some(author) =
+          payload.includes().and_then(|i| i.users.as_ref()).and_then(|i| i.iter().find(|x| x.id == author_id))
+        else {
+          continue;
+        };
 
-        let Some(public_metrics) = author.public_metrics.clone() else { continue };
+        let Some(public_metrics) = author.public_metrics.clone() else {
+          continue;
+        };
 
         if let Some(capture) = msg_regex.captures(&post.text) {
-          let Ok(account_id_str) = capture[1].parse::<String>() else { continue };
-          let Ok(account_id) = U256::from_dec_str(&account_id_str).map(U256::encode_hex) else { continue };
+          let Ok(account_id_str) = capture[1].parse::<String>() else {
+            continue;
+          };
+          let Ok(account_id) = U256::from_dec_str(&account_id_str).map(U256::encode_hex) else {
+            continue;
+          };
 
-          let Some(req) = self.state.handle_request().select()
+          let Some(req) = self
+            .state
+            .handle_request()
+            .select()
             .status_eq(HandleRequestStatus::Unverified)
             .site_eq(Site::X)
             .username_ilike(&author.username)
             .account_id_eq(&account_id)
-            .optional().await? else { continue };
+            .optional()
+            .await?
+          else {
+            continue;
+          };
 
           let score = U256::from(public_metrics.followers_count) * wei("85") / wei("100");
           let price = u256(indexer_state.suggested_price_per_point()) * score;
-          handle_requests.push(
-            req
-              .verify(author_id.to_string())
-              .await?
-              .appraise(price, score)
-              .await?,
-          );
+          handle_requests.push(req.verify(author_id.to_string()).await?.appraise(price, score).await?);
         }
       }
 
@@ -120,11 +114,7 @@ impl HandleRequestHub {
       page = mentions.next_page().await?;
     }
 
-    indexer_state
-      .update()
-      .x_handle_verification_checkpoint(checkpoint)
-      .save()
-      .await?;
+    indexer_state.update().x_handle_verification_checkpoint(checkpoint).save().await?;
 
     Ok(handle_requests)
   }
@@ -174,12 +164,7 @@ impl_on_chain_tx_request! {HandleRequestHub {
 
 impl HandleRequest {
   pub async fn verify(self, user_id: String) -> sqlx::Result<Self> {
-    self
-      .update()
-      .user_id(Some(user_id))
-      .status(HandleRequestStatus::Verified)
-      .save()
-      .await
+    self.update().user_id(Some(user_id)).status(HandleRequestStatus::Verified).save().await
   }
 
   pub async fn appraise(self, price: U256, score: U256) -> sqlx::Result<Self> {
@@ -193,14 +178,7 @@ impl HandleRequest {
   }
 
   pub async fn topic_ids(&self) -> sqlx::Result<Vec<String>> {
-    Ok(
-      self
-        .handle_request_topic_vec()
-        .await?
-        .into_iter()
-        .map(|t| t.attrs.topic_id)
-        .collect(),
-    )
+    Ok(self.handle_request_topic_vec().await?.into_iter().map(|t| t.attrs.topic_id).collect())
   }
 }
 

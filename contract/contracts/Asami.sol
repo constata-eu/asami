@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
-import "@openzeppelin/contracts/access/Ownable.sol";
+pragma solidity 0.8.19;
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract Asami is Ownable, ERC20Capped, ReentrancyGuard {
+contract Asami is ERC20Capped, ReentrancyGuard {
     enum Site {
       X,
       Instagram,
@@ -118,9 +117,9 @@ contract Asami is Ownable, ERC20Capped, ReentrancyGuard {
     }
 
     /*
-  We're only storing all historic vote counts to have a view function that helps find out
-  which candidate to proclaim without relying on events.
-  */
+    We're only storing all historic vote counts to have a view function that helps find out
+    which candidate to proclaim without relying on events.
+    */
     AdminVoteCount[] public adminVoteCounts;
     mapping(address => uint256) public adminVoteCountIdByCandidate;
 
@@ -153,14 +152,17 @@ contract Asami is Ownable, ERC20Capped, ReentrancyGuard {
     uint256 public claimedAsamiTokens;
 
     modifier onlyAdmin() {
-        require(msg.sender == admin || msg.sender == owner());
+        require(msg.sender == admin || msg.sender == adminTreasury);
         _;
     }
 
     constructor(
-        address _dollarOnChainAddress
+        address _dollarOnChainAddress,
+        address _adminAddress
     ) ERC20("AsamiToken", "ASAMI") ERC20Capped(21 * 1e24) {
         doc = IERC20(_dollarOnChainAddress);
+        adminTreasury = msg.sender;
+        admin = _adminAddress;
     }
 
     function _beforeTokenTransfer(
@@ -169,26 +171,26 @@ contract Asami is Ownable, ERC20Capped, ReentrancyGuard {
         uint256 amount
     ) internal override {
         super._beforeTokenTransfer(from, to, amount);
-        if (!trackedHolders[to] && amount > 0) {
-            holders.push(to);
-            trackedHolders[to] = true;
+
+        if (from != address(0)) {
+          _registerRecentBalanceChange(from, amount, false);
+
+          if (feeRateVotes[from].votes > 0) {
+              removeFeeRateVoteHelper(from);
+          }
+          if (submittedAdminVotes[from].votes > 0) {
+              removeAdminVoteHelper(from);
+          }
         }
 
-        if (feeRateVotes[from].votes > 0) {
-            removeFeeRateVoteHelper(from);
-        }
-        if (submittedAdminVotes[from].votes > 0) {
-            removeAdminVoteHelper(from);
-        }
-    }
+        if (to != address(0)) {
+          _registerRecentBalanceChange(to, amount, true);
 
-    function setAdmin(
-        address _admin,
-        address _adminTreasury
-    ) external onlyOwner {
-        require(admin == address(0) && adminTreasury == address(0));
-        admin = _admin;
-        adminTreasury = _adminTreasury;
+          if (!trackedHolders[to] && amount > 0) {
+              holders.push(to);
+              trackedHolders[to] = true;
+          }
+        }
     }
 
     function getHolders() public view returns (address[] memory) {
@@ -351,19 +353,19 @@ contract Asami is Ownable, ERC20Capped, ReentrancyGuard {
     ) external onlyAdmin nonReentrant {
         for (uint256 i = 0; i < _collabs.length; i++) {
             Handle storage handle = handles[_collabs[i].handleId - 1];
-            require(handle.id > 0, "1");
+            require(handle.id > 0, "amc1");
             Account storage member = accounts[handle.accountId];
 
             Campaign storage campaign = campaigns[_collabs[i].campaignId - 1];
-            require(campaign.id > 0, "3");
-            require(campaign.validUntil > block.timestamp, "4");
-            require(isSubset(handle.topics, campaign.topics), "5");
+            require(campaign.id > 0, "amc2");
+            require(campaign.validUntil > block.timestamp, "amc3");
+            require(isSubset(handle.topics, campaign.topics), "amc4");
 
-            require(campaign.remaining >= handle.price, "6");
-            require(campaign.site == handle.site, "7");
+            require(campaign.remaining >= handle.price, "amc5");
+            require(campaign.site == handle.site, "amc6");
             require(
                 (handle.price / handle.score) <= campaign.priceScoreRatio,
-                "8"
+                "amc7"
             );
 
             Account storage advertiser = accounts[campaign.accountId];
@@ -385,7 +387,7 @@ contract Asami is Ownable, ERC20Capped, ReentrancyGuard {
             member.collabs.push(collab.id);
 
             campaign.remaining -= gross;
-            feePool += fee;
+            changeFeePool(fee, true);
 
             uint256 remainingToCap = cap() - claimedAsamiTokens;
             uint256 newTokens = (fee > remainingToCap) ? remainingToCap : fee;
@@ -438,7 +440,7 @@ contract Asami is Ownable, ERC20Capped, ReentrancyGuard {
             Account storage advertiser = accounts[campaign.accountId];
             uint256 remaining = campaign.remaining;
             campaign.remaining = 0;
-            address fundedBy = campaign.fundedByAdmin ? admin : advertiser.addr;
+            address fundedBy = campaign.fundedByAdmin ? adminTreasury : advertiser.addr;
             require(doc.transfer(fundedBy, remaining), "rdc 3");
             emit CampaignSaved(campaign);
         }
@@ -446,7 +448,7 @@ contract Asami is Ownable, ERC20Capped, ReentrancyGuard {
 
     // To prevent race conditions, we never mint while we're in the middle of a payout.
     function _safeMint(address _addr, uint256 _amount) private {
-        require(payoutsRemaining == 0, "SM 0");
+        recentTokens[getCurrentCycle()] += _amount;
         _mint(_addr, _amount);
     }
 
@@ -515,67 +517,71 @@ contract Asami is Ownable, ERC20Capped, ReentrancyGuard {
         return getCurrentCycle() + getCycleLength();
     }
 
-    /*
-    Distributes the fee pool among token holders.
-    To prevent going over the gas limit, it does up to 100 a time, and can be called many times in a row.
-    Always returns the pending holders.
-    Anyone can call this at any time, but just once per period. It would usually be the admin though.
-  */
+
     uint256 public feePool;
-    uint256 public payoutsRemaining = 0;
-    uint256 public payoutsTotal = 0;
-    uint256 public feePoolRemainder = 0;
-    uint256 public lastPayoutCycle = 0;
-    uint256 public batchSize = 100;
+    struct BalanceChange {
+      uint256 added;
+      uint256 substracted;
+    }
+    mapping (uint256 => mapping(address => BalanceChange)) public recentBalanceChanges;
+    mapping (uint256 => BalanceChange) public recentFeePoolChanges;
+    mapping (uint256 => uint256) public recentTokens;
+    mapping(address => uint256) public lastFeePoolShareCycles;
 
-    function distributeFeePool() external nonReentrant {
-        uint256 totalSupply = totalSupply();
-        uint256 currentCycle = getCurrentCycle();
+    function getRecentBalanceChange(address _holder) public view returns (BalanceChange memory) {
+      return recentBalanceChanges[getCurrentCycle()][_holder];
+    }
 
-        require(totalSupply > 0, "dfp 0");
-        require(
-            currentCycle != lastPayoutCycle || payoutsRemaining > 0,
-            "dfp 1"
-        );
+    function getBalanceBeforeRecentChanges(address _holder) public view returns (uint256) {
+      BalanceChange storage recent = recentBalanceChanges[getCurrentCycle()][_holder];
+      return (balanceOf(_holder) + recent.substracted) - recent.added;
+    }
 
-        /* Just mark the distribution was attempted on this cycle if there's nothing ot distribute */
-        if (feePool == 0) {
-            lastPayoutCycle = currentCycle;
-            return;
-        }
+    function _registerRecentBalanceChange(address _holder, uint256 _amount, bool _added) private {
+      BalanceChange storage recent = recentBalanceChanges[getCurrentCycle()][_holder];
+      if(_added){
+        recent.added += _amount;
+      } else {
+        recent.substracted += _amount;
+      }
+    }
 
-        if (payoutsRemaining == 0) {
-            // We're starting a new payout of the feePool.
-            // We can only start one payout in each 15 day period.
-            payoutsTotal = holders.length;
-            feePoolRemainder = feePool;
-            payoutsRemaining = payoutsTotal;
-            lastPayoutCycle = currentCycle;
-        }
+    function changeFeePool(uint256 _amount, bool _added) private {
+      BalanceChange storage recent = recentFeePoolChanges[getCurrentCycle()];
+      if(_added){
+        feePool += _amount;
+        recent.added += _amount;
+      } else {
+        feePool -= _amount;
+        recent.substracted += _amount;
+      }
+    }
 
-        uint256 startAt = payoutsTotal - payoutsRemaining;
+    function getFeePoolBeforeRecentChanges() public view returns (uint256) {
+      BalanceChange storage recent = recentFeePoolChanges[getCurrentCycle()];
+      return (feePool + recent.substracted) - recent.added;
+    }
 
-        uint256 until = (batchSize > payoutsRemaining)
-            ? (startAt + payoutsRemaining)
-            : (startAt + batchSize);
+    function claimFeePoolShare(address[] calldata _holders) external nonReentrant {
+        uint256 current = getCurrentCycle();
+        uint256 supply = totalSupply() - recentTokens[current];
+        uint256 pool = getFeePoolBeforeRecentChanges();
+        require(supply > 0, "cfps0");
+        require(pool > 0, "cfps1");
 
-        uint256 localFeePoolRemainder = feePoolRemainder;
-        uint256 localPayoutsRemaining = payoutsRemaining;
+        for (uint256 i = 0; i < _holders.length; i++) {
+          address holder = _holders[i];
 
-        for (uint256 i = startAt; i < until; i++) {
-            address holder = holders[i];
-            uint256 balance = balanceOf(holder);
-            uint256 reward = (balance * feePool) / totalSupply;
-            localFeePoolRemainder -= reward;
-            localPayoutsRemaining -= 1;
-            require(doc.transfer(holder, reward), "dfp 3");
-        }
+          require(lastFeePoolShareCycles[holder] < current, "cfps2");
 
-        feePoolRemainder = localFeePoolRemainder;
-        payoutsRemaining = localPayoutsRemaining;
+          uint256 balance = getBalanceBeforeRecentChanges(holder);
+          require(balance > 0, "cfps3");
+          uint256 reward = (balance * pool) / supply;
 
-        if (payoutsRemaining == 0) {
-            feePool = feePoolRemainder;
+          lastFeePoolShareCycles[holder] = current;
+          changeFeePool(reward, false);
+
+          require(doc.transfer(holder, reward), "cfps4");
         }
     }
 

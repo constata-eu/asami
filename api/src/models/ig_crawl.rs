@@ -1,8 +1,10 @@
 use super::*;
 use chrono::Duration;
 use image_hasher::{HashAlg, HasherConfig, ImageHash};
-use std::collections::{HashMap, HashSet};
-use std::io::Cursor;
+use std::{
+  collections::{HashMap, HashSet},
+  io::Cursor,
+};
 
 model! {
   state: App,
@@ -84,20 +86,9 @@ impl IgCrawlHub {
         .map(|h| format!("https://www.instagram.com/{}", h.attrs.username)),
     );
 
-    for c in self
-      .state
-      .campaign()
-      .select()
-      .site_eq(Site::Instagram)
-      .finished_eq(false)
-      .all()
-      .await?
-    {
+    for c in self.state.campaign().select().site_eq(Site::Instagram).finished_eq(false).all().await? {
       if c.is_missing_ig_rules().await? {
-        direct_urls.insert(format!(
-          "https://www.instagram.com/p/{}",
-          c.attrs.content_id
-        ));
+        direct_urls.insert(format!("https://www.instagram.com/p/{}", c.attrs.content_id));
       }
     }
 
@@ -122,12 +113,7 @@ impl IgCrawlHub {
     let api_url = "https://api.apify.com/v2/acts/apify~instagram-scraper/runs";
     let token = &self.state.settings.instagram.apify_key;
 
-    for c in self
-      .select()
-      .status_eq(IgCrawlStatus::Scheduled)
-      .all()
-      .await?
-    {
+    for c in self.select().status_eq(IgCrawlStatus::Scheduled).all().await? {
       let result = ureq::post(&format!("{api_url}?token={token}"))
         .set("Content-Type", "application/json")
         .send_string(c.input());
@@ -135,11 +121,7 @@ impl IgCrawlHub {
       match result {
         Ok(response) => {
           let apify_id = response.into_json::<ApifyActorRun>()?.data.id;
-          c.update()
-            .status(IgCrawlStatus::Submitted)
-            .apify_id(Some(apify_id))
-            .save()
-            .await?;
+          c.update().status(IgCrawlStatus::Submitted).apify_id(Some(apify_id)).save().await?;
         }
         Err(e) => {
           let msg = if let ureq::Error::Status(_, r) = e {
@@ -147,11 +129,7 @@ impl IgCrawlHub {
           } else {
             e.to_string()
           };
-          c.update()
-            .status(IgCrawlStatus::Cancelled)
-            .log_text(msg)
-            .save()
-            .await?;
+          c.update().status(IgCrawlStatus::Cancelled).log_text(msg).save().await?;
         }
       }
     }
@@ -164,18 +142,11 @@ impl IgCrawlHub {
     let api_datasets_url = "https://api.apify.com/v2/datasets";
     let token = &self.state.settings.instagram.apify_key;
 
-    for crawl in self
-      .select()
-      .status_eq(IgCrawlStatus::Submitted)
-      .all()
-      .await?
-    {
-      let run_id = crawl.apify_id().as_ref().ok_or_else(|| {
-        Error::Runtime(format!(
-          "submitted crawl had no apify id {:?}",
-          &crawl.attrs
-        ))
-      })?;
+    for crawl in self.select().status_eq(IgCrawlStatus::Submitted).all().await? {
+      let run_id = crawl
+        .apify_id()
+        .as_ref()
+        .ok_or_else(|| Error::Runtime(format!("submitted crawl had no apify id {:?}", &crawl.attrs)))?;
 
       let result = ureq::get(&format!("{api_runs_url}/{run_id}?token={token}")).call();
 
@@ -205,15 +176,12 @@ impl IgCrawlHub {
         }
         "SUCCEEDED" => {
           let dataset_id = meta.default_dataset_id;
-          let items: Vec<IgResult> = ureq::get(&format!(
-            "{api_datasets_url}/{dataset_id}/items?token={token}"
-          ))
-          .call()?
-          .into_json()?;
+          let items: Vec<IgResult> =
+            ureq::get(&format!("{api_datasets_url}/{dataset_id}/items?token={token}")).call()?.into_json()?;
 
           for i in items {
-            let json_string = serde_json::to_string(&i)
-              .map_err(|_| Error::Runtime("IgProfile not serializable?".into()))?;
+            let json_string =
+              serde_json::to_string(&i).map_err(|_| Error::Runtime("IgProfile not serializable?".into()))?;
 
             self
               .state
@@ -226,18 +194,10 @@ impl IgCrawlHub {
               .await?;
           }
 
-          crawl
-            .update()
-            .status(IgCrawlStatus::Responded)
-            .save()
-            .await?;
+          crawl.update().status(IgCrawlStatus::Responded).save().await?;
         }
         _ => {
-          crawl
-            .update()
-            .log_text(format!("crawl still working {:?}", &meta))
-            .save()
-            .await?;
+          crawl.update().log_text(format!("crawl still working {:?}", &meta)).save().await?;
         }
       }
     }
@@ -253,27 +213,17 @@ impl IgCrawlHub {
       .all()
       .await?
     {
-      for result in crawl
-        .ig_crawl_result_scope()
-        .processed_for_campaign_rules_eq(false)
-        .all()
-        .await?
-      {
+      for result in crawl.ig_crawl_result_scope().processed_for_campaign_rules_eq(false).all().await? {
         result.process_for_campaign_rules().await?;
       }
-      crawl
-        .update()
-        .processed_for_campaign_rules(true)
-        .save()
-        .await?;
+      crawl.update().processed_for_campaign_rules(true).save().await?;
     }
 
     Ok(())
   }
 
   pub async fn process_for_handle_requests(&self) -> AsamiResult<()> {
-    let (_, verification_image_hash) =
-      get_url_image_hash(&self.state.settings.instagram.verification_image_url)?;
+    let (_, verification_image_hash) = get_url_image_hash(&self.state.settings.instagram.verification_image_url)?;
 
     let verification_caption_regex = regex::Regex::new(&format!(
       r#"^[\n\r\s]*{} \[(\d*)\]"#,
@@ -287,21 +237,10 @@ impl IgCrawlHub {
       .all()
       .await?
     {
-      for result in crawl
-        .ig_crawl_result_scope()
-        .processed_for_handle_requests_eq(false)
-        .all()
-        .await?
-      {
-        result
-          .process_for_handle_requests(&verification_image_hash, &verification_caption_regex)
-          .await?;
+      for result in crawl.ig_crawl_result_scope().processed_for_handle_requests_eq(false).all().await? {
+        result.process_for_handle_requests(&verification_image_hash, &verification_caption_regex).await?;
       }
-      crawl
-        .update()
-        .processed_for_handle_requests(true)
-        .save()
-        .await?;
+      crawl.update().processed_for_handle_requests(true).save().await?;
     }
 
     Ok(())
@@ -310,40 +249,14 @@ impl IgCrawlHub {
   pub async fn process_for_collabs(&self) -> AsamiResult<()> {
     let mut campaigns = vec![];
 
-    for campaign in self
-      .state
-      .campaign()
-      .select()
-      .site_eq(Site::Instagram)
-      .finished_eq(false)
-      .all()
-      .await?
-    {
-      if let Some(rule) = self
-        .state
-        .ig_campaign_rule()
-        .select()
-        .campaign_id_eq(campaign.id())
-        .optional()
-        .await?
-      {
+    for campaign in self.state.campaign().select().site_eq(Site::Instagram).finished_eq(false).all().await? {
+      if let Some(rule) = self.state.ig_campaign_rule().select().campaign_id_eq(campaign.id()).optional().await? {
         campaigns.push((campaign, rule));
       }
     }
 
-    for crawl in self
-      .select()
-      .processed_for_collabs_eq(false)
-      .status_eq(IgCrawlStatus::Responded)
-      .all()
-      .await?
-    {
-      for result in crawl
-        .ig_crawl_result_scope()
-        .processed_for_collabs_eq(false)
-        .all()
-        .await?
-      {
+    for crawl in self.select().processed_for_collabs_eq(false).status_eq(IgCrawlStatus::Responded).all().await? {
+      for result in crawl.ig_crawl_result_scope().processed_for_collabs_eq(false).all().await? {
         result.process_for_collabs(&campaigns).await?;
       }
       crawl.update().processed_for_collabs(true).save().await?;
@@ -381,15 +294,24 @@ model! {
 
 impl IgCrawlResult {
   pub async fn process_for_campaign_rules(self) -> AsamiResult<()> {
-    let ig_result = serde_json::from_str(self.json_string())
-      .map_err(|_| Error::Runtime("stored invalid IgResult in DB".into()))?;
+    let ig_result =
+      serde_json::from_str(self.json_string()).map_err(|_| Error::Runtime("stored invalid IgResult in DB".into()))?;
 
-    let IgResult::IgPost(post) = ig_result else { return Ok(()) };
+    let IgResult::IgPost(post) = ig_result else {
+      return Ok(());
+    };
 
-    let Some(campaign) = self.state.campaign()
-      .select().site_eq(Site::Instagram)
-      .content_id_eq(post.short_code).optional()
-      .await? else { return Ok(()) };
+    let Some(campaign) = self
+      .state
+      .campaign()
+      .select()
+      .site_eq(Site::Instagram)
+      .content_id_eq(post.short_code)
+      .optional()
+      .await?
+    else {
+      return Ok(());
+    };
 
     if !campaign.is_missing_ig_rules().await? {
       return Ok(());
@@ -418,10 +340,12 @@ impl IgCrawlResult {
     verification_hash: &ImageHash,
     caption_regex: &regex::Regex,
   ) -> AsamiResult<()> {
-    let ig_result = serde_json::from_str(self.json_string())
-      .map_err(|_| Error::Runtime("stored invalid IgResult in DB".into()))?;
+    let ig_result =
+      serde_json::from_str(self.json_string()).map_err(|_| Error::Runtime("stored invalid IgResult in DB".into()))?;
 
-    let IgResult::IgProfile(profile) = ig_result else { return Ok(()) };
+    let IgResult::IgProfile(profile) = ig_result else {
+      return Ok(());
+    };
 
     let maybe_request = self
       .state
@@ -446,9 +370,7 @@ impl IgCrawlResult {
             };
 
             if &account_id != handle_request.account_id() {
-              self
-                .log_post(post, "account id in caption did not match request account")
-                .await?;
+              self.log_post(post, "account id in caption did not match request account").await?;
               continue;
             }
           } else {
@@ -463,26 +385,14 @@ impl IgCrawlResult {
 
           let distance = verification_hash.dist(&posted_hash);
           if distance > 200 {
-            self
-              .log_post(post, &format!("Distance was {}", distance))
-              .await?;
+            self.log_post(post, &format!("Distance was {}", distance)).await?;
             continue;
           }
 
           let score = U256::from(profile.followers_count) * wei("85") / wei("100");
-          let suggested_ppp = self
-            .state
-            .indexer_state()
-            .get()
-            .await?
-            .attrs
-            .suggested_price_per_point;
+          let suggested_ppp = self.state.indexer_state().get().await?.attrs.suggested_price_per_point;
           let price = u256(suggested_ppp) * score;
-          handle_request
-            .verify(profile.id)
-            .await?
-            .appraise(price, score)
-            .await?;
+          handle_request.verify(profile.id).await?.appraise(price, score).await?;
 
           self.log_post(post, "verified and appraised").await?;
           break;
@@ -490,23 +400,18 @@ impl IgCrawlResult {
       }
     }
 
-    self
-      .update()
-      .processed_for_handle_requests(true)
-      .save()
-      .await?;
+    self.update().processed_for_handle_requests(true).save().await?;
 
     Ok(())
   }
 
-  pub async fn process_for_collabs(
-    mut self,
-    campaigns: &[(Campaign, IgCampaignRule)],
-  ) -> AsamiResult<()> {
-    let ig_result = serde_json::from_str(self.json_string())
-      .map_err(|_| Error::Runtime("stored invalid IgResult in DB".into()))?;
+  pub async fn process_for_collabs(mut self, campaigns: &[(Campaign, IgCampaignRule)]) -> AsamiResult<()> {
+    let ig_result =
+      serde_json::from_str(self.json_string()).map_err(|_| Error::Runtime("stored invalid IgResult in DB".into()))?;
 
-    let IgResult::IgProfile(profile) =  ig_result else { return Ok(()) };
+    let IgResult::IgProfile(profile) = ig_result else {
+      return Ok(());
+    };
 
     let maybe_handle = self
       .state
@@ -519,9 +424,7 @@ impl IgCrawlResult {
 
     match maybe_handle {
       None => {
-        self
-          .log("Skipped. Handle not synced yet. If it exists, we'll get it next time.")
-          .await?;
+        self.log("Skipped. Handle not synced yet. If it exists, we'll get it next time.").await?;
       }
       Some(handle) => {
         let mut post_hashes = HashMap::new();
@@ -529,49 +432,33 @@ impl IgCrawlResult {
         for post in &profile.latest_posts {
           for (campaign, rule) in campaigns {
             if !post.caption.trim().starts_with(rule.attrs.caption.trim()) {
-              self
-                .log_post(
-                  post,
-                  &format!("did not match caption for {}", campaign.id()),
-                )
-                .await?;
+              self.log_post(post, &format!("did not match caption for {}", campaign.id())).await?;
               continue;
             }
 
-            let posted_hash = match post_hashes
-              .entry(&post.id)
-              .or_insert_with(|| get_url_image_hash(&post.display_url).map(|x| x.1))
-            {
-              Ok(h) => h,
-              Err(e) => {
-                let description = format!("could not fetch display_url {:?} {:?}", post, e);
-                self.log_post(post, &description).await?;
-                continue;
-              }
-            };
+            let posted_hash =
+              match post_hashes.entry(&post.id).or_insert_with(|| get_url_image_hash(&post.display_url).map(|x| x.1)) {
+                Ok(h) => h,
+                Err(e) => {
+                  let description = format!("could not fetch display_url {:?} {:?}", post, e);
+                  self.log_post(post, &description).await?;
+                  continue;
+                }
+              };
 
             let distance = rule.get_image_hash()?.dist(posted_hash);
             if distance > 200 {
-              self
-                .log_post(post, &format!("Distance was {}", distance))
-                .await?;
+              self.log_post(post, &format!("Distance was {}", distance)).await?;
               continue;
             }
 
             match campaign.make_collab(&handle).await {
               Err(Error::Validation(field, value)) => {
-                self
-                  .log_post(
-                    post,
-                    &format!("could be a collab, but was invalid {} {}", field, value),
-                  )
-                  .await?;
+                self.log_post(post, &format!("could be a collab, but was invalid {} {}", field, value)).await?;
               }
               Err(e) => return Err(e),
               Ok(collab) => {
-                self
-                  .log_post(post, &format!("Made collab request {}", collab.attrs.id))
-                  .await?;
+                self.log_post(post, &format!("Made collab request {}", collab.attrs.id)).await?;
               }
             }
           }
@@ -586,12 +473,7 @@ impl IgCrawlResult {
 
   pub async fn log(&mut self, line: &str) -> AsamiResult<()> {
     self.reload().await?;
-    self
-      .clone()
-      .update()
-      .log_text(format!("{}{}\n", self.log_text(), line))
-      .save()
-      .await?;
+    self.clone().update().log_text(format!("{}{}\n", self.log_text(), line)).save().await?;
     Ok(())
   }
 
@@ -637,10 +519,7 @@ pub fn get_url_image_hash(url: &str) -> AsamiResult<(Vec<u8>, ImageHash)> {
   use image::io::Reader as ImageReader;
   use std::io::Read;
 
-  let hasher = HasherConfig::new()
-    .hash_alg(HashAlg::DoubleGradient)
-    .hash_size(100, 100)
-    .to_hasher();
+  let hasher = HasherConfig::new().hash_alg(HashAlg::DoubleGradient).hash_size(100, 100).to_hasher();
   let resp = ureq::get(url).call()?;
 
   let len: usize = resp
@@ -650,10 +529,7 @@ pub fn get_url_image_hash(url: &str) -> AsamiResult<(Vec<u8>, ImageHash)> {
     .map_err(|_| Error::service("image_hasher", "content_length_not_an_int"))?;
 
   let mut bytes: Vec<u8> = Vec::with_capacity(len);
-  resp
-    .into_reader()
-    .take(1024 * 1024 * 5)
-    .read_to_end(&mut bytes)?;
+  resp.into_reader().take(1024 * 1024 * 5).read_to_end(&mut bytes)?;
 
   let image = ImageReader::with_format(Cursor::new(&bytes), image::ImageFormat::Jpeg)
     .decode()

@@ -97,6 +97,7 @@ app_test!{ rate_can_be_voted (a)
 
 app_test!{ admin_can_be_voted_via_vested_votes (a)
   let admin_addr = a.app.on_chain.contract.client().address();
+  let admin_treasury = &a.truffle.addresses.deployer;
 
   let mut advertiser = a.client().await;
   let budget = u("3000");
@@ -170,7 +171,7 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
   assert!(a.contract().last_admin_election().call().await? > last_admin_election);
   assert_eq!(a.contract().get_latest_admin_elections().call().await?, [bob_addr, advertiser_addr,advertiser_addr]);
   assert_eq!(a.contract().admin().call().await?, admin_addr);
-  assert_eq!(a.contract().admin_treasury().call().await?, admin_addr);
+  assert_eq!(a.contract().admin_treasury().call().await?, *admin_treasury);
 
   // Bob keeps claiming the election two more times and becomes the new admin.
   a.evm_forward_to_next_cycle().await;

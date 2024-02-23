@@ -35,31 +35,16 @@ impl SyncedEventHub {
       d_to_u64(index_state.attrs.last_synced_block),
     );
 
-    let to_block = contract.client().get_block_number().await?
-      - self.state.settings.rsk.reorg_protection_padding;
+    let to_block = contract.client().get_block_number().await? - self.state.settings.rsk.reorg_protection_padding;
 
-    self
-      .sync_account_saved(contract, from_block, to_block)
-      .await?;
-    self
-      .sync_handle_saved(contract, from_block, to_block)
-      .await?;
+    self.sync_account_saved(contract, from_block, to_block).await?;
+    self.sync_handle_saved(contract, from_block, to_block).await?;
     self.sync_approval(contract, from_block, to_block).await?;
-    self
-      .sync_campaign_saved(contract, from_block, to_block)
-      .await?;
-    self
-      .sync_collab_saved(contract, from_block, to_block)
-      .await?;
-    self
-      .sync_topic_saved(contract, from_block, to_block)
-      .await?;
+    self.sync_campaign_saved(contract, from_block, to_block).await?;
+    self.sync_collab_saved(contract, from_block, to_block).await?;
+    self.sync_topic_saved(contract, from_block, to_block).await?;
 
-    index_state
-      .update()
-      .last_synced_block(u64_to_d(to_block))
-      .save()
-      .await?;
+    index_state.update().last_synced_block(u64_to_d(to_block)).save().await?;
 
     Ok(())
   }
@@ -129,12 +114,7 @@ impl SyncedEventHub {
         Some(a.addr.encode_hex())
       };
 
-      match self
-        .state
-        .account()
-        .find_optional(a.id.encode_hex())
-        .await?
-      {
+      match self.state.account().find_optional(a.id.encode_hex()).await? {
         Some(account) => {
           account
             .update()
@@ -165,12 +145,10 @@ impl SyncedEventHub {
     }
 
     for (_, meta) in &events {
-      let Some(on_chain_tx) = self.find_on_chain_tx(meta).await? else { continue };
-      self
-        .state
-        .claim_account_request()
-        .set_done(on_chain_tx.attrs.id)
-        .await?;
+      let Some(on_chain_tx) = self.find_on_chain_tx(meta).await? else {
+        continue;
+      };
+      self.state.claim_account_request().set_done(on_chain_tx.attrs.id).await?;
     }
 
     Ok(())
@@ -195,12 +173,7 @@ impl SyncedEventHub {
         continue;
       }
 
-      match self
-        .state
-        .handle()
-        .find_optional(e.handle.id.encode_hex())
-        .await?
-      {
+      match self.state.handle().find_optional(e.handle.id.encode_hex()).await? {
         Some(handle) => {
           let h = &e.handle;
           for old in handle.handle_topic_vec().await? {
@@ -260,33 +233,18 @@ impl SyncedEventHub {
     }
 
     for (_, meta) in events {
-      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
-      self
-        .state
-        .handle_request()
-        .set_done(on_chain_tx.attrs.id)
-        .await?;
-      self
-        .state
-        .set_score_and_topics_request()
-        .set_done(on_chain_tx.attrs.id)
-        .await?;
-      self
-        .state
-        .set_price_request()
-        .set_done(on_chain_tx.attrs.id)
-        .await?;
+      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else {
+        continue;
+      };
+      self.state.handle_request().set_done(on_chain_tx.attrs.id).await?;
+      self.state.set_score_and_topics_request().set_done(on_chain_tx.attrs.id).await?;
+      self.state.set_price_request().set_done(on_chain_tx.attrs.id).await?;
     }
 
     Ok(())
   }
 
-  pub async fn sync_approval(
-    &self,
-    contract: &AsamiContractSigner,
-    from_block: U64,
-    to_block: U64,
-  ) -> AsamiResult<()> {
+  pub async fn sync_approval(&self, contract: &AsamiContractSigner, from_block: U64, to_block: U64) -> AsamiResult<()> {
     let doc = &self.state.on_chain.doc_contract;
     let events = contract
       .approval_filter()
@@ -302,7 +260,9 @@ impl SyncedEventHub {
         continue;
       }
 
-      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
+      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else {
+        continue;
+      };
 
       let req = self
         .state
@@ -339,20 +299,10 @@ impl SyncedEventHub {
         continue;
       }
 
-      match self
-        .state
-        .campaign()
-        .find_optional(e.campaign.id.encode_hex())
-        .await?
-      {
+      match self.state.campaign().find_optional(e.campaign.id.encode_hex()).await? {
         Some(campaign) => {
           let remaining = e.campaign.remaining;
-          campaign
-            .update()
-            .remaining(remaining.encode_hex())
-            .finished(remaining == 0.into())
-            .save()
-            .await?;
+          campaign.update().remaining(remaining.encode_hex()).finished(remaining == 0.into()).save().await?;
         }
         None => {
           let c = &e.campaign;
@@ -379,19 +329,17 @@ impl SyncedEventHub {
             self.state.campaign_topic().insert(InsertCampaignTopic {
               campaign_id: c.id.encode_hex(),
               topic_id: new.encode_hex(),
-            });
+            }).save().await?;
           }
         }
       }
     }
 
     for (_, meta) in &events {
-      let Some(on_chain_tx) = self.find_on_chain_tx(meta).await? else { continue };
-      self
-        .state
-        .campaign_request()
-        .set_done(on_chain_tx.attrs.id)
-        .await?;
+      let Some(on_chain_tx) = self.find_on_chain_tx(meta).await? else {
+        continue;
+      };
+      self.state.campaign_request().set_done(on_chain_tx.attrs.id).await?;
     }
     Ok(())
   }
@@ -415,22 +363,12 @@ impl SyncedEventHub {
         continue;
       }
 
-      if self
-        .state
-        .collab()
-        .find_optional(e.collab.id.encode_hex())
-        .await?
-        .is_some()
-      {
+      if self.state.collab().find_optional(e.collab.id.encode_hex()).await?.is_some() {
         continue;
       }
 
       let c = &e.collab;
-      let campaign = self
-        .state
-        .campaign()
-        .find(c.campaign_id.encode_hex())
-        .await?;
+      let campaign = self.state.campaign().find(c.campaign_id.encode_hex()).await?;
       let handle = self.state.handle().find(c.handle_id.encode_hex()).await?;
 
       self
@@ -451,12 +389,10 @@ impl SyncedEventHub {
     }
 
     for (_, meta) in events {
-      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else { continue };
-      self
-        .state
-        .collab_request()
-        .set_done(on_chain_tx.attrs.id)
-        .await?;
+      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else {
+        continue;
+      };
+      self.state.collab_request().set_done(on_chain_tx.attrs.id).await?;
     }
 
     Ok(())
@@ -493,12 +429,10 @@ impl SyncedEventHub {
     }
 
     for (_, meta) in &events {
-      let Some(on_chain_tx) = self.find_on_chain_tx(meta).await? else { continue };
-      self
-        .state
-        .topic_request()
-        .set_done(on_chain_tx.attrs.id)
-        .await?;
+      let Some(on_chain_tx) = self.find_on_chain_tx(meta).await? else {
+        continue;
+      };
+      self.state.topic_request().set_done(on_chain_tx.attrs.id).await?;
     }
 
     Ok(())
@@ -506,12 +440,6 @@ impl SyncedEventHub {
 
   async fn find_on_chain_tx(&self, meta: &LogMeta) -> sqlx::Result<Option<OnChainTx>> {
     let tx_hash = meta.transaction_hash.encode_hex();
-    self
-      .state
-      .on_chain_tx()
-      .select()
-      .tx_hash_eq(tx_hash)
-      .optional()
-      .await
+    self.state.on_chain_tx().select().tx_hash_eq(tx_hash).optional().await
   }
 }

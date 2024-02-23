@@ -21,7 +21,7 @@ impl User {
   pub async fn account_id(&self) -> AsamiResult<String> {
     let accounts = self.account_user_vec().await?;
     let Some(first) = accounts.first() else {
-       return Err(Error::Runtime(format!("user has no account {}", &self.attrs.id)))
+      return Err(Error::Runtime(format!("user has no account {}", &self.attrs.id)));
     };
 
     Ok(first.attrs.account_id.clone())

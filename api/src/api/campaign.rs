@@ -44,10 +44,7 @@ pub struct CampaignFilter {
   available_to_account_id: Option<String>,
 }
 
-async fn make_available_to_account_id_filter(
-  context: &Context,
-  account_id: String,
-) -> FieldResult<CampaignFilter> {
+async fn make_available_to_account_id_filter(context: &Context, account_id: String) -> FieldResult<CampaignFilter> {
   let offers = context
     .app
     .account()
@@ -84,30 +81,16 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     sort_order: Option<String>,
     filter: Option<CampaignFilter>,
   ) -> FieldResult<Vec<Self>> {
-    if let Some(account_id) = filter
-      .as_ref()
-      .and_then(|f| f.available_to_account_id.clone())
-    {
+    if let Some(account_id) = filter.as_ref().and_then(|f| f.available_to_account_id.clone()) {
       let id_filter = make_available_to_account_id_filter(context, account_id).await?;
-      Self::base_collection(
-        context,
-        page,
-        per_page,
-        sort_field,
-        sort_order,
-        Some(id_filter),
-      )
-      .await
+      Self::base_collection(context, page, per_page, sort_field, sort_order, Some(id_filter)).await
     } else {
       Self::base_collection(context, page, per_page, sort_field, sort_order, filter).await
     }
   }
 
   async fn count(context: &Context, filter: Option<CampaignFilter>) -> FieldResult<ListMetadata> {
-    if let Some(account_ids) = filter
-      .as_ref()
-      .and_then(|f| f.available_to_account_id.clone())
-    {
+    if let Some(account_ids) = filter.as_ref().and_then(|f| f.available_to_account_id.clone()) {
       let ids_filter = make_available_to_account_id_filter(context, account_ids).await?;
       Self::base_count(context, Some(ids_filter)).await
     } else {
@@ -115,10 +98,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     }
   }
 
-  fn filter_to_select(
-    _context: &Context,
-    filter: Option<CampaignFilter>,
-  ) -> FieldResult<models::SelectCampaign> {
+  fn filter_to_select(_context: &Context, filter: Option<CampaignFilter>) -> FieldResult<models::SelectCampaign> {
     if let Some(f) = filter {
       Ok(models::SelectCampaign {
         id_in: f.ids,
@@ -134,7 +114,10 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
   }
 
   fn select_by_id(_context: &Context, id: String) -> FieldResult<models::SelectCampaign> {
-    Ok(models::SelectCampaign { id_eq: Some(id), ..Default::default() })
+    Ok(models::SelectCampaign {
+      id_eq: Some(id),
+      ..Default::default()
+    })
   }
 
   async fn db_to_graphql(d: models::Campaign) -> AsamiResult<Self> {

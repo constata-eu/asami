@@ -94,23 +94,11 @@ impl CreateCampaignPreferenceInput {
       .optional()
       .await?;
 
-    let not_interested_on = if self.not_interested {
-      Some(Utc::now())
-    } else {
-      None
-    };
-    let attempted_on = if self.attempted {
-      Some(Utc::now())
-    } else {
-      None
-    };
+    let not_interested_on = if self.not_interested { Some(Utc::now()) } else { None };
+    let attempted_on = if self.attempted { Some(Utc::now()) } else { None };
 
     let preference = if let Some(p) = maybe {
-      p.update()
-        .not_interested_on(not_interested_on)
-        .attempted_on(attempted_on)
-        .save()
-        .await?
+      p.update().not_interested_on(not_interested_on).attempted_on(attempted_on).save().await?
     } else {
       context
         .app

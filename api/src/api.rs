@@ -1,7 +1,7 @@
 use super::{error::Error, models, *};
 use juniper::{
-  graphql_object, graphql_value, EmptySubscription, FieldError, FieldResult, GraphQLInputObject,
-  GraphQLObject, IntrospectionFormat,
+  graphql_object, graphql_value, EmptySubscription, FieldError, FieldResult, GraphQLInputObject, GraphQLObject,
+  IntrospectionFormat,
 };
 use sqlx_models_orm::*;
 
@@ -46,12 +46,16 @@ pub async fn in_transaction(
 ) -> GraphQLResponse {
   let err = || GraphQLResponse::error(field_error("unexpected_error_in_graphql", ""));
 
-  let Ok(tx) = app.user().transactional().await else { return err() };
+  let Ok(tx) = app.user().transactional().await else {
+    return err();
+  };
   let app = tx.select().state;
 
   let context = match non_tx_current_session {
     Some(current) => {
-      let Ok(session) = current.0.reloaded().await else { return err() };
+      let Ok(session) = current.0.reloaded().await else {
+        return err();
+      };
       Context {
         app,
         current_session: Some(CurrentSession(session)),
@@ -74,7 +78,9 @@ pub async fn in_transaction(
   } else {
     Status::BadRequest
   };
-  let Ok(json) = serde_json::to_string(&response) else { return err() };
+  let Ok(json) = serde_json::to_string(&response) else {
+    return err();
+  };
   GraphQLResponse(status, json)
 }
 
@@ -89,7 +95,10 @@ pub async fn post_handler(
 
 #[rocket::get("/introspect")]
 pub async fn introspect(app: &State<App>, schema: &State<Schema>) -> JsonResult<juniper::Value> {
-  let ctx = Context { current_session: None, app: app.inner().clone() };
+  let ctx = Context {
+    current_session: None,
+    app: app.inner().clone(),
+  };
   let (res, _errors) = juniper::introspect(schema, &ctx, IntrospectionFormat::default())
     .map_err(|_| Error::Precondition("Invalid GraphQL schema for introspection".to_string()))?;
   Ok(Json(res))
@@ -127,10 +136,7 @@ const DEFAULT_PAGE: i32 = 0;
 trait Showable<Model: SqlxModel<State = App>, Filter: Send>: Sized {
   fn sort_field_to_order_by(field: &str) -> Option<<Model as SqlxModel>::ModelOrderBy>;
   fn filter_to_select(context: &Context, f: Option<Filter>) -> FieldResult<<Model as SqlxModel>::SelectModel>;
-  fn select_by_id(
-    context: &Context,
-    id: <Model as SqlxModel>::Id,
-  ) -> FieldResult<<Model as SqlxModel>::SelectModel>;
+  fn select_by_id(context: &Context, id: <Model as SqlxModel>::Id) -> FieldResult<<Model as SqlxModel>::SelectModel>;
   async fn db_to_graphql(d: Model) -> AsamiResult<Self>;
 
   async fn resource(context: &Context, id: <Model as SqlxModel>::Id) -> FieldResult<Self>
@@ -304,10 +310,7 @@ impl Mutation {
     input.process(context).await
   }
 
-  pub async fn create_handle_request(
-    context: &Context,
-    input: CreateHandleRequestInput,
-  ) -> FieldResult<HandleRequest> {
+  pub async fn create_handle_request(context: &Context, input: CreateHandleRequestInput) -> FieldResult<HandleRequest> {
     input.process(context).await
   }
 
@@ -342,10 +345,7 @@ pub fn new_graphql_schema() -> Schema {
 }
 
 fn field_error(message: &str, second_message: &str) -> FieldError {
-  FieldError::new(
-    message,
-    graphql_value!({ "internal_error": second_message }),
-  )
+  FieldError::new(message, graphql_value!({ "internal_error": second_message }))
 }
 
 fn into_like_search(i: Option<String>) -> Option<String> {

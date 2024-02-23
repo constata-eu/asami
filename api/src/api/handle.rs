@@ -19,9 +19,7 @@ pub struct Handle {
   username: String,
   #[graphql(description = "The unique user_id in the given social network. This never changes.")]
   user_id: String,
-  #[graphql(
-    description = "The price for each collab made with this handle. This is the price for a single repost."
-  )]
+  #[graphql(description = "The price for each collab made with this handle. This is the price for a single repost.")]
   price: String,
   #[graphql(description = "The score given to this handle by Asami's admin.")]
   score: String,

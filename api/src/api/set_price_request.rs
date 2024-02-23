@@ -11,13 +11,9 @@ pub struct SetPriceRequest {
   id: i32,
   #[graphql(description = "The id of the account that created this.")]
   account_id: String,
-  #[graphql(
-    description = "The numeric id of the handle in the smart contract. Hex encoded uint256."
-  )]
+  #[graphql(description = "The numeric id of the handle in the smart contract. Hex encoded uint256.")]
   handle_id: String,
-  #[graphql(
-    description = "The price for each collab made with this handle. This is the price for a single repost."
-  )]
+  #[graphql(description = "The price for each collab made with this handle. This is the price for a single repost.")]
   price: String,
   #[graphql(description = "Status of this request.")]
   status: GenericRequestStatus,
@@ -91,13 +87,7 @@ pub struct CreateSetPriceRequestInput {
 
 impl CreateSetPriceRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<SetPriceRequest> {
-    let handle = context
-      .account()
-      .await?
-      .handle_scope()
-      .id_eq(&self.handle_id)
-      .one()
-      .await?;
+    let handle = context.account().await?.handle_scope().id_eq(&self.handle_id).one().await?;
 
     let req = context
       .app

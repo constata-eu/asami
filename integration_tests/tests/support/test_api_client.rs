@@ -116,10 +116,10 @@ impl<'b> ApiClient<'b> {
     let rate = u256(self.test_app.app.indexer_state().get().await.unwrap().suggested_price_per_point());
     let budget = || { rate * wei("200") };
 
-    let regular_campaign = self.build_x_campaign(budget(), rate, 2).await;
+    let regular_campaign = self.build_x_campaign(budget(), rate, 2, &[]).await;
     let high_rate_campaign = self.build_instagram_campaign(budget(), rate * wei("2")).await;
-    let low_rate_campaign = self.build_x_campaign(budget(), rate / wei("2"), 2).await;
-    let low_budget_campaign = self.build_x_campaign(rate * wei("1"), rate, 2).await;
+    let low_rate_campaign = self.build_x_campaign(budget(), rate / wei("2"), 2, &[]).await;
+    let low_budget_campaign = self.build_x_campaign(rate * wei("1"), rate, 2, &[]).await;
 
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
 
@@ -135,26 +135,26 @@ impl<'b> ApiClient<'b> {
     let post = "C0T1wKQMS0v"; // This is the post shortcode.
     let two_days = Utc::now() + chrono::Duration::days(2);
 
-    self.account().await.create_campaign_request(models::Site::Instagram, post, budget, rate, two_days)
+    self.account().await.create_campaign_request(models::Site::Instagram, post, budget, rate, two_days, &[])
       .await.unwrap().pay()
       .await.unwrap()
   }
 
-  pub async fn build_x_campaign(&self, budget: U256, rate: U256, days: i64) -> models::CampaignRequest {
+  pub async fn build_x_campaign(&self, budget: U256, rate: U256, days: i64, topics: &[models::Topic]) -> models::CampaignRequest {
     let post = "1716421161867710954";
     let valid_until = Utc::now() + chrono::Duration::days(days);
 
-    self.account().await.create_campaign_request(models::Site::X, post, budget, rate, valid_until)
+    self.account().await.create_campaign_request(models::Site::X, post, budget, rate, valid_until, topics)
       .await.unwrap().pay()
       .await.unwrap()
   }
 
   pub async fn create_x_campaign(&self, budget: U256, rate: U256) -> models::Campaign {
-    self.create_x_campaign_valid_until(budget, rate, 2).await
+    self.create_x_campaign_extra(budget, rate, 2, &[]).await
   }
 
-  pub async fn create_x_campaign_valid_until(&self, budget: U256, rate: U256, days: i64) -> models::Campaign {
-    let campaign = self.build_x_campaign(budget, rate, days).await;
+  pub async fn create_x_campaign_extra(&self, budget: U256, rate: U256, days: i64, topics: &[models::Topic]) -> models::Campaign {
+    let campaign = self.build_x_campaign(budget, rate, days, topics).await;
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
     campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("campaign")
   }

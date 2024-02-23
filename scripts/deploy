@@ -3,31 +3,31 @@ trap "exit" INT
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD) 
 STAGING_IP=128.199.33.144
-PRODUCTION_IP=178.128.244.41
+PRODUCTION_IP=167.99.18.108
 
-#if [[ $1 == "production" && $BRANCH != "master" ]]
-#then
-#  echo Wont deploy anything but MASTER to production
-#  exit 1
-#fi
-#
-#if [[ -n $(git status --porcelain) ]]
-#then
-#  echo "Can't deploy while you have uncommited files"
-#  exit 1
-#fi
-#
-#if ! git pull origin $BRANCH
-#then
-#  echo Could not pull from $BRANCH
-#  exit 1
-#fi
-#
-#if [[ -n $(git status | grep ahead) ]]
-#then
-#  echo "Your branch is ahead of origin, push your changes first"
-#  exit 1
-#fi
+if [[ $1 == "production" && $BRANCH != "master" ]]
+then
+  echo Wont deploy anything but MASTER to production
+  exit 1
+fi
+
+if [[ -n $(git status --porcelain) ]]
+then
+  echo "Can't deploy while you have uncommited files"
+  exit 1
+fi
+
+if ! git pull origin $BRANCH
+then
+  echo Could not pull from $BRANCH
+  exit 1
+fi
+
+if [[ -n $(git status | grep ahead) ]]
+then
+  echo "Your branch is ahead of origin, push your changes first"
+  exit 1
+fi
 
 if [[ $1 == "production" ]]
 then

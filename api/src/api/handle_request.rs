@@ -19,9 +19,7 @@ pub struct HandleRequest {
   username: String,
   #[graphql(description = "The unique user_id in the given social network. This never changes.")]
   user_id: Option<String>,
-  #[graphql(
-    description = "The price for each collab made with this handle. This is the price for a single repost."
-  )]
+  #[graphql(description = "The price for each collab made with this handle. This is the price for a single repost.")]
   price: Option<String>,
   #[graphql(description = "The score given to this handle by Asami's admin.")]
   score: Option<String>,
@@ -102,11 +100,7 @@ pub struct CreateHandleRequestInput {
 
 impl CreateHandleRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<HandleRequest> {
-    let req = context
-      .account()
-      .await?
-      .create_handle_request(self.site, &self.username)
-      .await?;
+    let req = context.account().await?.create_handle_request(self.site, &self.username).await?;
 
     Ok(HandleRequest::db_to_graphql(req).await?)
   }

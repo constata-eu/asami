@@ -1,5 +1,7 @@
-use super::models::{Session, *};
-use super::*;
+use super::{
+  models::{Session, *},
+  *,
+};
 use base64::{engine::general_purpose, Engine as _};
 use ethers::abi::AbiEncode;
 use jwt_simple::prelude::*;
@@ -87,15 +89,8 @@ pub struct CurrentSession(pub Session);
 
 impl CurrentSession {
   async fn build(req: &Request<'_>, body: Option<&[u8]>) -> Result<Self, ApiAuthError> {
-    let app = req
-      .rocket()
-      .state::<App>()
-      .ok_or(ApiAuthError::Unexpected("rocket_error"))?;
-    let jwt = auth_some!(
-      req.headers().get_one("Authentication"),
-      "no_authentication_header"
-    )
-    .to_string();
+    let app = req.rocket().state::<App>().ok_or(ApiAuthError::Unexpected("rocket_error"))?;
+    let jwt = auth_some!(req.headers().get_one("Authentication"), "no_authentication_header").to_string();
 
     let session = match req.headers().get_one("Auth-Action") {
       Some("Login") => Self::login(app, &jwt, req, body).await?,
@@ -105,24 +100,13 @@ impl CurrentSession {
     Ok(Self(session))
   }
 
-  async fn login(
-    app: &App,
-    jwt: &str,
-    req: &Request<'_>,
-    body: Option<&[u8]>,
-  ) -> Result<Session, ApiAuthError> {
+  async fn login(app: &App, jwt: &str, req: &Request<'_>, body: Option<&[u8]>) -> Result<Session, ApiAuthError> {
     Self::validate_recaptcha(req, app).await?;
     let pubkey = Self::get_login_pubkey(req)?;
     let nonce = Self::validate_jwt(jwt, &pubkey, req, &body).await?;
     let (kind, lookup_key, auth_data) = Self::validate_auth_data(app, req).await?;
 
-    let maybe_auth_method = app
-      .auth_method()
-      .select()
-      .kind_eq(kind)
-      .lookup_key_eq(&lookup_key)
-      .optional()
-      .await?;
+    let maybe_auth_method = app.auth_method().select().kind_eq(kind).lookup_key_eq(&lookup_key).optional().await?;
 
     let (auth_method, new_account) = match maybe_auth_method {
       Some(method) => (method, None),
@@ -156,14 +140,7 @@ impl CurrentSession {
         .id;
 
         auth_try!(
-          app
-            .account_user()
-            .insert(InsertAccountUser {
-              account_id,
-              user_id
-            })
-            .save()
-            .await,
+          app.account_user().insert(InsertAccountUser { account_id, user_id }).save().await,
           "could_not_bind_user_to_account"
         );
 
@@ -186,10 +163,7 @@ impl CurrentSession {
 
     let key_id = hasher::hexdigest(pubkey.as_bytes());
 
-    let maybe_existing = auth_try!(
-      app.session().find_optional(&key_id).await,
-      "could_not_find_session"
-    );
+    let maybe_existing = auth_try!(app.session().find_optional(&key_id).await, "could_not_find_session");
 
     auth_assert!(maybe_existing.is_none(), "session_pubkey_exists");
 
@@ -213,27 +187,17 @@ impl CurrentSession {
 
     if let Some(account) = new_account {
       if kind == AuthMethodKind::Eip712 {
-        account
-          .create_claim_account_request(lookup_key, auth_data, session.attrs.id.clone())
-          .await?;
+        account.create_claim_account_request(lookup_key, auth_data, session.attrs.id.clone()).await?;
       }
     }
 
     Ok(session)
   }
 
-  async fn identify(
-    app: &App,
-    jwt: &str,
-    req: &Request<'_>,
-    body: Option<&[u8]>,
-  ) -> Result<Session, ApiAuthError> {
+  async fn identify(app: &App, jwt: &str, req: &Request<'_>, body: Option<&[u8]>) -> Result<Session, ApiAuthError> {
     let jwt_meta = auth_try!(Token::decode_metadata(jwt), "bad_jwt_metadata");
     let key_id = auth_some!(jwt_meta.key_id(), "no_key_id_in_jwt").to_string();
-    let session = auth_try!(
-      app.session().find(key_id).await,
-      "session_for_kid_not_found"
-    );
+    let session = auth_try!(app.session().find(key_id).await, "session_for_kid_not_found");
     auth_assert!(session.deletion_id().is_none(), "session_was_deleted");
     let nonce = Self::validate_jwt(jwt, &session.attrs.pubkey, req, &body).await?;
     auth_assert!(nonce > session.attrs.nonce, "invalid_nonce");
@@ -243,10 +207,7 @@ impl CurrentSession {
     ))
   }
 
-  async fn validate_auth_data(
-    app: &App,
-    req: &Request<'_>,
-  ) -> Result<(AuthMethodKind, String, String), ApiAuthError> {
+  async fn validate_auth_data(app: &App, req: &Request<'_>) -> Result<(AuthMethodKind, String, String), ApiAuthError> {
     let auth_method_kind_string = auth_some!(
       req.headers().get_one("Auth-Method-Kind"),
       "no_auth_method_kind_in_headers"
@@ -255,36 +216,21 @@ impl CurrentSession {
       AuthMethodKind::from_text(auth_method_kind_string),
       "invalid_auth_method_kind"
     );
-    let auth_data = auth_some!(
-      req.headers().get_one("Auth-Data"),
-      "no_auth_data_in_headers"
-    );
+    let auth_data = auth_some!(req.headers().get_one("Auth-Data"), "no_auth_data_in_headers");
 
     let lookup_key = match auth_method_kind {
       AuthMethodKind::OneTimeToken => {
         let token = auth_try!(
-          app
-            .one_time_token()
-            .select()
-            .used_eq(false)
-            .value_eq(&auth_data.to_string())
-            .one()
-            .await,
+          app.one_time_token().select().used_eq(false).value_eq(&auth_data.to_string()).one().await,
           "invalid_one_time_token"
         );
         format!("one_time_token:{}", token.attrs.id)
       }
       AuthMethodKind::X => {
-        let oauth_data: OauthCodeAndVerifier = auth_try!(
-          serde_json::from_str(auth_data),
-          "could_not_parse_oauth_data"
-        );
+        let oauth_data: OauthCodeAndVerifier = auth_try!(serde_json::from_str(auth_data), "could_not_parse_oauth_data");
 
         let verifier = twitter_v2::oauth2::PkceCodeVerifier::new(oauth_data.oauth_verifier);
-        let cb_url = auth_try!(
-          app.settings.x.redirect_uri.parse(),
-          "could_not_parse_cb_url"
-        );
+        let cb_url = auth_try!(app.settings.x.redirect_uri.parse(), "could_not_parse_cb_url");
 
         let client = twitter_v2::authorization::Oauth2Client::new(
           app.settings.x.client_id.clone(),
@@ -297,10 +243,7 @@ impl CurrentSession {
         let token = auth_try!(res, "could_not_fetch_oauth_token");
         let twitter = twitter_v2::TwitterApi::new(token);
 
-        let x = auth_try!(
-          twitter.get_users_me().send().await,
-          "could_not_find_twitter_me"
-        );
+        let x = auth_try!(twitter.get_users_me().send().await, "could_not_find_twitter_me");
 
         format!(
           "{}",
@@ -312,10 +255,7 @@ impl CurrentSession {
           .query_pairs(vec![
             ("client_id", app.settings.instagram.client_id.as_str()),
             ("redirect_uri", app.settings.instagram.redirect_uri.as_str()),
-            (
-              "client_secret",
-              app.settings.instagram.client_secret.as_str(),
-            ),
+            ("client_secret", app.settings.instagram.client_secret.as_str()),
             ("code", auth_data),
           ])
           .call();
@@ -325,10 +265,7 @@ impl CurrentSession {
           "could_not_get_facebook_auth_token"
         )
         .access_token;
-        let result = ureq::get(&format!(
-          "https://graph.facebook.com/me?access_token={access_token}"
-        ))
-        .call();
+        let result = ureq::get(&format!("https://graph.facebook.com/me?access_token={access_token}")).call();
         let response = auth_try!(result, "could_not_request_facebook_profile");
         auth_try!(
           response.into_json::<FacebookUserProfile>(),
@@ -339,11 +276,7 @@ impl CurrentSession {
       AuthMethodKind::Eip712 => {
         eip_712_sig_to_address(app.settings.rsk.chain_id, auth_data).map_err(ApiAuthError::Fail)?
       }
-      _ => {
-        return Err(ApiAuthError::Fail(
-          "auth_method_not_supported_yet".to_string(),
-        ))
-      }
+      _ => return Err(ApiAuthError::Fail("auth_method_not_supported_yet".to_string())),
     };
 
     Ok((auth_method_kind, lookup_key, auth_data.to_string()))
@@ -388,18 +321,10 @@ impl CurrentSession {
       general_purpose::URL_SAFE_NO_PAD.decode(pubkey_pem_base64),
       "invalid_base64_pubkey"
     );
-    Ok(auth_try!(
-      String::from_utf8(pubkey_pem_bytes),
-      "invalid_utf8_pubkey"
-    ))
+    Ok(auth_try!(String::from_utf8(pubkey_pem_bytes), "invalid_utf8_pubkey"))
   }
 
-  async fn validate_jwt(
-    jwt: &str,
-    pubkey: &str,
-    req: &Request<'_>,
-    body: &Option<&[u8]>,
-  ) -> Result<i64, ApiAuthError> {
+  async fn validate_jwt(jwt: &str, pubkey: &str, req: &Request<'_>, body: &Option<&[u8]>) -> Result<i64, ApiAuthError> {
     let key = auth_try!(ES256PublicKey::from_pem(pubkey), "invalid_pubkey_pem");
 
     let claims = auth_try!(
@@ -407,15 +332,9 @@ impl CurrentSession {
       "invalid_signature_or_token_claims"
     );
 
-    auth_assert!(
-      claims.custom.path == req.uri().path().raw(),
-      "wrong_auth_path"
-    );
+    auth_assert!(claims.custom.path == req.uri().path().raw(), "wrong_auth_path");
 
-    auth_assert!(
-      claims.custom.method == req.method().as_str(),
-      "wrong_auth_method"
-    );
+    auth_assert!(claims.custom.method == req.method().as_str(), "wrong_auth_method");
 
     if let Some(query) = req.uri().query() {
       let claim_query_hash = auth_some!(claims.custom.query_hash, "jwt_needs_to_send_query_hash");
@@ -429,10 +348,7 @@ impl CurrentSession {
     if let Some(bytes) = body {
       let claim_body_hash = auth_some!(claims.custom.body_hash, "jwt_needs_to_send_body_hash");
       let decoded = auth_try!(hex::decode(claim_body_hash), "claim_body_hash_is_not_hex");
-      auth_assert!(
-        decoded == hasher::digest(bytes),
-        "claim_body_does_not_match_body"
-      );
+      auth_assert!(decoded == hasher::digest(bytes), "claim_body_does_not_match_body");
     }
 
     let nonce_str: String = auth_some!(claims.nonce, "claims_had_no_nonce");
@@ -461,7 +377,7 @@ pub struct CurrentSessionAndJson<T> {
 }
 
 #[rocket::async_trait]
-impl<'r, T: DeserializeOwned + std::marker::Send > FromData<'r> for CurrentSessionAndJson<T> {
+impl<'r, T: DeserializeOwned + std::marker::Send> FromData<'r> for CurrentSessionAndJson<T> {
   type Error = ApiAuthError;
 
   async fn from_data(req: &'r Request<'_>, data: Data<'r>) -> data::Outcome<'r, Self> {
@@ -470,23 +386,15 @@ impl<'r, T: DeserializeOwned + std::marker::Send > FromData<'r> for CurrentSessi
 
     let body_bytes = match data.open(limit).into_bytes().await {
       Ok(read) if read.is_complete() => read.into_inner(),
-      _ => {
-        return Outcome::Failure((
-          Status::BadRequest,
-          ApiAuthError::Unexpected("no_body_bytes"),
-        ))
-      }
+      _ => return Outcome::Failure((Status::BadRequest, ApiAuthError::Unexpected("no_body_bytes"))),
     };
 
     match serde_json::from_str(&String::from_utf8_lossy(&body_bytes)) {
       Ok(value) => {
         let session = CurrentSession::build(req, Some(&body_bytes)).await.ok();
         Outcome::Success(CurrentSessionAndJson { session, json: value })
-      },
-      Err(_) => Outcome::Failure((
-        Status::BadRequest,
-        ApiAuthError::Unexpected("invalid_body_json"),
-      ))
+      }
+      Err(_) => Outcome::Failure((Status::BadRequest, ApiAuthError::Unexpected("invalid_body_json"))),
     }
   }
 }

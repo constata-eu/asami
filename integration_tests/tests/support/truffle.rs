@@ -1,4 +1,5 @@
 use std::process::Command;
+use ethers::abi::Address;
 
 #[derive(Clone)]
 pub struct Truffle {
@@ -11,6 +12,7 @@ pub struct Truffle {
 pub struct Addresses {
   pub asami: String,
   pub doc: String,
+  pub deployer: Address,
 }
 
 impl Truffle {

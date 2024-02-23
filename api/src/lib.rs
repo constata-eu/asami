@@ -26,10 +26,7 @@ pub async fn x_login(app: &State<App>, code: &str, state: &str) -> rocket::respo
 
 #[rocket::get("/facebook_login?<code>")]
 pub async fn facebook_login(app: &State<App>, code: &str) -> rocket::response::Redirect {
-  let uri = format!(
-    "{host}/#/facebook_login?code={code}",
-    host = app.settings.pwa_host
-  );
+  let uri = format!("{host}/#/facebook_login?code={code}", host = app.settings.pwa_host);
   rocket::response::Redirect::permanent(uri)
 }
 
@@ -68,10 +65,7 @@ pub fn custom_server(app: App, fig: figment::Figment) -> rocket::Rocket<rocket::
       allow_null: true,
       ..allowed
     }),
-    allowed_methods: vec![Method::Get, Method::Post]
-      .into_iter()
-      .map(From::from)
-      .collect(),
+    allowed_methods: vec![Method::Get, Method::Post].into_iter().map(From::from).collect(),
     allowed_headers: AllowedHeaders::all(),
     allow_credentials: true,
     ..Default::default()
@@ -80,9 +74,7 @@ pub fn custom_server(app: App, fig: figment::Figment) -> rocket::Rocket<rocket::
   .expect("Could not create cors.");
 
   rocket::custom(fig)
-    .attach(AdHoc::on_ignite("app", |rocket| async move {
-      rocket.manage(app)
-    }))
+    .attach(AdHoc::on_ignite("app", |rocket| async move { rocket.manage(app) }))
     .attach(ReCaptcha::fairing())
     .manage(new_graphql_schema())
     .attach(cors)

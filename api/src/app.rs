@@ -1,6 +1,4 @@
-use super::models::*;
-use super::on_chain::OnChain;
-use super::*;
+use super::{models::*, on_chain::OnChain, *};
 use rocket::Config;
 pub use serde::{Deserialize, Serialize};
 use sqlx::{
@@ -8,8 +6,10 @@ use sqlx::{
   ConnectOptions,
 };
 use sqlx_models_orm::Db;
-use std::io::{stdin, Read};
-use std::str::FromStr;
+use std::{
+  io::{stdin, Read},
+  str::FromStr,
+};
 
 #[derive(Clone)]
 pub struct App {

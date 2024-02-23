@@ -66,10 +66,7 @@ impl_on_chain_tx_request! {SetPriceRequestHub {
 impl SetPriceRequestHub {
   pub async fn create(&self, handle: &Handle, price: U256) -> AsamiResult<SetPriceRequest> {
     if handle.account().await?.is_claimed_or_claiming().await? {
-      return Err(Error::validation(
-        "handle",
-        "cannot_set_price_on_claimed_account",
-      ));
+      return Err(Error::validation("handle", "cannot_set_price_on_claimed_account"));
     }
 
     Ok(

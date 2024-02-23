@@ -32,12 +32,13 @@ impl Handle {
     u256(self.price()) / u256(self.score())
   }
 
+  pub async fn topic_ids(&self) -> sqlx::Result<Vec<String>> {
+    Ok(self.handle_topic_vec().await?.into_iter().map(|x| x.attrs.topic_id).collect())
+  }
+
   pub async fn validate_collaboration(&self, campaign: &Campaign) -> AsamiResult<()> {
     if self.price_score_ratio() > u256(campaign.price_score_ratio()) {
-      return Err(Error::validation(
-        "price_score_ratio",
-        "campaign_pays_too_little",
-      ));
+      return Err(Error::validation("price_score_ratio", "campaign_pays_too_little"));
     }
 
     if u256(self.price()) > u256(campaign.remaining()) {
@@ -49,10 +50,12 @@ impl Handle {
     }
 
     if self.site() != campaign.site() {
-      return Err(Error::validation(
-        "site",
-        "campaign_and_handle_sites_dont_match",
-      ));
+      return Err(Error::validation("site", "campaign_and_handle_sites_dont_match"));
+    }
+
+    let handle_topics = self.topic_ids().await?;
+    if !campaign.topic_ids().await?.iter().all(|topic| handle_topics.contains(topic)){
+      return Err(Error::validation("topics", "handle_is_missing_topics"));
     }
 
     let request_exists = self

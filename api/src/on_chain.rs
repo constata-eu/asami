@@ -4,8 +4,7 @@ pub use ethers::{
   prelude::{abigen, LogMeta, SignerMiddleware},
   providers::{Http, Provider},
   signers::{coins_bip39::English, LocalWallet, MnemonicBuilder, Signer},
-  types::Address,
-  types::U64,
+  types::{Address, U64},
 };
 use std::sync::Arc;
 

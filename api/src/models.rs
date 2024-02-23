@@ -1,5 +1,7 @@
-use super::on_chain::{self, AsamiContractSigner, LogMeta};
-use super::*;
+use super::{
+  on_chain::{self, AsamiContractSigner, LogMeta},
+  *,
+};
 pub use chrono::{DateTime, Datelike, Duration, TimeZone, Utc};
 pub use serde::{Deserialize, Serialize};
 pub use sqlx::{self, types::Decimal};
@@ -151,7 +153,9 @@ model! {
 
 impl IndexerStateHub {
   pub async fn get(&self) -> sqlx::Result<IndexerState> {
-    let Some(existing) = self.find_optional(1).await? else { return self.insert(InsertIndexerState{id: 1}).save().await };
+    let Some(existing) = self.find_optional(1).await? else {
+      return self.insert(InsertIndexerState { id: 1 }).save().await;
+    };
     Ok(existing)
   }
 }
@@ -216,8 +220,7 @@ pub fn make_login_to_asami_typed_data(chain_id: u64) -> Result<TypedData, String
 
 pub fn eip_712_sig_to_address(chain_id: u64, signature: &str) -> Result<String, String> {
   let payload = make_login_to_asami_typed_data(chain_id)?;
-  let sig =
-    Signature::from_str(signature).map_err(|_| "invalid_auth_data_signature".to_string())?;
+  let sig = Signature::from_str(signature).map_err(|_| "invalid_auth_data_signature".to_string())?;
   sig
     .recover_typed_data(&payload)
     .map(|a| a.encode_hex())

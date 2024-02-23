@@ -91,25 +91,14 @@ impl_on_chain_tx_request! { CampaignRequestHub {
 impl CampaignRequestHub {
   pub async fn submit_approvals(&self) -> anyhow::Result<()> {
     let rsk = &self.state.on_chain;
-    let reqs = self
-      .select()
-      .status_eq(CampaignRequestStatus::Paid)
-      .all()
-      .await?;
-    let total: U256 = reqs
-      .iter()
-      .map(|r| u256(r.budget()))
-      .fold(0.into(), |a, b| a + b);
+    let reqs = self.select().status_eq(CampaignRequestStatus::Paid).all().await?;
+    let total: U256 = reqs.iter().map(|r| u256(r.budget())).fold(0.into(), |a, b| a + b);
 
     if reqs.is_empty() {
       return Ok(());
     }
 
-    let on_chain_tx = self
-      .state
-      .on_chain_tx()
-      .send_tx(rsk.doc_contract.approve(rsk.contract.address(), total))
-      .await?;
+    let on_chain_tx = self.state.on_chain_tx().send_tx(rsk.doc_contract.approve(rsk.contract.address(), total)).await?;
 
     for r in reqs {
       r.update()
@@ -125,8 +114,12 @@ impl CampaignRequestHub {
 
 impl CampaignRequest {
   pub async fn campaign(&self) -> sqlx::Result<Option<Campaign>> {
-    let Some(on_chain_tx) = self.on_chain_tx().await? else { return Ok(None) };
-    let Some(tx_hash) = on_chain_tx.tx_hash() else { return Ok(None) };
+    let Some(on_chain_tx) = self.on_chain_tx().await? else {
+      return Ok(None);
+    };
+    let Some(tx_hash) = on_chain_tx.tx_hash() else {
+      return Ok(None);
+    };
 
     self
       .state
@@ -140,8 +133,14 @@ impl CampaignRequest {
       .await
   }
 
+  pub async fn topic_ids(&self) -> sqlx::Result<Vec<String>> {
+    Ok(self.campaign_request_topic_vec().await?.into_iter().map(|x| x.attrs.topic_id).collect())
+  }
+
   pub async fn approval(&self) -> sqlx::Result<Option<OnChainTx>> {
-    let Some(id) = self.approval_id().as_ref() else { return Ok(None) };
+    let Some(id) = self.approval_id().as_ref() else {
+      return Ok(None);
+    };
     self.state.on_chain_tx().find_optional(id).await
   }
 
@@ -150,21 +149,11 @@ impl CampaignRequest {
   }
 
   pub async fn pay(self) -> AsamiResult<Self> {
-    Ok(
-      self
-        .update()
-        .status(CampaignRequestStatus::Paid)
-        .save()
-        .await?,
-    )
+    Ok(self.update().status(CampaignRequestStatus::Paid).save().await?)
   }
 
   pub async fn approve(self) -> sqlx::Result<Self> {
-    self
-      .update()
-      .status(CampaignRequestStatus::Approved)
-      .save()
-      .await
+    self.update().status(CampaignRequestStatus::Approved).save().await
   }
 }
 

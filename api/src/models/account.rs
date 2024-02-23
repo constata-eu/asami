@@ -62,15 +62,7 @@ impl Account {
 
     let mut campaigns = vec![];
 
-    for c in self
-      .state
-      .campaign()
-      .select()
-      .finished_eq(false)
-      .all()
-      .await?
-      .into_iter()
-    {
+    for c in self.state.campaign().select().finished_eq(false).all().await?.into_iter() {
       if c.valid_until() <= &Utc::now() {
         continue;
       };
@@ -95,11 +87,7 @@ impl Account {
     Ok(campaigns)
   }
 
-  pub async fn create_handle_request(
-    &self,
-    site: Site,
-    username: &str,
-  ) -> sqlx::Result<HandleRequest> {
+  pub async fn create_handle_request(&self, site: Site, username: &str) -> sqlx::Result<HandleRequest> {
     self
       .state
       .handle_request()
@@ -119,10 +107,7 @@ impl Account {
     session_id: String,
   ) -> AsamiResult<ClaimAccountRequest> {
     if self.is_claimed_or_claiming().await? {
-      return Err(Error::validation(
-        "account",
-        "cannot_call_on_claimed_account",
-      ));
+      return Err(Error::validation("account", "cannot_call_on_claimed_account"));
     }
 
     Ok(
@@ -147,28 +132,38 @@ impl Account {
     budget: U256,
     price_score_ratio: U256,
     valid_until: UtcDateTime,
+    topics: &[Topic],
   ) -> AsamiResult<CampaignRequest> {
     if self.is_claimed_or_claiming().await? {
-      return Err(Error::validation(
-        "account",
-        "cannot_call_on_claimed_account",
-      ));
+      return Err(Error::validation("account", "cannot_call_on_claimed_account"));
     }
 
-    Ok(
+    let campaign = self
+      .state
+      .campaign_request()
+      .insert(InsertCampaignRequest {
+        account_id: self.attrs.id.clone(),
+        site,
+        budget: budget.encode_hex(),
+        content_id: content_id.to_string(),
+        price_score_ratio: price_score_ratio.encode_hex(),
+        valid_until,
+      })
+      .save()
+      .await?;
+
+    for t in topics {
       self
         .state
-        .campaign_request()
-        .insert(InsertCampaignRequest {
-          account_id: self.attrs.id.clone(),
-          site,
-          budget: budget.encode_hex(),
-          content_id: content_id.to_string(),
-          price_score_ratio: price_score_ratio.encode_hex(),
-          valid_until,
+        .campaign_request_topic()
+        .insert(InsertCampaignRequestTopic {
+          campaign_request_id: campaign.attrs.id.clone(),
+          topic_id: t.attrs.id.clone(),
         })
         .save()
-        .await?,
-    )
+        .await?;
+    }
+
+    Ok(campaign)
   }
 }

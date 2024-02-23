@@ -36,11 +36,6 @@ impl_on_chain_tx_request! { TopicRequestHub {
 
 impl TopicRequestHub {
   pub async fn create(&self, name: &str) -> sqlx::Result<TopicRequest> {
-    self
-      .insert(InsertTopicRequest {
-        name: name.to_string(),
-      })
-      .save()
-      .await
+    self.insert(InsertTopicRequest { name: name.to_string() }).save().await
   }
 }
