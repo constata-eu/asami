@@ -1,10 +1,10 @@
 pub struct TestApiServer;
+use rocket::{Config, config::LogLevel};
 
 impl TestApiServer {
   pub async fn start(app: api::App) -> tokio::task::JoinHandle<()> {
-    std::env::set_var("ROCKET_LOG_LEVEL", "off");
-
-    let server = tokio::spawn( async { api::server(app).launch().await.unwrap(); } );
+    let fig = Config::figment().merge((Config::LOG_LEVEL, LogLevel::Off));
+    let server = tokio::spawn( async move { api::custom_server(app, fig).launch().await.unwrap(); } );
 
     for i in 0..100 {
       let status = ureq::get("http://localhost:8000/graphql/introspect").call();

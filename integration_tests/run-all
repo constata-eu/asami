@@ -1,0 +1,4 @@
+#!/bin/bash
+pgrep -f "integration_tests/target/debug/deps" | xargs -r kill -9
+pgrep -f "bin/ganache" | xargs -r kill -9
+cargo test -j 4 --color always -- --test-threads 1 --nocapture 2>&1 | less -R

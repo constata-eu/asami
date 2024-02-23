@@ -1,4 +1,5 @@
 use std::process::Command;
+use ethers::abi::Address;
 
 #[derive(Clone)]
 pub struct Truffle {
@@ -11,6 +12,7 @@ pub struct Truffle {
 pub struct Addresses {
   pub asami: String,
   pub doc: String,
+  pub deployer: Address,
 }
 
 impl Truffle {
@@ -30,7 +32,7 @@ impl Truffle {
 
     let child_vec = Command::new("ganache")
       .current_dir(&dir)
-      .args(["-D", &format!("--logging.file={path_to_log}")])
+      .args(["-D", &format!("--logging.file={path_to_log}"), "--miner.instamine", "strict"])
       .output()
       .unwrap()
       .stdout;

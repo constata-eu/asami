@@ -1,4 +1,7 @@
-use super::{*, models::{self, *}};
+use super::{
+  models::{self, *},
+  *,
+};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -10,7 +13,9 @@ pub struct HandleRequest {
   account_id: String,
   #[graphql(description = "The social network of this handle: X, Instagram, Nostr.")]
   site: Site,
-  #[graphql(description = "The username on the given social network. This may change by the user, it may not be a unique id.")]
+  #[graphql(
+    description = "The username on the given social network. This may change by the user, it may not be a unique id."
+  )]
   username: String,
   #[graphql(description = "The unique user_id in the given social network. This never changes.")]
   user_id: Option<String>,
@@ -41,27 +46,34 @@ impl Showable<models::HandleRequest, HandleRequestFilter> for HandleRequest {
     }
   }
 
-  fn filter_to_select(context: &Context, filter: Option<HandleRequestFilter>) -> models::SelectHandleRequest {
+  fn filter_to_select(
+    context: &Context,
+    filter: Option<HandleRequestFilter>,
+  ) -> FieldResult<models::SelectHandleRequest> {
     if let Some(f) = filter {
-      models::SelectHandleRequest {
+      Ok(models::SelectHandleRequest {
         id_in: f.ids,
-        account_id_eq: Some(context.account_id().to_string()),
+        account_id_eq: Some(context.account_id()?),
         status_in: f.status_in,
         id_eq: f.id_eq,
         site_eq: f.site_eq,
         username_like: into_like_search(f.username_like),
         ..Default::default()
-      }
+      })
     } else {
-      models::SelectHandleRequest {
-        account_id_eq: Some(context.account_id().to_string()),
+      Ok(models::SelectHandleRequest {
+        account_id_eq: Some(context.account_id()?),
         ..Default::default()
-      }
+      })
     }
   }
 
-  fn select_by_id(context: &Context, id: i32) -> models::SelectHandleRequest {
-    models::SelectHandleRequest { id_eq: Some(id), account_id_eq: Some(context.account_id().to_string()), ..Default::default() }
+  fn select_by_id(context: &Context, id: i32) -> FieldResult<models::SelectHandleRequest> {
+    Ok(models::SelectHandleRequest {
+      id_eq: Some(id),
+      account_id_eq: Some(context.account_id()?),
+      ..Default::default()
+    })
   }
 
   async fn db_to_graphql(d: models::HandleRequest) -> AsamiResult<Self> {
@@ -88,10 +100,7 @@ pub struct CreateHandleRequestInput {
 
 impl CreateHandleRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<HandleRequest> {
-    let req = context.account().await?.create_handle_request(
-      self.site,
-      &self.username,
-    ).await?;
+    let req = context.account().await?.create_handle_request(self.site, &self.username).await?;
 
     Ok(HandleRequest::db_to_graphql(req).await?)
   }

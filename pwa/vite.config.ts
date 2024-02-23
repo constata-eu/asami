@@ -6,10 +6,12 @@ import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfil
 import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
 import nodePolyfills from 'rollup-plugin-polyfill-node';
 import cjs from '@rollup/plugin-commonjs';
+import svgr from "vite-plugin-svgr";
 
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
+      svgr(),
       react(),
     ],
     define: {
@@ -36,6 +38,7 @@ export default defineConfig({
             include: ['node_modules/** / *.js', '../../node_modules/** / *.js'],
           }),
           cjs(),
+          svgr(),
         ],
       },
     }

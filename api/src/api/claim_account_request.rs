@@ -1,4 +1,7 @@
-use super::{*, models::{self, *}};
+use super::{
+  models::{self, *},
+  *,
+};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -10,8 +13,8 @@ pub struct ClaimAccountRequest {
   account_id: String,
   #[graphql(description = "The address taking ownership.")]
   addr: String,
-  #[graphql(description = "Status of this campaign request.")]
-  status: ClaimAccountRequestStatus,
+  #[graphql(description = "Status of this request.")]
+  status: GenericRequestStatus,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -20,7 +23,7 @@ pub struct ClaimAccountRequestFilter {
   ids: Option<Vec<i32>>,
   id_eq: Option<i32>,
   addr_eq: Option<String>,
-  status_in: Option<Vec<ClaimAccountRequestStatus>>,
+  status_in: Option<Vec<GenericRequestStatus>>,
 }
 
 #[rocket::async_trait]
@@ -32,26 +35,33 @@ impl Showable<models::ClaimAccountRequest, ClaimAccountRequestFilter> for ClaimA
     }
   }
 
-  fn filter_to_select(context: &Context, filter: Option<ClaimAccountRequestFilter>) -> models::SelectClaimAccountRequest {
+  fn filter_to_select(
+    context: &Context,
+    filter: Option<ClaimAccountRequestFilter>,
+  ) -> FieldResult<models::SelectClaimAccountRequest> {
     if let Some(f) = filter {
-      models::SelectClaimAccountRequest {
+      Ok(models::SelectClaimAccountRequest {
         id_in: f.ids,
-        account_id_eq: Some(context.account_id().to_string()),
+        account_id_eq: Some(context.account_id()?),
         status_in: f.status_in,
         id_eq: f.id_eq,
         addr_eq: f.addr_eq,
         ..Default::default()
-      }
+      })
     } else {
-      models::SelectClaimAccountRequest {
-        account_id_eq: Some(context.account_id().to_string()),
+      Ok(models::SelectClaimAccountRequest {
+        account_id_eq: Some(context.account_id()?),
         ..Default::default()
-      }
+      })
     }
   }
 
-  fn select_by_id(context: &Context, id: i32) -> models::SelectClaimAccountRequest {
-    models::SelectClaimAccountRequest { id_eq: Some(id), account_id_eq: Some(context.account_id().to_string()), ..Default::default() }
+  fn select_by_id(context: &Context, id: i32) -> FieldResult<models::SelectClaimAccountRequest> {
+    Ok(models::SelectClaimAccountRequest {
+      id_eq: Some(id),
+      account_id_eq: Some(context.account_id()?),
+      ..Default::default()
+    })
   }
 
   async fn db_to_graphql(d: models::ClaimAccountRequest) -> AsamiResult<Self> {
@@ -74,19 +84,28 @@ pub struct CreateClaimAccountRequestInput {
 impl CreateClaimAccountRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<ClaimAccountRequest> {
     let address = eip_712_sig_to_address(context.app.settings.rsk.chain_id, &self.signature)
-      .map_err(|msg| Error::Validation("eip_712_sig".to_string(), msg) )?;
+      .map_err(|msg| Error::Validation("eip_712_sig".to_string(), msg))?;
 
-    let req = context.account().await?.create_claim_account_request(
-      address.clone(),
-      self.signature,
-      context.current_session.0.attrs.id.clone()
-    ).await?;
+    let req = context
+      .account()
+      .await?
+      .create_claim_account_request(
+        address.clone(),
+        self.signature,
+        context.current_session()?.0.attrs.id.clone(),
+      )
+      .await?;
 
-    context.app.auth_method().insert(InsertAuthMethod{
-      user_id: context.user_id(),
-      lookup_key: address,
-      kind: AuthMethodKind::Eip712
-    }).save().await?;
+    context
+      .app
+      .auth_method()
+      .insert(InsertAuthMethod {
+        user_id: context.user_id()?,
+        lookup_key: address,
+        kind: AuthMethodKind::Eip712,
+      })
+      .save()
+      .await?;
 
     Ok(ClaimAccountRequest::db_to_graphql(req).await?)
   }

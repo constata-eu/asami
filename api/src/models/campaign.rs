@@ -1,6 +1,6 @@
 use super::*;
 
-model!{
+model! {
   state: App,
   table: campaigns,
   struct Campaign {
@@ -22,27 +22,35 @@ model!{
     valid_until: UtcDateTime,
     #[sqlx_model_hints(boolean, default)]
     finished: bool,
+    #[sqlx_model_hints(boolean)]
+    funded_by_admin: bool,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
     #[sqlx_model_hints(timestamptz, default)]
     updated_at: Option<UtcDateTime>,
+    #[sqlx_model_hints(varchar)]
+    tx_hash: String,
   },
   has_many {
+    CampaignTopic(campaign_id),
     IgCampaignRule(campaign_id)
   }
 }
 
 impl CampaignHub {
   pub async fn sync_x_collabs(&self) -> AsamiResult<Vec<CollabRequest>> {
-    use twitter_v2::{TwitterApi, authorization::BearerToken, api_result::*};
+    use twitter_v2::{api_result::*, authorization::BearerToken, TwitterApi};
 
     let mut reqs = vec![];
     let conf = &self.state.settings.x;
     let auth = BearerToken::new(&conf.bearer_token);
     let api = TwitterApi::new(auth);
-    
+
     for campaign in self.select().finished_eq(false).site_eq(Site::X).all().await? {
-      let post_id = campaign.attrs.content_id.parse::<u64>()
+      let post_id = campaign
+        .attrs
+        .content_id
+        .parse::<u64>()
         .map_err(|_| Error::Validation("content_id".into(), "was stored in the db not as u64".into()))?;
 
       let reposts = api.get_tweet_retweeted_by(post_id).send().await?;
@@ -56,10 +64,9 @@ impl CampaignHub {
         };
 
         for user in data {
-          let Some(handle) = self.state.handle()
-            .select()
-            .user_id_eq(&user.id.to_string())
-            .optional().await? else { continue };
+          let Some(handle) = self.state.handle().select().user_id_eq(&user.id.to_string()).optional().await? else {
+            continue;
+          };
 
           match campaign.make_collab(&handle).await {
             Ok(req) => reqs.push(req),
@@ -87,13 +94,24 @@ impl CampaignHub {
 }
 
 impl Campaign {
-  pub async fn make_collab(&self, handle: &Handle) -> AsamiResult<CollabRequest> {
-    handle.validate_collaboration(&self).await?;
+  pub async fn topic_ids(&self) -> sqlx::Result<Vec<String>> {
+    Ok(self.campaign_topic_vec().await?.into_iter().map(|t| t.attrs.topic_id).collect())
+  }
 
-    Ok(self.state.collab_request().insert(InsertCollabRequest{
-      campaign_id: self.attrs.id.clone(),
-      handle_id: handle.attrs.id.clone(),
-    }).save().await?)
+  pub async fn make_collab(&self, handle: &Handle) -> AsamiResult<CollabRequest> {
+    handle.validate_collaboration(self).await?;
+
+    Ok(
+      self
+        .state
+        .collab_request()
+        .insert(InsertCollabRequest {
+          campaign_id: self.attrs.id.clone(),
+          handle_id: handle.attrs.id.clone(),
+        })
+        .save()
+        .await?,
+    )
   }
 
   pub async fn is_missing_ig_rules(&self) -> AsamiResult<bool> {
@@ -101,7 +119,7 @@ impl Campaign {
   }
 }
 
-model!{
+model! {
   state: App,
   table: campaign_topics,
   struct CampaignTopic {

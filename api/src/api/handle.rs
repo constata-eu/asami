@@ -1,4 +1,7 @@
-use super::{*, models::{self, *}};
+use super::{
+  models::{self, *},
+  *,
+};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -10,7 +13,9 @@ pub struct Handle {
   account_id: String,
   #[graphql(description = "The social network of this handle: X, Instagram, Nostr.")]
   site: Site,
-  #[graphql(description = "The username on the given social network. This may change by the user, it may not be a unique id.")]
+  #[graphql(
+    description = "The username on the given social network. This may change by the user, it may not be a unique id."
+  )]
   username: String,
   #[graphql(description = "The unique user_id in the given social network. This never changes.")]
   user_id: String,
@@ -40,9 +45,9 @@ impl Showable<models::Handle, HandleFilter> for Handle {
     }
   }
 
-  fn filter_to_select(context: &Context, filter: Option<HandleFilter>) -> models::SelectHandle {
+  fn filter_to_select(_context: &Context, filter: Option<HandleFilter>) -> FieldResult<models::SelectHandle> {
     if let Some(f) = filter {
-      models::SelectHandle {
+      Ok(models::SelectHandle {
         id_in: f.ids,
         account_id_eq: f.account_id_eq,
         id_eq: f.id_eq,
@@ -50,17 +55,17 @@ impl Showable<models::Handle, HandleFilter> for Handle {
         user_id_like: f.user_id_like,
         site_eq: f.site_eq,
         ..Default::default()
-      }
+      })
     } else {
-      models::SelectHandle {
-        account_id_eq: Some(context.account_id().to_string()),
-        ..Default::default()
-      }
+      Ok(Default::default())
     }
   }
 
-  fn select_by_id(_context: &Context, id: String) -> models::SelectHandle {
-    models::SelectHandle { id_eq: Some(id), ..Default::default() }
+  fn select_by_id(_context: &Context, id: String) -> FieldResult<models::SelectHandle> {
+    Ok(models::SelectHandle {
+      id_eq: Some(id),
+      ..Default::default()
+    })
   }
 
   async fn db_to_graphql(d: models::Handle) -> AsamiResult<Self> {

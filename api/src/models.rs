@@ -1,12 +1,18 @@
-use super::*;
-use super::on_chain::{self, AsamiContractSigner, LogMeta};
+use super::{
+  on_chain::{self, AsamiContractSigner, LogMeta},
+  *,
+};
+pub use chrono::{DateTime, Datelike, Duration, TimeZone, Utc};
+pub use serde::{Deserialize, Serialize};
 pub use sqlx::{self, types::Decimal};
-pub use serde::{Serialize, Deserialize};
 use sqlx_models_orm::model;
-pub use chrono::{DateTime, Duration, Utc, Datelike, TimeZone};
 pub type UtcDateTime = DateTime<Utc>;
+pub use ethers::{
+  abi::{AbiDecode, AbiEncode},
+  middleware::Middleware,
+  types::{transaction::eip712::TypedData, Signature, H160, H256, U256, U64},
+};
 pub use juniper::GraphQLEnum;
-pub use ethers::{ types::{ U256, U64, H160, H256, Signature, transaction::eip712::TypedData}, abi::{AbiEncode, AbiDecode}, middleware::Middleware};
 use std::str::FromStr;
 
 pub mod hasher;
@@ -34,140 +40,49 @@ pub mod session;
 pub use session::*;
 pub mod ig_crawl;
 pub use ig_crawl::*;
+pub mod audit_log_entry;
+pub use audit_log_entry::*;
+pub mod on_chain_tx;
+pub use on_chain_tx::*;
+pub mod site;
+pub use site::*;
+pub mod set_score_and_topics_request;
+pub use set_score_and_topics_request::*;
+pub mod set_price_request;
+pub use set_price_request::*;
+pub mod auth_method;
+pub use auth_method::*;
+pub mod topic;
+pub use topic::*;
+pub mod topic_request;
+pub use topic_request::*;
 
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
-#[sqlx(type_name = "site", rename_all = "snake_case")]
-pub enum Site {
-  X,
-  Nostr,
-  Instagram,
-}
+#[macro_export]
+macro_rules! make_sql_enum {
+  ($sql_name:tt, pub enum $name:ident { $($variants:ident),* $(,)?}) => (
+    #[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
+    #[sqlx(type_name = $sql_name, rename_all = "snake_case")]
+    pub enum $name { $($variants),* }
 
-impl Site {
-  pub fn from_on_chain(o: u8) -> Self {
-    match o {
-      0 => Self::X,
-      1 => Self::Nostr,
-      2 => Self::Instagram,
-      _ => panic!("mismatched site on contract")
+    impl sqlx::postgres::PgHasArrayType for $name {
+      fn array_type_info() -> sqlx::postgres::PgTypeInfo {
+        sqlx::postgres::PgTypeInfo::with_name(concat!("_", $sql_name))
+      }
     }
+  )
+}
+
+make_sql_enum![
+  "generic_request_status",
+  pub enum GenericRequestStatus {
+    Received,
+    Submitted,
+    Failed,
+    Done,
   }
-}
+];
 
-impl sqlx::postgres::PgHasArrayType for Site {
-  fn array_type_info() -> sqlx::postgres::PgTypeInfo {
-    sqlx::postgres::PgTypeInfo::with_name("_site")
-  }
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
-#[sqlx(type_name = "handle_update_request_status", rename_all = "snake_case")]
-pub enum HandleUpdateRequestStatus {
-  Received,
-  Submitted,
-  Done,
-}
-
-impl sqlx::postgres::PgHasArrayType for HandleUpdateRequestStatus {
-  fn array_type_info() -> sqlx::postgres::PgTypeInfo {
-    sqlx::postgres::PgTypeInfo::with_name("_handle_update_request_status")
-  }
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type)]
-#[sqlx(type_name = "auth_method_kind", rename_all = "snake_case")]
-pub enum AuthMethodKind {
-  X,
-  Facebook,
-  Nostr,
-  Eip712,
-  OneTimeToken,
-}
-
-impl AuthMethodKind {
-  pub fn from_str(s: &str) -> Option<AuthMethodKind> {
-    match s {
-      "X" => Some(AuthMethodKind::X),
-      "Facebook" => Some(AuthMethodKind::Facebook),
-      "Nostr" => Some(AuthMethodKind::Nostr),
-      "Eip712" => Some(AuthMethodKind::Eip712),
-      "OneTimeToken" => Some(AuthMethodKind::OneTimeToken),
-      _ => None
-    }
-  }
-}
-
-impl sqlx::postgres::PgHasArrayType for AuthMethodKind {
-  fn array_type_info() -> sqlx::postgres::PgTypeInfo {
-    sqlx::postgres::PgTypeInfo::with_name("_auth_method_kind")
-  }
-}
-
-model!{
-  state: App,
-  table: handle_update_requests,
-  struct HandleUpdateRequest {
-    #[sqlx_model_hints(int4, default)]
-    id: i32,
-    #[sqlx_model_hints(varchar)]
-    account_id: String,
-    #[sqlx_model_hints(varchar)]
-    handle_id: String,
-    #[sqlx_model_hints(varchar)]
-    username: Option<String>,
-    #[sqlx_model_hints(varchar)]
-    price: Option<String>,
-    #[sqlx_model_hints(varchar)]
-    score: Option<String>,
-    #[sqlx_model_hints(boolean)]
-    created_by_admin: bool,
-    #[sqlx_model_hints(handle_update_request_status, default)]
-    status: HandleUpdateRequestStatus,
-    #[sqlx_model_hints(varchar, default)]
-    tx_hash: Option<String>,
-  },
-  has_many {
-    HandleUpdateTopic(handle_update_request_id),
-  }
-}
-
-impl HandleUpdateRequest {
-  pub async fn done(self) -> sqlx::Result<Self> {
-    self.update().status(HandleUpdateRequestStatus::Done).save().await
-  }
-}
-
-model!{
-  state: App,
-  table: handle_update_request_topics,
-  struct HandleUpdateTopic {
-    #[sqlx_model_hints(int4, default)]
-    id: i32,
-    #[sqlx_model_hints(int4)]
-    handle_update_request_id: i32,
-    #[sqlx_model_hints(varchar)]
-    topic_id: String,
-  }
-}
-
-model!{
-  state: App,
-  table: auth_methods,
-  struct AuthMethod {
-    #[sqlx_model_hints(int4, default)]
-    id: i32,
-    user_id: i32,
-    #[sqlx_model_hints(auth_method_kind)]
-    kind: AuthMethodKind,
-    #[sqlx_model_hints(Varchar)]
-    lookup_key: String,
-  },
-  belongs_to {
-    User(user_id)
-  }
-}
-
-model!{
+model! {
   state: App,
   table: account_users,
   struct AccountUser {
@@ -184,7 +99,7 @@ model!{
  * The authentication strategy will only check that the string exists and has not been used.
  * This token's id is referenced in the lookup key of (at least one) AuthMethod.
  */
-model!{
+model! {
   state: App,
   table: one_time_tokens,
   struct OneTimeToken {
@@ -197,7 +112,7 @@ model!{
   }
 }
 
-model!{
+model! {
   state: App,
   table: collabs,
   struct Collab {
@@ -208,7 +123,7 @@ model!{
     #[sqlx_model_hints(varchar)]
     advertiser_id: String,
     #[sqlx_model_hints(varchar)]
-    handle_id: String, 
+    handle_id: String,
     #[sqlx_model_hints(varchar)]
     member_id: String,
     #[sqlx_model_hints(varchar)]
@@ -220,19 +135,8 @@ model!{
   }
 }
 
-model!{
-  state: App,
-  table: topics,
-  struct Topic {
-    #[sqlx_model_hints(varchar)]
-    id: String,
-    #[sqlx_model_hints(varchar)]
-    name: String,
-  }
-}
-
 // This is an account profile when taking the Collaborator role.
-model!{
+model! {
   state: App,
   table: indexer_states,
   struct IndexerState {
@@ -249,8 +153,8 @@ model!{
 
 impl IndexerStateHub {
   pub async fn get(&self) -> sqlx::Result<IndexerState> {
-    let Some(existing) = self.find_optional(1).await? else { 
-      return self.insert(InsertIndexerState{id: 1}).save().await
+    let Some(existing) = self.find_optional(1).await? else {
+      return self.insert(InsertIndexerState { id: 1 }).save().await;
     };
     Ok(existing)
   }
@@ -282,15 +186,15 @@ fn i_to_utc(u: U256) -> UtcDateTime {
   Utc.timestamp_opt(u.as_u64() as i64, 0).unwrap()
 }
 
-fn utc_to_i(d: UtcDateTime) -> U256 {
+pub fn utc_to_i(d: UtcDateTime) -> U256 {
   d.timestamp().into()
 }
 
-fn u64_to_d(u: U64) -> Decimal {
+pub fn u64_to_d(u: U64) -> Decimal {
   Decimal::from_u64(u.as_u64()).unwrap_or(Decimal::ZERO)
 }
 
-fn d_to_u64(d: Decimal) -> U64 {
+pub fn d_to_u64(d: Decimal) -> U64 {
   U64::from_dec_str(&d.to_string()).unwrap_or(U64::zero())
 }
 
@@ -317,7 +221,8 @@ pub fn make_login_to_asami_typed_data(chain_id: u64) -> Result<TypedData, String
 pub fn eip_712_sig_to_address(chain_id: u64, signature: &str) -> Result<String, String> {
   let payload = make_login_to_asami_typed_data(chain_id)?;
   let sig = Signature::from_str(signature).map_err(|_| "invalid_auth_data_signature".to_string())?;
-  sig.recover_typed_data(&payload)
-    .map(|a| a.encode_hex() )
+  sig
+    .recover_typed_data(&payload)
+    .map(|a| a.encode_hex())
     .map_err(|_| "could_not_recover_typed_data_from_sig".to_string())
 }

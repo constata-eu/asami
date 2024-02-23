@@ -1,4 +1,7 @@
-use super::{*, models::{self, *}};
+use super::{
+  models::{self, *},
+  *,
+};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -44,9 +47,9 @@ impl Showable<models::Collab, CollabFilter> for Collab {
     }
   }
 
-  fn filter_to_select(_context: &Context, filter: Option<CollabFilter>) -> models::SelectCollab {
+  fn filter_to_select(_context: &Context, filter: Option<CollabFilter>) -> FieldResult<models::SelectCollab> {
     if let Some(f) = filter {
-      models::SelectCollab {
+      Ok(models::SelectCollab {
         id_in: f.ids,
         campaign_id_eq: f.campaign_id_eq,
         campaign_id_in: f.campaign_id_in,
@@ -58,14 +61,17 @@ impl Showable<models::Collab, CollabFilter> for Collab {
         member_id_eq: f.member_id_eq,
         id_eq: f.id_eq,
         ..Default::default()
-      }
+      })
     } else {
-      Default::default()
+      Ok(Default::default())
     }
   }
 
-  fn select_by_id(_context: &Context, id: String) -> models::SelectCollab {
-    models::SelectCollab { id_eq: Some(id), ..Default::default() }
+  fn select_by_id(_context: &Context, id: String) -> FieldResult<models::SelectCollab> {
+    Ok(models::SelectCollab {
+      id_eq: Some(id),
+      ..Default::default()
+    })
   }
 
   async fn db_to_graphql(d: models::Collab) -> AsamiResult<Self> {

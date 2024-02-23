@@ -1,4 +1,7 @@
-use super::{*, models::{self, *}};
+use super::{
+  models::{self, *},
+  *,
+};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -31,25 +34,31 @@ impl Showable<models::IgCampaignRule, IgCampaignRuleFilter> for IgCampaignRule {
     }
   }
 
-  fn filter_to_select(_context: &Context, filter: Option<IgCampaignRuleFilter>) -> models::SelectIgCampaignRule {
+  fn filter_to_select(
+    _context: &Context,
+    filter: Option<IgCampaignRuleFilter>,
+  ) -> FieldResult<models::SelectIgCampaignRule> {
     if let Some(f) = filter {
-      models::SelectIgCampaignRule {
+      Ok(models::SelectIgCampaignRule {
         id_in: f.ids,
         campaign_id_eq: f.campaign_id_eq,
         id_eq: f.id_eq,
         ..Default::default()
-      }
+      })
     } else {
-      Default::default()
+      Ok(Default::default())
     }
   }
 
-  fn select_by_id(_context: &Context, id: i32) -> models::SelectIgCampaignRule {
-    models::SelectIgCampaignRule { id_eq: Some(id), ..Default::default() }
+  fn select_by_id(_context: &Context, id: i32) -> FieldResult<models::SelectIgCampaignRule> {
+    Ok(models::SelectIgCampaignRule {
+      id_eq: Some(id),
+      ..Default::default()
+    })
   }
 
   async fn db_to_graphql(d: models::IgCampaignRule) -> AsamiResult<Self> {
-    use base64::{Engine as _, engine::general_purpose};
+    use base64::{engine::general_purpose, Engine as _};
 
     Ok(IgCampaignRule {
       id: d.attrs.id,

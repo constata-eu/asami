@@ -7,19 +7,14 @@ pub use galvanic_assert::{
 };
 pub use api::{
   models::{self, u, U256, u256, hasher, Utc, wei},
-  on_chain::{AsamiContractSigner, AsamiContract, Provider, SignerMiddleware, Address, Http}
+  on_chain::{self, AsamiContractSigner, DocContract, AsamiContract, IERC20, Provider, SignerMiddleware, Address, Http}
 };
-use rocket::{
-  http::{Header, Status},
-  local::asynchronous::LocalResponse,
-};
+use rocket::{ http::Header, local::asynchronous::LocalResponse };
 use jwt_simple::{ algorithms::*, prelude::*, };
 pub use serde::{Serialize, de::DeserializeOwned, Deserialize};
 use graphql_client;
 use graphql_client::GraphQLQuery;
 pub use api::Decimal;
-
-use rand::thread_rng;
 use ethers::{middleware::Middleware, types::TransactionRequest, signers::{LocalWallet, Signer}};
 
 #[derive(Deserialize)]
@@ -34,6 +29,7 @@ pub struct ApiClient<'a> {
   pub session: Option<models::Session>,
   pub local_wallet: Option<LocalWallet>,
   pub contract: Option<AsamiContractSigner>,
+  pub doc_contract: Option<DocContract>,
 }
 
 #[derive(Clone)]
@@ -52,6 +48,7 @@ impl<'b> ApiClient<'b> {
       session_key: None, 
       session: None,
       contract: None,
+      doc_contract: None
     }
   }
 
@@ -81,6 +78,10 @@ impl<'b> ApiClient<'b> {
 
   pub fn contract(&self) -> &AsamiContractSigner {
     self.contract.as_ref().unwrap()
+  }
+
+  pub fn doc_contract(&self) -> &DocContract {
+    self.doc_contract.as_ref().unwrap()
   }
 
   pub async fn login_with_key(&mut self, key: ES256KeyPair) {
@@ -115,10 +116,10 @@ impl<'b> ApiClient<'b> {
     let rate = u256(self.test_app.app.indexer_state().get().await.unwrap().suggested_price_per_point());
     let budget = || { rate * wei("200") };
 
-    let regular_campaign = self.build_x_campaign(budget(), rate).await;
+    let regular_campaign = self.build_x_campaign(budget(), rate, 2, &[]).await;
     let high_rate_campaign = self.build_instagram_campaign(budget(), rate * wei("2")).await;
-    let low_rate_campaign = self.build_x_campaign(budget(), rate / wei("2")).await;
-    let low_budget_campaign = self.build_x_campaign(rate * wei("1"), rate).await;
+    let low_rate_campaign = self.build_x_campaign(budget(), rate / wei("2"), 2, &[]).await;
+    let low_budget_campaign = self.build_x_campaign(rate * wei("1"), rate, 2, &[]).await;
 
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
 
@@ -134,46 +135,81 @@ impl<'b> ApiClient<'b> {
     let post = "C0T1wKQMS0v"; // This is the post shortcode.
     let two_days = Utc::now() + chrono::Duration::days(2);
 
-    self.account().await.create_campaign_request(models::Site::Instagram, post, budget, rate, two_days)
+    self.account().await.create_campaign_request(models::Site::Instagram, post, budget, rate, two_days, &[])
       .await.unwrap().pay()
       .await.unwrap()
   }
 
-  pub async fn build_x_campaign(&self, budget: U256, rate: U256) -> models::CampaignRequest {
+  pub async fn build_x_campaign(&self, budget: U256, rate: U256, days: i64, topics: &[models::Topic]) -> models::CampaignRequest {
     let post = "1716421161867710954";
-    let two_days = Utc::now() + chrono::Duration::days(2);
+    let valid_until = Utc::now() + chrono::Duration::days(days);
 
-    self.account().await.create_campaign_request(models::Site::X, post, budget, rate, two_days)
+    self.account().await.create_campaign_request(models::Site::X, post, budget, rate, valid_until, topics)
       .await.unwrap().pay()
       .await.unwrap()
   }
 
   pub async fn create_x_campaign(&self, budget: U256, rate: U256) -> models::Campaign {
-    let campaign = self.build_x_campaign(budget, rate).await;
+    self.create_x_campaign_extra(budget, rate, 2, &[]).await
+  }
+
+  pub async fn create_x_campaign_extra(&self, budget: U256, rate: U256, days: i64, topics: &[models::Topic]) -> models::Campaign {
+    let campaign = self.build_x_campaign(budget, rate, days, topics).await;
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
     campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("campaign")
+  }
+
+  pub async fn create_self_managed_x_campaign(&self, budget: U256, rate: U256, days: i64) -> models::Campaign {
+    let two_days = Utc::now() + chrono::Duration::days(days);
+
+    self.doc_contract()
+      .approve(self.contract().address(), budget)
+      .send().await.expect("sending approval")
+      .await.expect("getting approval receipt")
+      .expect("approval receipt");
+
+    let tx = self.app().on_chain_tx().send_tx(
+      self.contract().make_campaigns(vec![on_chain::CampaignInput{
+        site: models::Site::X as u8,
+        budget: budget,
+        content_id: "1716421161867710954".to_string(),
+        price_score_ratio: rate,
+        topics: vec![],
+        valid_until: models::utc_to_i(two_days),
+      }])
+    ).await.unwrap();
+
+    assert!(tx.success(), "not successful tx {}", tx.attrs.id);
+
+    self.test_app.run_idempotent_background_tasks_a_few_times().await;
+
+    self.test_app.app.campaign().select().order_by(models::CampaignOrderBy::Id).desc(true).one().await.unwrap()
   }
 
   pub async fn create_x_handle(&self, username: &str, rate: U256) {
     self.account().await.create_handle_request(models::Site::X, username).await.unwrap()
       .verify("179383862".into()).await.unwrap()
       .appraise(rate, wei("10")).await.unwrap();
-
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
   }
 
-  pub async fn claim_account(&mut self) { // Rsk address as string.
+  pub async fn gql_claim_account_request(&self, wallet: &LocalWallet) -> graphql_client::Response<gql::create_claim_account_request::ResponseData> {
     let rsk = &self.test_app.app.settings.rsk;
-    let wallet = LocalWallet::new(&mut thread_rng()).with_chain_id(rsk.chain_id);
     let payload = models::make_login_to_asami_typed_data(rsk.chain_id).unwrap();
     let signature = wallet.sign_typed_data(&payload).await.unwrap().to_string();
 
-    let _claim: gql::create_claim_account_request::ResponseData = self.gql(
+    self.gql_response(
       &gql::CreateClaimAccountRequest::build_query(gql::create_claim_account_request::Variables{
         input: gql::create_claim_account_request::CreateClaimAccountRequestInput{signature}
       }),
       vec![]
-    ).await;
+    ).await
+  }
+
+  pub async fn submit_claim_account_request(&mut self) {
+    let rsk = &self.app().settings.rsk;
+    let wallet = self.test_app.make_wallet();
+    self.gql_claim_account_request(&wallet).await;
 
     let tx = TransactionRequest::new().to(wallet.address()).value(u("10"));
     self.test_app.app.on_chain.contract.client()
@@ -182,13 +218,19 @@ impl<'b> ApiClient<'b> {
       .await.expect("waiting tx confirmation")
       .expect("tx result");
 
-    self.test_app.run_idempotent_background_tasks_a_few_times().await;
-
     let provider = Provider::<Http>::try_from(&rsk.rpc_url).unwrap();
     let client = std::sync::Arc::new(SignerMiddleware::new(provider, wallet.clone()));
     let address: Address = rsk.contract_address.parse().unwrap();
     self.contract = Some(AsamiContract::new(address, client.clone()));
+
+    let doc_address: Address = rsk.doc_contract_address.parse().unwrap();
+    self.doc_contract = Some(IERC20::new(doc_address, client.clone()));
     self.local_wallet = Some(wallet);
+  }
+
+  pub async fn claim_account(&mut self) { // Rsk address as string.
+    self.submit_claim_account_request().await;
+    self.test_app.run_idempotent_background_tasks_a_few_times().await;
   }
 
   pub async fn create_x_collab(&self, campaign: &models::Campaign) {
@@ -212,12 +254,50 @@ impl<'b> ApiClient<'b> {
     Ok(())
   }
 
+  pub async fn self_submit_admin_vote(&self, candidate: Address) -> api::AsamiResult<()> {
+    self.contract().submit_admin_vote(candidate)
+      .send().await?
+      .await?
+      .expect("extracting receipt");
+    Ok(())
+  }
+
+  pub async fn self_remove_admin_vote(&self) -> api::AsamiResult<()> {
+    self.contract().remove_admin_vote()
+      .send().await?
+      .await?
+      .expect("extracting receipt");
+    Ok(())
+  }
+
+  pub async fn self_vest_admin_vote(&self, candidate: Address) -> api::AsamiResult<()> {
+    self.contract().vest_admin_votes(vec![candidate])
+      .send().await?
+      .await?
+      .expect("extracting receipt");
+    Ok(())
+  }
+
+  pub async fn self_set_admin_address(&self, address: Address) -> api::AsamiResult<()> {
+    self.contract().set_admin_address(address)
+      .send().await?
+      .await?
+      .expect("extracting receipt");
+    Ok(())
+  }
+
   pub async fn gql<'a, T: core::fmt::Debug, Q>(&'a self, query: Q, extra_headers: Vec<Header<'static>>) -> T
     where Q: Serialize, T: DeserializeOwned
   {
-    let query_str = serde_json::to_string(&query).expect("gql query was not JSON");
-    let response = self.post::<graphql_client::Response<T>, _>("/graphql/", query_str, extra_headers).await;
+    let response = self.gql_response(query, extra_headers).await;
     response.data.expect(&format!("No gql response. Error was {:?}", response.errors))
+  }
+
+  pub async fn gql_response<'a, T: core::fmt::Debug, Q>(&'a self, query: Q, extra_headers: Vec<Header<'static>>) -> graphql_client::Response<T>
+    where Q: Serialize, T: DeserializeOwned
+  {
+    let query_str = serde_json::to_string(&query).expect("gql query was not JSON");
+    self.post::<graphql_client::Response<T>, _>("/graphql/", query_str, extra_headers).await
   }
 
   pub fn make_auth_header<'a>(&'a self, path: &str, method: &str, nonce: i64, body: Option<&str>, query: Option<&str>) -> Header<'static> {
@@ -274,71 +354,19 @@ impl<'b> ApiClient<'b> {
     serde_json::from_str(&string).unwrap_or_else(|_| panic!("Could not parse response {}", string))
   }
 
-  pub async fn get<T: DeserializeOwned>(&self, path: &str) -> T {
-    let response = self.get_string(path).await;
-    serde_json::from_str(&response).expect(&format!("Could not parse response {}", response))
-  }
-
-  pub async fn get_string(&self, path: &str) -> String {
-    self.get_response(path).await.into_string().await.unwrap()
-  }
-
-  pub async fn get_bytes(&self, path: &str) -> Vec<u8> {
-    self.get_response(path).await.into_bytes().await.unwrap()
-  }
-
   pub async fn get_response<'a>(&'a self, path: &'a str) -> LocalResponse<'a> {
-    self.get_response_with_auth(path, self.ok_auth_header(path, "POST", None, None)).await
-  }
-
-  pub async fn get_response_with_auth<'a>(&'a self, path: &'a str, auth_header: Header<'static>) -> LocalResponse<'a> {
     self.test_app.rocket_client
       .post(path)
-      .header(auth_header)
+      .header(self.ok_auth_header(path, "POST", None, None))
       .dispatch().await
   }
 
-  pub async fn get_response_with_wrong_auth_path<'a>(&'a self, path: &'a str) -> LocalResponse<'a> {
-    self.get_response_with_auth(path, self.ok_auth_header("/boguspath/", "POST", None, None)).await
-  }
-  
-  pub async fn get_response_with_old_auth_token<'a>(&'a self, path: &'a str) -> LocalResponse<'a> {
-    self.get_response_with_auth(path, self.make_auth_header(path, "POST", -1, None, None)).await
+  pub async fn asami_balance(&self) -> U256 {
+    self.test_app.contract().balance_of(self.local_wallet().address()).call().await.unwrap()
   }
 
-  pub async fn response_with_bad_auth_signature<'a>(&'a self, path: &'a str) -> LocalResponse<'a> {
-    let payload = serde_json::json![{
-      "path": path,
-      "method": "POST",
-      "nonce": 1,
-      "body_hash": null,
-      "query_hash": null,
-    }];
-
-    let claims = Claims::with_custom_claims(payload, Duration::from_secs(30));
-    let key = ES256KeyPair::generate();
-    let id = self.test_app.app.session().select().one().await.unwrap().attrs.id.clone();
-    let jwt = key.with_key_id(&id).sign(claims).unwrap();
-    self.get_response_with_auth(path, Header::new("Authentication", jwt)).await
-  }
-
-  pub async fn get_response_with_malformed_payload<'a>(&'a self, path: &'a str) -> LocalResponse<'a> {
-    let payload = serde_json::json![{
-      "no_path": path,
-      "and_nothing_else": "totally_invalid",
-    }];
-
-    let claims = Claims::with_custom_claims(payload, Duration::from_secs(30));
-    let jwt = self.session_key.as_ref().unwrap().sign(claims).unwrap();
-
-    self.get_response_with_auth(path, Header::new("Authentication", jwt)).await
-  }
-
-  pub async fn assert_get_error<'a>(&'a self, path: &'a str, status: Status, msg: &'a str) {
-    let response = self.get_response(path).await;
-    assert_eq!(response.status(), status);
-    let err: ApiError = serde_json::from_str(&response.into_string().await.unwrap()).unwrap();
-    assert_that!(&err.error.contains(msg));
+  pub async fn doc_balance(&self) -> U256 {
+    self.test_app.doc_contract().balance_of(self.local_wallet().address()).call().await.unwrap()
   }
 }
 

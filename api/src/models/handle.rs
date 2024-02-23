@@ -1,6 +1,6 @@
 use super::*;
 
-model!{
+model! {
   state: App,
   table: handles,
   struct Handle {
@@ -21,12 +21,19 @@ model!{
   },
   has_many {
     HandleTopic(handle_id),
+  },
+  belongs_to {
+    Account(account_id),
   }
 }
 
 impl Handle {
   pub fn price_score_ratio(&self) -> U256 {
     u256(self.price()) / u256(self.score())
+  }
+
+  pub async fn topic_ids(&self) -> sqlx::Result<Vec<String>> {
+    Ok(self.handle_topic_vec().await?.into_iter().map(|x| x.attrs.topic_id).collect())
   }
 
   pub async fn validate_collaboration(&self, campaign: &Campaign) -> AsamiResult<()> {
@@ -42,24 +49,38 @@ impl Handle {
       return Err(Error::validation("site", "campaign_was_finished"));
     }
 
-
     if self.site() != campaign.site() {
       return Err(Error::validation("site", "campaign_and_handle_sites_dont_match"));
     }
 
-    let request_exists = self.state.collab_request().select()
+    let handle_topics = self.topic_ids().await?;
+    if !campaign.topic_ids().await?.iter().all(|topic| handle_topics.contains(topic)){
+      return Err(Error::validation("topics", "handle_is_missing_topics"));
+    }
+
+    let request_exists = self
+      .state
+      .collab_request()
+      .select()
       .handle_id_eq(self.attrs.id.clone())
       .campaign_id_eq(campaign.attrs.id.clone())
-      .count().await? > 0;
+      .count()
+      .await?
+      > 0;
 
     if request_exists {
       return Err(Error::validation("all", "collab_request_exists"));
     }
 
-    let collab_exists = self.state.collab().select()
+    let collab_exists = self
+      .state
+      .collab()
+      .select()
       .handle_id_eq(self.attrs.id.clone())
       .campaign_id_eq(campaign.attrs.id.clone())
-      .count().await? > 0;
+      .count()
+      .await?
+      > 0;
 
     if collab_exists {
       return Err(Error::validation("all", "collab_exists"));
@@ -69,7 +90,7 @@ impl Handle {
   }
 }
 
-model!{
+model! {
   state: App,
   table: handle_topics,
   struct HandleTopic {
@@ -81,4 +102,3 @@ model!{
     topic_id: String,
   }
 }
-

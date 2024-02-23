@@ -1,11 +1,12 @@
-import {AppBar, Toolbar, IconButton, Box, Button, Container, styled, Backdrop, Skeleton, useMediaQuery } from '@mui/material';
+import {AppBar, Toolbar, Typography, Divider, IconButton, Box, Button, Container, styled, Backdrop, Skeleton, useMediaQuery } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { useNavigate } from 'react-router-dom';
 import { useLogout, useTranslate, useSafeSetState, useGetOne} from 'react-admin';
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
-import logo from '../assets/asami.png';
+import RootstockLogo from '../assets/rootstock.svg?react';
+import AsamiLogo from '../assets/logo.svg?react';
 
 const ResponsiveAppBar = ({loggedIn}) => {
   const [menuOpen, setMenuOpen] = useSafeSetState(false);
@@ -41,21 +42,18 @@ const ResponsiveAppBar = ({loggedIn}) => {
   </Box>
 
   const ComputerMenu = () => <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, justifyContent:"end" }} id="desktop-menu">
-    <Button sx={{ pt: "0.6em", ml: 1, textTransform: "uppercase" }} variant="outlined" color="highlight" onClick={() => logout() } id="logout-menu-item">
+    <Button sx={{ pt: "0.6em", ml: 1, textTransform: "uppercase" }} variant="outlined" onClick={() => logout() } id="logout-menu-item">
       Logout
     </Button>
   </Box>
 
   return (
-    <AppBar position="static" color="inverted">
-      <Container maxWidth="md" style={{ padding: 0}}>
+    <AppBar position="static" color="">
+      <Container maxWidth="md" style={{ padding: "0.5em 0" }}>
         <Toolbar sx={{ minHeight: "0 !important" }}>
-          <Box display="flex" gap="5px" alignItems="center" fontFamily="Sacramento" fontSize="5em" lineHeight="1em" fontWeight="bold" >
-            <a href="https://asami.club" style={{lineHeight: 0}} target="_blank" rel="noreferrer">
-              <img src={logo} height="50px" width="auto"/>
-            </a>
-            asami
-          </Box>
+          <a href="https://asami.club" style={{lineHeight: 0}} target="_blank" rel="noreferrer">
+            <AsamiLogo width="50px" height="auto" />
+          </a>
           {loggedIn && <>
               <MobileMenu />
               <ComputerMenu />
@@ -102,8 +100,18 @@ export const BareLayout = ({children}) => {
       flexDirection: "column",
     }}>
       <CssBaseline/>
-      <Container maxWidth="md">
+      <Container maxWidth="xl">
         { children }
+        <Divider light sx={{ mt: "5em", mb: "2em" }}/>
+
+        <Button href="https://rootstock.io/" target="_blank" sx={{textDecoration: "none", mb: "2em"}}>
+          <Box display="flex" flexDirection="column">
+            <Typography fontSize="1em" textTransform="uppercase" fontFamily="LeagueSpartanBold">
+              Built with
+            </Typography>
+            <RootstockLogo/>
+          </Box>
+        </Button>
       </Container>
     </Box>
   )

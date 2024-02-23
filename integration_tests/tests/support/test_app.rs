@@ -1,12 +1,20 @@
-use api::{models::{self, U256}, App, AppConfig};
+use api::{
+  on_chain::Signer,
+  models::{self, U256},
+  App,
+  AppConfig
+};
 use jwt_simple::algorithms::*;
 use std::process::Command;
 use crate::support::{Truffle, ApiClient};
 use ethers::{
-  abi::AbiEncode,
+  abi::{Address, AbiEncode},
+  prelude::LocalWallet,
   providers::{Http, Provider}
 };
+use rand::thread_rng;
 use rocket::local::asynchronous::Client as RocketClient;
+use rocket::{Config, config::LogLevel};
 
 pub struct TestApp {
   pub app: App,
@@ -17,7 +25,7 @@ pub struct TestApp {
 
 impl TestApp {
   pub async fn init() -> Self {
-    let mut config = AppConfig::default().expect("config to exist");
+    let mut config = AppConfig::default_figment().expect("config to exist");
 
     Command::new("sqlx")
       .current_dir("../api")
@@ -31,13 +39,21 @@ impl TestApp {
     config.rsk.doc_contract_address = truffle.addresses.doc.clone();
     let provider = Provider::<Http>::try_from(&config.rsk.rpc_url).unwrap();
     let app = App::new("password".to_string(), config).await.unwrap();
-    let rocket_client = RocketClient::tracked(api::server(app.clone())).await.unwrap();
+
+    let fig = Config::figment().merge((Config::LOG_LEVEL, LogLevel::Off));
+    let rocket_client = RocketClient::tracked( api::custom_server(app.clone(), fig) ).await.unwrap();
 
     Self{ rocket_client, provider, truffle, app }
   }
 
   pub async fn evm_increase_time(&self, seconds: U256) -> u64 {
     self.provider.request::<_, u64>("evm_increaseTime", vec![seconds.encode_hex()]).await.unwrap()
+  }
+
+  pub async fn evm_forward_to_next_cycle(&self) {
+    use models::wei;
+    self.evm_increase_time(wei("60") * wei("60") * wei("24") * wei("15")).await;
+    self.evm_mine().await;
   }
 
   pub async fn evm_mine(&self) {
@@ -50,9 +66,38 @@ impl TestApp {
     client
   }
 
+  pub fn make_wallet(&self) -> LocalWallet {
+    LocalWallet::new(&mut thread_rng()).with_chain_id(self.app.settings.rsk.chain_id)
+  }
+
   pub fn contract(&self) -> &api::on_chain::AsamiContractSigner {
     &self.app.on_chain.contract
   }
+
+  pub async fn admin_asami_balance(&self) -> U256 {
+    self.contract().balance_of(self.contract().client().address()).call().await.unwrap()
+  }
+
+  pub async fn asami_balance_of(&self, addr: &Address) -> U256 {
+    self.contract().balance_of(*addr).await.unwrap()
+  }
+
+  pub fn doc_contract(&self) -> &api::on_chain::DocContract {
+    &self.app.on_chain.doc_contract
+  }
+
+  pub async fn admin_doc_balance(&self) -> U256 {
+    self.doc_contract().balance_of(self.doc_contract().client().address()).call().await.unwrap()
+  }
+
+  pub async fn contract_doc_balance(&self) -> U256 {
+    self.doc_contract().balance_of(self.contract().address()).call().await.unwrap()
+  }
+
+  pub async fn doc_balance_of(&self, addr: &Address) -> U256 {
+    self.doc_contract().balance_of(*addr).await.unwrap()
+  }
+
 
   pub async fn mock_admin_setting_campaign_requests_as_paid(&self) {
     let all = self.app.campaign_request().select().status_eq(models::CampaignRequestStatus::Received).all().await.unwrap();
@@ -78,7 +123,7 @@ impl TestApp {
 
   pub async fn run_idempotent_background_tasks_a_few_times(&self) {
     for _ in 0..5 {
-      self.app.run_background_tasks().await.unwrap();
+      self.app.run_background_tasks().await.expect("error in test background tasks");
     }
   }
 

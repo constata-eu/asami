@@ -1,5 +1,4 @@
-use juniper::{FieldError, IntoFieldError, ScalarValue, graphql_value};
-use std::error::Error as ErrorTrait;
+use juniper::{graphql_value, FieldError, IntoFieldError, ScalarValue};
 use rocket::{
   http::Status,
   request::Request,
@@ -7,6 +6,7 @@ use rocket::{
   serde::json::{json, Json},
   warn,
 };
+use std::error::Error as ErrorTrait;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -41,8 +41,10 @@ impl<A: ethers::middleware::Middleware> From<ethers::contract::ContractError<A>>
   }
 }
 
-impl<M: ethers::providers::Middleware, S: ethers::signers::Signer> From<ethers::middleware::signer::SignerMiddlewareError<M,S>> for Error {
-  fn from(err: ethers::middleware::signer::SignerMiddlewareError<M,S>) -> Error {
+impl<M: ethers::providers::Middleware, S: ethers::signers::Signer>
+  From<ethers::middleware::signer::SignerMiddlewareError<M, S>> for Error
+{
+  fn from(err: ethers::middleware::signer::SignerMiddlewareError<M, S>) -> Error {
     Error::Service("rsk_api".into(), err.to_string())
   }
 }
@@ -91,7 +93,7 @@ impl From<twitter_v2::Error> for Error {
 
 impl From<regex::Error> for Error {
   fn from(err: regex::Error) -> Error {
-    Error::Precondition(format!("Error in regex {}", err.to_string()))
+    Error::Precondition(format!("Error in regex {}", err))
   }
 }
 
@@ -107,12 +109,8 @@ impl<S: ScalarValue> IntoFieldError<S> for Error {
         graphql_value!({ "error": { "field": "third_party_service", "message": service.as_str() } }),
       ),
       _ => {
-        warn!(
-          "A wild error appeared: {:?}\n\n{:?}\n",
-          &self,
-          &self.source()
-        );
-        FieldError::new( "unexpected error", graphql_value!(None))
+        warn!("A wild error appeared: {:?}\n\n{:?}\n", &self, &self.source());
+        FieldError::new("unexpected error", graphql_value!(None))
       }
     }
   }
@@ -121,19 +119,13 @@ impl<S: ScalarValue> IntoFieldError<S> for Error {
 impl<'r> Responder<'r, 'static> for Error {
   fn respond_to(self, request: &'r Request<'_>) -> response::Result<'static> {
     let response = match self {
-      Error::Validation( field, message ) => (
+      Error::Validation(field, message) => (
         Status::UnprocessableEntity,
         Json(json![{"error": { "field": field, "message": message}}]),
       ),
-      Error::DatabaseError(sqlx::Error::RowNotFound) => {
-        (Status::NotFound, Json(json![{ "error": "Not found" }]))
-      }
+      Error::DatabaseError(sqlx::Error::RowNotFound) => (Status::NotFound, Json(json![{ "error": "Not found" }])),
       _ => {
-        warn!(
-          "A wild error appeared: {:?}\n\n{:?}\n",
-          &self,
-          &self.source()
-        );
+        warn!("A wild error appeared: {:?}\n\n{:?}\n", &self, &self.source());
         (
           Status::InternalServerError,
           Json(json![{ "error": "Unexpected Error" }]),

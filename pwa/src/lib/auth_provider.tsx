@@ -114,7 +114,7 @@ export const authProvider: AuthProvider = {
 
     return Promise.resolve();
   },
-  checkAuth: () => {
+  checkAuth: (a, b, c) => {
     let allSet = _.every(
       ['sessionPublicKey', 'sessionPrivateKey'],
       (k) => localStorage.getItem(k)

@@ -1,4 +1,7 @@
-use super::{*, models::{self, *}};
+use super::{
+  models::{self, *},
+  *,
+};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -14,14 +17,12 @@ pub struct CampaignRequest {
   site: Site,
   #[graphql(description = "Status of this campaign request.")]
   status: CampaignRequestStatus,
-  #[graphql(description = "When this campaigns's ERC20 DOC budget is 'approved', this field will show the transaction hash.")]
-  approval_tx_hash: Option<String>,
-  #[graphql(description = "When this campaign is submitted on-chain, this field will show the transaction hash.")]
-  submission_tx_hash: Option<String>,
   #[graphql(description = "The content to share.")]
   content_id: String,
   #[graphql(description = "The date in which this campaign was created.")]
   created_at: UtcDateTime,
+  #[graphql(description = "The topic ids this campaign is restricted to.")]
+  topic_ids: Vec<String>,
   #[graphql(description = "The last time this campaign received an update.")]
   updated_at: Option<UtcDateTime>,
 }
@@ -46,40 +47,47 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
     }
   }
 
-  fn filter_to_select(context: &Context, filter: Option<CampaignRequestFilter>) -> models::SelectCampaignRequest {
+  fn filter_to_select(
+    context: &Context,
+    filter: Option<CampaignRequestFilter>,
+  ) -> FieldResult<models::SelectCampaignRequest> {
     if let Some(f) = filter {
-      models::SelectCampaignRequest {
+      Ok(models::SelectCampaignRequest {
         id_in: f.ids,
-        account_id_eq: Some(context.account_id().to_string()),
+        account_id_eq: Some(context.account_id()?),
         status_in: f.status_in,
         id_eq: f.id_eq,
         content_id_like: into_like_search(f.content_id_like),
         ..Default::default()
-      }
+      })
     } else {
-      models::SelectCampaignRequest {
-        account_id_eq: Some(context.account_id().to_string()),
+      Ok(models::SelectCampaignRequest {
+        account_id_eq: Some(context.account_id()?),
         ..Default::default()
-      }
+      })
     }
   }
 
-  fn select_by_id(context: &Context, id: i32) -> models::SelectCampaignRequest {
-    models::SelectCampaignRequest { id_eq: Some(id), account_id_eq: Some(context.account_id().to_string()), ..Default::default() }
+  fn select_by_id(context: &Context, id: i32) -> FieldResult<models::SelectCampaignRequest> {
+    Ok(models::SelectCampaignRequest {
+      id_eq: Some(id),
+      account_id_eq: Some(context.account_id()?),
+      ..Default::default()
+    })
   }
 
   async fn db_to_graphql(d: models::CampaignRequest) -> AsamiResult<Self> {
+    let topic_ids = d.topic_ids().await?;
     Ok(CampaignRequest {
       id: d.attrs.id,
       account_id: d.attrs.account_id,
       budget: d.attrs.budget,
       status: d.attrs.status,
-      approval_tx_hash: d.attrs.approval_tx_hash,
-      submission_tx_hash: d.attrs.submission_tx_hash,
       site: d.attrs.site,
+      topic_ids,
       content_id: d.attrs.content_id,
       created_at: d.attrs.created_at,
-      updated_at:d.attrs.updated_at,
+      updated_at: d.attrs.updated_at,
     })
   }
 }
@@ -93,20 +101,26 @@ pub struct CreateCampaignRequestInput {
   pub account_id: String,
   pub site: Site,
   pub price_score_ratio: String,
-  pub valid_until: UtcDateTime
+  pub valid_until: UtcDateTime,
+  pub topic_ids: Vec<String>,
 }
 
 impl CreateCampaignRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<CampaignRequest> {
     let account = context.app.account().find(&self.account_id).await?;
 
-    let req = account.create_campaign_request(
-      self.site,
-      &self.content_id,
-      u256(self.budget),
-      u256(self.price_score_ratio),
-      self.valid_until,
-    ).await?;
+    let topics = context.app.topic().select().id_in(&self.topic_ids).all().await?;
+
+    let req = account
+      .create_campaign_request(
+        self.site,
+        &self.content_id,
+        u256(self.budget),
+        u256(self.price_score_ratio),
+        self.valid_until,
+        &topics,
+      )
+      .await?;
 
     Ok(CampaignRequest::db_to_graphql(req).await?)
   }

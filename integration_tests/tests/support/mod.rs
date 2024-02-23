@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 pub mod selenium;
 pub mod test_api_server;
 pub mod vite_preview;
@@ -101,6 +99,7 @@ macro_rules! browser_test {
       time_test::time_test!("integration test");
 
       let test_app = crate::support::TestApp::init().await;
+      let server = TestApiServer::start(test_app.app.clone()).await;
       let mut vite_preview = VitePreview::start();
       let api = test_app.client().await;
 
@@ -108,6 +107,8 @@ macro_rules! browser_test {
       let mut $browser = Selenium::start(api).await;
       {$($e)*};
 
+      server.abort();
+      assert!(server.await.unwrap_err().is_cancelled());
       vite_preview.stop();
       $browser.stop().await;
     }
@@ -120,6 +121,7 @@ macro_rules! api_test {
     test!{ $test_name
       time_test::time_test!("api test");
       let app = crate::support::TestApp::init().await;
+      #[allow(unused_mut)]
       let mut $client = app.client().await;
       {$($e)*};
     }

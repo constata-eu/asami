@@ -1,5 +1,5 @@
 #[macro_use]
-mod support;
+pub mod support;
 use graphql_client::GraphQLQuery;
 use support::{*, gql::{*, create_campaign_preference::*}};
 

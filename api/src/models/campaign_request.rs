@@ -20,12 +20,10 @@ model! {
     valid_until: UtcDateTime,
     #[sqlx_model_hints(campaign_request_status, default)]
     status: CampaignRequestStatus,
-    #[sqlx_model_hints(varchar, default)]
-    approval_tx_hash: Option<String>,
-    #[sqlx_model_hints(varchar, default)]
-    submission_tx_hash: Option<String>,
-    #[sqlx_model_hints(varchar, default)]
-    campaign_id: Option<String>,
+    #[sqlx_model_hints(int4, default)]
+    approval_id: Option<i32>,
+    #[sqlx_model_hints(int4, default)]
+    on_chain_tx_id: Option<i32>,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
     #[sqlx_model_hints(timestamptz, default)]
@@ -35,51 +33,79 @@ model! {
     CampaignRequestTopic(campaign_request_id)
   },
   belongs_to {
-    Campaign(campaign_id),
-    Account(account_id)
+    Account(account_id),
+    OnChainTx(on_chain_tx_id),
   }
 }
 
-impl CampaignRequestHub {
-  pub async fn submit_approvals(&self) -> AsamiResult<()> {
-    let rsk = &self.state.on_chain;
-    let reqs = self.select().status_eq(CampaignRequestStatus::Paid).all().await?;
-    let total: U256 = reqs.iter().map(|r| u256(r.budget()) ).fold(0.into(), |a,b| a+b);
+impl_loggable!(CampaignRequest);
 
-    if reqs.is_empty() { return Ok(()); }
+impl_on_chain_tx_request! { CampaignRequestHub {
+  type Model = CampaignRequest;
+  type Update = UpdateCampaignRequestHub;
+  type Status = CampaignRequestStatus;
+  type Param = on_chain::AdminCampaignInput;
 
-    let tx_hash = rsk.doc_contract.approve( rsk.contract.address(), total)
-      .send().await?.await?
-      .ok_or_else(|| Error::service("rsk_blockchain", "no_tx_recepit_for_submit_approvals"))?
-      .transaction_hash
-      .encode_hex();
+  async fn as_param(&self, model: &Self::Model) -> sqlx::Result<Self::Param> {
+    let topics = model.campaign_request_topic_vec().await?
+      .into_iter().map(|t| u256(t.attrs.topic_id) ).collect();
 
-    for r in reqs {
-      r.update().status(CampaignRequestStatus::Approved).approval_tx_hash(Some(tx_hash.clone())).save().await?;
+    Ok(Self::Param {
+      account_id: u256(&model.attrs.account_id),
+      attrs: on_chain::CampaignInput {
+        site: model.attrs.site as u8,
+        budget: u256(&model.attrs.budget),
+        content_id: model.attrs.content_id.clone(),
+        price_score_ratio: u256(&model.attrs.price_score_ratio),
+        topics,
+        valid_until: utc_to_i(model.attrs.valid_until)
+      }
+    })
+  }
+
+  async fn validate_before_submit_all(&self) -> sqlx::Result<()> {
+    let pending = self.select().status_not_in(vec![
+      CampaignRequestStatus::Submitted,
+      CampaignRequestStatus::Failed,
+      CampaignRequestStatus::Done,
+    ]).all().await?;
+
+    for p in pending {
+      if p.account().await?.is_claimed_or_claiming().await? {
+        p.fail("cannot_submit_for_claimed_account", &p).await?;
+        p.update().status(CampaignRequestStatus::Failed).save().await?;
+      }
     }
-
     Ok(())
   }
 
-  pub async fn submit_all(&self) -> AsamiResult<()> {
+  fn fn_call(&self, params: Vec<Self::Param>) -> AsamiFunctionCall {
+    self.state.on_chain.contract.admin_make_campaigns(params)
+  }
+
+  fn pending_status() -> Self::Status { CampaignRequestStatus::Approved }
+  fn submitted_status() -> Self::Status { CampaignRequestStatus::Submitted }
+  fn done_status() -> Self::Status { CampaignRequestStatus::Done }
+}}
+
+impl CampaignRequestHub {
+  pub async fn submit_approvals(&self) -> anyhow::Result<()> {
     let rsk = &self.state.on_chain;
-    let reqs = self.select().status_eq(CampaignRequestStatus::Approved).all().await?;
+    let reqs = self.select().status_eq(CampaignRequestStatus::Paid).all().await?;
+    let total: U256 = reqs.iter().map(|r| u256(r.budget())).fold(0.into(), |a, b| a + b);
 
-    if reqs.is_empty() { return Ok(()); }
-
-    let mut params = vec![];
-    for r in &reqs {
-      params.push(r.as_param().await?);
+    if reqs.is_empty() {
+      return Ok(());
     }
 
-    let tx_hash = rsk.contract.admin_make_campaigns(params)
-      .send().await?.await?
-      .ok_or_else(|| Error::service("rsk_blockchain", "no_tx_recepit_for_admin_make_campaigns"))?
-      .transaction_hash
-      .encode_hex();
+    let on_chain_tx = self.state.on_chain_tx().send_tx(rsk.doc_contract.approve(rsk.contract.address(), total)).await?;
 
     for r in reqs {
-      r.update().status(CampaignRequestStatus::Submitted).submission_tx_hash(Some(tx_hash.clone())).save().await?;
+      r.update()
+        .status(CampaignRequestStatus::Approved)
+        .approval_id(Some(on_chain_tx.attrs.id))
+        .save()
+        .await?;
     }
 
     Ok(())
@@ -87,6 +113,41 @@ impl CampaignRequestHub {
 }
 
 impl CampaignRequest {
+  pub async fn campaign(&self) -> sqlx::Result<Option<Campaign>> {
+    let Some(on_chain_tx) = self.on_chain_tx().await? else {
+      return Ok(None);
+    };
+    let Some(tx_hash) = on_chain_tx.tx_hash() else {
+      return Ok(None);
+    };
+
+    self
+      .state
+      .campaign()
+      .select()
+      .tx_hash_eq(tx_hash)
+      .site_eq(self.site())
+      .content_id_eq(self.content_id())
+      .account_id_eq(self.account_id())
+      .optional()
+      .await
+  }
+
+  pub async fn topic_ids(&self) -> sqlx::Result<Vec<String>> {
+    Ok(self.campaign_request_topic_vec().await?.into_iter().map(|x| x.attrs.topic_id).collect())
+  }
+
+  pub async fn approval(&self) -> sqlx::Result<Option<OnChainTx>> {
+    let Some(id) = self.approval_id().as_ref() else {
+      return Ok(None);
+    };
+    self.state.on_chain_tx().find_optional(id).await
+  }
+
+  pub async fn submission(&self) -> sqlx::Result<Option<OnChainTx>> {
+    self.on_chain_tx().await
+  }
+
   pub async fn pay(self) -> AsamiResult<Self> {
     Ok(self.update().status(CampaignRequestStatus::Paid).save().await?)
   }
@@ -94,32 +155,9 @@ impl CampaignRequest {
   pub async fn approve(self) -> sqlx::Result<Self> {
     self.update().status(CampaignRequestStatus::Approved).save().await
   }
-
-  pub async fn done(self, campaign: &Campaign) -> sqlx::Result<Self> {
-    self.update().status(CampaignRequestStatus::Done)
-      .campaign_id(Some(campaign.attrs.id.clone()))
-      .save().await
-  }
-
-  pub async fn as_param(&self) -> AsamiResult<on_chain::AdminCampaignInput> {
-    let topics = self.campaign_request_topic_vec().await?
-      .into_iter().map(|t| u256(t.attrs.topic_id) ).collect();
-
-    Ok(on_chain::AdminCampaignInput{
-      account_id: u256(&self.attrs.account_id),
-      attrs: on_chain::CampaignInput {
-        site: self.attrs.site as u8,
-        budget: u256(&self.attrs.budget),
-        content_id: self.attrs.content_id.clone(),
-        price_score_ratio: u256(&self.attrs.price_score_ratio),
-        topics,
-        valid_until: utc_to_i(self.attrs.valid_until)
-      }
-    })
-  }
 }
 
-model!{
+model! {
   state: App,
   table: campaign_request_topics,
   struct CampaignRequestTopic {
@@ -132,18 +170,14 @@ model!{
   }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
-#[sqlx(type_name = "campaign_request_status", rename_all = "snake_case")]
-pub enum CampaignRequestStatus {
-  Received,   // The request was received by a managed user to create a campaign.
-  Paid,       // We've got payment (through proprietary payment methods).
-  Approved,   // We've approved the on-chain DOC spend for this campaign.
-  Submitted,  // We've tried to submit the request on-chain.
-  Done,     // We've got the event that creates this campaign.
-}
-
-impl sqlx::postgres::PgHasArrayType for CampaignRequestStatus {
-  fn array_type_info() -> sqlx::postgres::PgTypeInfo {
-    sqlx::postgres::PgTypeInfo::with_name("_campaign_request_status")
+make_sql_enum![
+  "campaign_request_status",
+  pub enum CampaignRequestStatus {
+    Received,  // The request was received by a managed user to create a campaign.
+    Paid,      // We've got payment (through proprietary payment methods).
+    Approved,  // We've approved the on-chain DOC spend for this campaign.
+    Submitted, // We've tried to submit the request on-chain.
+    Failed,    // This campaign was rendered invalid, and will be left out of upcoming batches.
+    Done,      // The campaign is created and available on chain with enough confirmations.
   }
-}
+];
