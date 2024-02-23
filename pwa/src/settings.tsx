@@ -32,12 +32,30 @@ const staging = {
   }
 };
 
+const production = {
+  apiDomain: "https://asami.constata.eu",
+  environment: 'production',
+  recaptchaSiteKey: "6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX",
+  rsk: {
+    chainId: 31,
+  },
+  x: {
+    clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",
+    redirectUri: "https://asami.constata.eu/x_login",
+  },
+  facebook: {
+    appId: "376919484899990",
+    redirectUri: "https://asami.constata.eu/facebook_login",
+  }
+};
+
 const all = {
   "http://127.0.0.1:5173": development,
   "http://127.0.0.1:4173": development,
   "http://localhost:5173": development,
   "http://localhost:4173": development,
-  "https://asami.club": staging,
+  "https://staging.asami.club": staging,
+  "https://asami.club": production,
 }
 
 export const Settings = all[window.origin];
