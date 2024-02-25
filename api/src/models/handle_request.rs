@@ -52,11 +52,10 @@ impl HandleRequestHub {
       .since_id(indexer_state.attrs.x_handle_verification_checkpoint.to_u64().unwrap_or(0))
       .max_results(100)
       .user_fields(vec![UserField::Id, UserField::Username, UserField::PublicMetrics])
+      .tweet_fields(vec![TweetField::NoteTweet])
       .expansions(vec![TweetExpansion::AuthorId])
       .send()
       .await?;
-
-    self.state.info("verify_and_appraise_x", "got_mentions", &mentions).await;
 
     let checkpoint: i64 = mentions.meta().and_then(|m| m.oldest_id.clone()).and_then(|i| i.parse().ok()).unwrap_or(0);
 
@@ -82,7 +81,9 @@ impl HandleRequestHub {
           continue;
         };
 
-        if let Some(capture) = msg_regex.captures(&post.text) {
+        let text: &String = post.note_tweet.as_ref().and_then(|n| n.text.as_ref()).unwrap_or(&post.text);
+
+        if let Some(capture) = msg_regex.captures(&text) {
           let Ok(account_id_str) = capture[1].parse::<String>() else {
             self.state.info("verify_and_appraise_x", "skipped_post_no_account_id_str", format!("{capture:?}")).await;
             continue;

@@ -365,7 +365,7 @@ impl<'r> FromRequest<'r> for CurrentSession {
   async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
     match CurrentSession::build(req, None).await {
       Ok(current) => Outcome::Success(current),
-      Err(e) => Outcome::Failure((Status::Unauthorized, e)),
+      Err(e) => Outcome::Error((Status::Unauthorized, e)),
     }
   }
 }
@@ -386,7 +386,7 @@ impl<'r, T: DeserializeOwned + std::marker::Send> FromData<'r> for CurrentSessio
 
     let body_bytes = match data.open(limit).into_bytes().await {
       Ok(read) if read.is_complete() => read.into_inner(),
-      _ => return Outcome::Failure((Status::BadRequest, ApiAuthError::Unexpected("no_body_bytes"))),
+      _ => return Outcome::Error((Status::BadRequest, ApiAuthError::Unexpected("no_body_bytes"))),
     };
 
     match serde_json::from_str(&String::from_utf8_lossy(&body_bytes)) {
@@ -394,7 +394,7 @@ impl<'r, T: DeserializeOwned + std::marker::Send> FromData<'r> for CurrentSessio
         let session = CurrentSession::build(req, Some(&body_bytes)).await.ok();
         Outcome::Success(CurrentSessionAndJson { session, json: value })
       }
-      Err(_) => Outcome::Failure((Status::BadRequest, ApiAuthError::Unexpected("invalid_body_json"))),
+      Err(_) => Outcome::Error((Status::BadRequest, ApiAuthError::Unexpected("invalid_body_json"))),
     }
   }
 }
