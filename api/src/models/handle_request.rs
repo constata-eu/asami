@@ -46,6 +46,7 @@ impl HandleRequestHub {
     let api = TwitterApi::new(auth);
     let indexer_state = self.state.indexer_state().get().await?;
 
+
     let mentions = api
       .get_user_mentions(conf.asami_user_id)
       .since_id(indexer_state.attrs.x_handle_verification_checkpoint.to_u64().unwrap_or(0))
@@ -54,6 +55,8 @@ impl HandleRequestHub {
       .expansions(vec![TweetExpansion::AuthorId])
       .send()
       .await?;
+
+    self.state.info("verify_and_appraise_x", "got_mentions", &mentions).await;
 
     let checkpoint: i64 = mentions.meta().and_then(|m| m.oldest_id.clone()).and_then(|i| i.parse().ok()).unwrap_or(0);
 
@@ -65,22 +68,27 @@ impl HandleRequestHub {
       let Some(data) = payload.data() else { break };
 
       for post in data {
+        self.state.info("verify_and_appraise_x", "mention_post", &post).await;
         let Some(author_id) = post.author_id else { continue };
         let Some(author) =
           payload.includes().and_then(|i| i.users.as_ref()).and_then(|i| i.iter().find(|x| x.id == author_id))
         else {
+          self.state.info("verify_and_appraise_x", "skipped_post_no_author", &post.id).await;
           continue;
         };
 
         let Some(public_metrics) = author.public_metrics.clone() else {
+          self.state.info("verify_and_appraise_x", "skipped_post_no_public_metrics", &post.id).await;
           continue;
         };
 
         if let Some(capture) = msg_regex.captures(&post.text) {
           let Ok(account_id_str) = capture[1].parse::<String>() else {
+            self.state.info("verify_and_appraise_x", "skipped_post_no_account_id_str", format!("{capture:?}")).await;
             continue;
           };
           let Ok(account_id) = U256::from_dec_str(&account_id_str).map(U256::encode_hex) else {
+            self.state.info("verify_and_appraise_x", "skipped_post_no_account_id_dec", &account_id_str).await;
             continue;
           };
 
@@ -95,12 +103,15 @@ impl HandleRequestHub {
             .optional()
             .await?
           else {
+            self.state.info("verify_and_appraise_x", "skipped_post_no_pending_request", (&author.username, &account_id)).await;
             continue;
           };
 
           let score = U256::from(public_metrics.followers_count) * wei("85") / wei("100");
           let price = u256(indexer_state.suggested_price_per_point()) * score;
           handle_requests.push(req.verify(author_id.to_string()).await?.appraise(price, score).await?);
+        } else {
+          self.state.info("verify_and_appraise_x", "skipped_post_no_regex_capture", &post.text).await;
         }
       }
 
@@ -115,7 +126,7 @@ impl HandleRequestHub {
     }
 
     indexer_state.update().x_handle_verification_checkpoint(checkpoint).save().await?;
-
+    self.state.info("verify_and_appraise_x", "done_processing_updating_indexer_state", &checkpoint).await;
     Ok(handle_requests)
   }
 }

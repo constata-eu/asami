@@ -17,9 +17,9 @@ app_test!{ logs_on_chain_txs (a)
 
 app_test!{ pre_validates_campaign_requests_before_bulk_submission (a)
   let mut alice = a.client().await;
-  let mut alice_req = alice.build_x_campaign(u("10"), u("10"), 2).await;
+  let mut alice_req = alice.build_x_campaign(u("10"), u("10"), 2, &[]).await;
   let bob = a.client().await;
-  let mut bob_req = bob.build_x_campaign(u("10"), u("10"), 2).await;
+  let mut bob_req = bob.build_x_campaign(u("10"), u("10"), 2, &[]).await;
 
   a.app.campaign_request().submit_approvals().await?;
   alice.submit_claim_account_request().await;
