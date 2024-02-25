@@ -24,5 +24,5 @@ if (LOCALES.indexOf(fromBrowser) < 0) {
   fromBrowser = "en";
 }
 
-//export const browserLocale = fromBrowser;
-export const browserLocale = 'es';
+export const browserLocale = fromBrowser;
+//export const browserLocale = 'es';
