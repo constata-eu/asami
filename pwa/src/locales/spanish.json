@@ -1,0 +1,53 @@
+{
+  "resources": {
+  },
+	"footer": {
+    "built_with": "Hecho con"
+  },
+  "login": {
+    "login_button": "Entrar",
+    "about_asami_button": "Acerca de ASAMI",
+    "ig_handle": "asamiclub_es",
+    "x_handle": "asami_club_es"
+  },
+  "public_card_header": {
+    "title": "Paga hasta $%{amount}",
+    "subheader": "$%{amount} por chispa ✨"
+  },
+  "public_x_campaign": {
+    "main_button": "Cobra por Repost"
+  },
+  "public_ig_campaign": {
+    "main_button": "Cobra por Post"
+  },
+  "out_of_campaigns": {
+    "title": "Nos quedamos sin campañas.",
+    "message": "¡Vuelve a fijarte pronto!"
+  },
+  "your_post_here": {
+    "title": "Tu anuncio aquí",
+    "message": "Ofrece una recompensa para que los miembros del club amplifiquen tu publicación en Instagram o X.",
+    "button": "Envíar publicación"
+  },
+  "got_sparkles": {
+    "title": "¿Tienes chispa ✨?",
+    "message": "Calificamos tu cuenta con una cantidad de chispas cada 15 días.",
+    "message_2": "¡Los anunciantes pagan por cantidad de chispas!",
+    "button": "Únete al club"
+  },
+  "patch": {
+    "action": {
+      "clear_input_value": "Limpiar valor",
+      "confirm": "Confirmar",
+      "unselect": "Deseleccionar"
+    },
+    "auth": {
+      "auth_check_error": "Por favor inicie sesión para continuar",
+      "user_menu": "Perfil"
+    },
+    "navigation": {
+      "page_rows_per_page": "Filas por página:",
+      "skip_nav": "Saltar al contenido"
+    }
+  }
+}

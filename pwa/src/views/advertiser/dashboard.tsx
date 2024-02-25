@@ -245,7 +245,7 @@ const CreateCampaign = ({onSave}) => {
       errors.budget = "Budget must be a number";
     }
 
-    input.priceScoreRatio = zeroPadValue(toBeHex(parseEther("0.02")), 32);
+    input.priceScoreRatio = zeroPadValue(toBeHex(parseEther("0.001")), 32);
     input.validUntil = defaultValidUntil().toISOString();
     input.topicIds = [];
 

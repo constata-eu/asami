@@ -1,5 +1,5 @@
 /// <reference types="vite-plugin-svgr/client" />
-import { useEffect } from 'react';
+import { useEffect, useContext } from 'react';
 import {
   Alert, Avatar, AlertTitle, Badge, Divider, Card, CardActions, CardContent, CardHeader,
   Dialog, DialogActions, DialogContent, DialogTitle,
@@ -18,12 +18,15 @@ import {
   ListContextProvider,
   CoreAdminContext,
   useNotify,
-  useGetList
+  useGetList,
+  useTranslate,
+  I18nContext
 } from 'react-admin';
+
 import { TwitterTweetEmbed } from 'react-twitter-embed';
 import { useNavigate } from 'react-router-dom';
 import { BareLayout } from './layout';
-import { Head1, Head2, CardTitle, BulletPoint, yellow, dark, red } from '../components/theme';
+import { Head1, Head2, CardTitle, BulletPoint, yellow, dark, red, light, green } from '../components/theme';
 import logo from '../assets/asami.png';
 import RootstockLogo from '../assets/rootstock.svg?react';
 import AsamiLogo from '../assets/logo.svg?react';
@@ -39,10 +42,12 @@ import chunk from 'lodash/chunk';
 import flatten from 'lodash/flatten';
 
 const Login = () => {
+  const translate = useTranslate();
   const [role, setRole] = useStore('user.role', 'advertiser');
   const [open, setOpen] = useSafeSetState(false);
   const [error, setError] = useSafeSetState();
   const [pubDataProvider, setPubDataProvider] = useSafeSetState();
+  const i18nProvider = useContext(I18nContext);
 
   useEffect(() => {
     async function initApp() {
@@ -56,7 +61,6 @@ const Login = () => {
     return <></>;
   }
 
-
   const loginAs = async (role) => {
     try {
       setRole(role);
@@ -67,7 +71,7 @@ const Login = () => {
   }
 
   return (
-    <CoreAdminContext dataProvider={pubDataProvider} authProvider={null}>
+    <CoreAdminContext i18nProvider={i18nProvider} dataProvider={pubDataProvider} authProvider={null}>
       <BareLayout>
         <Box p="1em">
           <LoginSelector open={open} setOpen={setOpen} />
@@ -82,11 +86,13 @@ const Login = () => {
                   fullWidth
                   id="button-login-as-member"
                 >
-                  Login &ndash; Signup
+                  { translate("login.login_button") }
                 </Button>
-                <Button href="/#/about" color="inverted" fullWidth id="button-about-us" > About ASAMI</Button>
+                <Button href="/#/about" color="inverted" fullWidth id="button-about-us" >
+                  { translate("login.about_asami_button") }
+                </Button>
                 <Button
-                  href="https://x.com/asami_club"
+                  href={ `https://x.com/${translate("login.x_handle")}` }
                   target="_blank"
                   startIcon={ <XIcon /> }
                   color="inverted"
@@ -94,10 +100,10 @@ const Login = () => {
                   fullWidth
                   id="button-visit-x"
                 >
-                  asami_club
+                  { translate("login.x_handle") }
                 </Button>
                 <Button
-                  href="https://instagram.com/asamiclub"
+                  href={ `https://instagram.com/${translate("login.ig_handle")}` }
                   target="_blank"
                   startIcon={ <InstagramIcon /> }
                   color="inverted"
@@ -105,11 +111,12 @@ const Login = () => {
                   fullWidth
                   id="button-visit-instagram"
                 >
-                  asamiclub
+                  { translate("login.ig_handle") }
                 </Button>
               </Box>
             </Box>
 
+            <GotSparkles key="got-sparkels" loginAs={loginAs}/>
             <PublicCampaignList loginAs={loginAs} />
           </Box>
 
@@ -120,6 +127,7 @@ const Login = () => {
 };
 
 const PublicCampaignList = ({loginAs}) => {
+  const translate = useTranslate();
   const listContext = useListController({
     debounce: 500,
     disableSyncWithLocation: true,
@@ -139,14 +147,14 @@ const PublicCampaignList = ({loginAs}) => {
     return <>
       <Card id="campaign-list-empty" sx={{my:"3em"}}>
         <CardContent>
-          <Head2>We're all out of campaigns.</Head2>
-          <Typography>Check back soon though!</Typography>
+          <Head2>{ translate("out_of_campaigns.title") }</Head2>
+          <Typography>{ translate("out_of_campaigns.message") }</Typography>
         </CardContent>
       </Card>
     </>;
   }
 
-  const items = flatten(chunk(listContext.data, 5).map((i) => [{yourPostHere: true}, ...i]));
+  const items = flatten(chunk(listContext.data, 4).map((i) => [...i, {yourPostHere: true}]));
 
   return <>
     { items.map((item, index) => {
@@ -161,41 +169,67 @@ const PublicCampaignList = ({loginAs}) => {
   </>;
 }
 
-const YourPostHere = ({loginAs}) =>
-  <Card sx={{ border: "1px solid", borderColor: yellow, p: "1em", marginBottom: "1em", breakInside: "avoid", flex: "1 1 250px" }} >
-    <Head2 >Your post here</Head2>
-    <Typography>
-      Set up a reward for club members to boost your Instagram or X content.
-    </Typography>
+const YourPostHere = ({loginAs}) => {
+  const translate = useTranslate();
+  
+  return (<Card sx={{ border: "1px solid", borderColor: yellow, p: "1em", marginBottom: "1em", breakInside: "avoid", flex: "1 1 250px" }} >
+    <Head2 >{ translate("your_post_here.title") }</Head2>
+    <Typography>{ translate("your_post_here.message") }</Typography>
     <Box mt="1em" >
       <Button onClick={() => loginAs("advertiser")} className="submit-your-post" color="secondary" fullWidth size="large" variant="contained" >
-        Submit your post
+        { translate("your_post_here.button") }
       </Button>
     </Box>
-  </Card>
+  </Card>);
+}
 
-const PublicCardHeader = ({loginAs, item, buttonLabel, icon}) => 
-  <>
+const GotSparkles = ({loginAs}) => {
+  const translate = useTranslate();
+  
+  return (<Card sx={{ border: "1px solid", borderColor: light, p: "1em", marginBottom: "1em", breakInside: "avoid", flex: "1 1 250px" }} >
+    <Head2 >{ translate("got_sparkles.title") }</Head2>
+    <Typography>{ translate("got_sparkles.message") }</Typography>
+    <Typography>{ translate("got_sparkles.message_2") }</Typography>
+    <Box mt="1em" >
+      <Button onClick={() => loginAs("member")} className="get-your-sparkles" color="inverted" fullWidth size="large" variant="contained" >
+        { translate("got_sparkles.button") }
+      </Button>
+    </Box>
+  </Card>);
+}
+
+const PublicCardHeader = ({loginAs, item, buttonLabel, icon}) => {
+  const translate = useTranslate();
+
+  return (<>
     <CardHeader
-      avatar={ <Avatar>{icon}</Avatar> }
-      title={ `Pays up to $${formatEther(item.remaining)}` }
-      subheader={ `$${formatEther(item.priceScoreRatio)} per ✨` }
+      avatar={ <Avatar sx={{ bgcolor: light }} >{icon}</Avatar> }
+      title={ translate("public_card_header.title", {amount: formatEther(item.remaining)}) }
+      subheader={ translate("public_card_header.subheader", {amount: formatEther(item.priceScoreRatio)}) }
     />
     <Box px="10px">
       <Button onClick={() => loginAs("member") } fullWidth size="large" variant="contained" >
         { buttonLabel }
       </Button>
     </Box>
-  </>
+  </>);
+};
 
 const PublicXCampaign = ({loginAs, item}) => {
+  const translate = useTranslate();
   return <Card sx={{ marginBottom: "1em", breakInside: "avoid", flex: "1 1 250px" }} key={item.id} id={`campaign-container-${item.id}`}>
-    <PublicCardHeader icon={<XIcon/>} item={item} loginAs={loginAs} buttonLabel="Repost to earn" />
+    <PublicCardHeader
+      icon={<XIcon/>}
+      item={item}
+      loginAs={loginAs}
+      buttonLabel={ translate("public_x_campaign.main_button")}
+    />
     <TwitterTweetEmbed tweetId={item.contentId} options={{ theme: "dark", align: "center", width: "250px", conversation: "none"}} />
   </Card>;
 }
 
 const PublicInstagramCampaign = ({loginAs, item}) => {
+  const translate = useTranslate();
   const notify = useNotify();
   const {data, isLoading} = useGetList(
     "IgCampaignRule",
@@ -210,7 +244,12 @@ const PublicInstagramCampaign = ({loginAs, item}) => {
   const filename = `campaign_${data[0].campaignId}.jpg`;
 
   return <Card sx={{ marginBottom: "1em", flex: "1 1 250px"}} key={item.id} id={`campaign-container-${item.id}`}>
-    <PublicCardHeader icon={<InstagramIcon/>} item={item} loginAs={loginAs} buttonLabel="Repost to earn" />
+    <PublicCardHeader
+      icon={<InstagramIcon/>}
+      item={item}
+      loginAs={loginAs}
+      buttonLabel={ translate("public_ig_campaign.main_button") }
+    />
 
     <CardContent>
       <Box display="flex" flexDirection="column" alignItems="center">
@@ -242,14 +281,14 @@ const LoginSelector = ({open, setOpen}) => {
   };
 
   return (<Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
-    <Alert severity="error" icon={false}>
+    <Alert sx={{ bgcolor: 'background.paper' }} severity="warning" icon={false}>
       <Typography sx={{ color: "inherit" }} fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
         Consent to transfer your data outside the EU
       </Typography>
       Using ASAMI means agreeing to permanent disclosure and storage of your data globally.
       This non-revocable policy is essential for our club's fairness and transparency.
       Before logging in, please assess the potential privacy and reputation risks of disclosing your social media handles and rewards.
-      <Button href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32016R0679" sx={{mt:"1em"}} id="no-login-button" fullWidth color="error" variant="outlined">
+      <Button href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32016R0679" sx={{mt:"1em"}} id="no-login-button" fullWidth color="warning" variant="outlined">
         I do not consent!
       </Button>
     </Alert>
@@ -265,6 +304,7 @@ const LoginSelector = ({open, setOpen}) => {
               id="x-login-button"
               fullWidth
               variant="contained"
+              color="inverted"
               onClick={startXLogin}
             >
               Consent with X
@@ -281,6 +321,7 @@ const LoginSelector = ({open, setOpen}) => {
                   id="facebook-login-button"
                   fullWidth
                   variant="contained"
+                  color="inverted"
                 >
                   Consent with Facebook
                 </Button> 
@@ -303,7 +344,7 @@ const LoginSelector = ({open, setOpen}) => {
           </Typography>
           <Box display="flex" gap="1em" alignItems="center" mb="1em">
             <WalletIcon/>
-            <Button id="wallet-login-button" fullWidth variant="contained" onClick={startEip712Login}>
+            <Button id="wallet-login-button" fullWidth color="inverted" variant="contained" onClick={startEip712Login}>
               Consent and connect
             </Button>
           </Box>

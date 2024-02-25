@@ -94,6 +94,7 @@ const Content = styled("div")(({ theme }) => ({
 
 export const BareLayout = ({children}) => {
   const translate = useTranslate();
+
   return (<Box sx={{
       minHeight: "100vh",
       display: "flex",
@@ -107,7 +108,7 @@ export const BareLayout = ({children}) => {
         <Button href="https://rootstock.io/" target="_blank" sx={{textDecoration: "none", mb: "2em"}}>
           <Box display="flex" flexDirection="column">
             <Typography fontSize="1em" textTransform="uppercase" fontFamily="LeagueSpartanBold">
-              Built with
+              { translate("footer.built_with") }
             </Typography>
             <RootstockLogo/>
           </Box>

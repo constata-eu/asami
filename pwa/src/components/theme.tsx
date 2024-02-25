@@ -59,7 +59,7 @@ const theme = {
     mode: 'dark',
     primary: { main: green },
     secondary: { main: yellow },
-    inverted: { main: light },
+    inverted: { main: light, contrastText: dark },
     error: { main: red },
   },
   components: {

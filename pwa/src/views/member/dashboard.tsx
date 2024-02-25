@@ -240,7 +240,7 @@ const InstagramCampaign = ({item, prefsContext, setPreference}) => {
         <a href={ dataUri } target="_blank" download={filename}>
           <img style={{maxWidth: "100%", maxHeight: "400px"}} src={dataUri} />
         </a>
-        { !!data[0].caption && <Paper sx={{p:"1em", my:"1em"}}><Typography>{ data[0].caption }</Typography></Paper> }
+        { !!data[0].caption && <Paper elevation={5} sx={{p:"1em", my:"1em"}}><Typography>{ data[0].caption }</Typography></Paper> }
       </Box>
       
       <Button sx={{ mb: "1em" }} fullWidth size="large" variant="contained" target="_blank" href={ dataUri } rel="noopener noreferrer" download={filename}>
@@ -475,16 +475,22 @@ const MakeInstagramVerificationPost = () => {
       Well look for it in your posts, <strong>not in your stories</strong>.
     </Typography>
     <Box>
-      <a href={config.instagram_verification_image_url} target="_blank" download>
-        <img style={{maxWidth: "100%", maxHeight: "400px"}} src={config.instagram_verification_image_url} />
-      </a>
-      <Paper sx={{p:"1em", my:"1em"}}><Typography>{ caption }</Typography></Paper>
-      <Button sx={{ mb: "1em" }} fullWidth size="large" variant="contained" target="_blank" href={config.instagram_verification_image_url} rel="noopener noreferrer" download>
-        Download the image
-      </Button> 
-      <Button fullWidth size="large" onClick={() => copyText() } variant="contained" >
-        Copy the text
-      </Button> 
+      <Box display="flex" flexWrap="wrap" gap="1em" mb="1em">
+        <Box justifyContent="center" display="flex" >
+          <a href={config.instagram_verification_image_url} target="_blank" download>
+            <img style={{maxWidth: "100%", maxHeight: "400px"}} src={config.instagram_verification_image_url} />
+          </a>
+        </Box>
+        <Paper elevation={5} sx={{p:"1em", flex:"1 0 300px", alignSelf: "center"}}><Typography>{ caption }</Typography></Paper>
+      </Box>
+      <Box display="flex" gap="1em" mb="1em">
+        <Button fullWidth size="large" variant="contained" target="_blank" href={config.instagram_verification_image_url} rel="noopener noreferrer" download>
+          Get image
+        </Button> 
+        <Button fullWidth size="large" onClick={() => copyText() } variant="contained" >
+          Copy text
+        </Button> 
+      </Box>
     </Box>
   </Box>
 }
@@ -611,7 +617,7 @@ const MakeXVerificationPost = () => {
 
   return <Box p="1em">
     <Typography mb="1em">Now, to verify your username, and your willingness to use it in ASAMI, we need you to post this message on X.</Typography>
-    <Paper sx={{ my:"1em", p:"1em", background:"#eee"}}> {text} </Paper>
+    <Paper elevation={5} sx={{ my:"1em", p:"1em"}}> {text} </Paper>
     { clicked ?
       <Alert>Thank you! It will take a moment for us to pick up your post.</Alert> :
       <Button fullWidth onClick={() => setClicked(true)} size="large" variant="contained" href={intent_url} target="_blank" rel="noopener noreferrer">

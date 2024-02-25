@@ -50,6 +50,7 @@ browser_test!{ shows_campaigns_in_dashboard (mut d)
 
   d.goto("http://127.0.0.1:5173").await;
   d.wait_for("#button-login-as-member").await;
+  wait_here();
 }
 
 browser_test!{ full_flow_to_reward_in_browser (mut d)

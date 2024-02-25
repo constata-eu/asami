@@ -1,0 +1,53 @@
+{
+  "resources": {
+  },
+	"footer": {
+    "built_with": "Built with"
+  },
+  "login": {
+    "login_button": "Login",
+    "about_asami_button": "About ASAMI",
+    "ig_handle": "asamiclub",
+    "x_handle": "asami_club"
+  },
+  "public_card_header": {
+    "title": "Pays up to ${amount}",
+    "subheader": "${amount} per sparkle ✨"
+  },
+  "public_x_campaign": {
+    "main_button": "Repost to earn"
+  },
+  "public_ig_campaign": {
+    "main_button": "Post to earn"
+  },
+  "out_of_campaigns": {
+    "title": "We're all out of campaigns.",
+    "message": "Check back soon though!"
+  },
+  "your_post_here": {
+    "title": "Your post here",
+    "message": "Set up a reward for club members to boost your Instagram or X content",
+    "button": "Submit your post"
+  },
+  "got_sparkles": {
+    "title": "Got sparkles ✨?",
+    "message": "We'll rate your account with a number of sparkles every 15 days.",
+    "message_2": "Advertisers pay based on your sparkle score!",
+    "button": "Join the club"
+  },
+  "patch": {
+    "action": {
+      "clear_input_value": "Clear",
+      "confirm": "Confirm",
+      "unselect": "Unselect"
+    },
+    "auth": {
+      "auth_check_error": "Please sign in to continue",
+      "user_menu": "Profile"
+    },
+    "navigation": {
+      "page_rows_per_page": "Rows per page:",
+      "skip_nav": "Skip"
+    }
+  }
+}

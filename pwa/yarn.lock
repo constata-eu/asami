@@ -6845,6 +6845,22 @@ ra-core@^4.13.2:
     react-is "^17.0.2"
     react-query "^3.32.1"
 
+ra-core@^4.16.11:
+  version "4.16.11"
+  resolved "https://registry.yarnpkg.com/ra-core/-/ra-core-4.16.11.tgz#91d003dc3e3974315922fab60b1c8d8ca5278c94"
+  integrity sha512-Zlzg34jMKUNdVWCCZAojGDFXkwA4tGn4VxRV2fQOA+izoNoq521no5KZfWFN21NThNxUT+Z6vip0MJ7uhuLDaA==
+  dependencies:
+    clsx "^1.1.1"
+    date-fns "^2.19.0"
+    eventemitter3 "^4.0.7"
+    inflection "~1.12.0"
+    jsonexport "^3.2.0"
+    lodash "~4.17.5"
+    prop-types "^15.6.1"
+    query-string "^7.1.1"
+    react-is "^17.0.2"
+    react-query "^3.32.1"
+
 ra-data-graphql-simple@^4.14.3:
   version "4.14.3"
   resolved "https://registry.yarnpkg.com/ra-data-graphql-simple/-/ra-data-graphql-simple-4.14.3.tgz#f75b14ab88880df176a29bd3a5d203fce2d8021f"
@@ -6873,12 +6889,32 @@ ra-i18n-polyglot@^4.13.2:
     node-polyglot "^2.2.2"
     ra-core "^4.13.2"
 
+ra-i18n-polyglot@^4.16.11:
+  version "4.16.11"
+  resolved "https://registry.yarnpkg.com/ra-i18n-polyglot/-/ra-i18n-polyglot-4.16.11.tgz#163bf5d4765234a940fcf76fe06f5b02761d2d5f"
+  integrity sha512-39LHcwavuZRDd9HLqa7JB/CXwi3KysHnxby2cmL/Hk/sy4LKli1Z5zjBnhEcMhRs6uKl3VfP+dsI+giGB2jDxQ==
+  dependencies:
+    node-polyglot "^2.2.2"
+    ra-core "^4.16.11"
+
 ra-language-english@^4.13.2:
   version "4.13.2"
   resolved "https://registry.yarnpkg.com/ra-language-english/-/ra-language-english-4.13.2.tgz#68e09dcc2ad2515eb765511b0613acd72a5537f9"
   integrity sha512-dRwVajmaOF+//YzUsrXXAZKxiPvOPKPo1NL0Ydb0L+SGPhc77xB89Rd/zcjqBi3vZiy6ur48tVNrAFFedww8hA==
   dependencies:
     ra-core "^4.13.2"
+
+ra-language-english@^4.16.11:
+  version "4.16.11"
+  resolved "https://registry.yarnpkg.com/ra-language-english/-/ra-language-english-4.16.11.tgz#93b82b27770b84339006927ae52600fcd763e7c8"
+  integrity sha512-FHTDkAAz4dJOQWbznlh5X1mgrPdivdzWX1Vlmp6CPx8GxKwy+YPoe1CQPQY5G8p3PglYA/vpJVT+RRcI7x7I6Q==
+  dependencies:
+    ra-core "^4.16.11"
+
+ra-language-spanish@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/ra-language-spanish/-/ra-language-spanish-1.0.0.tgz#7b0575d07a5434bea219b7f3c1e7667e0c3b8dff"
+  integrity sha512-hdsW0DtE9foDVMkct3kyLdm8sKgwFFKeqBJ9bxOz3T7qtPAXljxOIgSmvSEjx3bKS0xfUkHX8kt3wvB+Q7fyIg==
 
 ra-ui-materialui@^4.13.2:
   version "4.13.2"

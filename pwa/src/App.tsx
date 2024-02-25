@@ -23,15 +23,15 @@ import Login from "./views/login";
 import About from "./views/about";
 import asamiTheme from './components/theme';
 import { AsamiLayout } from './views/layout';
-
 import AdvertiserDashboard from "./views/advertiser/dashboard";
 import MemberDashboard from "./views/member/dashboard";
-
 import { Alert, AlertTitle, AppBar, Divider, Toolbar, IconButton, Box, Button, Container, Paper, styled, Backdrop, Typography, Skeleton, useMediaQuery } from '@mui/material';
 import { Head1 } from './components/theme';
 import logo from './assets/asami.png';
 import rootstock from './assets/rootstock.png';
 import { XLogin, FacebookLogin, Eip712Login, OneTimeTokenLogin } from './views/oauth_redirect';
+import polyglotI18nProvider from 'ra-i18n-polyglot';
+import { messages, browserLocale, LOCALES } from "./i18n";
 
 const Dashboard = () => {
   const [searchParams,] = useSearchParams();
@@ -51,8 +51,9 @@ export const App = () => {
     initApp();
   }, []);
 
+  const i18nProvider =  polyglotI18nProvider(locale => messages[locale], browserLocale);
 
-  if (!dataProvider) {
+  if (!dataProvider || !i18nProvider) {
     return <Container maxWidth="md">
       <Skeleton animation="wave" />
     </Container>;
@@ -69,6 +70,7 @@ export const App = () => {
         loginPage={Login}
         authProvider={authProvider}
         dataProvider={dataProvider}
+        i18nProvider={i18nProvider}
       >
         <CustomRoutes>
           <Route path="/about" element={<About/>}/>
