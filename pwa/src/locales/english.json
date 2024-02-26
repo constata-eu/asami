@@ -11,8 +11,8 @@
     "x_handle": "asami_club"
   },
   "public_card_header": {
-    "title": "Pays up to ${amount}",
-    "subheader": "${amount} per sparkle ✨"
+    "title": "Pays up to $%{amount}",
+    "subheader": "$%{amount} per sparkle ✨"
   },
   "public_x_campaign": {
     "main_button": "Repost to earn"
