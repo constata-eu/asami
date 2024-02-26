@@ -35,6 +35,58 @@
     "message_2": "¡Los anunciantes pagan por cantidad de chispas!",
     "button": "Únete al club"
   },
+  "login_form": {
+    "disclaimer_title": "Consentimiento para transferir tus datos fuera de la UE",
+    "disclaimer_body": "Usar ASAMI significa aceptar la divulgación y almacenamiento permanentes de tus datos a nivel mundial. Esta política no revocable es esencial para la equidad y transparencia de nuestro club. Antes de ingresar, por favor evalúa los potenciales riesgos para la privacidad y reputación de divulgar tus identificadores en redes sociales y recompensas.",
+    "reject_button": "¡No acepto!",
+    "read_more": "Leer más",
+    "web2_consent_title": "Aceptar e ingresar con redes sociales.",
+    "consent_with_x": "Aceptar con X",
+    "consent_with_facebook": "Aceptar con Facebook",
+    "web3_consent_title": "Aceptar e ingresar con tu billetera WEB3",
+    "web3_consent_body": "Para gastar tus recompensas en Dólar on Chain, obtener tokens ASAMI, y votar.",
+    "consent_and_connect": "Aceptar y conectar"
+  },
+  "about_us": {
+    "go_back_button": "Volver",
+    "club_title": "Realmente es un club, y te invitamos a unirte!",
+    "club_description": [
+      "Somos un club de personas que reciben pago por republicar contenido en redes sociales.",
+      "Puedes participar como un <b>Anunciante</b>, un <b>Miembro</b>, o incluso como el <b>Administrador</b> del club.",
+      "<b>Los Anunciantes crean campañas</b> al enviar el enlace de una publicación y cuánto desean gastar.",
+      "<b>Los Miembros</b> revisan todas las campañas disponibles y deciden <b>colaborar republicándolas</b>, y luego reciben pago por ello.",
+      "<b>El Administrador</b> vigila las republicaciones de los miembros y <b>las registra</b> como colaboraciones.",
+      "<b>El Administrador</b> también investiga la red personal de cada miembro y <b>los califica con chispas ✨</b>.",
+      "<b>Los Miembros pueden establecer su propio precio</b>, lo que determina su <b>precio por chispa ✨</b>, y actualizarlo cada 15 días.",
+      "<b>Los Anunciantes pueden exigir un precio específico por chispa ✨</b> de los miembros antes de que puedan colaborar en su campaña.",
+      "Las reglas que rigen estos 3 roles están <b>impuestas por un contrato inteligente llamado ASAMI</b>, que existe en la blockchain pública de RSK.",
+      "Cuando se registra una colaboración, se emite un pago al miembro, y ASAMI cobra una comisión de ello.",
+      "Además, cada vez que se recauda una comisión, se emite y distribuye una cantidad equivalente de <b>Token de ASAMI</b> al miembro, al anunciante y al administrador. Reciben el 10%, 10% y 80% de los nuevos tokens respectivamente.",
+      "<b>Todas las comisiones recogidas se distribuyen</b> proporcionalmente a todos los tenedores de tokens de ASAMI cada 15 días.",
+      "El Token de ASAMI es un <b>token ERC20 estándar</b> que puede ser transferido, comprado y vendido en mercados secundarios.",
+      "Los tenedores de tokens también pueden <b>votar para cambiar la tasa de comisión de ASAMI</b>, lo que afecta sus ingresos de tokens a corto plazo, pero también su dilución.",
+      "<b>Un nuevo administrador puede ser elegido</b> por los tenedores de tokens también."
+    ],
+    "privacy_statement_title": "Tenemos una importante declaración de privacidad que hacer.",
+    "privacy_statement": [
+      "Como parte de nuestro compromiso con fomentar una comunidad transparente, confiable y justa, tenemos políticas específicas respecto a los datos de los miembros que deberías conocer antes de unirte.",
+      "1. <b>Acceso a la Información de los Participantes</b> Al unirte, por favor ten en cuenta que todos los participantes tendrán acceso a ciertos detalles sobre otros participantes y sus interacciones dentro del club. Esto incluye manejadores de redes sociales, recompensas recibidas, campañas creadas y su voto en aspectos de gobernanza.",
+      "2. <b>Permanencia de los Datos:</b> Es crucial para la integridad de nuestra comunidad mantener un registro permanente de interacciones y detalles de los miembros. Por lo tanto, una vez que proporciones cualquier información al club, será retenida indefinidamente en la blockchain de RSK.",
+      "3. <b>No hay Opción de Borrado o Enmienda:</b> Por favor entiende que una vez que tus datos son enviados al club, no tendrás la opción de borrar o enmendar esta información. Esto está en línea con nuestra política de mantener un registro duradero para transparencia y equidad entre todos los miembros. También es un impedimento técnico que surge del uso de una red blockchain pública que replica datos a nivel mundial.",
+      "4. <b>Disponibilidad Pública y Riesgos Potenciales:</b> Al acordar unirte a nuestro club, reconoces y consientes que todos los datos que proporciones serán públicamente disponibles a nivel mundial, a perpetuidad. Te aconsejamos considerar el impacto potencial que esto podría tener en tu privacidad y reputación.",
+      "5. <b>Consentimiento Informado:</b> Tu decisión de unirte al club significa tu aceptación de estos términos. Creemos que esta política es esencial para atraer a nuevos miembros que valoran la transparencia, asegurar un trato justo para todos y mantener el alto nivel de confianza dentro de nuestra comunidad.",
+      "Por favor, toma un momento para considerar estos puntos cuidadosamente. Al unirte a ASAMI aceptas estos términos respecto a tus datos. Estamos emocionados de tenerte como parte de nuestra comunidad y estamos comprometidos a mantener estos principios para crear un ambiente positivo y abierto para todos los miembros."
+    ],
+    "data_rights_title": "Acerca de este sitio web y tus derechos de datos.",
+    "data_rights": [
+      "Este sitio web sirve como una interfaz para interactuar con el contrato inteligente de ASAMI y participar en el club. La información personal que recopilamos de ti es únicamente para estos propósitos.",
+      "Dada la naturaleza mundial de la blockchain pública que hace cumplir el contrato inteligente de ASAMI entre los participantes, debes consentir en divulgar y almacenar tus datos de manera permanente a nivel global.",
+      "Esto significa que estarás transfiriendo tus datos a jurisdicciones fuera de la unión europea que no tienen garantías de protección de datos.",
+      "Puede que no puedas hacer que tus datos sean enmendados o borrados. Tu historial completo de interacciones con otros participantes como miembros, anunciantes y votos, así como tus recompensas recogidas, estarán disponibles públicamente para cualquiera, para siempre.",
+      "Este sitio está desarrollado y gestionado por <b>Constata EU Digital Trust Services S.L.</b>, registrada en España con C.I.F. nº B02983997, con sede en Calle Paseo de la Castellana 40, 8ª planta, Madrid, 28046, España, e inscrita en el Registro Mercantil de Madrid, Tomo 41408, folio 174, Hoja M 733896,",
+      "Si tienes alguna pregunta sobre los riesgos asociados con la divulgación global en blockchain, o deseas ejercer tus derechos de protección de datos en aspectos gestionados por este sitio web, puedes contactarnos en <a target=\"_blank\" href=\"mailto:dpo@constata.eu\">dpo@constata.eu</a>."
+    ]
+  },
   "patch": {
     "action": {
       "clear_input_value": "Limpiar valor",

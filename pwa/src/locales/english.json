@@ -35,6 +35,58 @@
     "message_2": "Advertisers pay based on your sparkle score!",
     "button": "Join the club"
   },
+  "login_form": {
+    "disclaimer_title": "Consent to transfer your data outside the EU",
+    "disclaimer_body": "Using ASAMI means agreeing to permanent disclosure and storage of your data globally. This non-revocable policy is essential for our club's fairness and transparency.  Before logging in, please assess the potential privacy and reputation risks of disclosing your social media handles and rewards.",
+    "reject_button": "I do not consent!",
+    "read_more": "Read more",
+    "web2_consent_title": "Consent and login with your social account.",
+    "consent_with_x": "Consent with X",
+    "consent_with_facebook": "Consent with Facebook",
+    "web3_consent_title": "Consent and login with a WEB3 wallet",
+    "web3_consent_body": "To spend your Dollar on Chain rewards, get ASAMI tokens, and vote.",
+    "consent_and_connect": "Consent and connect"
+  },
+  "about_us": {
+    "go_back_button": "Go Back",
+    "club_title": "It really is a club, and you're welcome to join!",
+    "club_description": [
+      "We're a club of people that get paid for reposting content on social media.",
+      "You can participate as an <b>Advertiser</b>, a <b>Member</b>, or even as the club's <b>Admin</b>.",
+      "<b>Advertisers create campaigns</b> by submitting the link to a post, and how much to spend.",
+      "<b>Members</b> review all the available campaigns and decide to <b>collaborate by reposting</b>, then get paid when they do.",
+      "<b>The Admin</b> watches for member reposts and <b>registers them</b> as collaborations.",
+      "<b>The Admin</b> also looks up each member's personal network and <b>rates them with sparkles ✨</b> .",
+      "<b>Members may set their own price</b>, which gives place to their <b>price per sparkle ✨</b>, and update it every 14 days.",
+      "<b>Advertisers can require a given price per sparkle ✨</b> from members before they can collaborate on their campaign.",
+      "The rules governing these 3 roles are <b>enforced by a smart contract called ASAMI</b>, which exists in the RSK public blockchain.",
+      "When a collaboration is registered, a payment is issued to the member, and ASAMI collects a fee from it.",
+      "Also, everytime a fee is collected, an equivalent amount of <b>ASAMI Tokens are issued and distributed</b> to the member, the advertiser, and the admin. They get 10%, 10% and 80% of the new tokens respectively.",
+      "<b>All fees collected are distributed</b> at prorata to all the ASAMI token holders every 14 days.",
+      "ASAMI Token is a <b>standard ERC20</b> token which can be transfered, bought and sold in secondary markets.",
+      "Token holders can also <b>vote to change the ASAMI fee rate</b>, which affects their short term token revenue, but also their dilution.",
+      "<b>A new admin may be voted</b> by token holders too."
+    ],
+    "privacy_statement_title": "We have an important privacy statement to make.",
+    "privacy_statement": [
+      "As part of our commitment to fostering a transparent, trustworthy, and fair community, we have specific policies regarding member data that you should be aware of before joining.",
+      "1. <b>Access to Participant Information</b> Upon joining, please be informed that all participants will have access to certain details about other participants and their interactions within the club. This includes social media handles, rewards received, campaigns created, and their vote in governance aspects.",
+      "2. <b>Permanence of Data:</b> It is crucial to our community's integrity that we maintain a permanent record of interactions and member details. Therefore, once you provide any information to the club, it will be retained indefinitely in the RSK blockchain.",
+      "3. <b>No Option for Erasure or Amendment:</b> Please understand that once your data is submitted to the club, you will not have the option to erase or amend this information. This is in line with our policy of maintaining a lasting record for transparency and fairness among all members. It is also a technical impediment arising from the usage of a public blockchain network which replicates data worldwide.",
+      "4. <b>Public Availability and Potential Risks:</b> By agreeing to join our club, you acknowledge and consent that all data you provide will be made publicly available worldwide, in perpetuity. We advise you to consider the potential impact this could have on your privacy and reputation.",
+      "5. <b>Informed Consent:</b> Your decision to join the club signifies your acceptance of these terms. We believe this policy is essential to attract new members who value transparency, ensure fair treatment for all, and maintain the high level of trust within our community.",
+      "Please take a moment to consider these points carefully. By joining ASAMI you agree to these terms regarding your data. We are excited to have you as part of our community and are committed to upholding these principles to create a positive and open environment for all members."
+    ],
+    "data_rights_title": "About this website and your data rights.",
+    "data_rights": [
+      "This website serves as an interface for engaging with the ASAMI smart contract and participating in the club. The personal information we collect from you is solely for these purposes.",
+      "Given the worldwide nature of the public blockchain that enforces the ASAMI smart contract between participants, you must consent to permanetly disclose and store your data globally.",
+      "This means you'll be transferring your data to jurisdictions outside the european union that have no data protection guarantees.",
+      "You may not be able to have your data amended, or deleted. Your full history of interactions with other participants such as members, advertisers and votes, and also your collected rewards will be publicly available to anyone, forever.",
+      "This site is developed and run by <b>Constata EU Digital Trust Services S.L.</b>, registered in Spain with C.I.F. nº B02983997, Headquartered in Calle Paseo de la Castellana 40, 8ª planta, Madrid, 28046, Spain, and registered in Registro Mercantil de Madrid, Tomo 41408, folio 174, Hoja M 733896,",
+      "If you have any question about the risks associated with global blockchain disclosure, or wish to exercise your data protection rights in aspects managed by this website, you can contact us at <a target=\"_blank\" href=\"mailto:dpo@constata.eu\">dpo@constata.eu</a>."
+    ]
+  },
   "patch": {
     "action": {
       "clear_input_value": "Clear",

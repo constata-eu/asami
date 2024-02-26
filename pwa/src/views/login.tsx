@@ -263,6 +263,7 @@ const PublicInstagramCampaign = ({loginAs, item}) => {
 }
 
 const LoginSelector = ({open, setOpen}) => {
+  const translate = useTranslate();
   const { signLoginMessage } = useContracts();
   const navigate = useNavigate();
   const [oauthVerifier, setOauthVerifier] = useStore('user.oauthChallenge');
@@ -283,20 +284,23 @@ const LoginSelector = ({open, setOpen}) => {
   return (<Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
     <Alert sx={{ bgcolor: 'background.paper' }} severity="warning" icon={false}>
       <Typography sx={{ color: "inherit" }} fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
-        Consent to transfer your data outside the EU
+        { translate("login_form.disclaimer_title") }
       </Typography>
-      Using ASAMI means agreeing to permanent disclosure and storage of your data globally.
-      This non-revocable policy is essential for our club's fairness and transparency.
-      Before logging in, please assess the potential privacy and reputation risks of disclosing your social media handles and rewards.
-      <Button href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32016R0679" sx={{mt:"1em"}} id="no-login-button" fullWidth color="warning" variant="outlined">
-        I do not consent!
-      </Button>
+        { translate("login_form.disclaimer_body") }
+      <Box display="flex" gap="1em" flexWrap="wrap" mt="1em">
+        <Button sx={{ flex: "1 1 300px"}} href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32016R0679" id="no-login-button" color="warning" variant="outlined">
+          { translate("login_form.reject_button") }
+        </Button>
+        <Button sx={{ flex: "1 1 100px" }} href="/#/about" id="more-on-privacy" color="warning">
+          { translate("login_form.read_more") }
+        </Button>
+      </Box>
     </Alert>
     <DialogContent>
       <Box display="flex" gap="1em" flexDirection="column">
         <Box>
           <Typography mb="1em" fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
-            Consent and login with your social account.
+            { translate("login_form.web2_consent_title") }
           </Typography>
           <Box display="flex" gap="1em" alignItems="center" mb="1em">
             <XIcon/>
@@ -307,7 +311,7 @@ const LoginSelector = ({open, setOpen}) => {
               color="inverted"
               onClick={startXLogin}
             >
-              Consent with X
+              { translate("login_form.consent_with_x") }
             </Button>
           </Box>
           <Box display="flex" gap="1em" alignItems="center" mb="1em">
@@ -323,7 +327,7 @@ const LoginSelector = ({open, setOpen}) => {
                   variant="contained"
                   color="inverted"
                 >
-                  Consent with Facebook
+                  { translate("login_form.consent_with_facebook") }
                 </Button> 
               }
               scope="public_profile"
@@ -337,15 +341,15 @@ const LoginSelector = ({open, setOpen}) => {
         </Box>
         <Box>
           <Typography fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
-            Consent and login with a WEB3 wallet
+            { translate("login_form.web3_consent_title") }
           </Typography>
           <Typography mb="1em">
-            To spend your rewards, get ASAMI tokens, and vote.
+            { translate("login_form.web3_consent_body") }
           </Typography>
           <Box display="flex" gap="1em" alignItems="center" mb="1em">
             <WalletIcon/>
             <Button id="wallet-login-button" fullWidth color="inverted" variant="contained" onClick={startEip712Login}>
-              Consent and connect
+              { translate("login_form.consent_and_connect") }
             </Button>
           </Box>
         </Box>
@@ -355,4 +359,3 @@ const LoginSelector = ({open, setOpen}) => {
 }
 
 export default Login;
-
