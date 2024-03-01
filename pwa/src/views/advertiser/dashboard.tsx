@@ -4,6 +4,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { Alert, Box, Button, Card, CardActions, CardContent, Container, FormControl, FormHelperText, InputLabel, MenuItem, Select, Skeleton, Typography, IconButton } from "@mui/material";
 import { Dialog, DialogContent, DialogTitle, DialogActions } from '@mui/material';
 import { ethers, parseUnits, formatEther, toBeHex, zeroPadValue, parseEther } from "ethers";
+import { LoggedInNavCard, ColumnsContainer, DeckCard } from '../layout';
 import schnorr from "bip-schnorr";
 import { Buffer } from "buffer";
 import Login from "./views/login";
@@ -15,8 +16,6 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { DateField } from '@mui/x-date-pickers/DateField';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs';
-import { nip19 } from 'nostr-tools'
-
 import { viewPostUrl } from '../../lib/campaign';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -59,33 +58,49 @@ const Dashboard = () => {
     </Container>;
   }
 
-  return <Container maxWidth="md" id="advertiser-dashboard">
-    <Head1 sx={{my:3}}>Hello Advertiser!</Head1>
-    <Typography my="1em">
-      Just enter the URL of an <strong>X or Instagram</strong> post and how much you want to spend.
-      <br/>
-      The club will pay members for reposting it, at a rate of 0.001 - 0.005 USD for each <strong>real person</strong> reached.
-      <br/>
-      <strong>On X</strong> members will hit the "repost" button of your post.
-      <br/>
-      <strong>On Instagram</strong> members will copy your original post image and caption, and post it as their own. Make sure to use hashtags!
-      <br/>
-      Anyone will be able to participate reposting in the next 7 days.
-    </Typography>
+  return (<Box p="1em" id="advertiser-dashboard">
+    <ColumnsContainer>
+      <LoggedInNavCard />
 
-    { !hasPendingClaim && <CreateCampaign onSave={() => setNeedsRefresh(true) } /> }
+      <DeckCard>
+        <CardContent>
+          <Typography my="1em">
+            Just enter the URL of an <strong>X or Instagram</strong> post and how much you want to spend.
+            <br/>
+            The club will pay members for reposting it, at a rate of 0.001 - 0.005 USD for each <strong>real person</strong> reached.
+            <br/>
+            <strong>On X</strong> members will hit the "repost" button of your post.
+            <br/>
+            <strong>On Instagram</strong> members will copy your original post image and caption, and post it as their own. Make sure to use hashtags!
+            <br/>
+            Anyone will be able to participate reposting in the next 7 days.
+          </Typography>
 
-    { hasPendingClaim && <Alert id="advertiser-claim-account-pending" sx={{ mt: "1em" }}>You'll be able to start new campaigns again once your WEB3 account setup is done.</Alert> }
-    { !hasClaim && <Alert severity="info" id="advertiser-claim-account-none" sx={{ mt: "1em" }}>
-        Since you haven't connected your WEB3 wallet, your campaigns will be funded privately by the club's admin,
-        subject to how much funds are available.
-        Connect your wallet to claim your account and fund campaigns with your own budget.
-        <ClaimAccountButton id="advertiser-claim-account-button"/>
-      </Alert>  
-    }
+          { !hasPendingClaim && <CreateCampaign onSave={() => setNeedsRefresh(true) } /> }
+        </CardContent>
+      </DeckCard>
+
+      { hasPendingClaim && <DeckCard id="advertiser-claim-account-pending">
+          <CardContent>
+            You'll be able to start new campaigns again once your WEB3 account setup is done.
+          </CardContent>
+        </DeckCard>
+      }
+
+      { !hasClaim && <DeckCard id="advertiser-claim-account-none">
+          <CardContent>
+            Since you haven't connected your WEB3 wallet, your campaigns will be funded privately by the club's admin,
+            subject to how much funds are available.
+            Connect your wallet to claim your account and fund campaigns with your own budget.
+            <ClaimAccountButton variant="outlined" label="Connect wallet" id="advertiser-claim-account-button"/>
+          </CardContent>
+        </DeckCard>  
+      }
+    </ColumnsContainer>
+
     <CampaignRequestList {...{needsRefresh, setNeedsRefresh}} />
     <CampaignList/>
-  </Container>;
+  </Box>);
 }
 
 const CampaignRequestList = ({needsRefresh, setNeedsRefresh}) => {
@@ -119,7 +134,7 @@ const CampaignRequestList = ({needsRefresh, setNeedsRefresh}) => {
           <Typography>Claim your account using a WEB3 wallet to create campaigns yourself!</Typography>
         </CardTitle>
         <Datagrid bulkActionButtons={false}>
-          <FunctionField label="Post" render={record => <a target="_blank" href={viewPostUrl(record)}>See post</a>} />
+          <FunctionField label="Post" render={record => <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">See post</a>} />
           <TextField source="status" />
           <TextField source="site" />
           <FunctionField label="Budget" render={record => `${formatEther(record.budget)} DOC` } />
@@ -153,7 +168,7 @@ const CampaignList = ({needsRefresh, setNeedsRefresh}) => {
           <Typography mt="1em">The ASAMI club members will be reposting your content until the budget is fully spent.</Typography>
         </CardTitle>
         <Datagrid bulkActionButtons={false}>
-          <FunctionField label="Post" render={record => <a target="_blank" href={`https://x.com/twitter/status/${record.contentId}`}>See post</a>} />
+          <FunctionField label="Post" render={record => <a target="_blank" href={`https://x.com/twitter/status/${record.contentId}`} rel="noreferrer">See post</a>} />
           <TextField source="site" />
           <FunctionField label="Budget" render={record => `${formatEther(record.budget)} DOC` } />
           <FunctionField label="Remaining" render={record => `${formatEther(record.remaining)} DOC` } />

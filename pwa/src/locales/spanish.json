@@ -4,6 +4,11 @@
 	"footer": {
     "built_with": "Hecho con"
   },
+  "logged_in_nav_card": {
+    "post_to_earn": "Post to earn",
+    "pay_to_amplify": "Pay for reach",
+    "logout": "Logout"
+  },
   "login": {
     "login_button": "Entrar",
     "about_asami_button": "Acerca de ASAMI",

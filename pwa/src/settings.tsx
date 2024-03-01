@@ -37,7 +37,7 @@ const production = {
   environment: 'production',
   recaptchaSiteKey: "6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX",
   rsk: {
-    chainId: 31,
+    chainId: 30,
   },
   x: {
     clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",

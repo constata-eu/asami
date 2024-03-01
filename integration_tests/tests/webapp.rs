@@ -50,7 +50,6 @@ browser_test!{ shows_campaigns_in_dashboard (mut d)
 
   d.goto("http://127.0.0.1:5173").await;
   d.wait_for("#button-login-as-member").await;
-  wait_here();
 }
 
 browser_test!{ full_flow_to_reward_in_browser (mut d)
@@ -64,12 +63,32 @@ browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.wait_until_gone(".MuiSnackbarContent-message").await;
   d.wait_for("#campaign-request-list").await;
 
+  d.click("#open-start-campaign-dialog").await;
+  d.fill_in("#contentUrl", "https://instagram.com/p/C2w6_ThRgkY").await;
+  d.fill_in("#budget", "20").await;
+  d.click("#submit-start-campaign-form").await;
+  d.wait_for_text(".MuiSnackbarContent-message", "Campaign will be started soon").await;
+  d.wait_until_gone(".MuiSnackbarContent-message").await;
+
+  let a = d.test_app();
   d.api.test_app.mock_admin_setting_campaign_requests_as_paid().await;
-  d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
+
+  try_until(10, 500, "no ig crawl", || async {
+    d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
+    a.app.campaign().select().count().await.unwrap() == 2
+  }).await;
+
+  a.app.ig_crawl().do_everything().await.unwrap();
+  let crawl = a.app.ig_crawl().find(1).await?;
+  assert_eq!(*crawl.processed_for_campaign_rules(), false);
+  try_until(100, 5000, "no ig crawl", || async {
+    a.app.ig_crawl().do_everything().await.unwrap();
+    *crawl.reloaded().await.unwrap().processed_for_campaign_rules()
+  }).await;
 
   d.wait_for("#campaign-list").await;
-  d.click("#logout-menu-item").await;
-  d.wait_for(".submit-your-post").await;
+  d.click("#button-logout").await;
+  d.wait_for("#login-form-and-landing").await;
   
   d.api.test_app.app.one_time_token().insert(InsertOneTimeToken{value: "member-token".to_string() }).save().await?;
   d.goto("http://127.0.0.1:5173/#/one_time_token_login?token=member-token").await;
@@ -77,17 +96,24 @@ browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.goto("http://127.0.0.1:5173/#/?role=member").await;
   d.wait_for("#member-dashboard").await;
 
-  d.fill_in("#username", "nubis_bruno").await;
+  d.fill_in("#x-handle-request-form #username", "nubis_bruno").await;
   d.click("#submit-x-handle-request-form").await;
   d.wait_for(".MuiSnackbarContent-message").await;
   d.wait_until_gone(".MuiSnackbarContent-message").await;
-  wait_here();
+
+  d.fill_in("#ig-handle-request-form #username", "nubis_bruno").await;
+  d.click("#submit-ig-handle-request-form").await;
+  d.wait_for(".MuiSnackbarContent-message").await;
+  d.wait_until_gone(".MuiSnackbarContent-message").await;
 
   d.api.test_app.mock_all_handles_being_verified_and_appraised().await;
-  d.wait_for("#handle-submission-in-progress-message").await;
+  d.wait_for("#handle-x-submission-in-progress-message").await;
+  d.wait_for("#handle-ig-submission-in-progress-message").await;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
   d.wait_for("#existing-x-handle-stats").await;
+  d.wait_for("#existing-ig-handle-stats").await;
 
+  wait_here();
   d.api.test_app.mock_collab_on_all_campaigns_with_all_handles().await;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
 

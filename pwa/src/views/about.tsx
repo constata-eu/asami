@@ -24,7 +24,7 @@ const LongForm = ({title, lines}) => {
     <Typography mb="0.5em" id="terms_and_policy" fontSize="2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
       { title }
     </Typography>
-    <Typography mb="0.7em" dangerouslySetInnerHTML={{ __html: html }}/>);
+    <Typography mb="0.7em" dangerouslySetInnerHTML={{ __html: html }}/>
   </Box>);
 }
 

@@ -22,7 +22,7 @@ import { defaultDataProvider } from "./lib/data_provider";
 import Login from "./views/login";
 import About from "./views/about";
 import asamiTheme from './components/theme';
-import { AsamiLayout } from './views/layout';
+import { BareLayout } from './views/layout';
 import AdvertiserDashboard from "./views/advertiser/dashboard";
 import MemberDashboard from "./views/member/dashboard";
 import { Alert, AlertTitle, AppBar, Divider, Toolbar, IconButton, Box, Button, Container, Paper, styled, Backdrop, Typography, Skeleton, useMediaQuery } from '@mui/material';
@@ -66,7 +66,7 @@ export const App = () => {
         dashboard={Dashboard}
         disableTelemetry={true}
         theme={asamiTheme}
-        layout={AsamiLayout}
+        layout={BareLayout}
         loginPage={Login}
         authProvider={authProvider}
         dataProvider={dataProvider}

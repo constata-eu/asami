@@ -62,7 +62,7 @@ impl Showable<models::IgCampaignRule, IgCampaignRuleFilter> for IgCampaignRule {
 
     Ok(IgCampaignRule {
       id: d.attrs.id,
-      campaign_id: d.attrs.display_url,
+      campaign_id: d.attrs.campaign_id,
       image: general_purpose::STANDARD.encode(d.attrs.image),
       caption: d.attrs.caption,
     })

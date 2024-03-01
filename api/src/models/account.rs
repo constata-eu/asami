@@ -1,4 +1,5 @@
 use super::*;
+use ethers::types::Address;
 
 // This is an account that maps with the smart contract accounts.
 // They may have several auth methods at first,
@@ -32,6 +33,12 @@ model! {
 impl Account {
   pub async fn is_claimed_or_claiming(&self) -> sqlx::Result<bool> {
     Ok(self.addr().is_some() || !self.claim_account_request_vec().await?.is_empty())
+  }
+
+  pub fn decoded_addr(&self) -> AsamiResult<Option<Address>> {
+    let Some(addr) = self.addr() else { return Ok(None) };
+    let decoded: Address = Address::decode_hex(addr).map_err(|_| Error::validation("invalid_address", addr))?;
+    Ok(Some(decoded))
   }
 
   pub async fn campaign_offers(&self) -> AsamiResult<Vec<Campaign>> {
