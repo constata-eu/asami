@@ -91,7 +91,6 @@ export const Head1 = styled("h1")(({ theme }) => ({
 
 export const Head2 = styled("h2")(({ theme }) => ({
   fontFamily: "'LeagueSpartanBold'",
-  color: light,
   fontSize: "20px",
   lineHeight: "1.1em",
   letterSpacing: "-0.05em",

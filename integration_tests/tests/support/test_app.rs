@@ -61,7 +61,7 @@ impl TestApp {
   }
 
   pub async fn client(&self) -> ApiClient {
-    let mut client = ApiClient::new(self.clone()).await;
+    let mut client = ApiClient::new(self).await;
     client.login().await;
     client
   }
@@ -114,9 +114,11 @@ impl TestApp {
   }
 
   pub async fn mock_collab_on_all_campaigns_with_all_handles(&self) {
-    for c in self.app.campaign().select().all().await.unwrap() {
-      for h in self.app.handle().select().all().await.unwrap() {
-        c.make_collab(&h).await.unwrap();
+    for site in &[models::Site::X, models::Site::Instagram] {
+      for c in self.app.campaign().select().site_eq(site).all().await.unwrap() {
+        for h in self.app.handle().select().site_eq(site).all().await.unwrap() {
+          c.make_collab(&h).await.unwrap();
+        }
       }
     }
   }

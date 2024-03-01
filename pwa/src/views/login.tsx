@@ -25,7 +25,7 @@ import {
 
 import { TwitterTweetEmbed } from 'react-twitter-embed';
 import { useNavigate } from 'react-router-dom';
-import { BareLayout } from './layout';
+import { BareLayout, DeckCard } from './layout';
 import { Head1, Head2, CardTitle, BulletPoint, yellow, dark, red, light, green } from '../components/theme';
 import logo from '../assets/asami.png';
 import RootstockLogo from '../assets/rootstock.svg?react';
@@ -40,6 +40,7 @@ import WalletIcon from '@mui/icons-material/Wallet';
 import truncate from 'lodash/truncate';
 import chunk from 'lodash/chunk';
 import flatten from 'lodash/flatten';
+import CampaignListEmpty from './campaign_list_empty';
 
 const Login = () => {
   const translate = useTranslate();
@@ -73,7 +74,7 @@ const Login = () => {
   return (
     <CoreAdminContext i18nProvider={i18nProvider} dataProvider={pubDataProvider} authProvider={null}>
       <BareLayout>
-        <Box p="1em">
+        <Box p="1em" id="login-form-and-landing">
           <LoginSelector open={open} setOpen={setOpen} />
 
           <Box sx={{columnCount: { xs: 1, sm: 2, md: 3, lg: 4, xl: 5}, columnGap:"1em"}}>
@@ -144,14 +145,7 @@ const PublicCampaignList = ({loginAs}) => {
   }
 
   if (listContext.total == 0 ) {
-    return <>
-      <Card id="campaign-list-empty" sx={{my:"3em"}}>
-        <CardContent>
-          <Head2>{ translate("out_of_campaigns.title") }</Head2>
-          <Typography>{ translate("out_of_campaigns.message") }</Typography>
-        </CardContent>
-      </Card>
-    </>;
+    return <CampaignListEmpty />;
   }
 
   const items = flatten(chunk(listContext.data, 4).map((i) => [...i, {yourPostHere: true}]));
@@ -172,30 +166,34 @@ const PublicCampaignList = ({loginAs}) => {
 const YourPostHere = ({loginAs}) => {
   const translate = useTranslate();
   
-  return (<Card sx={{ border: "1px solid", borderColor: yellow, p: "1em", marginBottom: "1em", breakInside: "avoid", flex: "1 1 250px" }} >
-    <Head2 >{ translate("your_post_here.title") }</Head2>
-    <Typography>{ translate("your_post_here.message") }</Typography>
-    <Box mt="1em" >
-      <Button onClick={() => loginAs("advertiser")} className="submit-your-post" color="secondary" fullWidth size="large" variant="contained" >
-        { translate("your_post_here.button") }
-      </Button>
-    </Box>
-  </Card>);
+  return (<DeckCard borderColor={yellow} >
+    <CardContent>
+      <Head2>{ translate("your_post_here.title") }</Head2>
+      <Typography>{ translate("your_post_here.message") }</Typography>
+      <Box mt="1em" >
+        <Button onClick={() => loginAs("advertiser")} className="submit-your-post" color="secondary" fullWidth size="large" variant="contained" >
+          { translate("your_post_here.button") }
+        </Button>
+      </Box>
+    </CardContent>
+  </DeckCard>);
 }
 
 const GotSparkles = ({loginAs}) => {
   const translate = useTranslate();
   
-  return (<Card sx={{ border: "1px solid", borderColor: light, p: "1em", marginBottom: "1em", breakInside: "avoid", flex: "1 1 250px" }} >
-    <Head2 >{ translate("got_sparkles.title") }</Head2>
-    <Typography>{ translate("got_sparkles.message") }</Typography>
-    <Typography>{ translate("got_sparkles.message_2") }</Typography>
-    <Box mt="1em" >
-      <Button onClick={() => loginAs("member")} className="get-your-sparkles" color="inverted" fullWidth size="large" variant="contained" >
-        { translate("got_sparkles.button") }
-      </Button>
-    </Box>
-  </Card>);
+  return (<DeckCard borderColor={light}>
+    <CardContent>
+      <Head2 >{ translate("got_sparkles.title") }</Head2>
+      <Typography>{ translate("got_sparkles.message") }</Typography>
+      <Typography>{ translate("got_sparkles.message_2") }</Typography>
+      <Box mt="1em" >
+        <Button onClick={() => loginAs("member")} className="get-your-sparkles" color="inverted" fullWidth size="large" variant="contained" >
+          { translate("got_sparkles.button") }
+        </Button>
+      </Box>
+    </CardContent>
+  </DeckCard>);
 }
 
 const PublicCardHeader = ({loginAs, item, buttonLabel, icon}) => {
@@ -215,17 +213,20 @@ const PublicCardHeader = ({loginAs, item, buttonLabel, icon}) => {
   </>);
 };
 
+
 const PublicXCampaign = ({loginAs, item}) => {
   const translate = useTranslate();
-  return <Card sx={{ marginBottom: "1em", breakInside: "avoid", flex: "1 1 250px" }} key={item.id} id={`campaign-container-${item.id}`}>
+  return <DeckCard id={`campaign-container-${item.id}`}>
     <PublicCardHeader
       icon={<XIcon/>}
       item={item}
       loginAs={loginAs}
       buttonLabel={ translate("public_x_campaign.main_button")}
     />
-    <TwitterTweetEmbed tweetId={item.contentId} options={{ theme: "dark", align: "center", width: "250px", conversation: "none"}} />
-  </Card>;
+    <CardContent>
+      <TwitterTweetEmbed tweetId={item.contentId} options={{ theme: "dark", align: "center", width: "250px", conversation: "none"}} />
+    </CardContent>
+  </DeckCard>;
 }
 
 const PublicInstagramCampaign = ({loginAs, item}) => {
@@ -243,7 +244,7 @@ const PublicInstagramCampaign = ({loginAs, item}) => {
   const dataUri = "data:image/jpeg;base64,"+data[0].image;
   const filename = `campaign_${data[0].campaignId}.jpg`;
 
-  return <Card sx={{ marginBottom: "1em", flex: "1 1 250px"}} key={item.id} id={`campaign-container-${item.id}`}>
+  return <DeckCard id={`campaign-container-${item.id}`}>
     <PublicCardHeader
       icon={<InstagramIcon/>}
       item={item}
@@ -253,13 +254,13 @@ const PublicInstagramCampaign = ({loginAs, item}) => {
 
     <CardContent>
       <Box display="flex" flexDirection="column" alignItems="center">
-        <a href={ dataUri } target="_blank" download={filename}>
+        <a href={ dataUri } target="_blank" download={filename} rel="noreferrer">
           <img style={{maxWidth: "100%", maxHeight: "400px"}} src={dataUri} />
         </a>
         { !!data[0].caption && <Typography>{ truncate(data[0].caption, {length: 120}) }</Typography> }
       </Box>
     </CardContent>
-  </Card>;
+  </DeckCard>;
 }
 
 const LoginSelector = ({open, setOpen}) => {

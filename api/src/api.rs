@@ -10,6 +10,8 @@ use rocket::{http::Status, State};
 
 mod current_session;
 use current_session::*;
+mod account;
+use account::*;
 mod campaign;
 use campaign::*;
 mod campaign_request;
@@ -283,6 +285,7 @@ macro_rules! make_graphql_query {
 make_graphql_query! {
   "1.0";
   showables {
+    [Account, allAccounts, allAccountsMeta, "_allAccountsMeta", AccountFilter, String],
     [CampaignRequest, allCampaignRequests, allCampaignRequestsMeta, "_allCampaignRequestsMeta", CampaignRequestFilter, i32],
     [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, String],
     [HandleRequest, allHandleRequests, allHandleRequestsMeta, "_allHandleRequestsMeta", HandleRequestFilter, i32],

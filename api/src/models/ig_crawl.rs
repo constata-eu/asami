@@ -378,9 +378,12 @@ impl IgCrawlResult {
             continue;
           }
 
-          let Ok((_, posted_hash)) = get_url_image_hash(&post.display_url) else {
-            self.log_post(post, "could not fetch display_url at this time").await?;
-            continue;
+          let posted_hash = match get_url_image_hash(&post.display_url) {
+            Ok((_, h)) => h,
+            Err(e) => {
+              self.log_post(post, &format!("could not fetch display_url at this time: {e:?}")).await?;
+              continue;
+            }
           };
 
           let distance = verification_hash.dist(&posted_hash);

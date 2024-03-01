@@ -14,7 +14,7 @@ import { useContracts } from "../components/contracts_context";
 import logo from '../assets/asami.png';
 import { getAuthKeys } from '../lib/auth_provider';
 
-const ClaimAccountButton = ({id}) => {
+const ClaimAccountButton = ({id, label, variant, color}) => {
   const notify = useNotify();
   const dataProvider = useDataProvider();
   const { signLoginMessage } = useContracts();
@@ -29,7 +29,9 @@ const ClaimAccountButton = ({id}) => {
     }
   }
 
-  return (<Button sx={{ mt: "1em"}} fullWidth id={id} variant="contained" color="inherit" onClick={createClaimRequest}>Claim your account</Button>);
+  return (<Button fullWidth id={id} variant={variant} color={color} onClick={createClaimRequest}>
+    {label}
+  </Button>);
 };
 
 export default ClaimAccountButton;

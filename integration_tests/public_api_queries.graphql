@@ -19,6 +19,7 @@ mutation CreateCampaignRequest($input: CreateCampaignRequestInput!) {
     status
     contentId
     createdAt
+    topicIds
     updatedAt
     __typename
   }
@@ -64,6 +65,36 @@ mutation CreateCampaignPreference($input: CreateCampaignPreferenceInput!) {
     __typename
   }
 }
+query Account($id: String!) {
+  Account(id: $id) {
+    id
+    unclaimedAsamiTokens
+    unclaimedDocRewards
+    status
+    addr
+    asamiBalance
+    docBalance
+    __typename
+  }
+}
+query AllAccounts($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: AccountFilter) {
+  allAccounts(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    unclaimedAsamiTokens
+    unclaimedDocRewards
+    status
+    addr
+    asamiBalance
+    docBalance
+    __typename
+  }
+}
+query AllAccountsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: AccountFilter) {
+  _allAccountsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
 query CampaignRequest($id: Int!) {
   CampaignRequest(id: $id) {
     id
@@ -73,6 +104,7 @@ query CampaignRequest($id: Int!) {
     status
     contentId
     createdAt
+    topicIds
     updatedAt
     __typename
   }
@@ -86,6 +118,7 @@ query AllCampaignRequests($page: Int, $perPage: Int, $sortField: String, $sortOr
     status
     contentId
     createdAt
+    topicIds
     updatedAt
     __typename
   }
@@ -102,6 +135,7 @@ query Campaign($id: String!) {
     accountId
     budget
     remaining
+    priceScoreRatio
     finished
     validUntil
     site
@@ -117,6 +151,7 @@ query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: St
     accountId
     budget
     remaining
+    priceScoreRatio
     finished
     validUntil
     site

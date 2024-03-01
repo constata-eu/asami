@@ -19,6 +19,7 @@ pub use thirtyfour::{
   WebElement,
   prelude::*
 };
+#[allow(unused_imports)]
 pub use galvanic_assert::{
   self,
   matchers::{collection::*, variant::*, *},

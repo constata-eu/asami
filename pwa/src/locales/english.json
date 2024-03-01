@@ -4,6 +4,118 @@
 	"footer": {
     "built_with": "Built with"
   },
+  "member_campaigns": {
+    "hide_campaign": {
+      "button": "Ignore this campaign",
+      "title": "Ignoring campaign",
+      "content": "We won't show this campaign again, this cannot be undone."
+    },
+    "header": {
+      "title": "Pays up to $%{amount}",
+      "subheader": "$%{amount} per sparkle ✨"
+    },
+    "x": {
+      "main_button": "Repost to earn",
+      "attempted": "Now just wait, your repost may take up to an hour to register in Asami."
+    },
+    "ig": {
+      "main_button": "Make post to earn",
+      "attempted": "Now just wait, your post may take up to an hour to register in Asami.",
+      "see_instructions_again": "See instructions again",
+      "title": "Post this to instagram",
+      "instruction_with_caption": "Make an instagram post using the provided image and caption.",
+      "instruction_without_caption": "Make an instagram post using the provided image.",
+      "caption_copied": "Caption copied to clipboard",
+      "post_not_story": "Make a post, not a story.",
+      "no_filters": "Do not use filters on the image.",
+      "public_post": "Make the post public to everyone.",
+      "no_private_account": "Make sure your account is not private",
+      "follow_rules": "Follow these rules, or Asami won't be able to detect your post.",
+      "download_image": "Download image",
+      "copy_text": "Copy text"
+    }
+  },
+  "help_card": {
+    "title": "What's next?",
+    "collaborate": "You can collaborate in a campaign, but remember, people are listening to you, be responsible an true to yourself when choosing what content to amplify.",
+    "verify_handles": "Help us verify your X or Instagram account. We'll give you a sparkles rating, and you'll be able to start earning for your reposts",
+    "wait_for_campaigns": "There are no campaigns for you to amplify at the moment. Come back tomorrow!"
+  },
+  "handle_settings": {
+    "title": "Settings",
+    "stats": {
+      "username": "Username",
+      "user_id": "User ID",
+      "price_per_repost": "Price per repost",
+      "sparkles": "Sparkles",
+      "sparkle_rate": "DOC per Sparkle",
+      "locked_until": "Values in force until"
+    },
+    "ig": {
+      "create_request": {
+        "text": "Your instagram account must be public, and we need to verify you own it, to give you your sparkles, so you can get paid to repost.",
+        "username_label": "Your instagram username",
+        "username_help": "Example: @zuck",
+        "save": "Continue",
+        "success": "We've got your username!",
+        "username_error": "That does not seem to be an Instagram username. It should be something like '@zuck'"
+      },
+      "make_verification_post": {
+        "caption_copied": "Caption copied to clipboard",
+        "verify_username": "Post this message to verify your username ownership, consent to use asami, and disclosure to your followers.",
+        "guidelines": "Make it a post, not a story. Do not use filters. Leave the text as-is. Make sure your account is public.",
+        "get_image": "Get image",
+        "copy_text": "Get text"
+      },
+      "in_progress": {
+        "text": "We've verified %{username}, and we're in process of publishing it to the blockchain. Once we're done you can start participating in campaigns."
+      }
+    },
+    "x": {
+      "create_request": {
+        "text": "Verify your X account ownership to get your sparkles, and get paid to repost.",
+        "username_label": "Your X handle",
+        "username_help": "Example: @jack",
+        "save": "Continue",
+        "success": "We've got your handle!",
+        "username_error": "That does not seem to be an X username. It should be something like '@jack'"
+      },
+      "make_verification_post": {
+        "text": "Post this message to verify your handle ownership, consent to use asami, and disclosure to your followers.",
+        "post_text": "Starting today, some of my reposts will be paid for, as I joined @asami_club [%{accountId}]",
+        "button": "Post message",
+        "done": "Thank you! It may take up to an hour for us to pick up your post."
+      },
+      "in_progress": {
+        "text": "We've verified %{username}, and we're in process of publishing it to the blockchain. Once we're done you can start participating in campaigns."
+      }
+    }
+  },
+  "balance_card": {
+    "title": "Your account",
+    "account_id_label":"Account ID",
+    "unclaimed": {
+      "doc_label": "Unclaimed DOC Rewards",
+      "asami_label": "Unclaimed ASAMI Tokens",
+      "not_requested": "You must create and connect a WEB3 wallet to claim these rewards. Once claimed, all your rewards will be paid directly to your wallet.",
+      "not_requested_button": "Connect wallet and claim",
+      "pending": "You've started the process to claim your account, which will complete soon.  After that, you'll have to connect your wallet to perform some actions."
+    },
+    "claimed": {
+      "doc_label": "DOC Balance",
+      "asami_label": "ASAMI Balance",
+      "address": "RSK Address",
+      "last_payout_amount_label": "Last fee share received",
+      "last_payout_date_label":"Last fee share date",
+      "next_payout_date_label":"Next fee share date",
+      "participate_in_governance": "You claimed your account, your rewards will be paid directly to your wallet, and you will get a share of protocol fees too."
+    }
+  },
+  "logged_in_nav_card": {
+    "post_to_earn": "Post to earn",
+    "pay_to_amplify": "Pay for reach",
+    "logout": "Logout"
+  },
   "login": {
     "login_button": "Login",
     "about_asami_button": "About ASAMI",

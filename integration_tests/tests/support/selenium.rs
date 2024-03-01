@@ -213,4 +213,18 @@ impl Selenium<'_> {
     self.driver.switch_to_window(handles[0].clone()).await?;
     Ok(())
   }
+
+  pub async fn login_with_wallet(&self) -> anyhow::Result<()> {
+    try_until(10, 200, "No other window opened", || async {
+      self.driver.windows().await.unwrap().len() == 2
+    }).await;
+
+    let mut handles = self.driver.windows().await.unwrap();
+    self.driver.switch_to_window(handles[1].clone()).await.expect("to switch window to one");
+
+    self.click("button[data-testid=page-container-footer-next]").await;
+
+    self.driver.switch_to_window(handles[0].clone()).await.unwrap();
+    Ok(())
+  }
 }
