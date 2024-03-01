@@ -4,10 +4,117 @@
 	"footer": {
     "built_with": "Hecho con"
   },
+  "member_campaigns": {
+    "hide_campaign": {
+      "button": "Ignorar esta campañá",
+      "title": "Ignorando campaña",
+      "content": "No volveremos a ofrecerte esta campaña, esta acción no puede deshacerse."
+    },
+    "header": {
+      "title": "Pagan hasta $%{amount}",
+      "subheader": "$%{amount} por chispa ✨"
+    },
+    "x": {
+      "main_button": "Repostea y cobra",
+      "attempted": "Ahora solo espera, a Asami le puede tomar hasta una hora registrar tu repost"
+    },
+    "ig": {
+      "main_button": "Postea y cobra",
+      "attempted": "Ahora solo espera, a Asami le puede tomar hasta una hora registrar tu post",
+      "see_instructions_again": "Ver instrucciones otra vez",
+      "title": "Haz un post en instagram",
+      "instruction_with_caption": "Haz una publicación en Instagram usando la imagen proporcionada y el pie de foto.",
+      "instruction_without_caption": "Haz una publicación en Instagram usando únicamente la imagen proporcionada.",
+      "caption_copied": "Pie de foto copiado al portapapeles",
+      "post_not_story": "Haz una publicación, no una historia.",
+      "no_filters": "No uses filtros en la imagen.",
+      "public_post": "Haz la publicación pública para todos.",
+      "no_private_account": "Asegúrate de que tu cuenta no sea privada",
+      "follow_rules": "Sigue estas reglas, o Asami no podrá detectar tu publicación.",
+      "download_image": "Descargar imagen",
+      "copy_text": "Copiar texto"
+    }
+  },
+  "help_card": {
+    "title": "¿Qué sigue?",
+    "collaborate": "Puedes colaborar en una campaña, pero recuerda, la gente te está escuchando, sé responsable y fiel a ti mismo al elegir qué contenido amplificar.",
+    "verify_handles": "Ayúdanos a verificar tu cuenta de X o Instagram. Te daremos una calificación de chispas, y podrás empezar a ganar por tus republicaciones",
+    "wait_for_campaigns": "No hay campañas disponibles para que amplifiques en este momento. ¡Vuelve mañana!"
+  },
+  "handle_settings": {
+    "title": "Configuraciones",
+    "stats": {
+      "username": "Nombre de usuario",
+      "user_id": "ID de usuario",
+      "price_per_repost": "Precio por republicación",
+      "sparkles": "Chispas",
+      "sparkle_rate": "DOC por Chispa",
+      "locked_until": "Valores vigentes hasta"
+    },
+    "ig": {
+      "create_request": {
+        "text": "Tu cuenta de Instagram debe ser pública, y necesitamos verificar que eres el propietario para darte tus chispas, así puedes recibir pago por republicar.",
+        "username_label": "Tu nombre de usuario en Instagram",
+        "username_help": "Ejemplo: @zuck",
+        "save": "Continuar",
+        "success": "¡Hemos obtenido tu nombre de usuario!",
+        "username_error": "Eso no parece ser un nombre de usuario de Instagram. Debería ser algo como '@zuck'"
+      },
+      "make_verification_post": {
+        "caption_copied": "Pie de foto copiado al portapapeles",
+        "verify_username": "Publica este mensaje para verificar la propiedad de tu nombre de usuario, consentir el uso de asami y la divulgación a tus seguidores.",
+        "guidelines": "Hazlo una publicación, no una historia. No uses filtros. Deja el texto tal como está. Asegúrate de que tu cuenta sea pública.",
+        "get_image": "Obtener imagen",
+        "copy_text": "Obtener texto"
+      },
+      "in_progress": {
+        "text": "Hemos verificado a %{username}, y estamos en proceso de publicarlo en la blockchain. Una vez que terminemos, puedes empezar a participar en campañas."
+      }
+    },
+    "x": {
+      "create_request": {
+        "text": "Verifica la propiedad de tu cuenta de X para obtener tus chispas, y recibir pago por republicar.",
+        "username_label": "Tu nombre en X",
+        "username_help": "Ejemplo: @jack",
+        "save": "Continuar",
+        "success": "¡Hemos obtenido tu nombre!",
+        "username_error": "Eso no parece ser un nombre de usuario de X. Debería ser algo como '@jack'"
+      },
+      "make_verification_post": {
+        "text": "Publica este mensaje para verificar la propiedad de tu nombre, consentir el uso de asami y la divulgación a tus seguidores.",
+        "post_text": "A partir de hoy, algunas de mis republicaciones serán pagadas, ya que me uní a @asami_club [%{accountId}]",
+        "button": "Publicar mensaje",
+        "done": "¡Gracias! Puede tomar hasta una hora para que detectemos tu publicación."
+      },
+      "in_progress": {
+        "text": "Hemos verificado a %{username}, y estamos en proceso de publicarlo en la blockchain. Una vez que terminemos, puedes empezar a participar en campañas."
+      }
+    }
+  },
+  "balance_card": {
+    "title": "Tu cuenta",
+    "account_id_label": "ID de la Cuenta",
+    "unclaimed": {
+      "doc_label": "DOC Rewards no reclamados",
+      "asami_label": "Tokens ASAMI no reclamados",
+      "not_requested": "Debes crear y conectar una cartera WEB3 para reclamar estas recompensas. Una vez reclamadas, todas tus recompensas se pagarán directamente a tu cartera.",
+      "not_requested_button": "Conectar cartera y reclamar",
+      "pending": "Has iniciado el proceso para reclamar tu cuenta, el cual se completará pronto. Después de eso, tendrás que conectar tu cartera para realizar algunas acciones."
+    },
+    "claimed": {
+      "doc_label": "Saldo en DOC",
+      "asami_label": "Saldo en ASAMI",
+      "address": "Dirección RSK",
+      "last_payout_amount_label": "Última distribución de comisiones",
+      "last_payout_date_label": "Fecha de la última distribución",
+      "next_payout_date_label": "Fecha de la próxima distribución",
+      "participate_in_governance": "Reclamaste tu cuenta, tus recompensas se pagarán directamente a tu cartera, y también obtendrás una parte de las comisiones del protocolo."
+    }
+  },
   "logged_in_nav_card": {
-    "post_to_earn": "Post to earn",
-    "pay_to_amplify": "Pay for reach",
-    "logout": "Logout"
+    "post_to_earn": "Cobra por postear",
+    "pay_to_amplify": "Paga para amplificar",
+    "logout": "Salir"
   },
   "login": {
     "login_button": "Entrar",

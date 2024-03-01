@@ -225,10 +225,11 @@ const IgCampaignInstructions = ({campaignId, setPreference, dataUri, caption, at
         }
         </Typography>
         <ul>
-          <li>It should be a post, not a story</li>
-          <li>Do not use filters</li>
-          <li>The post must be public.</li>
-          <li>Your account must not be private.</li>
+          <li>{ translate("member_campaigns.ig.post_not_story") }</li>
+          <li>{ translate("member_campaigns.ig.no_filters") }</li>
+          <li>{ translate("member_campaigns.ig.public_post") }</li>
+          <li>{ translate("member_campaigns.ig.no_private_account") }</li>
+          <li>{ translate("member_campaigns.ig.follow_rules") }</li>
         </ul>
         <Box display="flex" gap="1em">
           <Button fullWidth
@@ -237,7 +238,7 @@ const IgCampaignInstructions = ({campaignId, setPreference, dataUri, caption, at
             rel="noopener noreferrer"
             download={filename}
           >
-            Download image
+            { translate("member_campaigns.ig.download_image") }
           </Button> 
           { !!caption &&
             <Button
@@ -245,7 +246,7 @@ const IgCampaignInstructions = ({campaignId, setPreference, dataUri, caption, at
               onClick={() => copyText() }
               variant="contained"
             >
-              Copy text
+              { translate("member_campaigns.ig.copy_text") }
             </Button> 
           }
         </Box>

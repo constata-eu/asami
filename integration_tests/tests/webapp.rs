@@ -117,8 +117,8 @@ browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.api.test_app.mock_collab_on_all_campaigns_with_all_handles().await;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
 
-  d.wait_for("#campaign-list-empty").await;
-  d.click("#collabs-claim-account-button").await;
+  d.wait_for("#help-card-no-campaigns").await;
+  d.click("#balance-card-claim-account-button").await;
 
   // Claiming account.
   d.wait_for("#account-summary-claim-none").await;
@@ -132,10 +132,10 @@ browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.wait_for("#account-summary-claim-done").await;
 
   // Now logging back in.
-  d.click("#logout-menu-item").await;
+  d.click("#button-logout").await;
   d.click("#button-login-as-member").await;
   d.click("#wallet-login-button").await;
-  d.click("button[data-testid=page-container-footer-next]").await;
+  d.login_with_wallet().await?;
   d.wait_for("#member-dashboard").await;
 }
 

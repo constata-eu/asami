@@ -23,16 +23,23 @@
       "attempted": "Now just wait, your post may take up to an hour to register in Asami.",
       "see_instructions_again": "See instructions again",
       "title": "Post this to instagram",
-      "instruction_with_caption": "Make an instagram post using the provided image and caption",
-      "instruction_without_caption": "Make an instagram post using the provided image",
-      "caption_copied": "Caption copied to clipboard"
+      "instruction_with_caption": "Make an instagram post using the provided image and caption.",
+      "instruction_without_caption": "Make an instagram post using the provided image.",
+      "caption_copied": "Caption copied to clipboard",
+      "post_not_story": "Make a post, not a story.",
+      "no_filters": "Do not use filters on the image.",
+      "public_post": "Make the post public to everyone.",
+      "no_private_account": "Make sure your account is not private",
+      "follow_rules": "Follow these rules, or Asami won't be able to detect your post.",
+      "download_image": "Download image",
+      "copy_text": "Copy text"
     }
   },
   "help_card": {
     "title": "What's next?",
     "collaborate": "You can collaborate in a campaign, but remember, people are listening to you, be responsible an true to yourself when choosing what content to amplify.",
     "verify_handles": "Help us verify your X or Instagram account. We'll give you a sparkles rating, and you'll be able to start earning for your reposts",
-    "wait_for_campaigns": "There's no context for you to amplify at the moment. Come back tomorrow."
+    "wait_for_campaigns": "There are no campaigns for you to amplify at the moment. Come back tomorrow!"
   },
   "handle_settings": {
     "title": "Settings",

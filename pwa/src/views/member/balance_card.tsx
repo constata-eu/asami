@@ -98,7 +98,7 @@ const NotRequested = () => {
       <Typography mb="1em" id="account-summary-claim-none" variant="body2">
         { translate("balance_card.unclaimed.not_requested") }
       </Typography>
-      <ClaimAccountButton id="collabs-claim-account-button" color="inverted" variant="outlined"
+      <ClaimAccountButton id="balance-card-claim-account-button" color="inverted" variant="outlined"
         label={ translate("balance_card.unclaimed.not_requested_button") }/>
     </CardContent>
   </>;

@@ -1,16 +1,13 @@
 import RLogin from '@rsksmart/rlogin'
 import { WalletConnect2Provider } from '@rsksmart/rlogin-walletconnect2-provider'
+/*
 import Portis from '@portis/web3'
 import Torus from '@toruslabs/torus-embed'
+*/
 import { trezorProviderOptions } from '@rsksmart/rlogin-trezor-provider'
 import { ledgerProviderOptions } from '@rsksmart/rlogin-ledger-provider'
 import { dcentProviderOptions } from '@rsksmart/rlogin-dcent-provider'
-
-const rpcUrls = {
-  30: 'https://public-node.rsk.co',
-  31: 'https://public-node.testnet.rsk.co',
-  1337: 'http://localhost:8545',
-}
+import { Settings } from "../settings";
 
 const supportedChains = [
   {
@@ -53,25 +50,21 @@ const supportedChains = [
 
 //const supportedChains = Object.keys(rpcUrls).map(Number)
 
-const infoOptions = {
-  30: { addressBaseURL: 'https://explorer.rsk.co/address/' },
-  31: { addressBaseURL: 'https://explorer.testnet.rsk.co/address/' }
-}
-
 export const rLogin = new RLogin({
   providerOptions: {
     walletconnect: {
       package: WalletConnect2Provider,
       options: {
-        rpc: rpcUrls
+        rpc: Settings.rsk.rpcUrls
       }
     },
+    /*
     portis: {
       package: Portis,
       options: {
         id: "a1c8672b-7b1c-476b-b3d0-41c27d575920",
         network: {
-          nodeUrl: 'https://public-node.testnet.rsk.co',
+          nodeUrl: 'https://public-node.rsk.co',
           chainId: 31,
         }
       }
@@ -79,6 +72,7 @@ export const rLogin = new RLogin({
     torus: {
         package: Torus,
     },
+    */
     'custom-ledger': ledgerProviderOptions,
     'custom-dcent': dcentProviderOptions,
     'custom-trezor': {
@@ -89,7 +83,5 @@ export const rLogin = new RLogin({
       }
     }
   },
-  //rpcUrls,
-  ethereumChains: supportedChains,
-  //infoOptions
+  ethereumChains: Settings.rsk.supportedChains,
 })

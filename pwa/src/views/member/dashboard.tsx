@@ -133,12 +133,8 @@ const CampaignList = ({handles}) => {
     resource: "CampaignPreference",
   });
 
-  if (prefsContext.isLoading || listContext.isLoading || handles.isLoading || handles.total == 0 ){
+  if (prefsContext.isLoading || listContext.isLoading || handles.isLoading || handles.total == 0 || listContext.total == 0 ){
     return <></>;
-  }
-
-  if (listContext.total == 0 ) {
-    return <CampaignListEmpty />;
   }
 
   const setPreference = async (campaignId, notInterested, attempted) => {
@@ -150,7 +146,7 @@ const CampaignList = ({handles}) => {
   };
 
   return ( <>
-    <Box id="campaign-list" display="flex" flexWrap="wrap" gap="2em">
+    <Box id="campaign-list" display="flex" flexWrap="wrap">
       { listContext.data.map((item) => item.site == "X" ?
         <XCampaign key={item.id} campaign={item} prefsContext={prefsContext} setPreference={setPreference} /> :
         <IgCampaign key={item.id} campaign={item} prefsContext={prefsContext} setPreference={setPreference} />

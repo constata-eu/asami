@@ -4,6 +4,23 @@ const development = {
   recaptchaSiteKey: "6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX",
   rsk: {
     chainId: 1337,
+    rpcUrls: {
+      1337: 'http://localhost:8545',
+    },
+    supportedChains: [
+      {
+        chainId: '0x539', // hex 1337
+        chainName: 'RSK local',
+        nativeCurrency: {
+          name: 'Local RSK BTC',
+          symbol: 'lRBTC',
+          decimals: 18
+        },
+        rpcUrls: ['http://localhost:8545'],
+        blockExplorerUrls: [],
+        iconUrls: ['https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png']
+      }
+    ]
   },
   x: {
     clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",
@@ -21,6 +38,23 @@ const staging = {
   recaptchaSiteKey: "6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX",
   rsk: {
     chainId: 31,
+    rpcUrls: {
+      31: 'https://public-node.testnet.rsk.co'
+    },
+    supportedChains: [
+      {
+        chainId: '0x1f', // hex 31
+        chainName: 'RSK Testnet',
+        nativeCurrency: {
+          name: 'TEST RSK BTC',
+          symbol: 'tRBTC',
+          decimals: 18
+        },
+        rpcUrls: ['https://public-node.testnet.rsk.co'],
+        blockExplorerUrls: ['https://explorer.testnet.rsk.co'],
+        iconUrls: ['https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png']
+      }
+    ]
   },
   x: {
     clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",
@@ -38,6 +72,23 @@ const production = {
   recaptchaSiteKey: "6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX",
   rsk: {
     chainId: 30,
+    rpcUrls: {
+      30: 'https://public-node.rsk.co',
+    },
+    supportedChains: [
+      {
+        chainId: '0x1e', // hex 30
+        chainName: 'RSK Mainnet',
+        nativeCurrency: {
+          name: 'RSK BTC',
+          symbol: 'RBTC',
+          decimals: 18
+        },
+        rpcUrls: ['https://public-node.rsk.co'],
+        blockExplorerUrls: ['https://explorer.rsk.co'],
+        iconUrls: ['https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png']
+      }
+    ]
   },
   x: {
     clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",
