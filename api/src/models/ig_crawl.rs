@@ -525,14 +525,9 @@ pub fn get_url_image_hash(url: &str) -> AsamiResult<(Vec<u8>, ImageHash)> {
   let hasher = HasherConfig::new().hash_alg(HashAlg::DoubleGradient).hash_size(100, 100).to_hasher();
   let resp = ureq::get(url).call()?;
 
-  let len: usize = resp
-    .header("Content-Length")
-    .ok_or_else(|| Error::service("image_hasher", "no_content_length"))?
-    .parse()
-    .map_err(|_| Error::service("image_hasher", "content_length_not_an_int"))?;
-
+  let len: usize = 1024 * 1024;
   let mut bytes: Vec<u8> = Vec::with_capacity(len);
-  resp.into_reader().take(1024 * 1024 * 5).read_to_end(&mut bytes)?;
+  resp.into_reader().take(len as u64).read_to_end(&mut bytes)?;
 
   let image = ImageReader::with_format(Cursor::new(&bytes), image::ImageFormat::Jpeg)
     .decode()
