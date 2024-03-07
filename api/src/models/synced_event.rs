@@ -326,10 +326,15 @@ impl SyncedEventHub {
             .await?;
 
           for new in &c.topics {
-            self.state.campaign_topic().insert(InsertCampaignTopic {
-              campaign_id: c.id.encode_hex(),
-              topic_id: new.encode_hex(),
-            }).save().await?;
+            self
+              .state
+              .campaign_topic()
+              .insert(InsertCampaignTopic {
+                campaign_id: c.id.encode_hex(),
+                topic_id: new.encode_hex(),
+              })
+              .save()
+              .await?;
           }
         }
       }

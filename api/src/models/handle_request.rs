@@ -46,7 +46,6 @@ impl HandleRequestHub {
     let api = TwitterApi::new(auth);
     let indexer_state = self.state.indexer_state().get().await?;
 
-
     let mentions = api
       .get_user_mentions(conf.asami_user_id)
       .since_id(indexer_state.attrs.x_handle_verification_checkpoint.to_u64().unwrap_or(0))
@@ -85,11 +84,25 @@ impl HandleRequestHub {
 
         if let Some(capture) = msg_regex.captures(&text) {
           let Ok(account_id_str) = capture[1].parse::<String>() else {
-            self.state.info("verify_and_appraise_x", "skipped_post_no_account_id_str", format!("{capture:?}")).await;
+            self
+              .state
+              .info(
+                "verify_and_appraise_x",
+                "skipped_post_no_account_id_str",
+                format!("{capture:?}"),
+              )
+              .await;
             continue;
           };
           let Ok(account_id) = U256::from_dec_str(&account_id_str).map(U256::encode_hex) else {
-            self.state.info("verify_and_appraise_x", "skipped_post_no_account_id_dec", &account_id_str).await;
+            self
+              .state
+              .info(
+                "verify_and_appraise_x",
+                "skipped_post_no_account_id_dec",
+                &account_id_str,
+              )
+              .await;
             continue;
           };
 
@@ -104,7 +117,14 @@ impl HandleRequestHub {
             .optional()
             .await?
           else {
-            self.state.info("verify_and_appraise_x", "skipped_post_no_pending_request", (&author.username, &account_id)).await;
+            self
+              .state
+              .info(
+                "verify_and_appraise_x",
+                "skipped_post_no_pending_request",
+                (&author.username, &account_id),
+              )
+              .await;
             continue;
           };
 
@@ -127,7 +147,14 @@ impl HandleRequestHub {
     }
 
     indexer_state.update().x_handle_verification_checkpoint(checkpoint).save().await?;
-    self.state.info("verify_and_appraise_x", "done_processing_updating_indexer_state", &checkpoint).await;
+    self
+      .state
+      .info(
+        "verify_and_appraise_x",
+        "done_processing_updating_indexer_state",
+        &checkpoint,
+      )
+      .await;
     Ok(handle_requests)
   }
 }

@@ -104,3 +104,25 @@ app_test!{ fails_when_handle_is_missing_topics (a)
 
   assert!(a.app.collab_request().select().count().await? == 2);
 }
+
+app_test!{ registers_collab_for_last_accepted_handle(a) 
+  // If someone loses their account, they can create a new one and re-bind their handles.
+  // So collabs should always register to the most recently linked handle.
+  let advertiser = a.client().await;
+  let campaign = advertiser.create_x_campaign(u("10"), u("1")).await;
+
+  let old_bob = a.client().await;
+  old_bob.create_x_handle("bob_on_x", u("1")).await;
+  let user_id = old_bob.x_handle().await.attrs.user_id;
+
+  a.app.campaign().try_x_collab_for_newest_handle(&campaign, &user_id).await?;
+  a.run_idempotent_background_tasks_a_few_times().await;
+  assert_eq!(old_bob.x_handle().await.collab_vec().await?.len(), 1);
+
+  let new_bob = a.client().await;
+  new_bob.create_x_handle("bob_on_x", u("1")).await;
+  a.app.campaign().try_x_collab_for_newest_handle(&campaign, &user_id).await?;
+  a.run_idempotent_background_tasks_a_few_times().await;
+  assert_eq!(new_bob.x_handle().await.collab_vec().await?.len(), 1);
+  assert_eq!(old_bob.x_handle().await.collab_vec().await?.len(), 1);
+}

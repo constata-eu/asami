@@ -52,6 +52,10 @@ browser_test!{ shows_campaigns_in_dashboard (mut d)
   d.wait_for("#button-login-as-member").await;
 }
 
+browser_test!{ suggests_rsk_network_when_adding_wallet (mut d)
+  wait_here();
+}
+
 browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.signup_with_one_time_token().await;
 
