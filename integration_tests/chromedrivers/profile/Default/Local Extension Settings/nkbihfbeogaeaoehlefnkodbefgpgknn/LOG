@@ -1,5 +1,17 @@
-2023/11/16-04:58:09.765 2fb755 Reusing MANIFEST /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn/MANIFEST-000001
-2023/11/16-04:58:09.765 2fb755 Recovering log #69
-2023/11/16-04:58:09.775 2fb755 Level-0 table #72: started
-2023/11/16-04:58:09.795 2fb755 Level-0 table #72: 2272948 bytes OK
-2023/11/16-04:58:09.797 2fb755 Delete type=0 #69
+2024/03/07-17:48:32.705 5c258 Reusing MANIFEST /tmp/asami_browser_datadir/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn/MANIFEST-000001
+2024/03/07-17:48:32.705 5c258 Recovering log #48
+2024/03/07-17:48:32.712 5c258 Level-0 table #51: started
+2024/03/07-17:48:32.730 5c258 Level-0 table #51: 2473597 bytes OK
+2024/03/07-17:48:32.732 5c258 Delete type=0 #48
+2024/03/07-17:48:32.733 5c259 Compacting 4@0 + 1@1 files
+2024/03/07-17:48:32.769 5c259 Generated table #53@0: 1 keys, 1236892 bytes
+2024/03/07-17:48:32.769 5c259 Compacted 4@0 + 1@1 files => 1236892 bytes
+2024/03/07-17:48:32.770 5c259 compacted to: files[ 0 1 1 0 0 0 0 ]
+2024/03/07-17:50:08.910 5c259 Level-0 table #55: started
+2024/03/07-17:50:08.939 5c259 Level-0 table #55: 2473577 bytes OK
+2024/03/07-17:50:08.940 5c259 Delete type=0 #52
+2024/03/07-17:50:08.941 5c259 Delete type=2 #45
+2024/03/07-17:50:08.941 5c259 Delete type=2 #43
+2024/03/07-17:50:08.941 5c259 Delete type=2 #49
+2024/03/07-17:50:08.941 5c259 Delete type=2 #47
+2024/03/07-17:50:08.941 5c259 Delete type=2 #51

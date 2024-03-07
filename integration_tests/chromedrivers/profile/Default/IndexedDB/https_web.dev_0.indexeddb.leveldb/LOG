@@ -1,2 +1,0 @@
-2023/11/16-04:54:07.469 2f9e92 Creating DB /home/nubis/asami/integration_tests/chromedrivers/profile/Default/IndexedDB/https_web.dev_0.indexeddb.leveldb since it was missing.
-2023/11/16-04:54:07.471 2f9e92 Reusing MANIFEST /home/nubis/asami/integration_tests/chromedrivers/profile/Default/IndexedDB/https_web.dev_0.indexeddb.leveldb/MANIFEST-000001

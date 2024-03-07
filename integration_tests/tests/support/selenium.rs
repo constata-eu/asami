@@ -154,6 +154,8 @@ impl Selenium<'_> {
       .save().await.unwrap();
 
     self.goto("http://127.0.0.1:5173/#/one_time_token_login?token=advertiser-token").await;
+    //self.wait_for("#member-dashboard").await;
+    //self.goto("http://127.0.0.1:5173/#/?role=advertiser").await;
     self.wait_for("#advertiser-dashboard").await;
   }
 

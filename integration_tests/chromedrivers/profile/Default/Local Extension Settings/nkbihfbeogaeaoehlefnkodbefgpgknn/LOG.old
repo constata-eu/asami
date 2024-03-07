@@ -1,6 +1,3 @@
-2023/11/16-04:55:44.029 2fad58 Reusing MANIFEST /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn/MANIFEST-000001
-2023/11/16-04:55:44.029 2fad58 Recovering log #66
-2023/11/16-04:55:44.034 2fad58 Reusing old log /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn/000066.log 
-2023/11/16-04:55:50.445 2fad59 Level-0 table #70: started
-2023/11/16-04:55:50.471 2fad59 Level-0 table #70: 2272786 bytes OK
-2023/11/16-04:55:50.472 2fad59 Delete type=0 #66
+2024/03/07-17:09:33.255 54c90 Reusing MANIFEST /tmp/asami_browser_datadir/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn/MANIFEST-000001
+2024/03/07-17:09:33.255 54c90 Recovering log #48
+2024/03/07-17:09:33.256 54c90 Reusing old log /tmp/asami_browser_datadir/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn/000048.log 
