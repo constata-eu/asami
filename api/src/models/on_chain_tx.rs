@@ -194,8 +194,12 @@ impl OnChainTxHub {
     let mut pending = vec![];
 
     for holder in c.get_holders().call().await? {
-      if this_cycle == c.last_fee_pool_share_cycles(holder).call().await? { continue; }
-      if u("0") == c.get_balance_before_recent_changes(holder).call().await? { continue; }
+      if this_cycle == c.last_fee_pool_share_cycles(holder).call().await? {
+        continue;
+      }
+      if u("0") == c.get_balance_before_recent_changes(holder).call().await? {
+        continue;
+      }
       pending.push(holder);
 
       if pending.len() == 50 {

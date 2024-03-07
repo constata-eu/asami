@@ -154,6 +154,8 @@ impl Selenium<'_> {
       .save().await.unwrap();
 
     self.goto("http://127.0.0.1:5173/#/one_time_token_login?token=advertiser-token").await;
+    //self.wait_for("#member-dashboard").await;
+    //self.goto("http://127.0.0.1:5173/#/?role=advertiser").await;
     self.wait_for("#advertiser-dashboard").await;
   }
 
@@ -219,7 +221,7 @@ impl Selenium<'_> {
       self.driver.windows().await.unwrap().len() == 2
     }).await;
 
-    let mut handles = self.driver.windows().await.unwrap();
+    let handles = self.driver.windows().await.unwrap();
     self.driver.switch_to_window(handles[1].clone()).await.expect("to switch window to one");
 
     self.click("button[data-testid=page-container-footer-next]").await;

@@ -40,10 +40,7 @@ impl Showable<models::Account, AccountFilter> for Account {
     }
   }
 
-  fn filter_to_select(
-    _context: &Context,
-    filter: Option<AccountFilter>,
-  ) -> FieldResult<models::SelectAccount> {
+  fn filter_to_select(_context: &Context, filter: Option<AccountFilter>) -> FieldResult<models::SelectAccount> {
     if let Some(f) = filter {
       Ok(models::SelectAccount {
         id_in: f.ids,
@@ -57,20 +54,26 @@ impl Showable<models::Account, AccountFilter> for Account {
   }
 
   fn select_by_id(_context: &Context, id: String) -> FieldResult<models::SelectAccount> {
-    Ok(models::SelectAccount { id_eq: Some(id), ..Default::default() })
+    Ok(models::SelectAccount {
+      id_eq: Some(id),
+      ..Default::default()
+    })
   }
 
   async fn db_to_graphql(d: models::Account) -> AsamiResult<Self> {
-    let status = d.claim_account_request_scope().status_ne(&GenericRequestStatus::Failed).optional().await?.map(|x| x.attrs.status );
+    let status = d
+      .claim_account_request_scope()
+      .status_ne(&GenericRequestStatus::Failed)
+      .optional()
+      .await?
+      .map(|x| x.attrs.status);
     let address = d.decoded_addr()?;
     let (doc_balance, asami_balance) = match address {
-      Some(address) => {
-        (
-          Some(d.state.on_chain.doc_contract.balance_of(address).call().await?.encode_hex()),
-          Some(d.state.on_chain.contract.balance_of(address).call().await?.encode_hex()),
-        )
-      },
-      None => (None, None) 
+      Some(address) => (
+        Some(d.state.on_chain.doc_contract.balance_of(address).call().await?.encode_hex()),
+        Some(d.state.on_chain.contract.balance_of(address).call().await?.encode_hex()),
+      ),
+      None => (None, None),
     };
     Ok(Account {
       id: d.attrs.id,
@@ -79,7 +82,7 @@ impl Showable<models::Account, AccountFilter> for Account {
       status,
       addr: address.map(|x| format!("{x:?}")),
       asami_balance,
-      doc_balance
+      doc_balance,
     })
   }
 }

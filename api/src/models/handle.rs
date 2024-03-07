@@ -21,6 +21,7 @@ model! {
   },
   has_many {
     HandleTopic(handle_id),
+    Collab(handle_id),
   },
   belongs_to {
     Account(account_id),
@@ -54,7 +55,7 @@ impl Handle {
     }
 
     let handle_topics = self.topic_ids().await?;
-    if !campaign.topic_ids().await?.iter().all(|topic| handle_topics.contains(topic)){
+    if !campaign.topic_ids().await?.iter().all(|topic| handle_topics.contains(topic)) {
       return Err(Error::validation("topics", "handle_is_missing_topics"));
     }
 

@@ -52,6 +52,10 @@ browser_test!{ shows_campaigns_in_dashboard (mut d)
   d.wait_for("#button-login-as-member").await;
 }
 
+browser_test!{ suggests_rsk_network_when_adding_wallet (mut d)
+  wait_here();
+}
+
 browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.signup_with_one_time_token().await;
 
@@ -113,7 +117,6 @@ browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.wait_for("#existing-x-handle-stats").await;
   d.wait_for("#existing-ig-handle-stats").await;
 
-  wait_here();
   d.api.test_app.mock_collab_on_all_campaigns_with_all_handles().await;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
 

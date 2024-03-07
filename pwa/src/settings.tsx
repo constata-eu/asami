@@ -10,14 +10,14 @@ const development = {
     supportedChains: [
       {
         chainId: '0x539', // hex 1337
-        chainName: 'RSK local',
+        chainName: 'RSK Local',
         nativeCurrency: {
           name: 'Local RSK BTC',
           symbol: 'lRBTC',
           decimals: 18
         },
         rpcUrls: ['http://localhost:8545'],
-        blockExplorerUrls: [],
+        blockExplorerUrls: ['http://localhost:8545'],
         iconUrls: ['https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png']
       }
     ]

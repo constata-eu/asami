@@ -64,15 +64,9 @@ impl CampaignHub {
         };
 
         for user in data {
-          let Some(handle) = self.state.handle().select().user_id_eq(&user.id.to_string()).optional().await? else {
-            continue;
+          if let Some(req) = self.try_x_collab_for_newest_handle(&campaign, &user.id.to_string()).await? {
+            reqs.push(req);
           };
-
-          match campaign.make_collab(&handle).await {
-            Ok(req) => reqs.push(req),
-            Err(Error::Validation(_, _)) => (),
-            Err(e) => return Err(e),
-          }
         }
 
         if data.len() < 100 {
@@ -90,6 +84,32 @@ impl CampaignHub {
 
   async fn x_cooldown(&self) {
     tokio::time::sleep(tokio::time::Duration::from_millis(3 * 60 * 1000)).await;
+  }
+
+  pub async fn try_x_collab_for_newest_handle(
+    &self,
+    campaign: &Campaign,
+    user_id: &String,
+  ) -> AsamiResult<Option<CollabRequest>> {
+    let Some(handle) = self
+      .state
+      .handle()
+      .select()
+      .site_eq(Site::X)
+      .user_id_eq(user_id)
+      .order_by(HandleOrderBy::Id)
+      .desc(true)
+      .optional()
+      .await?
+    else {
+      return Ok(None);
+    };
+
+    match campaign.make_collab(&handle).await {
+      Ok(req) => Ok(Some(req)),
+      Err(Error::Validation(_, _)) => Ok(None),
+      Err(e) => Err(e),
+    }
   }
 }
 

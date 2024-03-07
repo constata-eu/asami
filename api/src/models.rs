@@ -56,6 +56,8 @@ pub mod topic;
 pub use topic::*;
 pub mod topic_request;
 pub use topic_request::*;
+pub mod collab;
+pub use collab::*;
 
 #[macro_export]
 macro_rules! make_sql_enum {
@@ -109,29 +111,6 @@ model! {
     value: String,
     #[sqlx_model_hints(boolean, default)]
     used: bool,
-  }
-}
-
-model! {
-  state: App,
-  table: collabs,
-  struct Collab {
-    #[sqlx_model_hints(varchar)]
-    id: String,
-    #[sqlx_model_hints(varchar)]
-    campaign_id: String,
-    #[sqlx_model_hints(varchar)]
-    advertiser_id: String,
-    #[sqlx_model_hints(varchar)]
-    handle_id: String,
-    #[sqlx_model_hints(varchar)]
-    member_id: String,
-    #[sqlx_model_hints(varchar)]
-    gross: String,
-    #[sqlx_model_hints(varchar)]
-    fee: String,
-    #[sqlx_model_hints(varchar)]
-    created_at: String,
   }
 }
 
