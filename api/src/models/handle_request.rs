@@ -56,7 +56,7 @@ impl HandleRequestHub {
       .send()
       .await?;
 
-    let checkpoint: i64 = mentions.meta().and_then(|m| m.oldest_id.clone()).and_then(|i| i.parse().ok()).unwrap_or(0);
+    let checkpoint: i64 = mentions.meta().and_then(|m| m.newest_id.clone()).and_then(|i| i.parse().ok()).unwrap_or(0);
 
     let mut page = Some(mentions);
     let mut pages = 0;

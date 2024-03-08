@@ -14,8 +14,8 @@ model! {
   struct OnChainTx {
     #[sqlx_model_hints(int4, default)]
     id: i32,
-    #[sqlx_model_hints(bool, default)]
-    success: bool,
+    #[sqlx_model_hints(on_chain_tx_status, default)]
+    status: OnChainTxStatus,
     #[sqlx_model_hints(varchar)]
     function_name: String,
     #[sqlx_model_hints(varchar, default)]
@@ -46,22 +46,13 @@ impl OnChainTxHub {
       Err(e) => {
         let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("{:?}; {:?}", e, e.source()));
         unsent.fail("contract_error", desc).await?;
-        Ok(unsent)
+        let reverted = unsent.update().status(OnChainTxStatus::Reverted).save().await?;
+        Ok(reverted)
       }
       Ok(pending_tx) => {
         let tx_hash = pending_tx.tx_hash().encode_hex();
-        let sent = unsent.update().tx_hash(Some(tx_hash)).save().await?;
-        match pending_tx.await {
-          Err(e) => {
-            sent.fail("provider_error", format!("{e:?}")).await?;
-            Ok(sent)
-          }
-          Ok(receipt) => {
-            let success = receipt.as_ref().map(|r| r.status.map(|s| s == U64::one()).unwrap_or(true)).unwrap_or(false);
-            sent.info("receipt", &receipt).await?;
-            Ok(sent.update().success(success).save().await?)
-          }
-        }
+        let submitted = unsent.update().status(OnChainTxStatus::Submitted).tx_hash(Some(tx_hash)).save().await?;
+        Ok(submitted)
       }
     }
   }
@@ -213,6 +204,52 @@ impl OnChainTxHub {
 
     Ok(Some(self.send_tx(c.claim_fee_pool_share(pending)).await?))
   }
+
+  pub async fn sync_tx_result(&self) -> anyhow::Result<()> {
+    let client = self.state.on_chain.contract.client();
+    for tx in self.select().status_eq(OnChainTxStatus::Submitted).all().await? {
+      let Some(tx_hash) = tx.tx_hash() else { continue };
+      let Some(receipt) = client.get_transaction_receipt(H256::decode_hex(tx_hash)?).await? else {
+        continue;
+      };
+      let status = if receipt.status.unwrap_or(U64::zero()) == U64::one() {
+        OnChainTxStatus::Success
+      } else {
+        OnChainTxStatus::Failure
+      };
+
+      let id = tx.attrs.id;
+
+      self.state.claim_account_request().set_done(id).await?;
+      self.state.handle_request().set_done(id).await?;
+      self.state.set_score_and_topics_request().set_done(id).await?;
+      self.state.set_price_request().set_done(id).await?;
+      self.state.campaign_request().set_done(id).await?;
+      self.state.collab_request().set_done(id).await?;
+      self.state.topic_request().set_done(id).await?;
+
+      tx.update().status(status).save().await?;
+    }
+    Ok(())
+  }
+}
+
+impl OnChainTx {
+  pub fn success(&self) -> bool {
+    self.attrs.status == OnChainTxStatus::Success
+  }
+
+  pub fn reverted(&self) -> bool {
+    self.attrs.status == OnChainTxStatus::Success
+  }
+
+  pub fn submitted(&self) -> bool {
+    self.attrs.status == OnChainTxStatus::Submitted
+  }
+
+  pub fn created(&self) -> bool {
+    self.attrs.status == OnChainTxStatus::Created
+  }
 }
 
 pub type AsamiSigner = SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>;
@@ -223,7 +260,7 @@ pub trait OnChainTxRequest: SqlxModelHub<Self::Model> + std::marker::Send + std:
   type Model: SqlxModel<State = App> + std::marker::Send + std::marker::Sync;
   type Update: std::marker::Send + std::marker::Sync;
   type Status: std::marker::Send + std::marker::Sync;
-  type Param: std::marker::Send + std::marker::Sync;
+  type Param: std::marker::Send + std::marker::Sync + serde::Serialize;
 
   async fn as_param(&self, model: &Self::Model) -> sqlx::Result<Self::Param>;
 
@@ -252,12 +289,19 @@ pub trait OnChainTxRequest: SqlxModelHub<Self::Model> + std::marker::Send + std:
   fn submitted_status() -> Self::Status;
   fn pending_status() -> Self::Status;
   fn done_status() -> Self::Status;
+  fn log_kind(&self) -> &str;
 
   async fn validate_before_submit_all(&self) -> sqlx::Result<()> {
     Ok(())
   }
 
+  async fn info<S: serde::Serialize + Send>(&self, subkind: &str, context: S) {
+    self.app().info(self.log_kind(), subkind, context).await;
+  }
+
   async fn submit_all(&self) -> sqlx::Result<Vec<Self::Model>> {
+    self.info("submit_all_starting", "").await;
+
     self.validate_before_submit_all().await?;
     let mut submitted = vec![];
     let reqs = Self::set_select_status(self.select(), Self::pending_status()).all().await?;
@@ -270,18 +314,25 @@ pub trait OnChainTxRequest: SqlxModelHub<Self::Model> + std::marker::Send + std:
     for p in &reqs {
       params.push(self.as_param(p).await?);
     }
+    self.info("submit_all_params", &params).await;
 
     let on_chain_tx = self.app().on_chain_tx().send_tx(self.fn_call(params)).await?;
+    self.info("submit_all_on_chain_tx", on_chain_tx.id()).await;
+
+    if on_chain_tx.reverted() {
+      self.info("submit_all_tx_reverted", on_chain_tx.id()).await;
+      return Ok(vec![]);
+    }
 
     for req in reqs {
       let mut update = Self::update(req);
       update = Self::set_update_tx_id(update, on_chain_tx.attrs.id);
       update = Self::set_update_status(update, Self::submitted_status());
-
       let updated = Self::save_update(update).await?;
       submitted.push(updated);
     }
 
+    self.info("submit_all_is_done", "").await;
     Ok(submitted)
   }
 
@@ -307,6 +358,7 @@ macro_rules! impl_on_chain_tx_request {
       fn set_update_tx_id(update: Self::Update, txid: i32) -> Self::Update { update.on_chain_tx_id(Some(txid)) }
       fn set_update_status(update: Self::Update, status: Self::Status) -> Self::Update { update.status(status) }
       async fn save_update(update: Self::Update) -> sqlx::Result<Self::Model> { update.save().await }
+      fn log_kind(&self) -> &str { stringify!($struct) }
 
       fn set_select_status(
         select: <Self::Model as sqlx_models_orm::SqlxModel>::SelectModelHub,
@@ -328,3 +380,14 @@ macro_rules! impl_on_chain_tx_request {
     }
   };
 }
+
+make_sql_enum![
+  "on_chain_tx_status",
+  pub enum OnChainTxStatus {
+    Created,
+    Reverted,
+    Submitted,
+    Failure,
+    Success,
+  }
+];

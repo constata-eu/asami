@@ -3,16 +3,30 @@ pub mod support;
 use api::models::*;
 
 app_test!{ logs_on_chain_txs (a) 
-  let advertiser = a.client().await;
-  let campaign = advertiser.create_x_campaign(u("10"), u("10")).await;
-
   let bob = a.client().await;
-  bob.create_x_handle("bob_on_x", u("1")).await;
-  bob.create_x_collab(&campaign).await;
+  let request = bob.account().await.create_handle_request(models::Site::X, "bob_on_x").await.unwrap()
+    .verify("179383862".into()).await.unwrap()
+    .appraise(wei("10"), wei("10")).await.unwrap();
+
+  assert!(a.app.on_chain_tx().select().all().await?.is_empty());
+
+  a.app.handle_request().submit_all().await?;
+  let mut on_chain_tx = a.app.on_chain_tx().find(1).await?;
+
+  assert_eq!(on_chain_tx.function_name(), "adminMakeHandles");
+  assert!(on_chain_tx.submitted());
+
+  a.run_idempotent_background_tasks_a_few_times().await;
+
+  on_chain_tx.reload().await?;
+
+  assert!(on_chain_tx.success());
+
   assert!(
-    a.app.on_chain_tx().find(1).await?.audit_log_entries().await?
-    .iter().all(|x| *x.severity() == AuditLogSeverity::Info)
+    on_chain_tx.audit_log_entries().await?.iter().all(|x| *x.severity() == AuditLogSeverity::Info)
   );
+
+  assert_eq!(*request.reloaded().await?.status(), HandleRequestStatus::Done);
 }
 
 app_test!{ pre_validates_campaign_requests_before_bulk_submission (a)
@@ -35,6 +49,11 @@ app_test!{ pre_validates_campaign_requests_before_bulk_submission (a)
 
   bob_req.reload().await?;
   assert_eq!(*bob_req.status(), CampaignRequestStatus::Submitted);
+  assert!(bob_req.submission().await?.unwrap().submitted());
+
+  a.run_idempotent_background_tasks_a_few_times().await;
+  bob_req.reload().await?;
+  assert_eq!(*bob_req.status(), CampaignRequestStatus::Done);
   assert!(bob_req.submission().await?.unwrap().success());
 }
 
@@ -61,5 +80,10 @@ app_test!{ pre_validates_admin_set_price_requests_before_bulk_submission (a)
 
   bob_req.reload().await?;
   assert_eq!(*bob_req.status(), GenericRequestStatus::Submitted);
+  assert!(bob_req.on_chain_tx().await?.unwrap().submitted());
+
+  a.run_idempotent_background_tasks_a_few_times().await;
+  bob_req.reload().await?;
+  assert_eq!(*bob_req.status(), GenericRequestStatus::Done);
   assert!(bob_req.on_chain_tx().await?.unwrap().success());
 }

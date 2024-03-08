@@ -179,7 +179,7 @@ impl<'b> ApiClient<'b> {
       }])
     ).await.unwrap();
 
-    assert!(tx.success(), "not successful tx {}", tx.attrs.id);
+    assert!(tx.submitted(), "not successful tx {}", tx.attrs.id);
 
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
 

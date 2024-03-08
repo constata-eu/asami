@@ -1,18 +1,3 @@
-/* ToDo:
-   Just logged in:
-
-     -> Campaign Cards:
-        Similar to what we have now, but opens instructions in dialog, for X and Instagram.
-
-     -> CollabRequestCard:
-        - Visiting a campaign, showing interest, creates a collab request.
-        - A collab request may be detected yet waiting for 7 days before it pays.
-
-     -> Collab summary card:
-        - When there are done collabs just show a single card that summarizes it all.
-     
- */
-
 import { useEffect } from "react";
 import { useDataProvider, useAuthenticated, useSafeSetState, useTranslate, ReferenceField, useGetAll, useGetOne, useGetList} from "react-admin";
 import { rLogin } from "../../lib/rLogin";
