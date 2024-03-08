@@ -102,12 +102,19 @@ impl CampaignRequestHub {
 
     for r in reqs {
       r.update()
-        .status(CampaignRequestStatus::Approved)
+        .status(CampaignRequestStatus::Approving)
         .approval_id(Some(on_chain_tx.attrs.id))
         .save()
         .await?;
     }
 
+    Ok(())
+  }
+
+  pub async fn set_approved(&self, tx_id: i32) -> sqlx::Result<()> {
+    for r in self.select().status_eq(CampaignRequestStatus::Approving).approval_id_eq(tx_id).all().await? {
+      r.update().status(CampaignRequestStatus::Approved).save().await?;
+    }
     Ok(())
   }
 }
@@ -175,6 +182,7 @@ make_sql_enum![
   pub enum CampaignRequestStatus {
     Received,  // The request was received by a managed user to create a campaign.
     Paid,      // We've got payment (through proprietary payment methods).
+    Approving, // The approval transaction has been sent.
     Approved,  // We've approved the on-chain DOC spend for this campaign.
     Submitted, // We've tried to submit the request on-chain.
     Failed,    // This campaign was rendered invalid, and will be left out of upcoming batches.
