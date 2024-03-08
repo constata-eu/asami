@@ -57,6 +57,7 @@ impl App {
     self.campaign_request().submit_all().await?;
 
     self.synced_event().sync_on_chain_events().await?;
+    self.on_chain_tx().sync_tx_result().await?;
     Ok(())
   }
 

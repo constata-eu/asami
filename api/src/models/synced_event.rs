@@ -144,13 +144,6 @@ impl SyncedEventHub {
       }
     }
 
-    for (_, meta) in &events {
-      let Some(on_chain_tx) = self.find_on_chain_tx(meta).await? else {
-        continue;
-      };
-      self.state.claim_account_request().set_done(on_chain_tx.attrs.id).await?;
-    }
-
     Ok(())
   }
 
@@ -232,15 +225,6 @@ impl SyncedEventHub {
       }
     }
 
-    for (_, meta) in events {
-      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else {
-        continue;
-      };
-      self.state.handle_request().set_done(on_chain_tx.attrs.id).await?;
-      self.state.set_score_and_topics_request().set_done(on_chain_tx.attrs.id).await?;
-      self.state.set_price_request().set_done(on_chain_tx.attrs.id).await?;
-    }
-
     Ok(())
   }
 
@@ -260,9 +244,8 @@ impl SyncedEventHub {
         continue;
       }
 
-      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else {
-        continue;
-      };
+      let tx_hash = meta.transaction_hash.encode_hex();
+      let Some(on_chain_tx) = self.state.on_chain_tx().select().tx_hash_eq(tx_hash).optional().await? else { continue; };
 
       let req = self
         .state
@@ -340,12 +323,6 @@ impl SyncedEventHub {
       }
     }
 
-    for (_, meta) in &events {
-      let Some(on_chain_tx) = self.find_on_chain_tx(meta).await? else {
-        continue;
-      };
-      self.state.campaign_request().set_done(on_chain_tx.attrs.id).await?;
-    }
     Ok(())
   }
 
@@ -393,13 +370,6 @@ impl SyncedEventHub {
         .await?;
     }
 
-    for (_, meta) in events {
-      let Some(on_chain_tx) = self.find_on_chain_tx(&meta).await? else {
-        continue;
-      };
-      self.state.collab_request().set_done(on_chain_tx.attrs.id).await?;
-    }
-
     Ok(())
   }
 
@@ -433,18 +403,6 @@ impl SyncedEventHub {
         .await?;
     }
 
-    for (_, meta) in &events {
-      let Some(on_chain_tx) = self.find_on_chain_tx(meta).await? else {
-        continue;
-      };
-      self.state.topic_request().set_done(on_chain_tx.attrs.id).await?;
-    }
-
     Ok(())
-  }
-
-  async fn find_on_chain_tx(&self, meta: &LogMeta) -> sqlx::Result<Option<OnChainTx>> {
-    let tx_hash = meta.transaction_hash.encode_hex();
-    self.state.on_chain_tx().select().tx_hash_eq(tx_hash).optional().await
   }
 }

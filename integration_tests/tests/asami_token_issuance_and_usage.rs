@@ -60,6 +60,7 @@ app_test!{ rate_can_be_voted (a)
   assert_eq!(a.contract().fee_rate().call().await?, u("10"));
 
   a.app.on_chain_tx().apply_voted_fee_rate().await.unwrap();
+  a.run_idempotent_background_tasks_a_few_times().await;
   assert_eq!(a.contract().fee_rate().call().await?, u("20"));
 
   bob.self_submit_fee_rate_vote(u("1")).await.unwrap();
@@ -72,6 +73,7 @@ app_test!{ rate_can_be_voted (a)
   a.evm_forward_to_next_cycle().await;
 
   a.app.on_chain_tx().apply_voted_fee_rate().await.unwrap();
+  a.run_idempotent_background_tasks_a_few_times().await;
   assert_eq!(a.contract().fee_rate().call().await?, wei("8600000000000000000"));
 
   advertiser.self_remove_fee_rate_vote().await?;
@@ -129,12 +131,7 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
   // Advertiser is vesting and hurrying to claim victory.
   assert!(advertiser.self_vest_admin_vote(advertiser_addr).await.is_ok());
 
-  assert!(
-    a.app.on_chain_tx()
-      .proclaim_cycle_admin_winner().await?
-      .expect("on_chain_tx")
-      .success()
-  );
+  proclaim_winner(&a).await;
 
   assert!(a.contract().last_admin_election().call().await? > last_admin_election);
   last_admin_election = a.contract().last_admin_election().call().await?;
@@ -146,12 +143,7 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
   a.evm_forward_to_next_cycle().await;
 
   // Advertiser is hurrying again to claim its win before other votes vest.
-  assert!(
-    a.app.on_chain_tx()
-      .proclaim_cycle_admin_winner().await?
-      .expect("on_chain_tx")
-      .success()
-  );
+  proclaim_winner(&a).await;
 
   // Bob vested his votes late, so he cannot claim the election this cycle.
   assert!(bob.self_vest_admin_vote(bob_addr).await.is_ok());
@@ -166,7 +158,7 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
 
   // Starting the next cycle, advertiser cannot claim the win anymore. 
   a.evm_forward_to_next_cycle().await;
-  assert!(a.app.on_chain_tx().proclaim_cycle_admin_winner().await?.unwrap().success());
+  proclaim_winner(&a).await;
 
   assert!(a.contract().last_admin_election().call().await? > last_admin_election);
   assert_eq!(a.contract().get_latest_admin_elections().call().await?, [bob_addr, advertiser_addr,advertiser_addr]);
@@ -175,13 +167,13 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
 
   // Bob keeps claiming the election two more times and becomes the new admin.
   a.evm_forward_to_next_cycle().await;
-  assert!(a.app.on_chain_tx().proclaim_cycle_admin_winner().await?.unwrap().success());
+  proclaim_winner(&a).await;
   assert_eq!(a.contract().get_latest_admin_elections().call().await?,
     [bob_addr, bob_addr, advertiser_addr]
   );
 
   a.evm_forward_to_next_cycle().await;
-  assert!(a.app.on_chain_tx().proclaim_cycle_admin_winner().await?.unwrap().success());
+  proclaim_winner(&a).await;
   assert_eq!(a.contract().get_latest_admin_elections().call().await?,
     [bob_addr, bob_addr, bob_addr]
   );
@@ -245,4 +237,12 @@ app_test!{ admin_vote_vesting_validations (a)
   // And cannot vest again
   assert!(advertiser.self_vest_admin_vote(advertiser_addr).await.is_err());
   assert_eq!(a.contract().vested_admin_votes_total().call().await?, u("30"));
+}
+
+async fn proclaim_winner(a: &crate::support::TestApp) {
+  let tx = a.app.on_chain_tx().proclaim_cycle_admin_winner().await.expect("proclaim is ok").expect("on_chain_tx");
+  crate::support::try_until(100, 100, "tx_not_mined", || async {
+    a.app.on_chain_tx().sync_tx_result().await.unwrap();
+    tx.reloaded().await.unwrap().success()
+  }).await;
 }
