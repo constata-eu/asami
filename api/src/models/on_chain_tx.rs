@@ -224,6 +224,7 @@ impl OnChainTxHub {
       self.state.handle_request().set_done(id).await?;
       self.state.set_score_and_topics_request().set_done(id).await?;
       self.state.set_price_request().set_done(id).await?;
+      self.state.campaign_request().set_approved(id).await?;
       self.state.campaign_request().set_done(id).await?;
       self.state.collab_request().set_done(id).await?;
       self.state.topic_request().set_done(id).await?;
