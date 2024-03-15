@@ -38,40 +38,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import { getAuthKeys } from '../../lib/auth_provider';
 import ClaimAccountButton from '../claim_account';
 
-const getCampaignSiteAndContentId = (url) => {
-  const result = {
-    error: null,
-    site: null,
-    contentId: null
-  };
-
-  try {
-    const u = new URL(url);
-    const path = u.pathname.replace(/\/$/, '').split("/");
-    const contentId = path[path.length - 1];
-
-    if ( (u.host.match(/\.?x\.com$/) || u.host.match(/\.?twitter\.com#/)) && contentId.match(/^\d+$/) ) {
-      result.site = "X";
-    } else if (u.host.match(/\.?instagram.com$/) && contentId.match(/^[\d\w\-_]+$/)) {
-      result.site = "INSTAGRAM";
-    } else {
-      result.error = "not_a_post_url";
-    }
-    result.contentId = contentId;
-
-  } catch {
-    result.error = "invalid_url";
-  }
-
-  return result;
-}
-
-const defaultValidUntil = () => {
-  let currentDate = new Date();
-  currentDate.setTime(currentDate.getTime() + (30 * 24 * 60 * 60 * 1000));
-  return currentDate;
-}
-
 export const CampaignRequestCard = () => {
   const translate = useTranslate();
   const notify = useNotify();
@@ -98,12 +64,12 @@ export const CampaignRequestCard = () => {
 
     values.campaignRequestInput = {
       accountId: getAuthKeys().session.accountId,
-      contentId = contentId;
-      site = site;
-      budget = zeroPadValue(toBeHex(parseEther("10")), 32);
-      priceScoreRatio = zeroPadValue(toBeHex(parseEther("0.001")), 32);
-      validUntil = defaultValidUntil().toISOString();
-      topicIds = [];
+      contentId,
+      site,
+      budget: zeroPadValue(toBeHex(parseEther("10")), 32),
+      priceScoreRatio: zeroPadValue(toBeHex(parseEther("0.001")), 32),
+      validUntil: defaultValidUntil().toISOString(),
+      topicIds: []
     };
 
     return errors;
@@ -114,7 +80,7 @@ export const CampaignRequestCard = () => {
       <Head2>{ translate("campaign_request.title") }</Head2>
       <Typography my="1em" >{ translate("campaign_request.text") }</Typography>
 
-      <Button fullWidth variant="contained" size="large" id="open-start-campaign-dialog" onClick={ () => setOpen(true) }>
+      <Button fullWidth variant="contained" size="large" id="open-start-campaign-request-dialog" onClick={ () => setOpen(true) }>
         <CampaignIcon sx={{mr:"5px"}}/>
         { translate("campaign_request.send_suggestion") }
       </Button>
@@ -275,3 +241,37 @@ const CampaignForm = ({handleClose, validate, onSubmit}) => {
   </Form>;
 }
 */
+const getCampaignSiteAndContentId = (url) => {
+  const result = {
+    error: null,
+    site: null,
+    contentId: null
+  };
+
+  try {
+    const u = new URL(url);
+    const path = u.pathname.replace(/\/$/, '').split("/");
+    const contentId = path[path.length - 1];
+
+    if ( (u.host.match(/\.?x\.com$/) || u.host.match(/\.?twitter\.com#/)) && contentId.match(/^\d+$/) ) {
+      result.site = "X";
+    } else if (u.host.match(/\.?instagram.com$/) && contentId.match(/^[\d\w\-_]+$/)) {
+      result.site = "INSTAGRAM";
+    } else {
+      result.error = "not_a_post_url";
+    }
+    result.contentId = contentId;
+
+  } catch {
+    result.error = "invalid_url";
+  }
+
+  return result;
+}
+
+const defaultValidUntil = () => {
+  let currentDate = new Date();
+  currentDate.setTime(currentDate.getTime() + (30 * 24 * 60 * 60 * 1000));
+  return currentDate;
+}
+

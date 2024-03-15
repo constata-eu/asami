@@ -205,6 +205,7 @@ browser_test!{ account_is_web3_from_the_start (mut d)
   d.wait_for("#member-dashboard").await;
   d.click("#button-pay-to-amplify").await;
   d.wait_for("#advertiser-dashboard").await;
+  wait_here();
 
   d.wait_for("#advertiser-claim-account-pending").await;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
@@ -219,8 +220,8 @@ browser_test!{ account_is_web3_from_the_start (mut d)
   d.goto("http://127.0.0.1:5173/#/?role=member").await;
   d.wait_for("#member-dashboard").await;
   d.goto("http://127.0.0.1:5173/#/?role=advertiser").await;
-  d.wait_for("#open-start-campaign-dialog").await;
 
+  d.wait_for("#open-start-campaign-dialog").await;
   d.click("#open-start-campaign-dialog").await;
   d.fill_in("#contentUrl", "https://x.com/asami_club/status/1716421161867710954?s=20").await;
   d.fill_in("#budget", "20").await;

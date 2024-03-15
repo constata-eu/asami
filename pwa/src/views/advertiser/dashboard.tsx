@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useDataProvider, useAuthenticated, useSafeSetState, useTranslate, useGetList} from "react-admin";
+import { useDataProvider, useAuthenticated, useSafeSetState, useTranslate, useGetList, useGetOne} from "react-admin";
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Alert, Box, Button, Card, CardActions, CardContent, Container, FormControl, FormHelperText, InputLabel, MenuItem, Select, Skeleton, Typography, IconButton } from "@mui/material";
 import { Dialog, DialogContent, DialogTitle, DialogActions } from '@mui/material';
@@ -42,16 +42,17 @@ import { CampaignRequestCard } from './campaign_request_card';
 const Dashboard = () => {
   useAuthenticated();
 
-  const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
-
-  const {data, isLoading} = useGetList(
-    "ClaimAccountRequest",
-    { refetchInterval: (data) => data?.[0]?.status == "DONE" ? false : 5000 }
+  const {data, isLoading, error, refetch} = useGetOne(
+    "Account",
+    { id: getAuthKeys().session.accountId },
+    { refetchInterval: (data) => data.status == "DONE" ? false : 5000 }
   );
 
-  const hasClaim = !!data?.[0];
-  const hasPendingClaim = hasClaim && data?.[0].status != "DONE";
-  const isFullMember = hasClaim && data?.[0].status == "DONE";
+  const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
+
+  const hasClaim = !!data.status;
+  const hasPendingClaim = data.status == "RECEIVED" || data.status == "SUBMITTED";
+  const isFullMember = data.status == "DONE";
 
   if(isLoading) {
     return <Container maxWidth="md">
