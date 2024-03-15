@@ -120,7 +120,7 @@ impl SyncedEventHub {
             .update()
             .addr(addr)
             .unclaimed_asami_tokens(a.unclaimed_asami_tokens.encode_hex())
-            .unclaimed_doc_rewards(a.unclaimed_asami_tokens.encode_hex())
+            .unclaimed_doc_rewards(a.unclaimed_doc_rewards.encode_hex())
             .save()
             .await?;
         }
@@ -132,7 +132,7 @@ impl SyncedEventHub {
               addr,
               name: None,
               unclaimed_asami_tokens: a.unclaimed_asami_tokens.encode_hex(),
-              unclaimed_doc_rewards: a.unclaimed_asami_tokens.encode_hex(),
+              unclaimed_doc_rewards: a.unclaimed_doc_rewards.encode_hex(),
             })
             .save()
             .await?
