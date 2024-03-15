@@ -52,10 +52,6 @@ browser_test!{ shows_campaigns_in_dashboard (mut d)
   d.wait_for("#button-login-as-member").await;
 }
 
-browser_test!{ suggests_rsk_network_when_adding_wallet (mut d)
-  wait_here();
-}
-
 browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.signup_with_one_time_token().await;
 
@@ -203,13 +199,26 @@ browser_test!{ advertiser_claims_account (mut d)
 
 browser_test!{ account_is_web3_from_the_start (mut d)
   d.goto("http://127.0.0.1:5173").await;
-  d.click(".submit-your-post").await;
+  d.click("#button-login-as-member").await;
   d.click("#wallet-login-button").await;
   d.link_wallet_and_sign_login().await?;
+  d.wait_for("#member-dashboard").await;
+  d.click("#button-pay-to-amplify").await;
   d.wait_for("#advertiser-dashboard").await;
 
   d.wait_for("#advertiser-claim-account-pending").await;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
+
+  /*
+  let account = d.app().account().select().order_by(AccountOrderBy::Id).desc(true).one().await?;
+  try_until(10, 200, "account not confirmed", || async {
+    account.reloaded().await.unwrap().addr().is_some()
+  }).await;
+  */
+  
+  d.goto("http://127.0.0.1:5173/#/?role=member").await;
+  d.wait_for("#member-dashboard").await;
+  d.goto("http://127.0.0.1:5173/#/?role=advertiser").await;
   d.wait_for("#open-start-campaign-dialog").await;
 
   d.click("#open-start-campaign-dialog").await;
@@ -228,6 +237,9 @@ browser_test!{ account_is_web3_from_the_start (mut d)
   d.click("button[data-testid=page-container-footer-next]").await;
   d.wait_for(".review-spending-cap").await;
   d.click("button[data-testid=page-container-footer-next]").await;
+  d.wait_for(".review-spending-cap").await;
+  d.click("button[data-testid=page-container-footer-next]").await;
+  wait_here();
 
   d.driver.switch_to_window(handles[0].clone()).await.unwrap();
   d.wait_for_text(".MuiSnackbarContent-message", "Campaign budget approved.").await;
@@ -245,5 +257,6 @@ browser_test!{ account_is_web3_from_the_start (mut d)
   d.wait_until_gone(".MuiSnackbarContent-message").await;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
   d.wait_for("#campaign-list").await;
+  wait_here();
 }
 

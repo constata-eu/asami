@@ -4,6 +4,18 @@
 	"footer": {
     "built_with": "Built with"
   },
+  "campaign_request": {
+    "title": "Suggest a campaign",
+    "text": "Got a campaign idea for X or Instagram? Share it with us! If approved, we'll launch it, and you'll earn Asami tokens for each repost.",
+    "send_suggestion": "Send Suggestion",
+    "post_url_label": "The X or Instagram post link",
+    "cancel": "Cancel",
+    "success": "Your suggestion has been received!",
+    "errors": {
+      "not_a_post_url": "The link you provided does not appear to be an X or Instagram post.",
+      "invalid_url": "The link must point to a post, and start with https://..."
+    }
+  },
   "member_campaigns": {
     "hide_campaign": {
       "button": "Ignore this campaign",
