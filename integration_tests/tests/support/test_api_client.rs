@@ -187,9 +187,13 @@ impl<'b> ApiClient<'b> {
   }
 
   pub async fn create_x_handle(&self, username: &str, rate: U256) {
+    self.create_x_handle_with_score(username, rate, wei("10")).await
+  }
+
+  pub async fn create_x_handle_with_score(&self, username: &str, rate: U256, score: U256) {
     self.account().await.create_handle_request(models::Site::X, username).await.unwrap()
       .verify("179383862".into()).await.unwrap()
-      .appraise(rate, wei("10")).await.unwrap();
+      .appraise(rate, score).await.unwrap();
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
   }
 
@@ -367,6 +371,26 @@ impl<'b> ApiClient<'b> {
 
   pub async fn doc_balance(&self) -> U256 {
     self.test_app.doc_contract().balance_of(self.local_wallet().address()).call().await.unwrap()
+  }
+
+  pub async fn get_campaign_offers(&self) -> gql::all_campaigns::ResponseData {
+    self.gql(
+      &gql::AllCampaigns::build_query(gql::all_campaigns::Variables{
+        filter: Some(gql::all_campaigns::CampaignFilter {
+          available_to_account_id: Some(self.account().await.attrs.id),
+          ids: None,
+          id_eq: None,
+          account_id_eq: None,
+          finished_eq: None,
+          content_id_like: None,
+        }),
+        page: None,
+        per_page: None,
+        sort_field: None,
+        sort_order: None,
+      }),
+      vec![]
+    ).await
   }
 }
 

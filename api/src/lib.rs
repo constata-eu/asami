@@ -79,5 +79,5 @@ pub fn custom_server(app: App, fig: figment::Figment) -> rocket::Rocket<rocket::
     .manage(new_graphql_schema())
     .attach(cors)
     .mount("/", routes![x_login, facebook_login, config])
-    .mount("/graphql", routes![graphiql, post_handler, introspect])
+    .mount("/graphql", routes![graphiql, post_handler, introspect, options])
 }
