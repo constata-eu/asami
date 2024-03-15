@@ -39,7 +39,7 @@ api_test!{ filters_campaigns_for_account (mut c)
     vec![]
   ).await;
 
-  all = get_campaign_offers(&mut c).await;
+  all = c.get_campaign_offers().await;
 
   assert_eq!(all.all_campaigns.len(), 1);
   assert_eq!(&all.all_campaigns[0].id, &scenario.high_rate_campaign.attrs.id);
@@ -55,25 +55,6 @@ api_test!{ filters_campaigns_for_account (mut c)
     vec![]
   ).await;
 
-  assert_eq!(get_campaign_offers(&mut c).await.all_campaigns.len(), 1);
+  assert_eq!(c.get_campaign_offers().await.all_campaigns.len(), 1);
 }
 
-async fn get_campaign_offers(client: &mut ApiClient<'_>) -> all_campaigns::ResponseData {
-  client.gql(
-    &AllCampaigns::build_query(all_campaigns::Variables{
-      filter: Some(all_campaigns::CampaignFilter {
-        available_to_account_id: Some(client.account().await.attrs.id),
-        ids: None,
-        id_eq: None,
-        account_id_eq: None,
-        finished_eq: None,
-        content_id_like: None,
-      }),
-      page: None,
-      per_page: None,
-      sort_field: None,
-      sort_order: None,
-    }),
-    vec![]
-  ).await
-}

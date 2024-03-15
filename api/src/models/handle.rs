@@ -30,7 +30,8 @@ model! {
 
 impl Handle {
   pub fn price_score_ratio(&self) -> U256 {
-    u256(self.price()) / u256(self.score())
+    let score = u256(self.score());
+    if score == U256::zero() { U256::zero() } else { u256(self.price()) / score }
   }
 
   pub async fn topic_ids(&self) -> sqlx::Result<Vec<String>> {
@@ -38,6 +39,10 @@ impl Handle {
   }
 
   pub async fn validate_collaboration(&self, campaign: &Campaign) -> AsamiResult<()> {
+    if self.price_score_ratio() == U256::zero() {
+      return Err(Error::validation("score", "handle_score_is_zero"));
+    }
+
     if self.price_score_ratio() > u256(campaign.price_score_ratio()) {
       return Err(Error::validation("price_score_ratio", "campaign_pays_too_little"));
     }
