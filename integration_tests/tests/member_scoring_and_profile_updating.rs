@@ -92,6 +92,39 @@ app_test!{ handles_can_be_updated_once_per_cycle (a)
   assert_handle(&a, 0, bob.id(), u("6"), wei("6000"), &[&crypto, &sports], false, "bob updated his price").await;
 }
 
+app_test!{ does_not_allow_more_than_one_claim_account_request (a)
+  let mut alice = a.client().await;
+  alice.submit_claim_account_request().await;
+  assert_eq!(
+    alice.gql_claim_account_request(alice.local_wallet()).await.errors.unwrap()[0].message,
+    "Invalid input on account: cannot_call_on_claimed_account"
+  );
+}
+
+app_test!{ can_have_a_zero_score_handle (a) 
+  let advertiser = a.client().await;
+  let campaign = advertiser.create_x_campaign(u("10"), u("5")).await;
+
+  let bob = a.client().await;
+  bob.create_x_handle_with_score("bob_on_x", u("0"), u("0")).await;
+  let handle = bob.x_handle().await;
+  assert_eq!(handle.attrs.score, weihex("0"));
+
+  assert!(bob.get_campaign_offers().await.all_campaigns.len() == 0);
+
+  assert_that!(&campaign.make_collab(&handle).await.unwrap_err(),
+    structure!{api::Error::Validation[eq("score".to_string()), eq("handle_score_is_zero".to_string())]}
+  );
+}
+
+async fn assert_non_updateable(a: &TestApp, msg: &str) {
+  assert!(a.app.on_chain_tx().apply_handle_updates().await.expect(msg).is_none(), "{msg} on_chain_tx");
+  assert!(matches!(
+    a.contract().apply_handle_updates(vec![wei("0"), wei("1")]).send().await.unwrap_err(),
+    ethers::contract::ContractError::Revert(_)
+  ), "{msg} on contract");
+}
+
 async fn assert_handle(
   a: &TestApp,
   pos: usize,
@@ -120,21 +153,3 @@ async fn assert_handle(
     "{msg} db topics"
   );
 }
-
-app_test!{ does_not_allow_more_than_one_claim_account_request (a)
-  let mut alice = a.client().await;
-  alice.submit_claim_account_request().await;
-  assert_eq!(
-    alice.gql_claim_account_request(alice.local_wallet()).await.errors.unwrap()[0].message,
-    "Invalid input on account: cannot_call_on_claimed_account"
-  );
-}
-
-async fn assert_non_updateable(a: &TestApp, msg: &str) {
-  assert!(a.app.on_chain_tx().apply_handle_updates().await.expect(msg).is_none(), "{msg} on_chain_tx");
-  assert!(matches!(
-    a.contract().apply_handle_updates(vec![wei("0"), wei("1")]).send().await.unwrap_err(),
-    ethers::contract::ContractError::Revert(_)
-  ), "{msg} on contract");
-}
-

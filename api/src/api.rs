@@ -40,6 +40,11 @@ pub fn graphiql() -> rocket::response::content::RawHtml<String> {
   graphiql_source("/graphql", None)
 }
 
+#[rocket::options("/")]
+pub fn options() -> Status {
+  Status::Ok
+}
+
 pub async fn in_transaction(
   app: &App,
   request: juniper::http::GraphQLBatchRequest,
