@@ -98,7 +98,6 @@ impl Showable<models::CampaignRequest, CampaignRequestFilter> for CampaignReques
 pub struct CreateCampaignRequestInput {
   pub content_id: String,
   pub budget: String,
-  pub account_id: String,
   pub site: Site,
   pub price_score_ratio: String,
   pub valid_until: UtcDateTime,
@@ -107,11 +106,9 @@ pub struct CreateCampaignRequestInput {
 
 impl CreateCampaignRequestInput {
   pub async fn process(self, context: &Context) -> FieldResult<CampaignRequest> {
-    let account = context.app.account().find(&self.account_id).await?;
-
     let topics = context.app.topic().select().id_in(&self.topic_ids).all().await?;
 
-    let req = account
+    let req = context.account().await?
       .create_campaign_request(
         self.site,
         &self.content_id,

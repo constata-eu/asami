@@ -38,6 +38,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { getAuthKeys } from '../../lib/auth_provider';
 import ClaimAccountButton from '../claim_account';
 import { CampaignRequestCard } from './campaign_request_card';
+import { MakeCampaignCard } from './make_campaign_card';
 
 const Dashboard = () => {
   useAuthenticated();
@@ -45,14 +46,10 @@ const Dashboard = () => {
   const {data, isLoading, error, refetch} = useGetOne(
     "Account",
     { id: getAuthKeys().session.accountId },
-    { refetchInterval: (data) => data.status == "DONE" ? false : 5000 }
+    { refetchInterval: (d) => d?.status == "DONE" ? false : 5000 }
   );
 
   const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
-
-  const hasClaim = !!data.status;
-  const hasPendingClaim = data.status == "RECEIVED" || data.status == "SUBMITTED";
-  const isFullMember = data.status == "DONE";
 
   if(isLoading) {
     return <Container maxWidth="md">
@@ -60,27 +57,16 @@ const Dashboard = () => {
     </Container>;
   }
 
+  const hasClaim = !!data.status;
+  const hasPendingClaim = data.status == "RECEIVED" || data.status == "SUBMITTED";
+  const isFullMember = data.status == "DONE";
+
   return (<Box p="1em" id="advertiser-dashboard">
     <ColumnsContainer>
       <LoggedInNavCard />
-      <CampaignRequestCard />
+      { !hasClaim && <CampaignRequestCard /> }
+      <MakeCampaignCard/>
 
-      <DeckCard>
-        <CardContent>
-          <Typography my="1em">
-            Just enter the URL of an <strong>X or Instagram</strong> post and how much you want to spend.
-            <br/>
-            The club will pay members for reposting it, at a rate of 0.001 - 0.005 USD for each <strong>real person</strong> reached.
-            <br/>
-            <strong>On X</strong> members will hit the "repost" button of your post.
-            <br/>
-            <strong>On Instagram</strong> members will copy your original post image and caption, and post it as their own. Make sure to use hashtags!
-            <br/>
-            Anyone will be able to participate reposting in the next 7 days.
-          </Typography>
-
-        </CardContent>
-      </DeckCard>
 
       { hasPendingClaim && <DeckCard id="advertiser-claim-account-pending">
           <CardContent>

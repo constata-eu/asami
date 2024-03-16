@@ -84129,10 +84129,16 @@
       "links": {},
       "address": "0x49eAA031de13942B4Cd9E69EBaef10e69821F247",
       "transactionHash": "0x3f3df2ad4620124787ba5f2f023bd9f3c8772131a7517c59117f3e10e484fc13"
+    },
+    "1710567072733": {
+      "events": {},
+      "links": {},
+      "address": "0xDe970aB7De7293aFa40a7E86D41dc937f86B9563",
+      "transactionHash": "0x55e411fe4f329bb80567fffbb60ac22e4131e9916c8ebf692eb2bf782e825437"
     }
   },
   "schemaVersion": "3.4.15",
-  "updatedAt": "2024-03-15T18:55:15.437Z",
+  "updatedAt": "2024-03-16T05:31:18.167Z",
   "networkType": "ethereum",
   "devdoc": {
     "events": {

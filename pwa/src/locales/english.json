@@ -16,6 +16,17 @@
       "invalid_url": "The link must point to a post, and start with https://..."
     }
   },
+  "make_campaign_card": {
+    "post_url_label": "The X or Instagram post link",
+    "cancel": "Cancel",
+    "errors": {
+      "budget_too_low": "Budget is too low, must be at least 1 DOC",
+      "budget_not_a_number": "Budget must be a number",
+      "not_a_post_url": "The link you provided does not appear to be an X or Instagram post.",
+      "invalid_url": "The link must point to a post, and start with https://..."
+    }
+
+  },
   "member_campaigns": {
     "hide_campaign": {
       "button": "Ignore this campaign",

@@ -205,10 +205,10 @@ browser_test!{ account_is_web3_from_the_start (mut d)
   d.wait_for("#member-dashboard").await;
   d.click("#button-pay-to-amplify").await;
   d.wait_for("#advertiser-dashboard").await;
-  wait_here();
 
   d.wait_for("#advertiser-claim-account-pending").await;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
+  wait_here();
 
   /*
   let account = d.app().account().select().order_by(AccountOrderBy::Id).desc(true).one().await?;
