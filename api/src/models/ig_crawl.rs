@@ -114,7 +114,7 @@ impl IgCrawlHub {
     let token = &self.state.settings.instagram.apify_key;
 
     for c in self.select().status_eq(IgCrawlStatus::Scheduled).all().await? {
-      let result = ureq::post(&format!("{api_url}?token={token}"))
+      let result = ureq_agent().post(&format!("{api_url}?token={token}"))
         .set("Content-Type", "application/json")
         .send_string(c.input());
 
@@ -148,7 +148,7 @@ impl IgCrawlHub {
         .as_ref()
         .ok_or_else(|| Error::Runtime(format!("submitted crawl had no apify id {:?}", &crawl.attrs)))?;
 
-      let result = ureq::get(&format!("{api_runs_url}/{run_id}?token={token}")).call();
+      let result = ureq_agent().get(&format!("{api_runs_url}/{run_id}?token={token}")).call();
 
       let response = match result {
         Ok(r) => r,
@@ -177,7 +177,7 @@ impl IgCrawlHub {
         "SUCCEEDED" => {
           let dataset_id = meta.default_dataset_id;
           let items: Vec<IgResult> =
-            ureq::get(&format!("{api_datasets_url}/{dataset_id}/items?token={token}")).call()?.into_json()?;
+            ureq_agent().get(&format!("{api_datasets_url}/{dataset_id}/items?token={token}")).call()?.into_json()?;
 
           for i in items {
             let json_string =
@@ -523,7 +523,7 @@ pub fn get_url_image_hash(url: &str) -> AsamiResult<(Vec<u8>, ImageHash)> {
   use std::io::Read;
 
   let hasher = HasherConfig::new().hash_alg(HashAlg::DoubleGradient).hash_size(100, 100).to_hasher();
-  let resp = ureq::get(url).call()?;
+  let resp = ureq_agent().get(url).call()?;
 
   let len: usize = 1024 * 1024;
   let mut bytes: Vec<u8> = Vec::with_capacity(len);
@@ -534,6 +534,10 @@ pub fn get_url_image_hash(url: &str) -> AsamiResult<(Vec<u8>, ImageHash)> {
     .map_err(|e| Error::service("image_hasher", &e.to_string()))?;
 
   Ok((bytes, hasher.hash_image(&image)))
+}
+
+pub fn ureq_agent() -> ureq::Agent {
+  ureq::AgentBuilder::new().timeout(std::time::Duration::from_secs(5)).build()
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
