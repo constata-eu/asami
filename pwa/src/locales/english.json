@@ -17,6 +17,12 @@
     }
   },
   "make_campaign_card": {
+    "title": "Start a campaign!",
+    "pay_members": "Pay club members to repost any X post, or to clone any Instagram post.",
+    "doc_funded": "Campaigns are funded in DoC, a USD pegged stablecoin from Money On Chain, that you can mint yourself using RBTC.",
+    "get_doc": "Go get some DoC",
+    "start_campaign": "Start Campaign",
+    "close": "Close",
     "post_url_label": "The X or Instagram post link",
     "cancel": "Cancel",
     "errors": {
@@ -24,8 +30,37 @@
       "budget_not_a_number": "Budget must be a number",
       "not_a_post_url": "The link you provided does not appear to be an X or Instagram post.",
       "invalid_url": "The link must point to a post, and start with https://..."
+    },
+    "form_step": {
+      "content_url": "Link to X or Instagram post",
+      "budget": "Total budget you'll spend, in DOC",
+      "start_campaign": "Start Campaign",
+      "service_summary": "You'll pay ~0.001 DOC per real person reached by a repost. Unused funds will be returned to you after 30 days.",
+      "x_description": "On X, members will repost your original post.",
+      "ig_description": "On Instagram, members will clone your ig post as their own. Use hashtags and mention yourself to drive traffic."
+    },
+    "tx_waiter": {
+      "approving_title": "Approve budget spend",
+      "approving_text": "Go to your wallet and approve spending your campaign's budget.",
+      "creating_title": "Create Campaign",
+      "creating_text": "Now got to your wallet again and sign the transaction that will create your campaign in ASAMI.",
+      "waiting_for_tx": "Waiting for transaction to confirm",
+      "see_in_explorer": "See transaction in block explorer",
+      "close": "Close"
+    },
+    "done": {
+      "title": "Campaign created",
+      "text": "Your campaign has been created. It may take a few minutes to show up in your dashboard.",
+      "see_in_explorer": "See transaction in block explorer"
+    },
+    "error_step": {
+      "action_rejected": "It looks like you cancelled the campaign creation in your wallet, try again if you're still interested.",
+      "wrong_signer": "Did you change your wallet account? You are using Asami with %{expected} but your wallet is using %{actual}. Switch your wallet connected account to %{expected} and try again.",
+      "unexpected_error": "An unexpected error ocurred, contact us on twitter or instagram and forward the error information.",
+      "copy_info": "Copy error details",
+      "info_copied": "Error details copied to your clipboard",
+      "title": "Campaign creation cancelled"
     }
-
   },
   "member_campaigns": {
     "hide_campaign": {

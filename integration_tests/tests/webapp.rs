@@ -208,14 +208,6 @@ browser_test!{ account_is_web3_from_the_start (mut d)
 
   d.wait_for("#advertiser-claim-account-pending").await;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
-  wait_here();
-
-  /*
-  let account = d.app().account().select().order_by(AccountOrderBy::Id).desc(true).one().await?;
-  try_until(10, 200, "account not confirmed", || async {
-    account.reloaded().await.unwrap().addr().is_some()
-  }).await;
-  */
   
   d.goto("http://127.0.0.1:5173/#/?role=member").await;
   d.wait_for("#member-dashboard").await;
@@ -227,6 +219,7 @@ browser_test!{ account_is_web3_from_the_start (mut d)
   d.fill_in("#budget", "20").await;
 
   d.click("#submit-start-campaign-form").await;
+  d.wait_for("#approval-waiter").await;
 
   try_until(10, 200, "No other window opened", || async {
     d.driver.windows().await.unwrap().len() == 2
@@ -238,13 +231,10 @@ browser_test!{ account_is_web3_from_the_start (mut d)
   d.click("button[data-testid=page-container-footer-next]").await;
   d.wait_for(".review-spending-cap").await;
   d.click("button[data-testid=page-container-footer-next]").await;
-  d.wait_for(".review-spending-cap").await;
-  d.click("button[data-testid=page-container-footer-next]").await;
-  wait_here();
-
   d.driver.switch_to_window(handles[0].clone()).await.unwrap();
-  d.wait_for_text(".MuiSnackbarContent-message", "Campaign budget approved.").await;
-  d.wait_until_gone(".MuiSnackbarContent-message").await;
+
+  d.wait_until_gone("#approval-waiter").await;
+  d.wait_for("#creation-waiter").await;
 
   try_until(10, 200, "No other window opened", || async {
     d.driver.windows().await.unwrap().len() == 2
@@ -254,10 +244,9 @@ browser_test!{ account_is_web3_from_the_start (mut d)
   d.click("button[data-testid=page-container-footer-next]").await;
 
   d.driver.switch_to_window(handles[0].clone()).await.unwrap();
-  d.wait_for_text(".MuiSnackbarContent-message", "Campaign will be started soon").await;
-  d.wait_until_gone(".MuiSnackbarContent-message").await;
+  d.wait_for("#campaign-done").await;
+  d.click("#campaign-done-close").await;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
   d.wait_for("#campaign-list").await;
-  wait_here();
 }
 

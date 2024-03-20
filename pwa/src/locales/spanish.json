@@ -4,9 +4,67 @@
 	"footer": {
     "built_with": "Hecho con"
   },
+  "campaign_request": {
+    "title": "Sugiere una campaña",
+    "text": "¿Tienes una idea de campaña para X o Instagram? ¡Compártela con nosotros! Si es aprobada, la lanzaremos y ganarás tokens de Asami por cada repost.",
+    "send_suggestion": "Enviar sugerencia",
+    "post_url_label": "El enlace del post de X o Instagram",
+    "cancel": "Cancelar",
+    "success": "¡Tu sugerencia ha sido recibida!",
+    "errors": {
+      "not_a_post_url": "El enlace que proporcionaste no parece ser un post de X o Instagram.",
+      "invalid_url": "El enlace debe apuntar a un post y comenzar con https://..."
+    }
+  },
+  "make_campaign_card": {
+    "title": "¡Inicia una campaña!",
+    "pay_members": "Paga a los miembros del club para repostear cualquier post de X, o para clonar cualquier post de Instagram.",
+    "doc_funded": "Las campañas se financian en DOC, una stablecoin vinculada al USD de Money On Chain, que puedes acuñar tú mismo usando RBTC.",
+    "get_doc": "Ve a conseguir algo de DOC",
+    "start_campaign": "Iniciar campaña",
+    "close": "Cerrar",
+    "post_url_label": "El enlace del post de X o Instagram",
+    "cancel": "Cancelar",
+    "errors": {
+      "budget_too_low": "El presupuesto es demasiado bajo, debe ser al menos 1 DOC",
+      "budget_not_a_number": "El presupuesto debe ser un número",
+      "not_a_post_url": "El enlace que proporcionaste no parece ser un post de X o Instagram.",
+      "invalid_url": "El enlace debe apuntar a un post y comenzar con https://..."
+    },
+    "form_step": {
+      "content_url": "Enlace al post de X o Instagram",
+      "budget": "Presupuesto total que gastarás, en DOC",
+      "start_campaign": "Iniciar campaña",
+      "service_summary": "Pagarás ~0.001 DOC por persona real alcanzada por un repost. Los fondos no utilizados serán devueltos después de 30 días.",
+      "x_description": "En X, los miembros repostearán tu post original.",
+      "ig_description": "En Instagram, los miembros clonarán tu post como propio. Usa hashtags y menciónate a ti mismo para generar tráfico."
+    },
+    "tx_waiter": {
+      "approving_title": "Aprobación del gasto del presupuesto",
+      "approving_text": "Ve a tu cartera y aprueba el gasto del presupuesto de tu campaña.",
+      "creating_title": "Crear campaña",
+      "creating_text": "Ahora ve a tu cartera de nuevo y firma la transacción que creará tu campaña en ASAMI.",
+      "waiting_for_tx": "Esperando que la transacción se confirme",
+      "see_in_explorer": "Ver transacción en el explorador de bloques",
+      "close": "Cerrar"
+    },
+    "done": {
+      "title": "Campaña creada",
+      "text": "Tu campaña ha sido creada. Puede tardar unos minutos en aparecer en tu panel de control.",
+      "see_in_explorer": "Ver transacción en el explorador de bloques"
+    },
+    "error_step": {
+      "action_rejected": "Parece que cancelaste la creación de la campaña en tu cartera, intenta de nuevo si todavía estás interesado.",
+      "wrong_signer": "¿Cambiaste tu cuenta de cartera? Estás usando Asami con %{expected} pero tu cartera está usando %{actual}. Cambia la cuenta conectada de tu cartera a %{expected} e intenta de nuevo.",
+      "unexpected_error": "Ocurrió un error inesperado, contáctanos en twitter o instagram y reenvía la información del error.",
+      "copy_info": "Copiar detalles del error",
+      "info_copied": "Detalles del error copiados al portapapeles",
+      "title": "Creación de campaña cancelada"
+    }
+  },
   "member_campaigns": {
     "hide_campaign": {
-      "button": "Ignorar esta campañá",
+      "button": "Ignorar esta campaña",
       "title": "Ignorando campaña",
       "content": "No volveremos a ofrecerte esta campaña, esta acción no puede deshacerse."
     },

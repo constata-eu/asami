@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useDataProvider, useAuthenticated, useSafeSetState, useTranslate, ReferenceField, useGetAll, useGetOne, useGetList} from "react-admin";
 import LoadingButton from '@mui/lab/LoadingButton';
 import { viewPostUrl } from '../../lib/campaign';
+import { formatAddress } from '../../lib/formatters';
 import { Alert, Box, Button, Card, CardActions, CardContent, Container, FormControl, FormHelperText, InputLabel, MenuItem, Select, Skeleton, Typography, IconButton } from "@mui/material";
 import { Avatar, Badge, Dialog, Divider, DialogContent, DialogTitle, DialogActions, Chip, Stack } from '@mui/material';
 import { ethers, parseUnits, formatEther, toQuantity, toBeHex, zeroPadValue, parseEther } from "ethers";
@@ -124,7 +125,7 @@ const Done = ({account}) => {
         <FunctionField label={ translate("balance_card.claimed.asami_label") }
           render={ record => `${formatEther(record.asamiBalance)} ASAMI` }  />
         <FunctionField label={ translate("balance_card.claimed.address") }
-          render={ record => `${record.addr.substring(0,8)}…${record.addr.substring(36)}`} />
+          render={ record => formatAddress(record.addr) } />
         <FunctionField label={ translate("balance_card.account_id_label")} render={ record => `${BigInt(record.id)}` }  />
       </SimpleShowLayout>
     </CardContent>

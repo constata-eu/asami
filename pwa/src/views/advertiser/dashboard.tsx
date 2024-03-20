@@ -65,7 +65,7 @@ const Dashboard = () => {
     <ColumnsContainer>
       <LoggedInNavCard />
       { !hasClaim && <CampaignRequestCard /> }
-      <MakeCampaignCard/>
+      { isFullMember && <MakeCampaignCard account={data} /> }
 
 
       { hasPendingClaim && <DeckCard id="advertiser-claim-account-pending">

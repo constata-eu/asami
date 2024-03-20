@@ -63,10 +63,12 @@ const theme = {
     error: { main: red },
   },
   components: {
-    MuiBox: {
+    MuiAlert: {
       styleOverrides: {
-        "& iframe body": {
-          background: "red",
+        root: {
+          "& .MuiAlert-message": {
+            flex: "1 1 auto !important"
+          }
         }
       }
     },
