@@ -1,21 +1,16 @@
 import { useCallback } from 'react';
 import { Alert, Typography, Box, CircularProgress, Button } from '@mui/material';
-import { useTranslate, useSafeSetState, useStore } from 'react-admin';
+import { useTranslate, useSafeSetState } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
 import { useSearchParams } from "react-router-dom";
 import { Head2 } from "../components/theme";
 import { BareLayout } from './layout';
-import { Settings } from '../settings';
 import authProvider from '../lib/auth_provider';
 import { NoAccounts, LiveHelp, Replay } from '@mui/icons-material';
-import {
-  GoogleReCaptchaProvider,
-  GoogleReCaptcha
-} from 'react-google-recaptcha-v3';
+import { GoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 export const OneTimeTokenLogin = () => {
   const [searchParams,] = useSearchParams();
-  const [role, setRole] = useStore('user.role', 'advertiser');
   const translate = useTranslate();
   const token = searchParams.get("token");
 
@@ -110,15 +105,14 @@ const RegularLogin = ({ authData, authMethodKind}) => {
       await authProvider.login(authMethodKind, authData, recaptchaToken);
       navigate("/")
     } catch (e) {
-      setError(e.message || "An unexpected error ocurred logging you in")
+      setError(e.message || translate("login.unexpected_error"))
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (!error ?
     <>
       <CircularProgress sx={{mb: 3}}/>
-      <Head2>Logging you in, this won't take long.</Head2>
+      <Head2>Logging you in, this won&apos;t take long.</Head2>
       <GoogleReCaptcha onVerify={onVerify} />
     </>
     :
@@ -132,8 +126,8 @@ const Errors = ({error}) => {
 
   return <>
       <NoAccounts sx={{ mb: 3, width: "2em", height: "auto" }}/>
-      <Head2 sx={{mb: 3}}>An unexpected error ocurred logging you in.</Head2>
-      <Typography>We have a description code for the error: </Typography>
+      <Head2 sx={{mb: 3}}>{ translate("login.unexpected_error") }</Head2>
+      <Typography>{ translate("login.error_description_title") }</Typography>
       <Alert severity="info" sx={{my: "2em" }}>{ error }</Alert>
 
       <Button
@@ -142,14 +136,14 @@ const Errors = ({error}) => {
         onClick={() => navigate("/login")}
         startIcon={<Replay />}
       >
-        Try again
+        { translate("login.try_again") }
       </Button>
       <Button
         variant="outlined"
         href="mailto:hola@constata.eu"
         startIcon={<LiveHelp />}
       >
-        Contact us
+        { translate("login.contact_us") }
       </Button>
   </>;
 }

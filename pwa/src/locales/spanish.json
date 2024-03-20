@@ -178,7 +178,11 @@
     "login_button": "Entrar",
     "about_asami_button": "Acerca de ASAMI",
     "ig_handle": "asamiclub_es",
-    "x_handle": "asami_club_es"
+    "x_handle": "asami_club_es",
+    "unexpected_error": "Ocurrió un error inesperado iniciando tu sesión",
+    "error_description_title": "Tenemos una descripción del error:"
+    "try_again": "Intentar nuevamente",
+    "contact_us": "Contáctanos"
   },
   "public_card_header": {
     "title": "Paga hasta $%{amount}",

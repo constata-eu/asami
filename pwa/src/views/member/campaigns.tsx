@@ -218,7 +218,7 @@ const IgCampaignInstructions = ({campaignId, setPreference, dataUri, caption, at
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogContent>
         <Typography>
-        { !!caption ?
+        { caption ?
             translate("member_campaigns.ig.instruction_with_caption")
           :
             translate("member_campaigns.ig.instruction_without_caption")

@@ -178,7 +178,11 @@
     "login_button": "Login",
     "about_asami_button": "About ASAMI",
     "ig_handle": "asamiclub",
-    "x_handle": "asami_club"
+    "x_handle": "asami_club",
+    "unexpected_error": "An unexpected error ocurred while starting your session",
+    "error_description_title": "We have a description for the error:",
+    "try_again": "Try again",
+    "contact_us": "Contact us"
   },
   "public_card_header": {
     "title": "Pays up to $%{amount}",
