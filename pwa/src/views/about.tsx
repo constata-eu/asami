@@ -1,24 +1,11 @@
-import { useEffect } from 'react';
-import {
-  Alert, AlertTitle, Badge, Divider,
-  Dialog, DialogActions, DialogContent, DialogTitle,
-  IconButton, Box, Button, Container, Paper, styled,
-  Toolbar, Typography, Skeleton, useMediaQuery
-} from '@mui/material';
-import { useCheckAuth, useSafeSetState, useStore, useTranslate } from 'react-admin';
-import { useNavigate } from 'react-router-dom';
-import authProvider, { makeXUrl, makeInstagramUrl} from '../lib/auth_provider';
+import { Box, Button, Typography } from '@mui/material';
+import { useTranslate } from 'react-admin';
 import { BareLayout } from './layout';
-import { Head1, green } from '../components/theme';
-import logo from '../assets/asami.png';
-import rootstock from '../assets/rootstock.png';
-import { useContracts } from "../components/contracts_context";
-import FacebookLogin from '@greatsumini/react-facebook-login';
-import { Settings } from '../settings';
+import { green } from '../components/theme';
 import AsamiLogo from '../assets/logo.svg?react';
 import { messages, browserLocale } from '../i18n';
 
-const LongForm = ({title, lines}) => {
+const LongText = ({title, lines}) => {
   const html = lines.map((l) => `<p>${l}</p>`).join("");
   return (<Box sx={{ breakInside: "avoid" }}>
     <Typography mb="0.5em" id="terms_and_policy" fontSize="2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
@@ -41,9 +28,9 @@ const About = () => {
         { translate("about_us.go_back_button") }
       </Button>
 
-      <LongForm title={s.club_title} lines={s.club_description} />
-      <LongForm title={s.privacy_statement_title} lines={s.privacy_statement} />
-      <LongForm title={s.data_rights_title} lines={s.data_rights} />
+      <LongText title={s.club_title} lines={s.club_description} />
+      <LongText title={s.privacy_statement_title} lines={s.privacy_statement} />
+      <LongText title={s.data_rights_title} lines={s.data_rights} />
     </Box>
   </BareLayout>);
 };

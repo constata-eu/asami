@@ -1,46 +1,18 @@
-import { useEffect } from "react";
-import { useDataProvider, useAuthenticated, useSafeSetState, useTranslate, useGetList} from "react-admin";
-import LoadingButton from '@mui/lab/LoadingButton';
-import { Chip, LinearProgress, Alert, AlertTitle, Box, Button, Card, CardActions, CardContent, Container, FormControl, FormHelperText, InputLabel, MenuItem, Select, Skeleton, Typography, IconButton } from "@mui/material";
-import { Dialog, DialogContent, DialogTitle, DialogActions } from '@mui/material';
-import { ethers, parseUnits, formatEther, toBeHex, zeroPadValue, parseEther } from "ethers";
-import { LoggedInNavCard, ColumnsContainer, DeckCard } from '../layout';
-import schnorr from "bip-schnorr";
-import { Buffer } from "buffer";
-import Login from "./views/login";
+import { useSafeSetState, useTranslate } from "react-admin";
+import { LinearProgress, Alert, Box, Button, CardContent, Typography } from "@mui/material";
+import { Dialog } from '@mui/material';
+import { toBeHex, zeroPadValue, parseEther } from "ethers";
+import { DeckCard } from '../layout';
 import { useContracts } from "../../components/contracts_context";
-import { Head1, Head2, BulletPoint, CardTitle, light } from '../../components/theme';
-import LoginIcon from '@mui/icons-material/Login';
-import _ from 'lodash';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { DateField } from '@mui/x-date-pickers/DateField';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
-import dayjs from 'dayjs';
-import { viewPostUrl, parseCampaignSiteAndContentId, defaultValidUntil } from '../../lib/campaign';
-import { getAuthKeys } from '../../lib/auth_provider';
-import { formatTxHash, formatAddress } from '../../lib/formatters';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
+import { Head2, light } from '../../components/theme';
+import { parseCampaignSiteAndContentId, defaultValidUntil } from '../../lib/campaign';
+import { formatAddress } from '../../lib/formatters';
 import Paper from '@mui/material/Paper';
-import { Toolbar, Create, SimpleForm, CreateBase, Form, TextInput, RichTextInput, SaveButton, useNotify } from 'react-admin';
-import { ListBase, Title, ListToolbar, Pagination, Datagrid, TextField, FunctionField} from 'react-admin';
-import {  
-    useListController,
-    defaultExporter,
-    ListContextProvider
-} from 'react-admin';
-
+import { Form, TextInput, SaveButton, useNotify } from 'react-admin';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import LaunchIcon from '@mui/icons-material/Launch';
-import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import { Stack } from '@mui/material';
 import CampaignIcon from '@mui/icons-material/Campaign';
-import CloseIcon from '@mui/icons-material/Close';
-import ClaimAccountButton from '../claim_account';
 
 export const MakeCampaignCard = ({account}) => {
   const translate = useTranslate();
@@ -48,14 +20,14 @@ export const MakeCampaignCard = ({account}) => {
   const [step, setStep] = useSafeSetState("FORM"); 
   const [approvalTx, setApprovalTx] = useSafeSetState();
   const [creationTx, setCreationTx] = useSafeSetState();
-  const [error, setError] = useSafeSetState();
+  const [failure, setFailure] = useSafeSetState();
   const { contracts } = useContracts();
 
   const handleClose = () => {
     setOpen(false);
     setApprovalTx(null);
     setCreationTx(null);
-    setError(null);
+    setFailure(null);
     setStep("FORM");
   }
 
@@ -78,15 +50,13 @@ export const MakeCampaignCard = ({account}) => {
       await creation.wait();
       setStep("DONE");
     } catch (e) {
-      setError(e);
+      setFailure(e);
       setOpen(true)
       setStep("ERROR");
     }
   }
 
   const validate = (values) => {
-    let errors = {};
-    let keys = getAuthKeys();
     let input = {
       priceScoreRatio: BigInt(zeroPadValue(toBeHex(parseEther("0.001")), 32)),
       validUntil: BigInt(Math.floor(defaultValidUntil().getTime() / 1000)),
@@ -152,7 +122,7 @@ export const MakeCampaignCard = ({account}) => {
           />
         }
         { step == "DONE" && <Done tx={creationTx} handleClose={handleClose} /> }
-        { step == "ERROR" && <Error error={error} handleClose={handleClose} /> }
+        { step == "ERROR" && <Failure failure={failure} handleClose={handleClose} /> }
       </Dialog>
     </DeckCard>);
 }
@@ -211,36 +181,36 @@ const Done = ({tx, handleClose}) => {
   </Alert>
 }
 
-const Error = ({error, handleClose}) => {
+const Failure = ({failure, handleClose}) => {
   const notify = useNotify();
   const translate = useTranslate();
 
   let msg;
   let info;
 
-  if(error == "Modal closed by user" || error.code == "ACTION_REJECTED"){
-    msg = translate("make_campaign_card.error_step.action_rejected");
-  } else if (error.code == "WRONG_SIGNER") {
-    msg = translate("make_campaign_card.error_step.wrong_signer", {expected: formatAddress(error.expected), actual: formatAddress(error.actual)});
+  if(failure == "Modal closed by user" || failure.code == "ACTION_REJECTED"){
+    msg = translate("make_campaign_card.failure_step.action_rejected");
+  } else if (failure.code == "WRONG_SIGNER") {
+    msg = translate("make_campaign_card.failure_step.wrong_signer", {expected: formatAddress(failure.expected), actual: formatAddress(failure.actual)});
   } else {
-    msg = translate("make_campaign_card.error_step.unexpected_error");
-    info = error.info && JSON.stringify(error.info, null, 2);
+    msg = translate("make_campaign_card.failure_step.unexpected_error");
+    info = failure.info && JSON.stringify(failure.info, null, 2);
   }
 
   const copyText = async () => {
-    notify("make_campaign_card.error_step.info_copied", { anchorOrigin: { vertical: 'top', horizontal: 'center' }});
+    notify("make_campaign_card.failure_step.info_copied", { anchorOrigin: { vertical: 'top', horizontal: 'center' }});
     await navigator.clipboard.writeText(info);
   }
 
   return <Alert severity="error" variant="filled" icon={false}>
     <Head2 sx={{ mb: "0.5em" }}>
-      { translate("make_campaign_card.error_step.title") }
+      { translate("make_campaign_card.failure_step.title") }
     </Head2>
     {msg}
     { info && <Paper sx={{ mt: "1em", p: "0.5em" }}>
       <Typography component="pre" variant="body2" sx={{ whiteSpace:"break-spaces", lineBreak:"anywhere"}}>{info}</Typography>
       <Button sx={{ mt: "1em"}} fullWidth startIcon={<ContentCopyIcon/>} onClick={copyText} color="inverted">
-        { translate("make_campaign_card.error_step.copy_info") }
+        { translate("make_campaign_card.failure_step.copy_info") }
       </Button>
       </Paper>
     }

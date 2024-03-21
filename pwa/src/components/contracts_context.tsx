@@ -2,8 +2,8 @@ import asamiABI from "../abi/Asami.json";
 import docABI from "../abi/Doc.json";
 import { rLogin } from "../lib/rLogin";
 import { ethers } from "ethers";
-import { useDataProvider, useSafeSetState} from "react-admin";
-import React, { createContext, useContext } from 'react';
+import { useSafeSetState} from "react-admin";
+import { createContext, useContext } from 'react';
 import { HttpError } from "react-admin";
 import { Settings } from '../settings';
 
@@ -47,11 +47,6 @@ export const ContractsProvider = ({ children }) => {
     try {
       const { signer, provider } = await contracts();
 
-      const user = {
-        id: signer.address,
-        fullName: `${signer.address.substring(0,6)}…${signer.address.substring(38)}`
-      };
-
       let msgParams = {
           domain: {
             chainId: Settings.rsk.chainId,
@@ -79,6 +74,7 @@ export const ContractsProvider = ({ children }) => {
         params: [ signer.address, JSON.stringify(msgParams) ],
         from: signer.address
       });
+
     } catch(e) {
       throw (new HttpError("Unauthorized", 401, {
         message: "Cannot log-in if you don't authorize the app.",

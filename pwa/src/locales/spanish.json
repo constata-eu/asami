@@ -4,6 +4,40 @@
 	"footer": {
     "built_with": "Hecho con"
   },
+  "campaign_list": {
+    "title": "Campañas activas",
+    "text": "Los miembros del club amplificarán tu contenido hasta que el presupuesto se acabe. Si sobran fondos se devolverán luedo de la fecha de fin de campaña.",
+    "see_post": "Ver Post",
+    "site": "Sitio",
+    "post": "Post",
+    "budget": "Presupuesto",
+    "remaining": "Restante",
+    "ends_on": "Finaliza el"
+  },
+  "claim_account": {
+    "success": "El administrador the entregará el control de tu cuenta pronto.",
+    "error": "Ups, no pudimos recibir tu pedido. Por favor contáctate con el administrador en X o Instagram.",
+    "claim_pending": "Podrás crear campañas nuevas cuando el administrador te entregue el control de tu cuenta.",
+    "claim_available": "Como no has conetado tu billetera WEB3, tus campañas serán revisadas y fondeadas por el administrador del club, sujeto a fondos disponibles. Conecta tu billetera WEB3 para recibir control de tu cuenta y crear campañas cuando quieras con tus propios fondos.",
+    "claim_button": "Conectar billetera"
+  },
+  "campaign_request_list": {
+    "title": "Pedidos de campañas",
+    "admin_will_review": "El administrador del club revisará y decidirá sobre estas campañas",
+    "claim_to_create": "Reclama el control de tu cuenta con tu billetera WEB3 para crear campañas con tus propios fondos.",
+    "see_post": "Ver post",
+    "post": "Post",
+    "status": "Estado",
+    "site": "Sitio",
+    "budget": "Presupuesto"
+  },
+  "collab_list": {
+    "title": "Tu histórico de colaboraciones",
+    "text": "Estas son tus colaboraciones a la fecha",
+    "see_post": "Ver post",
+    "reward": "Recompensa",
+    "fee": "Comisión de Asami"
+  },
   "campaign_request": {
     "title": "Sugiere una campaña",
     "text": "¿Tienes una idea de campaña para X o Instagram? ¡Compártela con nosotros! Si es aprobada, la lanzaremos y ganarás tokens de Asami por cada repost.",
@@ -53,7 +87,7 @@
       "text": "Tu campaña ha sido creada. Puede tardar unos minutos en aparecer en tu panel de control.",
       "see_in_explorer": "Ver transacción en el explorador de bloques"
     },
-    "error_step": {
+    "failure_step": {
       "action_rejected": "Parece que cancelaste la creación de la campaña en tu cartera, intenta de nuevo si todavía estás interesado.",
       "wrong_signer": "¿Cambiaste tu cuenta de cartera? Estás usando Asami con %{expected} pero tu cartera está usando %{actual}. Cambia la cuenta conectada de tu cartera a %{expected} e intenta de nuevo.",
       "unexpected_error": "Ocurrió un error inesperado, contáctanos en twitter o instagram y reenvía la información del error.",

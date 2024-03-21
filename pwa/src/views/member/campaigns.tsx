@@ -1,46 +1,13 @@
 /// <reference types="vite-plugin-svgr/client" />
-import { useEffect, useContext } from 'react';
-import {
-  Alert, Avatar, AlertTitle, Badge, Divider, Card, CardActions, CardContent, CardHeader,
-  Dialog, DialogActions, DialogContent, DialogTitle,
-  IconButton, Box, Button, Container, Paper, styled,
-  Toolbar, Typography, Skeleton, useMediaQuery
-} from '@mui/material';
-import { makeXUrl,  } from '../lib/auth_provider';
-import { ethers, parseUnits, formatEther, toBeHex, zeroPadValue, parseEther } from "ethers";
-import { publicDataProvider } from "../lib/data_provider";
-import {  
-  useCheckAuth,
-  useSafeSetState,
-  useStore,
-  useListController,
-  defaultExporter,
-  ListContextProvider,
-  CoreAdminContext,
-  useNotify,
-  useGetList,
-  useTranslate,
-  I18nContext,
-  Confirm
-} from 'react-admin';
-
+import { Alert, Avatar, CardContent, CardHeader, Dialog, DialogContent, Box, Button, Typography } from '@mui/material';
+import { formatEther } from "ethers";
+import { useSafeSetState, useNotify, useGetList, useTranslate, Confirm } from 'react-admin';
 import { TwitterTweetEmbed } from 'react-twitter-embed';
-import { useNavigate } from 'react-router-dom';
-import { BareLayout, DeckCard } from '../layout';
-import { Head1, Head2, CardTitle, BulletPoint, yellow, dark, red, light, green } from '../../components/theme';
-import logo from '../assets/asami.png';
-import RootstockLogo from '../assets/rootstock.svg?react';
-import AsamiLogo from '../assets/logo.svg?react';
-import { useContracts } from "../components/contracts_context";
-import FacebookLogin from '@greatsumini/react-facebook-login';
-import { Settings } from '../settings';
+import { DeckCard } from '../layout';
+import { light } from '../../components/theme';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import XIcon from '@mui/icons-material/X';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import WalletIcon from '@mui/icons-material/Wallet';
 import truncate from 'lodash/truncate';
-import chunk from 'lodash/chunk';
-import flatten from 'lodash/flatten';
 
 export const CampaignHeader = ({campaign, icon, children}) => {
   const translate = useTranslate();
@@ -131,7 +98,6 @@ export const XCampaign = ({campaign, prefsContext, setPreference}) => {
 
 export const IgCampaign = ({campaign, prefsContext, setPreference}) => {
   const translate = useTranslate();
-  const notify = useNotify();
   const {data, isLoading} = useGetList(
     "IgCampaignRule",
     { filter: {campaignIdEq: campaign.id}, perPage: 1,}

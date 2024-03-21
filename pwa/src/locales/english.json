@@ -4,6 +4,40 @@
 	"footer": {
     "built_with": "Built with"
   },
+  "campaign_list": {
+    "title": "Active campaigns",
+    "text": "Club members will be reposting your content until the budget is fully spent. Unspent amounts will be returned after campaign ends.",
+    "see_post": "See Post",
+    "site": "Site",
+    "post": "Post",
+    "budget": "Budget",
+    "remaining": "Remaining",
+    "ends_on": "Ends on"
+  },
+  "claim_account": {
+    "success": "The admin will hand over control of your account to you soon.",
+    "error": "Oops, we could not receive your request. Please try again or contact the admin on X or Instagram.",
+    "claim_pending": "You'll be able to start new campaigns once the admin processes your account claim",
+    "claim_available": "Since you haven't connected your WEB3 wallet, your campaigns will be funded privately by the club's admin, subject to how much funds are available. Connect your wallet to claim your account and fund campaigns with your own budget.",
+    "claim_button": "Connect wallet"
+  },
+  "campaign_request_list": {
+    "title": "Requested campaigns",
+    "admin_will_review": "The club's admin will review and decide whether to fund your campaigns.",
+    "claim_to_create": "Claim your account using a WEB3 wallet to create campaigns yourself!",
+    "see_post": "See Post",
+    "post": "Post",
+    "status": "Status",
+    "site": "Site",
+    "budget": "Budget"
+  },
+  "collab_list": {
+    "title": "Your collaboration history",
+    "text": "These are your collaborations so far",
+    "see_post": "See post",
+    "reward": "Reward",
+    "fee": "Asami fee"
+  },
   "campaign_request": {
     "title": "Suggest a campaign",
     "text": "Got a campaign idea for X or Instagram? Share it with us! If approved, we'll launch it, and you'll earn Asami tokens for each repost.",
@@ -53,7 +87,7 @@
       "text": "Your campaign has been created. It may take a few minutes to show up in your dashboard.",
       "see_in_explorer": "See transaction in block explorer"
     },
-    "error_step": {
+    "failure_step": {
       "action_rejected": "It looks like you cancelled the campaign creation in your wallet, try again if you're still interested.",
       "wrong_signer": "Did you change your wallet account? You are using Asami with %{expected} but your wallet is using %{actual}. Switch your wallet connected account to %{expected} and try again.",
       "unexpected_error": "An unexpected error ocurred, contact us on twitter or instagram and forward the error information.",

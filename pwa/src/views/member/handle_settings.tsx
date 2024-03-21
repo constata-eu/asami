@@ -64,9 +64,13 @@ export const HandleStats = ({handle, id}) => {
       <FunctionField label={ translate("handle_settings.stats.price_per_repost") }
         render={ h => `${formatEther(h.price)} DOC` } />
       <FunctionField label={ translate("handle_settings.stats.sparkle_rate") }
-        render={ h => formatEther(BigInt(handle.price)/BigInt(handle.score)) } />
+        render={ h => {
+          const score = BigInt(h.score);
+          const ratio = score > BigInt(0) ? BigInt(h.price) / score : BigInt(0);
+          return formatEther(ratio);
+        }} />
       <FunctionField label={ translate("handle_settings.stats.locked_until") }
-        render={ record => nextCycle.toLocaleDateString(undefined, { month: 'long', day: 'numeric'}) } />
+        render={ () => nextCycle.toLocaleDateString(undefined, { month: 'long', day: 'numeric'}) } />
       <TextField label={ translate("handle_settings.stats.user_id")} source="userId" />
     </SimpleShowLayout>
   </Box>;

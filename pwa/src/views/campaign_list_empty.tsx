@@ -1,16 +1,9 @@
-import {
-  CardActions, CardContent, CardHeader,
-  IconButton, Box, Button, Container, Paper, styled,
-  Toolbar, Typography, Skeleton, useMediaQuery
-} from '@mui/material';
-import { makeXUrl,  } from '../lib/auth_provider';
-import { ethers, parseUnits, formatEther, toBeHex, zeroPadValue, parseEther } from "ethers";
-import {  useTranslate, } from 'react-admin';
+import { CardContent, Typography } from '@mui/material';
+import { useTranslate } from 'react-admin';
+import { DeckCard } from './layout';
+import { Head2 } from '../components/theme';
 
-import { BareLayout, DeckCard } from './layout';
-import { Head1, Head2, CardTitle, BulletPoint, yellow, dark, red, light, green } from '../components/theme';
-
-const CampaignListEmpty = ({loginAs}) => {
+const CampaignListEmpty = () => {
   const translate = useTranslate();
   return <DeckCard id="campaign-list-empty">
     <CardContent>

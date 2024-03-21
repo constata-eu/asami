@@ -4,15 +4,11 @@
  * It uses a special data provider for registering a new public key to the server together with authentication details.
  */
 
-import { AuthProvider, HttpError } from "react-admin";
-import { ethers } from "ethers";
-import { rLogin } from "./rLogin";
-import * as React from 'react';
+import { AuthProvider } from "react-admin";
 import { Settings } from '../settings';
 import _ from 'lodash';
-import { createSessionDataProvider, defaultDataProvider, sha256sum} from "./data_provider";
+import { createSessionDataProvider } from "./data_provider";
 import {generateKeyPair, exportSPKI, exportPKCS8 } from 'jose';
-import pkceChallenge from "pkce-challenge";
 
 export function getAuthKeys() {
   return {
@@ -114,7 +110,7 @@ export const authProvider: AuthProvider = {
 
     return Promise.resolve();
   },
-  checkAuth: (a, b, c) => {
+  checkAuth: () => {
     let allSet = _.every(
       ['sessionPublicKey', 'sessionPrivateKey'],
       (k) => localStorage.getItem(k)

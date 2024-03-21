@@ -1,34 +1,14 @@
 /// <reference types="vite-plugin-svgr/client" />
 import { useEffect, useContext } from 'react';
-import {
-  Alert, Avatar, AlertTitle, Badge, Divider, Card, CardActions, CardContent, CardHeader,
-  Dialog, DialogActions, DialogContent, DialogTitle,
-  IconButton, Box, Button, Container, Paper, styled,
-  Toolbar, Typography, Skeleton, useMediaQuery
-} from '@mui/material';
+import { Alert, Avatar, CardContent, CardHeader, Dialog, DialogContent, Box, Button, Typography } from '@mui/material';
 import { makeXUrl,  } from '../lib/auth_provider';
-import { ethers, parseUnits, formatEther, toBeHex, zeroPadValue, parseEther } from "ethers";
+import { formatEther } from "ethers";
 import { publicDataProvider } from "../lib/data_provider";
-import {  
-  useCheckAuth,
-  useSafeSetState,
-  useStore,
-  useListController,
-  defaultExporter,
-  ListContextProvider,
-  CoreAdminContext,
-  useNotify,
-  useGetList,
-  useTranslate,
-  I18nContext
-} from 'react-admin';
-
+import { useSafeSetState, useStore, useListController, CoreAdminContext, useGetList, useTranslate, I18nContext } from 'react-admin';
 import { TwitterTweetEmbed } from 'react-twitter-embed';
 import { useNavigate } from 'react-router-dom';
 import { BareLayout, DeckCard } from './layout';
-import { Head1, Head2, CardTitle, BulletPoint, yellow, dark, red, light, green } from '../components/theme';
-import logo from '../assets/asami.png';
-import RootstockLogo from '../assets/rootstock.svg?react';
+import { Head2, yellow, light } from '../components/theme';
 import AsamiLogo from '../assets/logo.svg?react';
 import { useContracts } from "../components/contracts_context";
 import FacebookLogin from '@greatsumini/react-facebook-login';
@@ -44,9 +24,8 @@ import CampaignListEmpty from './campaign_list_empty';
 
 const Login = () => {
   const translate = useTranslate();
-  const [role, setRole] = useStore('user.role', 'advertiser');
+  const [, setRole] = useStore('user.role', 'advertiser');
   const [open, setOpen] = useSafeSetState(false);
-  const [error, setError] = useSafeSetState();
   const [pubDataProvider, setPubDataProvider] = useSafeSetState();
   const i18nProvider = useContext(I18nContext);
 
@@ -62,13 +41,9 @@ const Login = () => {
     return <></>;
   }
 
-  const loginAs = async (role) => {
-    try {
-      setRole(role);
-      setOpen(true);
-    } catch (e) {
-      setError(e.message)
-    }
+  const loginAs = async (newRole) => {
+    setRole(newRole);
+    setOpen(true);
   }
 
   return (
@@ -128,7 +103,6 @@ const Login = () => {
 };
 
 const PublicCampaignList = ({loginAs}) => {
-  const translate = useTranslate();
   const listContext = useListController({
     debounce: 500,
     disableSyncWithLocation: true,
@@ -231,7 +205,6 @@ const PublicXCampaign = ({loginAs, item}) => {
 
 const PublicInstagramCampaign = ({loginAs, item}) => {
   const translate = useTranslate();
-  const notify = useNotify();
   const {data, isLoading} = useGetList(
     "IgCampaignRule",
     { filter: {campaignIdEq: item.id}, perPage: 1,}
@@ -267,16 +240,15 @@ const LoginSelector = ({open, setOpen}) => {
   const translate = useTranslate();
   const { signLoginMessage } = useContracts();
   const navigate = useNavigate();
-  const [oauthVerifier, setOauthVerifier] = useStore('user.oauthChallenge');
 
-  const startXLogin = async (method) => {
+  const startXLogin = async () => {
     setOpen(false);
     const { url, verifier } = await makeXUrl();
     localStorage.setItem("oauthVerifier", verifier);
     document.location.href = url;
   };
 
-  const startEip712Login = async (method) => {
+  const startEip712Login = async () => {
     setOpen(false);
     const code = await signLoginMessage();
     navigate(`/eip712_login?code=${code}`);
