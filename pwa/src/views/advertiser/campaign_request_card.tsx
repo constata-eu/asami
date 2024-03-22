@@ -1,13 +1,13 @@
 import { useDataProvider, useSafeSetState, useTranslate } from "react-admin";
 import { Box, Button, CardContent, Typography} from "@mui/material";
 import { Dialog } from '@mui/material';
-import { toBeHex, zeroPadValue, parseEther } from "ethers";
 import { DeckCard } from '../layout';
 import { Head2 } from '../../components/theme';
 import { Form, TextInput, SaveButton, useNotify } from 'react-admin';
 import { Stack } from '@mui/material';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import { parseCampaignSiteAndContentId, defaultValidUntil } from '../../lib/campaign';
+import { etherToHex } from '../../lib/formatters';
 
 export const CampaignRequestCard = () => {
   const translate = useTranslate();
@@ -36,8 +36,8 @@ export const CampaignRequestCard = () => {
     values.campaignRequestInput = {
       contentId,
       site,
-      budget: zeroPadValue(toBeHex(parseEther("10")), 32),
-      priceScoreRatio: zeroPadValue(toBeHex(parseEther("0.001")), 32),
+      budget: etherToHex("10"),
+      priceScoreRatio: etherToHex("0.001"),
       validUntil: defaultValidUntil().toISOString(),
       topicIds: []
     };

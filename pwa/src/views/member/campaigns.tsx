@@ -9,14 +9,14 @@ import InstagramIcon from '@mui/icons-material/Instagram';
 import XIcon from '@mui/icons-material/X';
 import truncate from 'lodash/truncate';
 
-export const CampaignHeader = ({campaign, icon, children}) => {
+export const CampaignHeader = ({handle, campaign, icon, children}) => {
   const translate = useTranslate();
 
   return (<>
     <CardHeader
       avatar={ <Avatar sx={{ bgcolor: light }} >{icon}</Avatar> }
-      title={ translate("member_campaigns.header.title", {amount: formatEther(campaign.remaining)}) }
-      subheader={ translate("member_campaigns.header.subheader", {amount: formatEther(campaign.priceScoreRatio)}) }
+      title={ <Typography variant="h6">{translate("member_campaigns.header.title", {amount: formatEther(handle.price)}) }</Typography>}
+      subheader={ translate("member_campaigns.header.subheader") }
     />
     <Box px="10px">
       { children }
@@ -53,13 +53,14 @@ const ConfirmHideCampaign = ({campaignId, setPreference }) => {
   </>;
 }
 
-export const XCampaign = ({campaign, prefsContext, setPreference}) => {
+export const XCampaign = ({handle, campaign, prefsContext, setPreference}) => {
   const translate = useTranslate();
   const repostUrl = `https://twitter.com/intent/retweet?tweet_id=${campaign.contentId}&related=asami_club`;
   const attemptedOn = prefsContext.data.find((x) => x.campaignId == campaign.id)?.attemptedOn;
 
   return <DeckCard id={`campaign-container-${campaign.id}`} elevation={attemptedOn ? 1 : 10}>
     <CampaignHeader
+      handle={handle}
       icon={<XIcon/>}
       campaign={campaign}
     >
@@ -96,7 +97,7 @@ export const XCampaign = ({campaign, prefsContext, setPreference}) => {
   </DeckCard>;
 }
 
-export const IgCampaign = ({campaign, prefsContext, setPreference}) => {
+export const IgCampaign = ({handle, campaign, prefsContext, setPreference}) => {
   const translate = useTranslate();
   const {data, isLoading} = useGetList(
     "IgCampaignRule",
@@ -115,6 +116,7 @@ export const IgCampaign = ({campaign, prefsContext, setPreference}) => {
     <CampaignHeader
       icon={<InstagramIcon/>}
       campaign={campaign}
+      handle={handle}
     >
       { attemptedOn &&
         <Alert id={`alert-repost-attempted-${campaign.id}`}
@@ -134,9 +136,9 @@ export const IgCampaign = ({campaign, prefsContext, setPreference}) => {
     </CampaignHeader>
 
     <CardContent sx={{ pt: "0px" }}>
-      <Box my="1em" display="flex" flexDirection="column" alignItems="center">
+      <Box mt="1em" display="flex" flexDirection="column" alignItems="center">
         <img style={{maxWidth: "100%", maxHeight: "400px"}} src={dataUri} />
-        { !!caption && <Typography sx={{lineBreak:"anywhere" }}>{ truncate(caption, {length: 120}) }
+        { !!caption && <Typography sx={{lineBreak:"anywhere", mt: "1em" }}>{ truncate(caption, {length: 120}) }
         </Typography> }
       </Box>
     </CardContent>

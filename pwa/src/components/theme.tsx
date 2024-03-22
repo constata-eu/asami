@@ -96,6 +96,17 @@ export const Head2 = styled("h2")(({ theme }) => ({
   margin: 0,
 }));
 
+export const Head3 = styled("h3")(({ theme }) => ({
+  fontFamily: "'LeagueSpartanBold'",
+  fontSize: "15px",
+  lineHeight: "1em",
+  letterSpacing: "-0.05em",
+  [theme.breakpoints.up('md')]: {
+    fontSize: "20px",
+  },
+  margin: 0,
+}));
+
 export const CardTitle = ({text, ...props}) => {
   const translate = useTranslate();
 

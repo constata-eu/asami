@@ -1,7 +1,7 @@
 import { useSafeSetState, useTranslate } from "react-admin";
 import { LinearProgress, Alert, Box, Button, CardContent, Typography } from "@mui/material";
 import { Dialog } from '@mui/material';
-import { toBeHex, zeroPadValue, parseEther } from "ethers";
+import { etherToHex } from '../../lib/formatters';
 import { DeckCard } from '../layout';
 import { useContracts } from "../../components/contracts_context";
 import { Head2, light } from '../../components/theme';
@@ -58,7 +58,7 @@ export const MakeCampaignCard = ({account}) => {
 
   const validate = (values) => {
     let input = {
-      priceScoreRatio: BigInt(zeroPadValue(toBeHex(parseEther("0.001")), 32)),
+      priceScoreRatio: parseEther("0.001"),
       validUntil: BigInt(Math.floor(defaultValidUntil().getTime() / 1000)),
       topics: []
     };

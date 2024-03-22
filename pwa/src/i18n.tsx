@@ -18,11 +18,10 @@ export const messages = {
 
 export const LOCALES = ["en","es"];
 
-let fromBrowser = navigator.language.length > 2 ? navigator.language.substring(1,3) : navigator.language;
+let fromBrowser = navigator.language.length > 2 ? navigator.language.substring(0,2) : navigator.language;
 
 if (LOCALES.indexOf(fromBrowser) < 0) {
   fromBrowser = "en";
 }
 
 export const browserLocale = fromBrowser;
-//export const browserLocale = 'es';

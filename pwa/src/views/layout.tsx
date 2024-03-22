@@ -90,8 +90,7 @@ export const BareLayout = ({children}) => {
       <Container maxWidth="xl">
         { children }
         <Divider light sx={{ mt: "5em", mb: "2em" }}/>
-
-        <Button href="https://rootstock.io/" target="_blank" sx={{textDecoration: "none", mb: "2em"}}>
+        <Button href="https://explorer.rootstock.io/address/0x16039ab4e9b0bf3b79f9a221898d152151026034" target="_blank" sx={{textDecoration: "none", mb: "2em"}}>
           <Box display="flex" flexDirection="column">
             <Typography fontSize="1em" textTransform="uppercase" fontFamily="LeagueSpartanBold">
               { translate("footer.built_with") }

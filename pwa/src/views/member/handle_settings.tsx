@@ -1,6 +1,6 @@
 import { useTranslate} from "react-admin";
 import { DeckCard } from '../layout';
-import { Box, CardContent, Skeleton, Typography } from "@mui/material";
+import { Box, Chip, CardContent, Skeleton, Typography } from "@mui/material";
 import { formatEther } from "ethers";
 import { Head2 } from '../../components/theme';
 import { SimpleForm, CreateBase, TextInput, SaveButton, useNotify } from 'react-admin';
@@ -59,19 +59,14 @@ export const HandleStats = ({handle, id}) => {
 
   return <Box id={id}>
     <SimpleShowLayout record={handle} sx={{ p: 0, mt: 1}}>
-      <TextField label={ translate("handle_settings.stats.username")} source="username" />
-      <FunctionField label={ translate("handle_settings.stats.sparkles") } render={ h => `${BigInt(h.score)} ✨` }  />
       <FunctionField label={ translate("handle_settings.stats.price_per_repost") }
         render={ h => `${formatEther(h.price)} DOC` } />
-      <FunctionField label={ translate("handle_settings.stats.sparkle_rate") }
-        render={ h => {
-          const score = BigInt(h.score);
-          const ratio = score > BigInt(0) ? BigInt(h.price) / score : BigInt(0);
-          return formatEther(ratio);
-        }} />
+      <FunctionField label={ translate("handle_settings.stats.username")}
+        render={ (x) => <>{x.username} <Typography variant="span" sx={{fontSize: "0.8em", lineHeight: "1em" }}>[{x.userId}]</Typography></> }
+      />
+      <FunctionField label={ translate("handle_settings.stats.score") } render={ h => `${BigInt(h.score)} 力` }  />
       <FunctionField label={ translate("handle_settings.stats.locked_until") }
         render={ () => nextCycle.toLocaleDateString(undefined, { month: 'long', day: 'numeric'}) } />
-      <TextField label={ translate("handle_settings.stats.user_id")} source="userId" />
     </SimpleShowLayout>
   </Box>;
 }

@@ -16,10 +16,13 @@
   },
   "claim_account": {
     "success": "El administrador the entregará el control de tu cuenta pronto.",
-    "error": "Ups, no pudimos recibir tu pedido. Por favor contáctate con el administrador en X o Instagram.",
-    "claim_pending": "Podrás crear campañas nuevas cuando el administrador te entregue el control de tu cuenta.",
-    "claim_available": "Como no has conetado tu billetera WEB3, tus campañas serán revisadas y fondeadas por el administrador del club, sujeto a fondos disponibles. Conecta tu billetera WEB3 para recibir control de tu cuenta y crear campañas cuando quieras con tus propios fondos.",
-    "claim_button": "Conectar billetera"
+    "error": "Ups, no pudimos recibir tu pedido. Por favor contáctate con el administrador en X o Instagram."
+  },
+  "advertiser_help": {
+    "title": "Un tip:",
+    "DONE": "Puedes crear una campaña en X o en Instagram poniendo el enlace a algún posteo, y los miembros lo amplificarán. Recuerda que ellos tienen la última palabra, así que haz un posteo amigable!",
+    "CLAIMING": "Podrás crear campañas nuevas cuando el administrador te entregue el control de tu cuenta.",
+    "NO_CLAIM": "Como no has conectado tu billetera WEB3, solo puedes sugerir campañas, que serán revisadas y fondeadas por el administrador del club, sujeto a fondos disponibles. Conecta tu billetera WEB3 para recibir control de tu cuenta y crear campañas cuando quieras con tus propios fondos."
   },
   "campaign_request_list": {
     "title": "Pedidos de campañas",
@@ -53,7 +56,7 @@
   "make_campaign_card": {
     "title": "¡Inicia una campaña!",
     "pay_members": "Paga a los miembros del club para repostear cualquier post de X, o para clonar cualquier post de Instagram.",
-    "doc_funded": "Las campañas se financian en DOC, una stablecoin vinculada al USD de Money On Chain, que puedes acuñar tú mismo usando RBTC.",
+    "doc_funded": "Las campañas se financian en DOC, una stablecoin vinculada al US$ de Money On Chain, que puedes acuñar tú mismo usando RBTC.",
     "get_doc": "Ve a conseguir algo de DOC",
     "start_campaign": "Iniciar campaña",
     "close": "Cerrar",
@@ -103,8 +106,8 @@
       "content": "No volveremos a ofrecerte esta campaña, esta acción no puede deshacerse."
     },
     "header": {
-      "title": "Pagan hasta $%{amount}",
-      "subheader": "$%{amount} por chispa ✨"
+      "title": "Te paga $%{amount}",
+      "subheader": "*minus fees"
     },
     "x": {
       "main_button": "Repostea y cobra",
@@ -130,7 +133,7 @@
   "help_card": {
     "title": "¿Qué sigue?",
     "collaborate": "Puedes colaborar en una campaña, pero recuerda, la gente te está escuchando, sé responsable y fiel a ti mismo al elegir qué contenido amplificar.",
-    "verify_handles": "Ayúdanos a verificar tu cuenta de X o Instagram. Te daremos una calificación de chispas, y podrás empezar a ganar por tus republicaciones",
+    "verify_handles": "Ayúdanos a verificar tu cuenta de X o Instagram. Calcularemos tu nivel de influencia, y podrás empezar a ganar por tus republicaciones",
     "wait_for_campaigns": "No hay campañas disponibles para que amplifiques en este momento. ¡Vuelve mañana!"
   },
   "handle_settings": {
@@ -139,13 +142,12 @@
       "username": "Nombre de usuario",
       "user_id": "ID de usuario",
       "price_per_repost": "Precio por republicación",
-      "sparkles": "Chispas",
-      "sparkle_rate": "DOC por Chispa",
+      "score": "Nivel de influencia",
       "locked_until": "Valores vigentes hasta"
     },
     "ig": {
       "create_request": {
-        "text": "Tu cuenta de Instagram debe ser pública, y necesitamos verificar que eres el propietario para darte tus chispas, así puedes recibir pago por republicar.",
+        "text": "Tu cuenta de Instagram debe ser pública, y necesitamos verificar que eres el propietario para calcular tu nivel de influencia, así podrás recibir pagos por republicar.",
         "username_label": "Tu nombre de usuario en Instagram",
         "username_help": "Ejemplo: @zuck",
         "save": "Continuar",
@@ -165,7 +167,7 @@
     },
     "x": {
       "create_request": {
-        "text": "Verifica la propiedad de tu cuenta de X para obtener tus chispas, y recibir pago por republicar.",
+        "text": "Verifica la propiedad de tu cuenta de X para calcular tu nivel de influencia, y recibir pago por republicar.",
         "username_label": "Tu nombre en X",
         "username_help": "Ejemplo: @jack",
         "save": "Continuar",
@@ -196,11 +198,13 @@
     "claimed": {
       "doc_label": "Saldo en DOC",
       "asami_label": "Saldo en ASAMI",
+      "added": "%{symbol} agregado a tu billetera.",
+      "not_added": "%{symbol} no se pudo agregar a tu billetera.",
       "address": "Dirección RSK",
       "last_payout_amount_label": "Última distribución de comisiones",
       "last_payout_date_label": "Fecha de la última distribución",
       "next_payout_date_label": "Fecha de la próxima distribución",
-      "participate_in_governance": "Reclamaste tu cuenta, tus recompensas se pagarán directamente a tu cartera, y también obtendrás una parte de las comisiones del protocolo."
+      "participate_in_governance": "Reclamaste tu cuenta, tus recompensas se pagarán directamente a tu cartera, y también obtendrás una parte de las comisiones del protocolo. Asegúrate de agregar los tokens ASAMI y DOC a tu wallet con los botones de arriba."
     }
   },
   "logged_in_nav_card": {
@@ -214,13 +218,12 @@
     "ig_handle": "asamiclub_es",
     "x_handle": "asami_club_es",
     "unexpected_error": "Ocurrió un error inesperado iniciando tu sesión",
-    "error_description_title": "Tenemos una descripción del error:"
+    "error_description_title": "Tenemos una descripción del error:",
     "try_again": "Intentar nuevamente",
     "contact_us": "Contáctanos"
   },
   "public_card_header": {
-    "title": "Paga hasta $%{amount}",
-    "subheader": "$%{amount} por chispa ✨"
+    "title": "Paga hasta US$%{amount} en DOC"
   },
   "public_x_campaign": {
     "main_button": "Cobra por Repost"
@@ -237,11 +240,12 @@
     "message": "Ofrece una recompensa para que los miembros del club amplifiquen tu publicación en Instagram o X.",
     "button": "Envíar publicación"
   },
-  "got_sparkles": {
-    "title": "¿Tienes chispa ✨?",
-    "message": "Calificamos tu cuenta con una cantidad de chispas cada 15 días.",
-    "message_2": "¡Los anunciantes pagan por cantidad de chispas!",
-    "button": "Únete al club"
+  "join_now": {
+    "title": "Monetiza cualquier nivel de audiencia.",
+    "message": "Comparte contenido de anunciantes en X e Instagram y recibe crypto equivalente a US$, con recompensas basadas en tu alcance genuino.", 
+    "no_crypto_no_problem": "¿No usas crypto?",
+    "learn_later": "¡No hay problema! Puedes acumular recompensas ahora, y aprender a usar crypto luego.",
+    "button": "Únete al club gratis!"
   },
   "login_form": {
     "disclaimer_title": "Consentimiento para transferir tus datos fuera de la UE",
@@ -252,28 +256,21 @@
     "consent_with_x": "Aceptar con X",
     "consent_with_facebook": "Aceptar con Facebook",
     "web3_consent_title": "Aceptar e ingresar con tu billetera WEB3",
-    "web3_consent_body": "Para gastar tus recompensas en Dólar on Chain, obtener tokens ASAMI, y votar.",
+    "web3_consent_body": "Para gastar tus recompensas, obtener tokens ASAMI, y votar.",
     "consent_and_connect": "Aceptar y conectar"
   },
   "about_us": {
     "go_back_button": "Volver",
     "club_title": "Realmente es un club, y te invitamos a unirte!",
     "club_description": [
-      "Somos un club de personas que reciben pago por republicar contenido en redes sociales.",
-      "Puedes participar como un <b>Anunciante</b>, un <b>Miembro</b>, o incluso como el <b>Administrador</b> del club.",
-      "<b>Los Anunciantes crean campañas</b> al enviar el enlace de una publicación y cuánto desean gastar.",
-      "<b>Los Miembros</b> revisan todas las campañas disponibles y deciden <b>colaborar republicándolas</b>, y luego reciben pago por ello.",
-      "<b>El Administrador</b> vigila las republicaciones de los miembros y <b>las registra</b> como colaboraciones.",
-      "<b>El Administrador</b> también investiga la red personal de cada miembro y <b>los califica con chispas ✨</b>.",
-      "<b>Los Miembros pueden establecer su propio precio</b>, lo que determina su <b>precio por chispa ✨</b>, y actualizarlo cada 15 días.",
-      "<b>Los Anunciantes pueden exigir un precio específico por chispa ✨</b> de los miembros antes de que puedan colaborar en su campaña.",
-      "Las reglas que rigen estos 3 roles están <b>impuestas por un contrato inteligente llamado ASAMI</b>, que existe en la blockchain pública de RSK.",
-      "Cuando se registra una colaboración, se emite un pago al miembro, y ASAMI cobra una comisión de ello.",
-      "Además, cada vez que se recauda una comisión, se emite y distribuye una cantidad equivalente de <b>Token de ASAMI</b> al miembro, al anunciante y al administrador. Reciben el 10%, 10% y 80% de los nuevos tokens respectivamente.",
-      "<b>Todas las comisiones recogidas se distribuyen</b> proporcionalmente a todos los tenedores de tokens de ASAMI cada 15 días.",
-      "El Token de ASAMI es un <b>token ERC20 estándar</b> que puede ser transferido, comprado y vendido en mercados secundarios.",
-      "Los tenedores de tokens también pueden <b>votar para cambiar la tasa de comisión de ASAMI</b>, lo que afecta sus ingresos de tokens a corto plazo, pero también su dilución.",
-      "<b>Un nuevo administrador puede ser elegido</b> por los tenedores de tokens también."
+      "Somos un club en donde nos pagamos por repostear contenido en redes sociales.",
+      "Nuestro objetivo es medir la influencia genuina de cada uno, y recompensar la participación en la creación de tendencias.",
+      "Asami no es exclusivo para creadores de contenido, cualquiera puede participar creando tendencias, con cualquier audencia.",
+      "Cuando se registre un repost, recibirás DOC, y el club cobrará una comisión.",
+      "DOC &ndash;<i>Dollar on Chain</i>&ndash; es una criptomoneda con un valor estable atado al US$.",
+      "Como miembro fundador, también se te emitirán tokens ASAMI, que te permitirán votar en temas como las comisiones, el rol del administrador, y te distribuirán ingresos de las comisiones.",
+      "<a href='https://asami.ams3.digitaloceanspaces.com/ASAMI%20WHITEPAPER%20ES.pdf' target='_blank'>MIRA EL WHITEPAPER</a> para enterarte más sobre nuestra misión y el funcionamiento del club.",
+      "Asami es un <i>Contrato inteligente</i> en la blockchain de Rootstock, <a href='https://explorer.rootstock.io/address/0x16039ab4e9b0bf3b79f9a221898d152151026034'>puedes verlo aquí.</a>."
     ],
     "privacy_statement_title": "Tenemos una importante declaración de privacidad que hacer.",
     "privacy_statement": [

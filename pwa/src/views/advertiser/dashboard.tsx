@@ -3,7 +3,7 @@ import { useAuthenticated, useSafeSetState, useGetOne} from "react-admin";
 import { Box, Card, CardContent, Container, Skeleton, Typography } from "@mui/material";
 import { formatEther } from "ethers";
 import { LoggedInNavCard, ColumnsContainer, DeckCard } from '../layout';
-import { CardTitle } from '../../components/theme';
+import { CardTitle, Head2, green } from '../../components/theme';
 import { viewPostUrl } from '../../lib/campaign';
 import { Pagination, Datagrid, TextField, FunctionField} from 'react-admin';
 import { useListController, ListContextProvider, useTranslate } from 'react-admin';
@@ -25,41 +25,50 @@ const Dashboard = () => {
 
   const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
 
-  if(isLoading) {
+  if(isLoading || !data) {
     return <Container maxWidth="md">
       <Skeleton animation="wave" />
     </Container>;
   }
 
-  const hasClaim = !!data.status;
-  const hasPendingClaim = data.status == "RECEIVED" || data.status == "SUBMITTED";
-  const isFullMember = data.status == "DONE";
+  let claim;
+  if (!data.status) {
+    claim = "NO_CLAIM";
+  } else if (data.status == "DONE") {
+    claim = "DONE";
+  } else {
+    claim = "CLAIMING";
+  }
 
   return (<Box p="1em" id="advertiser-dashboard">
     <ColumnsContainer>
       <LoggedInNavCard />
+      <AdvertiserHelpCard claim={claim} />
       <BalanceCard />
-      { !hasClaim && <CampaignRequestCard /> }
-      { isFullMember && <MakeCampaignCard account={data} /> }
+      { claim == "NO_CLAIM" && <CampaignRequestCard /> }
+      { claim == "DONE" && <MakeCampaignCard account={data} /> }
 
-      { hasPendingClaim && <DeckCard id="advertiser-claim-account-pending">
-        <CardContent>{ translate("claim_account.claim_pending") }</CardContent>
-        </DeckCard>
-      }
-
-      { !hasClaim && <DeckCard id="advertiser-claim-account-none">
-          <CardContent>
-            { translate("claim_account.claim_available") }
-            <ClaimAccountButton variant="outlined"
-              label={ translate("claim_account.claim_button") } id="advertiser-claim-account-button"/>
-          </CardContent>
-        </DeckCard>  
-      }
     </ColumnsContainer>
 
     <CampaignRequestList {...{needsRefresh, setNeedsRefresh}} />
     <CampaignList/>
   </Box>);
+}
+
+const AdvertiserHelpCard = ({claim}) => {
+  const translate = useTranslate();
+  const id = {
+    "NO_CLAIM": "advertiser-claim-account-none",
+    "CLAIMING": "advertiser-claim-account-pending",
+    "DONE": "advertiser-claim-account-done",
+  }[claim];
+
+  return <DeckCard id="advertiser-help-card" borderColor={green}>
+    <CardContent>
+      <Head2 sx={{ color: green}} >{ translate('advertiser_help.title') }</Head2>
+      <Typography id={id} mt="1em">{ translate(`advertiser_help.${claim}`) }</Typography>
+    </CardContent>
+  </DeckCard>;
 }
 
 const CampaignRequestList = ({needsRefresh, setNeedsRefresh}) => {
@@ -69,7 +78,7 @@ const CampaignRequestList = ({needsRefresh, setNeedsRefresh}) => {
     disableSyncWithLocation: true,
     filter: {statusIn: ["RECEIVED", "PAID", "SUBMITTED"]},
     queryOptions: {
-      refetchInterval: 2000,
+      refetchInterval: 5000,
     },
     perPage: 20,
     resource: "CampaignRequest",
@@ -116,7 +125,7 @@ const CampaignList = () => {
     filter: {accountIdEq: getAuthKeys().session.accountId },
     perPage: 20,
     queryOptions: {
-      refetchInterval: 3000,
+      refetchInterval: 5000,
     },
     resource: "Campaign",
   });
