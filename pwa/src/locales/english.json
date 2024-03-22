@@ -133,7 +133,7 @@
   "help_card": {
     "title": "What's next?",
     "collaborate": "You can collaborate in a campaign, but remember, people are listening to you, be responsible an true to yourself when choosing what content to amplify.",
-    "verify_handles": "Help us verify your X or Instagram account. We'll asses your influence level, and you'll be able to start earning for your reposts",
+    "verify_handles": "Help us verify your X or Instagram account. We'll estimate your influence level, and you'll be able to start earning for your reposts",
     "wait_for_campaigns": "There are no campaigns for you to amplify at the moment. Come back tomorrow!"
   },
   "handle_settings": {
@@ -147,7 +147,7 @@
     },
     "ig": {
       "create_request": {
-        "text": "Your instagram account must be public, and we need to verify you own it, to assess your influence level, so you can get paid to repost.",
+        "text": "Your instagram account must be public, and we need to verify you own it, to estimate your influence level, so you can get paid to repost.",
         "username_label": "Your instagram username",
         "username_help": "Example: @zuck",
         "save": "Continue",
