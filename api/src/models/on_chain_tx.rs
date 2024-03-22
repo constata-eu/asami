@@ -241,7 +241,7 @@ impl OnChainTx {
   }
 
   pub fn reverted(&self) -> bool {
-    self.attrs.status == OnChainTxStatus::Success
+    self.attrs.status == OnChainTxStatus::Reverted
   }
 
   pub fn submitted(&self) -> bool {

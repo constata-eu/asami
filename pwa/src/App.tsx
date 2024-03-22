@@ -1,21 +1,8 @@
 import {useEffect } from "react";
-import {
-  Admin,
-  Resource,
-  ListGuesser,
-  EditGuesser,
-  ShowGuesser,
-  CustomRoutes,
-  useSafeSetState,
-  useStore,
-  Authenticated
-} from "react-admin";
+import { Admin, CustomRoutes, useSafeSetState, useStore, Authenticated } from "react-admin";
 import { ContractsProvider } from './components/contracts_context';
 import { Settings } from './settings';
-import {
-  GoogleReCaptchaProvider,
-} from 'react-google-recaptcha-v3';
-
+import { GoogleReCaptchaProvider, } from 'react-google-recaptcha-v3';
 import { Route, useSearchParams } from "react-router-dom";
 import { authProvider } from "./lib/auth_provider";
 import { defaultDataProvider } from "./lib/data_provider";
@@ -25,13 +12,10 @@ import asamiTheme from './components/theme';
 import { BareLayout } from './views/layout';
 import AdvertiserDashboard from "./views/advertiser/dashboard";
 import MemberDashboard from "./views/member/dashboard";
-import { Alert, AlertTitle, AppBar, Divider, Toolbar, IconButton, Box, Button, Container, Paper, styled, Backdrop, Typography, Skeleton, useMediaQuery } from '@mui/material';
-import { Head1 } from './components/theme';
-import logo from './assets/asami.png';
-import rootstock from './assets/rootstock.png';
+import { Container, Skeleton } from '@mui/material';
 import { XLogin, FacebookLogin, Eip712Login, OneTimeTokenLogin } from './views/oauth_redirect';
 import polyglotI18nProvider from 'ra-i18n-polyglot';
-import { messages, browserLocale, LOCALES } from "./i18n";
+import { messages, browserLocale } from "./i18n";
 
 const Dashboard = () => {
   const [searchParams,] = useSearchParams();

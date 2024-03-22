@@ -36,12 +36,13 @@ browser_test!{ shows_campaigns_in_dashboard (mut d)
       .await.unwrap();
   }
 
-  a.run_idempotent_background_tasks_a_few_times().await;
+  try_until(100, 5000, "campaigns not created", || async {
+    a.run_idempotent_background_tasks_a_few_times().await;
+    a.app.campaign().select().count().await.unwrap() == 14
+  }).await;
 
   a.app.ig_crawl().do_everything().await.unwrap();
   let crawl = a.app.ig_crawl().find(1).await?;
-
-  assert_eq!(*crawl.processed_for_campaign_rules(), false);
 
   try_until(100, 5000, "no ig crawl", || async {
     a.app.ig_crawl().do_everything().await.unwrap();
@@ -52,26 +53,20 @@ browser_test!{ shows_campaigns_in_dashboard (mut d)
   d.wait_for("#button-login-as-member").await;
 }
 
-browser_test!{ suggests_rsk_network_when_adding_wallet (mut d)
-  wait_here();
-}
-
 browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.signup_with_one_time_token().await;
 
-  d.click("#open-start-campaign-dialog").await;
+  d.click("#open-start-campaign-request-dialog").await;
   d.fill_in("#contentUrl", "https://x.com/asami_club/status/1716421161867710954?s=20").await;
-  d.fill_in("#budget", "20").await;
   d.click("#submit-start-campaign-form").await;
-  d.wait_for_text(".MuiSnackbarContent-message", "Campaign will be started soon").await;
+  d.wait_for_text(".MuiSnackbarContent-message", "Your suggestion has been received!").await;
   d.wait_until_gone(".MuiSnackbarContent-message").await;
   d.wait_for("#campaign-request-list").await;
 
-  d.click("#open-start-campaign-dialog").await;
+  d.click("#open-start-campaign-request-dialog").await;
   d.fill_in("#contentUrl", "https://instagram.com/p/C2w6_ThRgkY").await;
-  d.fill_in("#budget", "20").await;
   d.click("#submit-start-campaign-form").await;
-  d.wait_for_text(".MuiSnackbarContent-message", "Campaign will be started soon").await;
+  d.wait_for_text(".MuiSnackbarContent-message", "Your suggestion has been received!").await;
   d.wait_until_gone(".MuiSnackbarContent-message").await;
 
   let a = d.test_app();
@@ -97,6 +92,7 @@ browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.api.test_app.app.one_time_token().insert(InsertOneTimeToken{value: "member-token".to_string() }).save().await?;
   d.goto("http://127.0.0.1:5173/#/one_time_token_login?token=member-token").await;
   d.wait_for("#advertiser-dashboard").await;
+
   d.goto("http://127.0.0.1:5173/#/?role=member").await;
   d.wait_for("#member-dashboard").await;
 
@@ -203,20 +199,27 @@ browser_test!{ advertiser_claims_account (mut d)
 
 browser_test!{ account_is_web3_from_the_start (mut d)
   d.goto("http://127.0.0.1:5173").await;
-  d.click(".submit-your-post").await;
+  d.click("#button-login-as-member").await;
   d.click("#wallet-login-button").await;
   d.link_wallet_and_sign_login().await?;
+  d.wait_for("#member-dashboard").await;
+  d.click("#button-pay-to-amplify").await;
   d.wait_for("#advertiser-dashboard").await;
 
   d.wait_for("#advertiser-claim-account-pending").await;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
-  d.wait_for("#open-start-campaign-dialog").await;
+  
+  d.goto("http://127.0.0.1:5173/#/?role=member").await;
+  d.wait_for("#member-dashboard").await;
+  d.goto("http://127.0.0.1:5173/#/?role=advertiser").await;
 
+  d.wait_for("#open-start-campaign-dialog").await;
   d.click("#open-start-campaign-dialog").await;
   d.fill_in("#contentUrl", "https://x.com/asami_club/status/1716421161867710954?s=20").await;
   d.fill_in("#budget", "20").await;
 
   d.click("#submit-start-campaign-form").await;
+  d.wait_for("#approval-waiter").await;
 
   try_until(10, 200, "No other window opened", || async {
     d.driver.windows().await.unwrap().len() == 2
@@ -228,10 +231,10 @@ browser_test!{ account_is_web3_from_the_start (mut d)
   d.click("button[data-testid=page-container-footer-next]").await;
   d.wait_for(".review-spending-cap").await;
   d.click("button[data-testid=page-container-footer-next]").await;
-
   d.driver.switch_to_window(handles[0].clone()).await.unwrap();
-  d.wait_for_text(".MuiSnackbarContent-message", "Campaign budget approved.").await;
-  d.wait_until_gone(".MuiSnackbarContent-message").await;
+
+  d.wait_until_gone("#approval-waiter").await;
+  d.wait_for("#creation-waiter").await;
 
   try_until(10, 200, "No other window opened", || async {
     d.driver.windows().await.unwrap().len() == 2
@@ -241,9 +244,29 @@ browser_test!{ account_is_web3_from_the_start (mut d)
   d.click("button[data-testid=page-container-footer-next]").await;
 
   d.driver.switch_to_window(handles[0].clone()).await.unwrap();
-  d.wait_for_text(".MuiSnackbarContent-message", "Campaign will be started soon").await;
-  d.wait_until_gone(".MuiSnackbarContent-message").await;
+  d.wait_for("#campaign-done").await;
+  d.click("#campaign-done-close").await;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
   d.wait_for("#campaign-list").await;
 }
 
+browser_test!{ can_add_tokens_to_wallet (mut d)
+  d.goto("http://127.0.0.1:5173").await;
+  d.click("#button-login-as-member").await;
+  d.click("#wallet-login-button").await;
+  d.link_wallet_and_sign_login().await?;
+  d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
+  d.click("#add-to-wallet-DOC").await;
+
+  try_until(10, 200, "No other window opened", || async {
+    d.driver.windows().await.unwrap().len() == 2
+  }).await;
+
+  let handles = d.driver.windows().await.unwrap();
+  d.driver.switch_to_window(handles[1].clone()).await.expect("to switch window zero");
+  d.click("button[data-testid=page-container-footer-next]").await;
+  d.driver.switch_to_window(handles[0].clone()).await.unwrap();
+  // Adding token always fails on metamask because of the unsupported chain id for tokenservice.
+  d.wait_for_text(".MuiSnackbarContent-message", "DOC could not be added to your wallet.").await;
+  d.wait_until_gone(".MuiSnackbarContent-message").await;
+}

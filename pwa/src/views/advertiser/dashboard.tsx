@@ -1,101 +1,53 @@
 import { useEffect } from "react";
-import { useDataProvider, useAuthenticated, useSafeSetState, useTranslate, useGetList} from "react-admin";
-import LoadingButton from '@mui/lab/LoadingButton';
-import { Alert, Box, Button, Card, CardActions, CardContent, Container, FormControl, FormHelperText, InputLabel, MenuItem, Select, Skeleton, Typography, IconButton } from "@mui/material";
-import { Dialog, DialogContent, DialogTitle, DialogActions } from '@mui/material';
-import { ethers, parseUnits, formatEther, toBeHex, zeroPadValue, parseEther } from "ethers";
+import { useAuthenticated, useSafeSetState, useGetOne} from "react-admin";
+import { Box, Card, CardContent, Container, Skeleton, Typography } from "@mui/material";
+import { formatEther } from "ethers";
 import { LoggedInNavCard, ColumnsContainer, DeckCard } from '../layout';
-import schnorr from "bip-schnorr";
-import { Buffer } from "buffer";
-import Login from "./views/login";
-import { useContracts } from "../../components/contracts_context";
-import { Head1, Head2, BulletPoint, CardTitle } from '../../components/theme';
-import LoginIcon from '@mui/icons-material/Login';
-import _ from 'lodash';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { DateField } from '@mui/x-date-pickers/DateField';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
-import dayjs from 'dayjs';
+import { CardTitle, Head2, green } from '../../components/theme';
 import { viewPostUrl } from '../../lib/campaign';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import { Toolbar, Create, SimpleForm, CreateBase, Form, TextInput, RichTextInput, SaveButton, useNotify } from 'react-admin';
-import { ListBase, Title, ListToolbar, Pagination, Datagrid, TextField, FunctionField} from 'react-admin';
-import {  
-    useListController,
-    defaultExporter,
-    ListContextProvider
-} from 'react-admin';
-
-import { Stack } from '@mui/material';
-import CampaignIcon from '@mui/icons-material/Campaign';
-import CloseIcon from '@mui/icons-material/Close';
+import { Pagination, Datagrid, TextField, FunctionField} from 'react-admin';
+import { useListController, ListContextProvider, useTranslate } from 'react-admin';
 import { getAuthKeys } from '../../lib/auth_provider';
 import ClaimAccountButton from '../claim_account';
+import { CampaignRequestCard } from './campaign_request_card';
+import { MakeCampaignCard } from './make_campaign_card';
+import BalanceCard from "../balance_card";
 
 const Dashboard = () => {
   useAuthenticated();
+  const translate = useTranslate();
+
+  const {data, isLoading} = useGetOne(
+    "Account",
+    { id: getAuthKeys().session.accountId },
+    { refetchInterval: (d) => d?.status == "DONE" ? false : 5000 }
+  );
 
   const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
 
-  const {data, isLoading} = useGetList(
-    "ClaimAccountRequest",
-    { refetchInterval: (data) => data?.[0]?.status == "DONE" ? false : 5000 }
-  );
-
-  const hasClaim = !!data?.[0];
-  const hasPendingClaim = hasClaim && data?.[0].status != "DONE";
-  const isFullMember = hasClaim && data?.[0].status == "DONE";
-
-  if(isLoading) {
+  if(isLoading || !data) {
     return <Container maxWidth="md">
       <Skeleton animation="wave" />
     </Container>;
   }
 
+  let claim;
+  if (!data.status) {
+    claim = "NO_CLAIM";
+  } else if (data.status == "DONE") {
+    claim = "DONE";
+  } else {
+    claim = "CLAIMING";
+  }
+
   return (<Box p="1em" id="advertiser-dashboard">
     <ColumnsContainer>
       <LoggedInNavCard />
+      <AdvertiserHelpCard claim={claim} />
+      <BalanceCard />
+      { claim == "NO_CLAIM" && <CampaignRequestCard /> }
+      { claim == "DONE" && <MakeCampaignCard account={data} /> }
 
-      <DeckCard>
-        <CardContent>
-          <Typography my="1em">
-            Just enter the URL of an <strong>X or Instagram</strong> post and how much you want to spend.
-            <br/>
-            The club will pay members for reposting it, at a rate of 0.001 - 0.005 USD for each <strong>real person</strong> reached.
-            <br/>
-            <strong>On X</strong> members will hit the "repost" button of your post.
-            <br/>
-            <strong>On Instagram</strong> members will copy your original post image and caption, and post it as their own. Make sure to use hashtags!
-            <br/>
-            Anyone will be able to participate reposting in the next 7 days.
-          </Typography>
-
-          { !hasPendingClaim && <CreateCampaign onSave={() => setNeedsRefresh(true) } /> }
-        </CardContent>
-      </DeckCard>
-
-      { hasPendingClaim && <DeckCard id="advertiser-claim-account-pending">
-          <CardContent>
-            You'll be able to start new campaigns again once your WEB3 account setup is done.
-          </CardContent>
-        </DeckCard>
-      }
-
-      { !hasClaim && <DeckCard id="advertiser-claim-account-none">
-          <CardContent>
-            Since you haven't connected your WEB3 wallet, your campaigns will be funded privately by the club's admin,
-            subject to how much funds are available.
-            Connect your wallet to claim your account and fund campaigns with your own budget.
-            <ClaimAccountButton variant="outlined" label="Connect wallet" id="advertiser-claim-account-button"/>
-          </CardContent>
-        </DeckCard>  
-      }
     </ColumnsContainer>
 
     <CampaignRequestList {...{needsRefresh, setNeedsRefresh}} />
@@ -103,13 +55,30 @@ const Dashboard = () => {
   </Box>);
 }
 
+const AdvertiserHelpCard = ({claim}) => {
+  const translate = useTranslate();
+  const id = {
+    "NO_CLAIM": "advertiser-claim-account-none",
+    "CLAIMING": "advertiser-claim-account-pending",
+    "DONE": "advertiser-claim-account-done",
+  }[claim];
+
+  return <DeckCard id="advertiser-help-card" borderColor={green}>
+    <CardContent>
+      <Head2 sx={{ color: green}} >{ translate('advertiser_help.title') }</Head2>
+      <Typography id={id} mt="1em">{ translate(`advertiser_help.${claim}`) }</Typography>
+    </CardContent>
+  </DeckCard>;
+}
+
 const CampaignRequestList = ({needsRefresh, setNeedsRefresh}) => {
+  const translate = useTranslate();
   const listContext = useListController({
     debounce: 500,
     disableSyncWithLocation: true,
     filter: {statusIn: ["RECEIVED", "PAID", "SUBMITTED"]},
     queryOptions: {
-      refetchInterval: 2000,
+      refetchInterval: 5000,
     },
     perPage: 20,
     resource: "CampaignRequest",
@@ -129,15 +98,18 @@ const CampaignRequestList = ({needsRefresh, setNeedsRefresh}) => {
   return (
     <ListContextProvider value={listContext}>
       <Card id="campaign-request-list" sx={{my:"3em"}}>
-        <CardTitle text="Requested campaigns" >
-          <Typography mt="1em">The club's admin will review and decide whether to fund your campaigns.</Typography>
-          <Typography>Claim your account using a WEB3 wallet to create campaigns yourself!</Typography>
+        <CardTitle text="campaign_request_list.title" >
+          <Typography mt="1em">{ translate("campaign_request_list.admin_will_review") }</Typography>
+          <Typography>{ translate("campaign_request_list.claim_to_create") }</Typography>
         </CardTitle>
         <Datagrid bulkActionButtons={false}>
-          <FunctionField label="Post" render={record => <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">See post</a>} />
-          <TextField source="status" />
-          <TextField source="site" />
-          <FunctionField label="Budget" render={record => `${formatEther(record.budget)} DOC` } />
+          <FunctionField label={ translate("campaign_request_list.post") } render={record =>
+            <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">{ translate("campaign_request_list.see_post") }</a>
+          } />
+          <TextField source="status" label={ translate("campaign_request_list.status") } />
+          <TextField source="site" label={ translate("campaign_request_list.site") }/>
+          <FunctionField label={ translate("campaign_request_list.budget") }
+            render={record => `${formatEther(record.budget)} DOC` } />
         </Datagrid>
         <Pagination rowsPerPageOptions={[]} />
       </Card>
@@ -145,14 +117,15 @@ const CampaignRequestList = ({needsRefresh, setNeedsRefresh}) => {
   );
 }
 
-const CampaignList = ({needsRefresh, setNeedsRefresh}) => {
+const CampaignList = () => {
+  const translate = useTranslate();
   const listContext = useListController({
     debounce: 500,
     disableSyncWithLocation: true,
     filter: {accountIdEq: getAuthKeys().session.accountId },
     perPage: 20,
     queryOptions: {
-      refetchInterval: 3000,
+      refetchInterval: 5000,
     },
     resource: "Campaign",
   });
@@ -164,132 +137,24 @@ const CampaignList = ({needsRefresh, setNeedsRefresh}) => {
   return (
     <ListContextProvider value={listContext}>
       <Card id="campaign-list" sx={{my:"3em"}}>
-        <CardTitle text="Active campaigns" >
-          <Typography mt="1em">The ASAMI club members will be reposting your content until the budget is fully spent.</Typography>
+        <CardTitle text="campaign_list.title" >
+          <Typography mt="1em">{ translate("campaign_list.text") } </Typography>
         </CardTitle>
         <Datagrid bulkActionButtons={false}>
-          <FunctionField label="Post" render={record => <a target="_blank" href={`https://x.com/twitter/status/${record.contentId}`} rel="noreferrer">See post</a>} />
-          <TextField source="site" />
-          <FunctionField label="Budget" render={record => `${formatEther(record.budget)} DOC` } />
-          <FunctionField label="Remaining" render={record => `${formatEther(record.remaining)} DOC` } />
-          <TextField source="validUntil" />
+          <FunctionField label={ translate("campaign_list.post") } render={record =>
+            <a target="_blank" href={`https://x.com/twitter/status/${record.contentId}`} rel="noreferrer">
+              { translate("campaign_list.see_post") }
+            </a>
+          } />
+          <TextField source="site" label={ translate("campaign_list.site") } />
+          <FunctionField label={ translate("campaign_list.budget") } render={record => `${formatEther(record.budget)} DOC` } />
+          <FunctionField render={record => `${formatEther(record.remaining)} DOC` } />
+          <TextField source="validUntil" label={ translate("campaign_list.ends_on") } />
         </Datagrid>
         <Pagination rowsPerPageOptions={[]} />
       </Card>
     </ListContextProvider>
   );
-}
-
-const CreateCampaign = ({onSave}) => {
-  const notify = useNotify();
-  const dataProvider = useDataProvider();
-  const { contracts } = useContracts();
-  const [open, setOpen] = useSafeSetState(false);
-  const {data, isLoading} = useGetList(
-    "ClaimAccountRequest",
-    { refetchInterval: (data) => data?.[0]?.status == "DONE" ? false : 5000 }
-  );
-  const handleClose = () => setOpen(false);
-
-  const defaultValidUntil = () => {
-    let currentDate = new Date();
-    currentDate.setTime(currentDate.getTime() + (30 * 24 * 60 * 60 * 1000));
-    return currentDate;
-  }
-
-  const onSubmit = async (values) => {
-    if (data?.[0]?.status == "DONE") {
-      const { doc, asami, asamiAddress, signer } = await contracts();
-      const input = values.campaignRequestInput;
-      const budget = BigInt(input.budget);
-      const site = { 'X': 0, 'NOSTR': 1, 'INSTAGRAM': 2 }[input.site];
-      const approval = await doc.approve(asamiAddress, budget, signer);
-      await approval.wait();
-      notify("Campaign budget approved.");
-      
-      const creation = await asami.makeCampaigns([
-        { site,
-          budget: BigInt(input.budget),
-          contentId: input.contentId,
-          priceScoreRatio: BigInt(input.priceScoreRatio),
-          topics: input.topicIds,
-          validUntil: BigInt(Math.floor(defaultValidUntil().getTime() / 1000))
-        }
-      ]);
-      await creation.wait();
-    } else {
-      await dataProvider.create("CampaignRequest", { data: { input: values.campaignRequestInput } });
-    }
-
-    onSave();
-    notify("Campaign will be started soon");
-    handleClose();
-  }
-
-  const validate = (values) => {
-    let errors = {};
-    let keys = getAuthKeys();
-    let input = { accountId: getAuthKeys().session.accountId};
-
-    try {
-      const u = new URL(values.contentUrl);
-      const path = u.pathname.replace(/\/$/, '').split("/");
-      const contentId = path[path.length - 1];
-
-      if ( (u.host.match(/\.?x\.com$/) || u.host.match(/\.?twitter\.com#/)) && contentId.match(/^\d+$/) ) {
-        input.site = "X";
-      } else if (u.host.match(/\.?instagram.com$/) && contentId.match(/^[\d\w\-_]+$/)) {
-        input.site = "INSTAGRAM";
-      } else {
-        errors.contentUrl = "The URL does not seem to be for an X nor Instagram post.";
-      }
-
-      input.contentId = contentId;
-    } catch {
-      errors.contentUrl = "Invalid URL";
-    }
-
-    try {
-      const parsed = parseEther(values.budget);
-      if( parsed <= parseEther("1") ) {
-        errors.budget = "Budget is too low, must be at least 1 DoC (USD)";
-      } else {
-        input.budget = zeroPadValue(toBeHex(parsed), 32);
-      }
-    } catch {
-      errors.budget = "Budget must be a number";
-    }
-
-    input.priceScoreRatio = zeroPadValue(toBeHex(parseEther("0.001")), 32);
-    input.validUntil = defaultValidUntil().toISOString();
-    input.topicIds = [];
-
-    values.campaignRequestInput = input;
-    return errors;
-  }
-
-  if ( isLoading ) {
-    return null;
-  }
-  
-  return (<Box>
-    <Button fullWidth variant="contained" size="large" id="open-start-campaign-dialog" onClick={ () => setOpen(true) }>
-      <CampaignIcon sx={{mr:"5px"}}/>
-      Start Campaign
-    </Button>
-    <Dialog id="start-campaign-dialog" open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <Box p="1em">
-        <Form sanitizeEmptyValues validate={validate} onSubmit={onSubmit}>
-          <TextInput fullWidth required={true} size="large" variant="filled" source="contentUrl" label="Your Instagram or X post URL" />
-          <TextInput fullWidth required={true} size="large" variant="filled" source="budget" label="How much to spend, in DoC (USD)" />
-          <Box width="100%" display="flex" gap="1em" justifyContent="space-between">
-            <SaveButton id="submit-start-campaign-form" size="large" label="Start Campaign" icon={<CampaignIcon/>} />
-            <Button size="large" variant="contained" color="grey" onClick={handleClose}>Cancel</Button>
-          </Box>
-        </Form>
-      </Box>
-    </Dialog>
-  </Box>);
 }
 
 export default Dashboard;

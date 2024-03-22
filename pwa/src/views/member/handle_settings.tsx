@@ -1,48 +1,11 @@
-import { useEffect } from "react";
-import { useDataProvider, useAuthenticated, useSafeSetState, useTranslate, ReferenceField, useGetAll, useGetOne, useGetList} from "react-admin";
-import { rLogin } from "../../lib/rLogin";
-import LoadingButton from '@mui/lab/LoadingButton';
-import { LoggedInNavCard, ColumnsContainer, DeckCard } from '../layout';
-import { viewPostUrl } from '../../lib/campaign';
-import { Alert, Box, Button, Card, CardActions, CardContent, Container, FormControl, FormHelperText, InputLabel, MenuItem, Select, Skeleton, Typography, IconButton } from "@mui/material";
-import { Dialog, DialogContent, DialogTitle, DialogActions } from '@mui/material';
-import { ethers, parseUnits, formatEther, toQuantity, toBeHex, zeroPadValue, parseEther } from "ethers";
-import schnorr from "bip-schnorr";
-import { Buffer } from "buffer";
-import Login from "./views/login";
-import { useContracts } from "../../components/contracts_context";
-import { Head1, Head2, BulletPoint, CardTitle } from '../../components/theme';
-import LoginIcon from '@mui/icons-material/Login';
-import _ from 'lodash';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { DateField } from '@mui/x-date-pickers/DateField';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
-import dayjs from 'dayjs';
-import { nip19 } from 'nostr-tools';
-import { TwitterTweetEmbed } from 'react-twitter-embed';
-import { Settings } from '../../settings';
-import AsamiLogo from '../../assets/logo.svg?react';
-import XIcon from '@mui/icons-material/X';
-import Paper from '@mui/material/Paper';
-import { Toolbar, Create, Confirm, SimpleForm, CreateBase, Form, TextInput, RichTextInput, SaveButton, useNotify } from 'react-admin';
-import { ListBase, Title, ListToolbar, Pagination, Datagrid, TextField, FunctionField, RecordContextProvider, SimpleShowLayout} from 'react-admin';
-import {  
-    useListController,
-    defaultExporter,
-    ListContextProvider
-} from 'react-admin';
-
+import { useTranslate} from "react-admin";
+import { DeckCard } from '../layout';
+import { Box, Chip, CardContent, Skeleton, Typography } from "@mui/material";
+import { formatEther } from "ethers";
+import { Head2 } from '../../components/theme';
+import { SimpleForm, CreateBase, TextInput, SaveButton, useNotify } from 'react-admin';
+import { TextField, FunctionField, SimpleShowLayout} from 'react-admin';
 import { Stack } from '@mui/material';
-import CampaignIcon from '@mui/icons-material/Campaign';
-import CloseIcon from '@mui/icons-material/Close';
-import { getAuthKeys } from '../../lib/auth_provider';
-import ClaimAccountButton from '../claim_account';
-
-import InstagramIcon from '@mui/icons-material/Instagram';
-
-import asamiABI from "../../abi/Asami.json";
-import docABI from "../../abi/Doc.json";
-import BalanceCard from "./balance_card";
 
 export const HandleSettings = ({handles, handleRequests, site, namespace, handleMinLength, handleMaxLength, icon, verificationPost}) => {
   const translate = useTranslate();
@@ -96,19 +59,14 @@ export const HandleStats = ({handle, id}) => {
 
   return <Box id={id}>
     <SimpleShowLayout record={handle} sx={{ p: 0, mt: 1}}>
-      <TextField label={ translate("handle_settings.stats.username")} source="username" />
-      <FunctionField label={ translate("handle_settings.stats.sparkles") } render={ record => `${BigInt(handle.score)} ✨` }  />
       <FunctionField label={ translate("handle_settings.stats.price_per_repost") }
-        render={ record => `${formatEther(record.price)} DOC` } />
-      <FunctionField label={ translate("handle_settings.stats.sparkle_rate") }
-        render={ record => {
-          const score = BigInt(handle.score);
-          const ratio = score > BigInt(0) ? BigInt(handle.price) / score : BigInt(0);
-          return formatEther(ratio);
-        }} />
+        render={ h => `${formatEther(h.price)} DOC` } />
+      <FunctionField label={ translate("handle_settings.stats.username")}
+        render={ (x) => <>{x.username} <Typography variant="span" sx={{fontSize: "0.8em", lineHeight: "1em" }}>[{x.userId}]</Typography></> }
+      />
+      <FunctionField label={ translate("handle_settings.stats.score") } render={ h => `${BigInt(h.score)} 力` }  />
       <FunctionField label={ translate("handle_settings.stats.locked_until") }
-        render={ record => nextCycle.toLocaleDateString(undefined, { month: 'long', day: 'numeric'}) } />
-      <TextField label={ translate("handle_settings.stats.user_id")} source="userId" />
+        render={ () => nextCycle.toLocaleDateString(undefined, { month: 'long', day: 'numeric'}) } />
     </SimpleShowLayout>
   </Box>;
 }

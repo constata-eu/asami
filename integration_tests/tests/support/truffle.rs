@@ -51,7 +51,7 @@ impl Truffle {
     let out = Command::new("truffle")
       .current_dir(&dir)
       .env("ADMIN_ADDRESS", &admin_address)
-      .env("MEMBER_ADDRESS", "0xF92DddAE4853a8cEA0b99a55d265E3b1Ee352429")
+      .env("MEMBER_ADDRESS", "0x6868db995fdEEf093320A8Ee64b01F450b044f2C")
       .args(["exec", "scripts/local_blockchain_state.js", "--network", "local"])
       .output()
       .unwrap();

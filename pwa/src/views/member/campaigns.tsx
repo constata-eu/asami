@@ -1,55 +1,22 @@
 /// <reference types="vite-plugin-svgr/client" />
-import { useEffect, useContext } from 'react';
-import {
-  Alert, Avatar, AlertTitle, Badge, Divider, Card, CardActions, CardContent, CardHeader,
-  Dialog, DialogActions, DialogContent, DialogTitle,
-  IconButton, Box, Button, Container, Paper, styled,
-  Toolbar, Typography, Skeleton, useMediaQuery
-} from '@mui/material';
-import { makeXUrl,  } from '../lib/auth_provider';
-import { ethers, parseUnits, formatEther, toBeHex, zeroPadValue, parseEther } from "ethers";
-import { publicDataProvider } from "../lib/data_provider";
-import {  
-  useCheckAuth,
-  useSafeSetState,
-  useStore,
-  useListController,
-  defaultExporter,
-  ListContextProvider,
-  CoreAdminContext,
-  useNotify,
-  useGetList,
-  useTranslate,
-  I18nContext,
-  Confirm
-} from 'react-admin';
-
+import { Alert, Avatar, CardContent, CardHeader, Dialog, DialogContent, Box, Button, Typography } from '@mui/material';
+import { formatEther } from "ethers";
+import { useSafeSetState, useNotify, useGetList, useTranslate, Confirm } from 'react-admin';
 import { TwitterTweetEmbed } from 'react-twitter-embed';
-import { useNavigate } from 'react-router-dom';
-import { BareLayout, DeckCard } from '../layout';
-import { Head1, Head2, CardTitle, BulletPoint, yellow, dark, red, light, green } from '../../components/theme';
-import logo from '../assets/asami.png';
-import RootstockLogo from '../assets/rootstock.svg?react';
-import AsamiLogo from '../assets/logo.svg?react';
-import { useContracts } from "../components/contracts_context";
-import FacebookLogin from '@greatsumini/react-facebook-login';
-import { Settings } from '../settings';
+import { DeckCard } from '../layout';
+import { light } from '../../components/theme';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import XIcon from '@mui/icons-material/X';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import WalletIcon from '@mui/icons-material/Wallet';
 import truncate from 'lodash/truncate';
-import chunk from 'lodash/chunk';
-import flatten from 'lodash/flatten';
 
-export const CampaignHeader = ({campaign, icon, children}) => {
+export const CampaignHeader = ({handle, campaign, icon, children}) => {
   const translate = useTranslate();
 
   return (<>
     <CardHeader
       avatar={ <Avatar sx={{ bgcolor: light }} >{icon}</Avatar> }
-      title={ translate("member_campaigns.header.title", {amount: formatEther(campaign.remaining)}) }
-      subheader={ translate("member_campaigns.header.subheader", {amount: formatEther(campaign.priceScoreRatio)}) }
+      title={ <Typography variant="h6">{translate("member_campaigns.header.title", {amount: formatEther(handle.price)}) }</Typography>}
+      subheader={ translate("member_campaigns.header.subheader") }
     />
     <Box px="10px">
       { children }
@@ -86,13 +53,14 @@ const ConfirmHideCampaign = ({campaignId, setPreference }) => {
   </>;
 }
 
-export const XCampaign = ({campaign, prefsContext, setPreference}) => {
+export const XCampaign = ({handle, campaign, prefsContext, setPreference}) => {
   const translate = useTranslate();
   const repostUrl = `https://twitter.com/intent/retweet?tweet_id=${campaign.contentId}&related=asami_club`;
   const attemptedOn = prefsContext.data.find((x) => x.campaignId == campaign.id)?.attemptedOn;
 
   return <DeckCard id={`campaign-container-${campaign.id}`} elevation={attemptedOn ? 1 : 10}>
     <CampaignHeader
+      handle={handle}
       icon={<XIcon/>}
       campaign={campaign}
     >
@@ -129,9 +97,8 @@ export const XCampaign = ({campaign, prefsContext, setPreference}) => {
   </DeckCard>;
 }
 
-export const IgCampaign = ({campaign, prefsContext, setPreference}) => {
+export const IgCampaign = ({handle, campaign, prefsContext, setPreference}) => {
   const translate = useTranslate();
-  const notify = useNotify();
   const {data, isLoading} = useGetList(
     "IgCampaignRule",
     { filter: {campaignIdEq: campaign.id}, perPage: 1,}
@@ -149,6 +116,7 @@ export const IgCampaign = ({campaign, prefsContext, setPreference}) => {
     <CampaignHeader
       icon={<InstagramIcon/>}
       campaign={campaign}
+      handle={handle}
     >
       { attemptedOn &&
         <Alert id={`alert-repost-attempted-${campaign.id}`}
@@ -168,9 +136,9 @@ export const IgCampaign = ({campaign, prefsContext, setPreference}) => {
     </CampaignHeader>
 
     <CardContent sx={{ pt: "0px" }}>
-      <Box my="1em" display="flex" flexDirection="column" alignItems="center">
+      <Box mt="1em" display="flex" flexDirection="column" alignItems="center">
         <img style={{maxWidth: "100%", maxHeight: "400px"}} src={dataUri} />
-        { !!caption && <Typography sx={{lineBreak:"anywhere" }}>{ truncate(caption, {length: 120}) }
+        { !!caption && <Typography sx={{lineBreak:"anywhere", mt: "1em" }}>{ truncate(caption, {length: 120}) }
         </Typography> }
       </Box>
     </CardContent>
@@ -218,7 +186,7 @@ const IgCampaignInstructions = ({campaignId, setPreference, dataUri, caption, at
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogContent>
         <Typography>
-        { !!caption ?
+        { caption ?
             translate("member_campaigns.ig.instruction_with_caption")
           :
             translate("member_campaigns.ig.instruction_without_caption")

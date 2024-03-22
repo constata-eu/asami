@@ -1,34 +1,15 @@
 /// <reference types="vite-plugin-svgr/client" />
 import { useEffect, useContext } from 'react';
-import {
-  Alert, Avatar, AlertTitle, Badge, Divider, Card, CardActions, CardContent, CardHeader,
-  Dialog, DialogActions, DialogContent, DialogTitle,
-  IconButton, Box, Button, Container, Paper, styled,
-  Toolbar, Typography, Skeleton, useMediaQuery
-} from '@mui/material';
-import { makeXUrl,  } from '../lib/auth_provider';
-import { ethers, parseUnits, formatEther, toBeHex, zeroPadValue, parseEther } from "ethers";
+import { Alert, Divider, Avatar, CardContent, CardHeader, Dialog, DialogContent, Box, Button, Typography } from '@mui/material';
+import { makeXUrl } from '../lib/auth_provider';
+import { etherToHex  } from '../lib/formatters';
+import { formatEther } from "ethers";
 import { publicDataProvider } from "../lib/data_provider";
-import {  
-  useCheckAuth,
-  useSafeSetState,
-  useStore,
-  useListController,
-  defaultExporter,
-  ListContextProvider,
-  CoreAdminContext,
-  useNotify,
-  useGetList,
-  useTranslate,
-  I18nContext
-} from 'react-admin';
-
+import { useSafeSetState, useStore, useListController, CoreAdminContext, useGetList, useTranslate, I18nContext } from 'react-admin';
 import { TwitterTweetEmbed } from 'react-twitter-embed';
 import { useNavigate } from 'react-router-dom';
 import { BareLayout, DeckCard } from './layout';
-import { Head1, Head2, CardTitle, BulletPoint, yellow, dark, red, light, green } from '../components/theme';
-import logo from '../assets/asami.png';
-import RootstockLogo from '../assets/rootstock.svg?react';
+import { Head2, Head3, yellow, light, green } from '../components/theme';
 import AsamiLogo from '../assets/logo.svg?react';
 import { useContracts } from "../components/contracts_context";
 import FacebookLogin from '@greatsumini/react-facebook-login';
@@ -37,6 +18,7 @@ import InstagramIcon from '@mui/icons-material/Instagram';
 import XIcon from '@mui/icons-material/X';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import WalletIcon from '@mui/icons-material/Wallet';
+import CampaignIcon from '@mui/icons-material/Campaign';
 import truncate from 'lodash/truncate';
 import chunk from 'lodash/chunk';
 import flatten from 'lodash/flatten';
@@ -44,9 +26,8 @@ import CampaignListEmpty from './campaign_list_empty';
 
 const Login = () => {
   const translate = useTranslate();
-  const [role, setRole] = useStore('user.role', 'advertiser');
+  const [, setRole] = useStore('user.role', 'advertiser');
   const [open, setOpen] = useSafeSetState(false);
-  const [error, setError] = useSafeSetState();
   const [pubDataProvider, setPubDataProvider] = useSafeSetState();
   const i18nProvider = useContext(I18nContext);
 
@@ -62,13 +43,9 @@ const Login = () => {
     return <></>;
   }
 
-  const loginAs = async (role) => {
-    try {
-      setRole(role);
-      setOpen(true);
-    } catch (e) {
-      setError(e.message)
-    }
+  const loginAs = async (newRole) => {
+    setRole(newRole);
+    setOpen(true);
   }
 
   return (
@@ -117,7 +94,7 @@ const Login = () => {
               </Box>
             </Box>
 
-            <GotSparkles key="got-sparkels" loginAs={loginAs}/>
+            <JoinNow key="join-now" loginAs={loginAs}/>
             <PublicCampaignList loginAs={loginAs} />
           </Box>
 
@@ -128,12 +105,12 @@ const Login = () => {
 };
 
 const PublicCampaignList = ({loginAs}) => {
-  const translate = useTranslate();
   const listContext = useListController({
     debounce: 500,
     disableSyncWithLocation: true,
-    filter: { finishedEq: false },
-    perPage: 40,
+    filter: { remainingGt: etherToHex("1") },
+    sort: { field: 'createdAt', order: 'DESC'},
+    perPage: 20,
     queryOptions: {
       refetchInterval: 100000,
     },
@@ -166,12 +143,13 @@ const PublicCampaignList = ({loginAs}) => {
 const YourPostHere = ({loginAs}) => {
   const translate = useTranslate();
   
-  return (<DeckCard borderColor={yellow} >
+  return (<DeckCard elevation={10} >
     <CardContent>
       <Head2>{ translate("your_post_here.title") }</Head2>
       <Typography>{ translate("your_post_here.message") }</Typography>
       <Box mt="1em" >
-        <Button onClick={() => loginAs("advertiser")} className="submit-your-post" color="secondary" fullWidth size="large" variant="contained" >
+        <Button onClick={() => loginAs("advertiser")} className="submit-your-post" color="inverted" fullWidth size="large" variant="outlined" >
+          <CampaignIcon sx={{mr:"5px"}}/>
           { translate("your_post_here.button") }
         </Button>
       </Box>
@@ -179,17 +157,18 @@ const YourPostHere = ({loginAs}) => {
   </DeckCard>);
 }
 
-const GotSparkles = ({loginAs}) => {
+const JoinNow = ({loginAs}) => {
   const translate = useTranslate();
   
-  return (<DeckCard borderColor={light}>
+  return (<DeckCard borderColor={green} elevation={10}>
     <CardContent>
-      <Head2 >{ translate("got_sparkles.title") }</Head2>
-      <Typography>{ translate("got_sparkles.message") }</Typography>
-      <Typography>{ translate("got_sparkles.message_2") }</Typography>
+      <Head2 sx={{ mb: "0.5em" }}>{ translate("join_now.title") }</Head2>
+      <Typography>{ translate("join_now.message") }</Typography>
+      <Head3 sx={{ mt: "1em", mb: "0.5em" }}>{ translate("join_now.no_crypto_no_problem") }</Head3>
+      <Typography>{ translate("join_now.learn_later") }</Typography>
       <Box mt="1em" >
-        <Button onClick={() => loginAs("member")} className="get-your-sparkles" color="inverted" fullWidth size="large" variant="contained" >
-          { translate("got_sparkles.button") }
+        <Button onClick={() => loginAs("member")} className="get-your-sparkles" fullWidth size="large" variant="contained" >
+          { translate("join_now.button") }
         </Button>
       </Box>
     </CardContent>
@@ -199,18 +178,18 @@ const GotSparkles = ({loginAs}) => {
 const PublicCardHeader = ({loginAs, item, buttonLabel, icon}) => {
   const translate = useTranslate();
 
-  return (<>
+  return (
     <CardHeader
+      sx={{ mb: "0", pb: "0.5em" }}
       avatar={ <Avatar sx={{ bgcolor: light }} >{icon}</Avatar> }
       title={ translate("public_card_header.title", {amount: formatEther(item.remaining)}) }
-      subheader={ translate("public_card_header.subheader", {amount: formatEther(item.priceScoreRatio)}) }
+      subheader={
+        <Button sx={{ mt:"0.2em" }} onClick={() => loginAs("member") } fullWidth color="inverted" size="small" variant="outlined" >
+          { buttonLabel }
+        </Button>
+      }
     />
-    <Box px="10px">
-      <Button onClick={() => loginAs("member") } fullWidth size="large" variant="contained" >
-        { buttonLabel }
-      </Button>
-    </Box>
-  </>);
+  );
 };
 
 
@@ -231,7 +210,6 @@ const PublicXCampaign = ({loginAs, item}) => {
 
 const PublicInstagramCampaign = ({loginAs, item}) => {
   const translate = useTranslate();
-  const notify = useNotify();
   const {data, isLoading} = useGetList(
     "IgCampaignRule",
     { filter: {campaignIdEq: item.id}, perPage: 1,}
@@ -267,23 +245,22 @@ const LoginSelector = ({open, setOpen}) => {
   const translate = useTranslate();
   const { signLoginMessage } = useContracts();
   const navigate = useNavigate();
-  const [oauthVerifier, setOauthVerifier] = useStore('user.oauthChallenge');
 
-  const startXLogin = async (method) => {
+  const startXLogin = async () => {
     setOpen(false);
     const { url, verifier } = await makeXUrl();
     localStorage.setItem("oauthVerifier", verifier);
     document.location.href = url;
   };
 
-  const startEip712Login = async (method) => {
+  const startEip712Login = async () => {
     setOpen(false);
     const code = await signLoginMessage();
     navigate(`/eip712_login?code=${code}`);
   };
 
-  return (<Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
-    <Alert sx={{ bgcolor: 'background.paper' }} severity="warning" icon={false}>
+  return (<Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" slotProps={{ backdrop: {sx: {background: "rgba(0,0,0,0.9)"}}}} PaperProps={ {"variant": "outlined", sx:{ borderWidth: "10px" }} }>
+    <Alert  severity="warning" icon={false}>
       <Typography sx={{ color: "inherit" }} fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
         { translate("login_form.disclaimer_title") }
       </Typography>
@@ -297,6 +274,7 @@ const LoginSelector = ({open, setOpen}) => {
         </Button>
       </Box>
     </Alert>
+    <Divider/>
     <DialogContent>
       <Box display="flex" gap="1em" flexDirection="column">
         <Box>

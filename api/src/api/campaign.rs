@@ -40,6 +40,7 @@ pub struct CampaignFilter {
   id_eq: Option<String>,
   account_id_eq: Option<String>,
   finished_eq: Option<bool>,
+  remaining_gt: Option<String>,
   content_id_like: Option<String>,
   available_to_account_id: Option<String>,
 }
@@ -105,6 +106,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
         account_id_eq: f.account_id_eq,
         id_eq: f.id_eq,
         finished_eq: f.finished_eq,
+        remaining_gt: f.remaining_gt,
         content_id_like: into_like_search(f.content_id_like),
         ..Default::default()
       })

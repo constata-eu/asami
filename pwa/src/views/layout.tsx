@@ -1,16 +1,10 @@
-import {Paper, Card, CardContent, AppBar, Toolbar, Typography, Divider, IconButton, Box, Button, Container, styled, Backdrop, Skeleton, useMediaQuery } from '@mui/material';
+import { Card, Typography, Divider, Box, Button, Container } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
-import { useNavigate } from 'react-router-dom';
-import { useLogout, useTranslate, useSafeSetState, useGetOne} from 'react-admin';
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import MenuIcon from '@mui/icons-material/Menu';
-import CloseIcon from '@mui/icons-material/Close';
+import { useLogout, useTranslate } from 'react-admin';
 import RootstockLogo from '../assets/rootstock.svg?react';
 import AsamiLogo from '../assets/logo.svg?react';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import XIcon from '@mui/icons-material/X';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import { Head1, Head2, BulletPoint, CardTitle, green, yellow } from '../components/theme';
 
 export const DeckCard = ({id, borderColor, background, color, elevation, children}) => {
   const border = borderColor ? "1px solid" : "none";
@@ -84,33 +78,6 @@ export const LoggedInNavCard = () => {
   );
 }
 
-const Root = styled("div")(({ theme }) => ({
-  display: "flex",
-  flexDirection: "column",
-  zIndex: 1,
-  minHeight: "100vh",
-  backgroundColor: theme.palette.background.default,
-  position: "relative",
-}));
-
-const AppFrame = styled("div")(() => ({
-  display: "flex",
-  flex: 1,
-  flexDirection: "column",
-  overflowX: "auto",
-  alignItems: "center",
-  marginBottom: "3em",
-}));
-
-const Content = styled("div")(({ theme }) => ({
-  width: "100%",
-  display: "flex",
-  flex: 1,
-  flexDirection: "column",
-  overflowX: "auto",
-  paddingTop: "2em",
-}));
-
 export const BareLayout = ({children}) => {
   const translate = useTranslate();
 
@@ -123,8 +90,7 @@ export const BareLayout = ({children}) => {
       <Container maxWidth="xl">
         { children }
         <Divider light sx={{ mt: "5em", mb: "2em" }}/>
-
-        <Button href="https://rootstock.io/" target="_blank" sx={{textDecoration: "none", mb: "2em"}}>
+        <Button href="https://explorer.rootstock.io/address/0x16039ab4e9b0bf3b79f9a221898d152151026034" target="_blank" sx={{textDecoration: "none", mb: "2em"}}>
           <Box display="flex" flexDirection="column">
             <Typography fontSize="1em" textTransform="uppercase" fontFamily="LeagueSpartanBold">
               { translate("footer.built_with") }

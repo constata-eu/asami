@@ -4,6 +4,101 @@
 	"footer": {
     "built_with": "Built with"
   },
+  "campaign_list": {
+    "title": "Active campaigns",
+    "text": "Club members will be reposting your content until the budget is fully spent. Unspent amounts will be returned after campaign ends.",
+    "see_post": "See Post",
+    "site": "Site",
+    "post": "Post",
+    "budget": "Budget",
+    "remaining": "Remaining",
+    "ends_on": "Ends on"
+  },
+  "claim_account": {
+    "success": "The admin will hand over control of your account to you soon.",
+    "error": "Oops, we could not receive your request. Please try again or contact the admin on X or Instagram."
+  },
+  "advertiser_help": {
+    "title": "Little help:",
+    "DONE": "You can create a campaign in X or Instagram by providing a link to any post, and members will amplify it. Remember they have the last word, so make your post friendly!",
+    "CLAIMING": "You'll be able to start new campaigns once the admin processes your account claim",
+    "NO_CLAIM": "Since you haven't connected your WEB3 wallet, your campaigns will be funded privately by the club's admin, subject to how much funds are available. Connect your wallet to claim your account and fund campaigns with your own budget."
+  },
+  "campaign_request_list": {
+    "title": "Requested campaigns",
+    "admin_will_review": "The club's admin will review and decide whether to fund your campaigns.",
+    "claim_to_create": "Claim your account using a WEB3 wallet to create campaigns yourself!",
+    "see_post": "See Post",
+    "post": "Post",
+    "status": "Status",
+    "site": "Site",
+    "budget": "Budget"
+  },
+  "collab_list": {
+    "title": "Your collaboration history",
+    "text": "These are your collaborations so far",
+    "see_post": "See post",
+    "reward": "Reward",
+    "fee": "Asami fee"
+  },
+  "campaign_request": {
+    "title": "Suggest a campaign",
+    "text": "Got a campaign idea for X or Instagram? Share it with us! If approved, we'll launch it, and you'll earn Asami tokens for each repost.",
+    "send_suggestion": "Send Suggestion",
+    "post_url_label": "The X or Instagram post link",
+    "cancel": "Cancel",
+    "success": "Your suggestion has been received!",
+    "errors": {
+      "not_a_post_url": "The link you provided does not appear to be an X or Instagram post.",
+      "invalid_url": "The link must point to a post, and start with https://..."
+    }
+  },
+  "make_campaign_card": {
+    "title": "Start a campaign!",
+    "pay_members": "Pay club members to repost any X post, or to clone any Instagram post.",
+    "doc_funded": "Campaigns are funded in DoC, a US dollar pegged stablecoin from Money On Chain, that you can mint yourself using RBTC.",
+    "get_doc": "Go get some DoC",
+    "start_campaign": "Start Campaign",
+    "close": "Close",
+    "post_url_label": "The X or Instagram post link",
+    "cancel": "Cancel",
+    "errors": {
+      "budget_too_low": "Budget is too low, must be at least 1 DOC",
+      "budget_not_a_number": "Budget must be a number",
+      "not_a_post_url": "The link you provided does not appear to be an X or Instagram post.",
+      "invalid_url": "The link must point to a post, and start with https://..."
+    },
+    "form_step": {
+      "content_url": "Link to X or Instagram post",
+      "budget": "Total budget you'll spend, in DOC",
+      "start_campaign": "Start Campaign",
+      "service_summary": "You'll pay ~0.001 DOC per real person reached by a repost. Unused funds will be returned to you after 30 days.",
+      "x_description": "On X, members will repost your original post.",
+      "ig_description": "On Instagram, members will clone your ig post as their own. Use hashtags and mention yourself to drive traffic."
+    },
+    "tx_waiter": {
+      "approving_title": "Approve budget spend",
+      "approving_text": "Go to your wallet and approve spending your campaign's budget.",
+      "creating_title": "Create Campaign",
+      "creating_text": "Now got to your wallet again and sign the transaction that will create your campaign in ASAMI.",
+      "waiting_for_tx": "Waiting for transaction to confirm",
+      "see_in_explorer": "See transaction in block explorer",
+      "close": "Close"
+    },
+    "done": {
+      "title": "Campaign created",
+      "text": "Your campaign has been created. It may take a few minutes to show up in your dashboard.",
+      "see_in_explorer": "See transaction in block explorer"
+    },
+    "failure_step": {
+      "action_rejected": "It looks like you cancelled the campaign creation in your wallet, try again if you're still interested.",
+      "wrong_signer": "Did you change your wallet account? You are using Asami with %{expected} but your wallet is using %{actual}. Switch your wallet connected account to %{expected} and try again.",
+      "unexpected_error": "An unexpected error ocurred, contact us on twitter or instagram and forward the error information.",
+      "copy_info": "Copy error details",
+      "info_copied": "Error details copied to your clipboard",
+      "title": "Campaign creation cancelled"
+    }
+  },
   "member_campaigns": {
     "hide_campaign": {
       "button": "Ignore this campaign",
@@ -11,8 +106,8 @@
       "content": "We won't show this campaign again, this cannot be undone."
     },
     "header": {
-      "title": "Pays up to $%{amount}",
-      "subheader": "$%{amount} per sparkle ✨"
+      "title": "You get $%{amount}",
+      "subheader": "*minus fees"
     },
     "x": {
       "main_button": "Repost to earn",
@@ -38,7 +133,7 @@
   "help_card": {
     "title": "What's next?",
     "collaborate": "You can collaborate in a campaign, but remember, people are listening to you, be responsible an true to yourself when choosing what content to amplify.",
-    "verify_handles": "Help us verify your X or Instagram account. We'll give you a sparkles rating, and you'll be able to start earning for your reposts",
+    "verify_handles": "Help us verify your X or Instagram account. We'll estimate your influence level, and you'll be able to start earning for your reposts",
     "wait_for_campaigns": "There are no campaigns for you to amplify at the moment. Come back tomorrow!"
   },
   "handle_settings": {
@@ -47,13 +142,12 @@
       "username": "Username",
       "user_id": "User ID",
       "price_per_repost": "Price per repost",
-      "sparkles": "Sparkles",
-      "sparkle_rate": "DOC per Sparkle",
+      "score": "Influence level",
       "locked_until": "Values in force until"
     },
     "ig": {
       "create_request": {
-        "text": "Your instagram account must be public, and we need to verify you own it, to give you your sparkles, so you can get paid to repost.",
+        "text": "Your instagram account must be public, and we need to verify you own it, to estimate your influence level, so you can get paid to repost.",
         "username_label": "Your instagram username",
         "username_help": "Example: @zuck",
         "save": "Continue",
@@ -73,7 +167,7 @@
     },
     "x": {
       "create_request": {
-        "text": "Verify your X account ownership to get your sparkles, and get paid to repost.",
+        "text": "Verify your X account ownership to know your influence level, and get paid to repost.",
         "username_label": "Your X handle",
         "username_help": "Example: @jack",
         "save": "Continue",
@@ -104,11 +198,13 @@
     "claimed": {
       "doc_label": "DOC Balance",
       "asami_label": "ASAMI Balance",
+      "added": "%{symbol} added to your wallet.",
+      "not_added": "%{symbol} could not be added to your wallet.",
       "address": "RSK Address",
       "last_payout_amount_label": "Last fee share received",
       "last_payout_date_label":"Last fee share date",
       "next_payout_date_label":"Next fee share date",
-      "participate_in_governance": "You claimed your account, your rewards will be paid directly to your wallet, and you will get a share of protocol fees too."
+      "participate_in_governance": "You claimed your account, your rewards will be paid directly to your wallet, and you will get a share of protocol fees too. Make sure to add the DOC and ASAMI tokens to your wallet using the buttons above."
     }
   },
   "logged_in_nav_card": {
@@ -120,11 +216,14 @@
     "login_button": "Login",
     "about_asami_button": "About ASAMI",
     "ig_handle": "asamiclub",
-    "x_handle": "asami_club"
+    "x_handle": "asami_club",
+    "unexpected_error": "An unexpected error ocurred while starting your session",
+    "error_description_title": "We have a description for the error:",
+    "try_again": "Try again",
+    "contact_us": "Contact us"
   },
   "public_card_header": {
-    "title": "Pays up to $%{amount}",
-    "subheader": "$%{amount} per sparkle ✨"
+    "title": "Pays up to $%{amount} in DOC"
   },
   "public_x_campaign": {
     "main_button": "Repost to earn"
@@ -137,15 +236,16 @@
     "message": "Check back soon though!"
   },
   "your_post_here": {
-    "title": "Your post here",
-    "message": "Set up a reward for club members to boost your Instagram or X content",
-    "button": "Submit your post"
+    "title": "Your post, here.",
+    "message": "Pay club members to repost your Instagram or X content.",
+    "button": "Start a campaign"
   },
-  "got_sparkles": {
-    "title": "Got sparkles ✨?",
-    "message": "We'll rate your account with a number of sparkles every 15 days.",
-    "message_2": "Advertisers pay based on your sparkle score!",
-    "button": "Join the club"
+  "join_now": {
+    "title": "Monetize any audience size.",
+    "message": "Repost content from advertisers in X an Instagram and receive US dollar equivalent crypto, with rewards based on your genuine reach.",
+    "no_crypto_no_problem": "No crypto? No problem!",
+    "learn_later": "You can start accumulating rewards now, and learn more about using crypto later.",
+    "button": "Join the club, it's free!"
   },
   "login_form": {
     "disclaimer_title": "Consent to transfer your data outside the EU",
@@ -156,28 +256,21 @@
     "consent_with_x": "Consent with X",
     "consent_with_facebook": "Consent with Facebook",
     "web3_consent_title": "Consent and login with a WEB3 wallet",
-    "web3_consent_body": "To spend your Dollar on Chain rewards, get ASAMI tokens, and vote.",
+    "web3_consent_body": "To collect your rewards, get ASAMI tokens, and vote.",
     "consent_and_connect": "Consent and connect"
   },
   "about_us": {
     "go_back_button": "Go Back",
     "club_title": "It really is a club, and you're welcome to join!",
     "club_description": [
-      "We're a club of people that get paid for reposting content on social media.",
-      "You can participate as an <b>Advertiser</b>, a <b>Member</b>, or even as the club's <b>Admin</b>.",
-      "<b>Advertisers create campaigns</b> by submitting the link to a post, and how much to spend.",
-      "<b>Members</b> review all the available campaigns and decide to <b>collaborate by reposting</b>, then get paid when they do.",
-      "<b>The Admin</b> watches for member reposts and <b>registers them</b> as collaborations.",
-      "<b>The Admin</b> also looks up each member's personal network and <b>rates them with sparkles ✨</b> .",
-      "<b>Members may set their own price</b>, which gives place to their <b>price per sparkle ✨</b>, and update it every 14 days.",
-      "<b>Advertisers can require a given price per sparkle ✨</b> from members before they can collaborate on their campaign.",
-      "The rules governing these 3 roles are <b>enforced by a smart contract called ASAMI</b>, which exists in the RSK public blockchain.",
-      "When a collaboration is registered, a payment is issued to the member, and ASAMI collects a fee from it.",
-      "Also, everytime a fee is collected, an equivalent amount of <b>ASAMI Tokens are issued and distributed</b> to the member, the advertiser, and the admin. They get 10%, 10% and 80% of the new tokens respectively.",
-      "<b>All fees collected are distributed</b> at prorata to all the ASAMI token holders every 14 days.",
-      "ASAMI Token is a <b>standard ERC20</b> token which can be transfered, bought and sold in secondary markets.",
-      "Token holders can also <b>vote to change the ASAMI fee rate</b>, which affects their short term token revenue, but also their dilution.",
-      "<b>A new admin may be voted</b> by token holders too."
+      "We're a club of people that pay each other for reposting content on social media.",
+      "Our goal is to measure everybody's genuine influence and reward their participation creating trends.",
+      "Asami is not exclusive to content creators, anyone can participate creating trends, regardless of their audience.",
+      "When your repost is registered, you'll be rewarded with DOC, and the club will collect a fee.",
+      "DOC &ndash;<i>Dollar on Chain</i>&ndash; is a US dollar pegged stablecoin.",
+      "As a founding member, you'll also receive newly minted ASAMI tokens, which let you vote on issues like the fee rate, the admin role, and also distribute fee revenue.",
+      "<a href='https://asami.ams3.digitaloceanspaces.com/ASAMI%20WHITEPAPER.pdf' target='_blank'>READ THE WHITEPAPER</a> to learn more about or mission and how the club works.",
+      "Asami is a smart contract in the Rootstock blockchain, <a href='https://explorer.rootstock.io/address/0x16039ab4e9b0bf3b79f9a221898d152151026034'>you can see it here</a>."
     ],
     "privacy_statement_title": "We have an important privacy statement to make.",
     "privacy_statement": [

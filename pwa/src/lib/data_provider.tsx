@@ -52,7 +52,11 @@ export const createSessionDataProvider = async (keys, authMethodKind, authData, 
 
       if (response.status < 200 || response.status >= 300) {
         let json;
-        try { json = JSON.parse(text); } catch (e) { }
+        try {
+          json = await response.json();
+        } catch (e) {
+          json = "";
+        }
         return Promise.reject(
           new HttpError(json?.errors[0]?.message || response?.statusText, response.status, json));
       }
