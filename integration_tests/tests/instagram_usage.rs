@@ -70,6 +70,23 @@ browser_test!{ browser_flow_until_instagram_reward (mut d)
   d.wait_for("#campaign-list-empty").await;
 }
 
+api_test! { can_deserialize_a_response (mut c)
+  let hub = c.app().ig_crawl();
+  hub.schedule_new().await?;
+  let mut crawl = hub.find(1).await?;
+
+  let apify_id = "fxJVEIkPpS4JdYZCJ";
+  crawl = crawl.update()
+    .status(models::IgCrawlStatus::Submitted)
+    .apify_id(Some(apify_id.to_string()))
+    .save().await?;
+
+  try_until(90, 2000, "crawl was not done", || async {
+    hub.collect_all_responses().await.unwrap();
+    crawl.reloaded().await.unwrap().attrs.status == models::IgCrawlStatus::Responded
+  }).await;
+}
+
 api_test! { supports_instagram_collaboration (mut c)
   let _scenario = c.build_baseline_scenario().await;
 
@@ -96,10 +113,12 @@ api_test! { supports_instagram_collaboration (mut c)
   assert!(direct_urls.contains(&"https://www.instagram.com/nubis_bruno".to_string()));
   assert!(direct_urls.contains(&"https://www.instagram.com/p/C0T1wKQMS0v".to_string()));
 
-  if false {
+  let apify_id = "fxJVEIkPpS4JdYZCJ";
+  //let apify_id = .apify_id(Some("FWtqLuS4KucLLZVqc".to_string()))
+  if true {
     crawl = crawl.update()
       .status(models::IgCrawlStatus::Submitted)
-      .apify_id(Some("FWtqLuS4KucLLZVqc".to_string()))
+      .apify_id(Some(apify_id.to_string()))
       .save().await?;
   } else {
     hub.submit_scheduled().await?;

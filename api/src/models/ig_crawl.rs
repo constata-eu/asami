@@ -176,8 +176,10 @@ impl IgCrawlHub {
         }
         "SUCCEEDED" => {
           let dataset_id = meta.default_dataset_id;
-          let items: Vec<IgResult> =
-            ureq_agent().get(&format!("{api_datasets_url}/{dataset_id}/items?token={token}")).call()?.into_json()?;
+          let items: Vec<IgResult> = ureq_agent()
+            .get(&format!("{api_datasets_url}/{dataset_id}/items?token={token}"))
+            .call()?
+            .into_json()?;
 
           for i in items {
             let json_string =
@@ -545,6 +547,7 @@ pub fn ureq_agent() -> ureq::Agent {
 enum IgResult {
   IgProfile(IgProfile),
   IgPost(IgPost),
+  IgError(IgError),
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -576,6 +579,15 @@ pub struct IgPost {
   display_url: String,
   owner_username: String,
   owner_id: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IgError {
+  input_url: String,
+  error: String,
+  username: String,
+  url: String,
 }
 
 #[derive(Clone, Debug, Deserialize)]
