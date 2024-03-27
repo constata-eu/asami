@@ -9,7 +9,7 @@ import InstagramIcon from '@mui/icons-material/Instagram';
 import XIcon from '@mui/icons-material/X';
 import truncate from 'lodash/truncate';
 
-export const CampaignHeader = ({handle, campaign, icon, children}) => {
+export const CampaignHeader = ({handle, icon, children}) => {
   const translate = useTranslate();
 
   return (<>

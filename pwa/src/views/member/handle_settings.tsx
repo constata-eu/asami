@@ -1,10 +1,10 @@
 import { useTranslate} from "react-admin";
 import { DeckCard } from '../layout';
-import { Box, Chip, CardContent, Skeleton, Typography } from "@mui/material";
+import { Box, CardContent, Skeleton, Typography } from "@mui/material";
 import { formatEther } from "ethers";
 import { Head2 } from '../../components/theme';
 import { SimpleForm, CreateBase, TextInput, SaveButton, useNotify } from 'react-admin';
-import { TextField, FunctionField, SimpleShowLayout} from 'react-admin';
+import { FunctionField, SimpleShowLayout} from 'react-admin';
 import { Stack } from '@mui/material';
 
 export const HandleSettings = ({handles, handleRequests, site, namespace, handleMinLength, handleMaxLength, icon, verificationPost}) => {

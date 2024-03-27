@@ -9,7 +9,7 @@ import { useSafeSetState, useStore, useListController, CoreAdminContext, useGetL
 import { TwitterTweetEmbed } from 'react-twitter-embed';
 import { useNavigate } from 'react-router-dom';
 import { BareLayout, DeckCard } from './layout';
-import { Head2, Head3, yellow, light, green } from '../components/theme';
+import { Head2, Head3, light, green } from '../components/theme';
 import AsamiLogo from '../assets/logo.svg?react';
 import { useContracts } from "../components/contracts_context";
 import FacebookLogin from '@greatsumini/react-facebook-login';

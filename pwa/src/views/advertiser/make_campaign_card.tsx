@@ -1,12 +1,12 @@
 import { useSafeSetState, useTranslate } from "react-admin";
 import { LinearProgress, Alert, Box, Button, CardContent, Typography } from "@mui/material";
 import { Dialog } from '@mui/material';
-import { etherToHex } from '../../lib/formatters';
+import { formatAddress } from '../../lib/formatters';
+import { toBeHex, zeroPadValue, parseEther } from "ethers";
 import { DeckCard } from '../layout';
 import { useContracts } from "../../components/contracts_context";
 import { Head2, light } from '../../components/theme';
 import { parseCampaignSiteAndContentId, defaultValidUntil } from '../../lib/campaign';
-import { formatAddress } from '../../lib/formatters';
 import Paper from '@mui/material/Paper';
 import { Form, TextInput, SaveButton, useNotify } from 'react-admin';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';

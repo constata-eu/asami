@@ -106,7 +106,6 @@ const Done = ({account}) => {
 
 const BalanceWithAddButton = ({symbol, account}) => {
   const notify = useNotify();
-  const translate = useTranslate();
   const { contracts } = useContracts();
 
   const balance = symbol == "DOC" ? account.docBalance : account.asamiBalance;

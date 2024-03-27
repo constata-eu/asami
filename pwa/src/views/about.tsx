@@ -1,6 +1,5 @@
 import { Box, Button, Typography } from '@mui/material';
 import { useTranslate } from 'react-admin';
-import { BareLayout } from './layout';
 import { green } from '../components/theme';
 import AsamiLogo from '../assets/logo.svg?react';
 import { messages, browserLocale } from '../i18n';

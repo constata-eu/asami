@@ -8,14 +8,12 @@ import { viewPostUrl } from '../../lib/campaign';
 import { Pagination, Datagrid, TextField, FunctionField} from 'react-admin';
 import { useListController, ListContextProvider, useTranslate } from 'react-admin';
 import { getAuthKeys } from '../../lib/auth_provider';
-import ClaimAccountButton from '../claim_account';
 import { CampaignRequestCard } from './campaign_request_card';
 import { MakeCampaignCard } from './make_campaign_card';
 import BalanceCard from "../balance_card";
 
 const Dashboard = () => {
   useAuthenticated();
-  const translate = useTranslate();
 
   const {data, isLoading} = useGetOne(
     "Account",
