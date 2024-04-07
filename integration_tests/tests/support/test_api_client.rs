@@ -5,9 +5,9 @@ pub use galvanic_assert::{
   matchers::{collection::*, variant::*, *},
   *,
 };
-pub use api::{
-  models::{self, u, U256, u256, hasher, Utc, wei},
-  on_chain::{self, AsamiContractSigner, DocContract, AsamiContract, IERC20, Provider, SignerMiddleware, Address, Http}
+pub use api::models::{self, u, U256, u256, hasher, Utc, wei};
+use api::{
+  on_chain::{self, AsamiContractSigner, AsamiCoreContractSigner, DocContract, AsamiCoreContract, AsamiContract, IERC20, Provider, SignerMiddleware, Address, Http}
 };
 use rocket::{ http::Header, local::asynchronous::LocalResponse };
 use jwt_simple::{ algorithms::*, prelude::*, };
@@ -15,7 +15,7 @@ pub use serde::{Serialize, de::DeserializeOwned, Deserialize};
 use graphql_client;
 use graphql_client::GraphQLQuery;
 pub use api::Decimal;
-use ethers::{middleware::Middleware, types::TransactionRequest, signers::{LocalWallet, Signer}};
+use ethers::signers::{LocalWallet, Signer};
 
 #[derive(Deserialize)]
 pub struct ApiError {
@@ -28,7 +28,9 @@ pub struct ApiClient<'a> {
   pub session_key: Option<ES256KeyPair>,
   pub session: Option<models::Session>,
   pub local_wallet: Option<LocalWallet>,
+  pub account_id: Option<U256>,
   pub contract: Option<AsamiContractSigner>,
+  pub asami_contract: Option<AsamiCoreContractSigner>,
   pub doc_contract: Option<DocContract>,
 }
 
@@ -47,13 +49,19 @@ impl<'b> ApiClient<'b> {
       local_wallet: None,
       session_key: None, 
       session: None,
+      account_id: None,
       contract: None,
-      doc_contract: None
+      doc_contract: None,
+      asami_contract: None,
     }
   }
 
   pub fn app(&self) -> api::App {
     self.test_app.app.clone()
+  }
+
+  pub fn account_id(&self) -> U256 {
+    self.account_id.clone().unwrap()
   }
 
   pub async fn account(&self) -> models::Account {
@@ -76,13 +84,34 @@ impl<'b> ApiClient<'b> {
     self.local_wallet.as_ref().unwrap()
   }
 
+  pub fn address(&self) -> Address {
+    self.local_wallet().address()
+  }
+
   pub fn contract(&self) -> &AsamiContractSigner {
     self.contract.as_ref().unwrap()
+  }
+
+  pub fn asami_contract(&self) -> &AsamiCoreContractSigner {
+    self.asami_contract.as_ref().unwrap()
   }
 
   pub fn doc_contract(&self) -> &DocContract {
     self.doc_contract.as_ref().unwrap()
   }
+
+  pub async fn asami_balance(&self) -> U256 {
+    self.test_app.asami_balance_of(&self.address()).await
+  }
+
+  pub async fn doc_balance(&self) -> U256 {
+    self.test_app.doc_balance_of(&self.address()).await
+  }
+
+  pub async fn rbtc_balance(&self) -> U256 {
+    self.test_app.rbtc_balance_of(&self.address()).await
+  }
+
 
   pub async fn login_with_key(&mut self, key: ES256KeyPair) {
     let token = api::models::hasher::hexdigest(key.public_key().to_pem().unwrap().as_bytes());
@@ -108,7 +137,9 @@ impl<'b> ApiClient<'b> {
       ]
     ).await;
 
-    self.session = Some(self.test_app.app.session().find(&result.create_session.id).await.unwrap());
+    let session = self.test_app.app.session().find(&result.create_session.id).await.unwrap();
+    self.account_id = Some(u256(session.account_id()));
+    self.session = Some(session);
   }
 
   pub async fn build_baseline_scenario(&mut self) -> BaseLineScenario {
@@ -156,7 +187,7 @@ impl<'b> ApiClient<'b> {
   pub async fn create_x_campaign_extra(&self, budget: U256, rate: U256, days: i64, topics: &[models::Topic]) -> models::Campaign {
     let campaign = self.build_x_campaign(budget, rate, days, topics).await;
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
-    campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("campaign")
+    campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("campaign to be created")
   }
 
   pub async fn create_self_managed_x_campaign(&self, budget: U256, rate: U256, days: i64) -> models::Campaign {
@@ -210,26 +241,58 @@ impl<'b> ApiClient<'b> {
     ).await
   }
 
-  pub async fn submit_claim_account_request(&mut self) {
-    let rsk = &self.app().settings.rsk;
-    let wallet = self.test_app.make_wallet();
-    self.gql_claim_account_request(&wallet).await;
+  pub async fn setup_as_advertiser(&mut self, message: &str) {
+    self.make_client_wallet().await;
+    self.test_app.send_doc_to(self.address(), u("2000")).await;
 
-    let tx = TransactionRequest::new().to(wallet.address()).value(u("10"));
-    self.test_app.app.on_chain.contract.client()
-      .send_transaction(tx, None)
-      .await.expect("sending tx")
-      .await.expect("waiting tx confirmation")
-      .expect("tx result");
+    self.test_app.send_tx(
+      &format!("Claiming for setting up as advertiser: {message}"),
+      "94233",
+      self.test_app.asami_core().claim_accounts(vec![
+        on_chain::ClaimAccountsParam{ account_id: self.account_id(), addr: self.address() },
+      ])
+    ).await;
+
+    self.test_app.send_tx(
+      &format!("Approving spending for setting up as advertiser: {message}"),
+      "46284",
+      self.doc_contract().approve( self.test_app.asami_core().address(), u("10000"))
+    ).await;
+  }
+
+  pub async fn make_campaign(&self, message: &str, budget: U256, briefing: U256, duration_days: i64) {
+    self.test_app.send_tx(
+      &format!("Making campaign: {message}"),
+      "112859",
+      self.asami_contract().make_campaigns( vec![
+        on_chain::MakeCampaignsParam{
+          budget,
+          briefing,
+          valid_until: models::utc_to_i(Utc::now() + chrono::Duration::days(duration_days)),
+        },
+      ])
+    ).await;
+  }
+
+  pub async fn make_client_wallet(&mut self) {
+    let rsk = &self.app().settings.rsk;
+    let wallet = self.test_app.make_wallet().await;
 
     let provider = Provider::<Http>::try_from(&rsk.rpc_url).unwrap();
     let client = std::sync::Arc::new(SignerMiddleware::new(provider, wallet.clone()));
     let address: Address = rsk.contract_address.parse().unwrap();
+    let asami_address: Address = rsk.asami_contract_address.parse().unwrap();
     self.contract = Some(AsamiContract::new(address, client.clone()));
+    self.asami_contract = Some(AsamiCoreContract::new(asami_address, client.clone()));
 
     let doc_address: Address = rsk.doc_contract_address.parse().unwrap();
     self.doc_contract = Some(IERC20::new(doc_address, client.clone()));
     self.local_wallet = Some(wallet);
+  }
+
+  pub async fn submit_claim_account_request(&mut self) {
+    self.make_client_wallet().await;
+    self.gql_claim_account_request(&self.local_wallet()).await;
   }
 
   pub async fn claim_account(&mut self) { // Rsk address as string.
@@ -363,14 +426,6 @@ impl<'b> ApiClient<'b> {
       .post(path)
       .header(self.ok_auth_header(path, "POST", None, None))
       .dispatch().await
-  }
-
-  pub async fn asami_balance(&self) -> U256 {
-    self.test_app.contract().balance_of(self.local_wallet().address()).call().await.unwrap()
-  }
-
-  pub async fn doc_balance(&self) -> U256 {
-    self.test_app.doc_contract().balance_of(self.local_wallet().address()).call().await.unwrap()
   }
 
   pub async fn get_campaign_offers(&self) -> gql::all_campaigns::ResponseData {

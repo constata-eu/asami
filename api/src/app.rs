@@ -125,6 +125,7 @@ pub struct Rsk {
   pub rpc_url: String,
   pub start_sync_from_block: i64,
   pub contract_address: String,
+  pub asami_contract_address: String,
   pub doc_contract_address: String,
   pub wallet_mnemonic: String,
   pub admin_address: String,

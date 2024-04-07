@@ -15,11 +15,15 @@ import BalanceCard from "../balance_card";
 const Dashboard = () => {
   useAuthenticated();
 
+  /*
   const {data, isLoading} = useGetOne(
     "Account",
     { id: getAuthKeys().session.accountId },
     { refetchInterval: (d) => d?.status == "DONE" ? false : 5000 }
   );
+*/
+  const data = { status: "DONE" };
+  const isLoading = false;
 
   const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
 
@@ -41,9 +45,6 @@ const Dashboard = () => {
   return (<Box p="1em" id="advertiser-dashboard">
     <ColumnsContainer>
       <LoggedInNavCard />
-      <AdvertiserHelpCard claim={claim} />
-      <BalanceCard />
-      { claim == "NO_CLAIM" && <CampaignRequestCard /> }
       { claim == "DONE" && <MakeCampaignCard account={data} /> }
 
     </ColumnsContainer>

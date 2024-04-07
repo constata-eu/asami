@@ -34,7 +34,7 @@ export const MakeCampaignCard = ({account}) => {
   const onSubmit = async (values) => {
     setOpen(false)
     try {
-      const { doc, asami, asamiAddress, signer } = await contracts(account.addr);
+      const { doc, asami, asamiAddress, signer } = await contracts();//account.addr);
 
       setStep("APPROVING");
       setOpen(true)
@@ -63,9 +63,9 @@ export const MakeCampaignCard = ({account}) => {
       topics: []
     };
 
-    const {err, site, contentId} = parseCampaignSiteAndContentId(values.contentUrl);
-    if (err) {
-      return { contentUrl: translate(`make_campaign_card.errors.${err}`) };
+    const {error, site, contentId} = parseCampaignSiteAndContentId(values.contentUrl);
+    if (error) {
+      return { contentUrl: translate(`make_campaign_card.errors.${error}`) };
     }
     input.site = { 'X': 0, 'INSTAGRAM': 1 }[site];
     input.contentId = contentId;
@@ -82,7 +82,8 @@ export const MakeCampaignCard = ({account}) => {
     values.makeCampaignInput = input;
   }
   
-  const hasDoc = BigInt(account.docBalance) > 0;
+  // const hasDoc = BigInt(account.docBalance) > 0;
+  const hasDoc = true;
 
   return (
     <DeckCard>

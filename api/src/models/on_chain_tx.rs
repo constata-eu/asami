@@ -2,11 +2,33 @@ use super::*;
 use ethers::{
   abi::{Address, Detokenize},
   middleware::{contract::FunctionCall, Middleware},
-  prelude::{SignerMiddleware, Wallet},
+  prelude::{SignerMiddleware, Wallet, ContractError},
+  signers::{LocalWallet},
   providers::{Http, Provider},
 };
 use sqlx_models_orm::{SqlxModel, SqlxModelHub, SqlxSelectModelHub};
-use std::{borrow::Borrow, error::Error, sync::Arc};
+use std::{borrow::Borrow, sync::Arc};
+
+// Tx only does scheduling. Tx calls back to model for actual params.
+// Tx calls back to the models that requested it to say it's done.
+// Models receive call and react 
+//
+// Make "process_all" be "lock-step", "schedule_next":
+//      - Check previous OnChainTx state.
+//         - if done or failed, decide next step, and create it.
+//         - Work is creating an on-chain-tx. Logging the call/params/etc.
+//         - Requests can be "set failed" the same they are now "set done".
+//
+// What happens if a batch of collabs fails because some of them are not supposed to be there?
+//   - A standard "request" state is:
+//      - Registered (Received)
+//      - Processing (it's been added to an on-chain-tx, and references it.)
+//      - Done (batch tx done)
+//      - Failed (batch tx failed, or other error).
+//      - How can they be retried?
+//          * Set state from 'Failed' to 'Registered' and it should be picked up again.
+//          * Maybe store the previous attempt, or log it. 
+
 
 model! {
   state: App,
@@ -22,6 +44,12 @@ model! {
     tx_hash: Option<String>,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
+    #[sqlx_model_hints(varchar, default)]
+    gas_used: Option<String>,
+    #[sqlx_model_hints(varchar, default)]
+    nonce: Option<String>,
+    #[sqlx_model_hints(varchar, default)]
+    message: Option<String>,
   }
 }
 
@@ -44,9 +72,9 @@ impl OnChainTxHub {
 
     match fn_call.send().await {
       Err(e) => {
-        let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("{:?}; {:?}", e, e.source()));
-        unsent.fail("contract_error", desc).await?;
-        let reverted = unsent.update().status(OnChainTxStatus::Reverted).save().await?;
+        let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error") );
+        unsent.fail("early_revert_message", format!("{e:?}")).await?;
+        let reverted = unsent.update().status(OnChainTxStatus::Reverted).message(Some(desc)).save().await?;
         Ok(reverted)
       }
       Ok(pending_tx) => {
@@ -206,20 +234,37 @@ impl OnChainTxHub {
   }
 
   pub async fn sync_tx_result(&self) -> anyhow::Result<()> {
-    let client = self.state.on_chain.contract.client();
+    let client = self.state.on_chain.asami.client();
     for tx in self.select().status_eq(OnChainTxStatus::Submitted).all().await? {
-      let Some(tx_hash) = tx.tx_hash() else { continue };
-      let Some(receipt) = client.get_transaction_receipt(H256::decode_hex(tx_hash)?).await? else {
+      let Some(tx_hash) = tx.tx_hash().as_ref().and_then(|x| H256::decode_hex(x).ok()) else { 
+        dbg!("no_tx_hash");
+        continue
+      };
+      let Some(original_tx) = client.get_transaction(tx_hash).await? else {
+        dbg!("no_transaction");
         continue;
       };
-      let status = if receipt.status.unwrap_or(U64::zero()) == U64::one() {
-        OnChainTxStatus::Success
+      let Some(receipt) = client.get_transaction_receipt(tx_hash).await? else {
+        dbg!("no_receipt");
+        continue;
+      };
+      let (status, message) = if receipt.status.unwrap_or(U64::zero()) == U64::one() {
+        (OnChainTxStatus::Success, None)
       } else {
-        OnChainTxStatus::Failure
+        let typed: ethers::types::transaction::eip2718::TypedTransaction = (&original_tx).into();
+        let msg = match client.call(&typed, None).await {
+          Err(e) => {
+            tx.fail("full_failure_message", format!("{e:?}")).await?;
+            AsamiCoreContractError::from_middleware_error(e).decode_revert::<String>().unwrap_or_else(|| format!("non_revert_error"))
+          },
+          _ => "no_failure_reason_wtf".to_string()
+        };
+        (OnChainTxStatus::Failure, Some(msg))
       };
 
-      let id = tx.attrs.id;
+      //let id = tx.attrs.id;
 
+      /*
       self.state.claim_account_request().set_done(id).await?;
       self.state.handle_request().set_done(id).await?;
       self.state.set_score_and_topics_request().set_done(id).await?;
@@ -228,8 +273,13 @@ impl OnChainTxHub {
       self.state.campaign_request().set_done(id).await?;
       self.state.collab_request().set_done(id).await?;
       self.state.topic_request().set_done(id).await?;
+      */
 
-      tx.update().status(status).save().await?;
+      tx.update().status(status)
+        .gas_used(receipt.gas_used.map(|x| x.encode_hex() ))
+        .nonce(Some(original_tx.nonce.encode_hex()))
+        .message(message)
+        .save().await?;
     }
     Ok(())
   }
@@ -255,6 +305,7 @@ impl OnChainTx {
 
 pub type AsamiSigner = SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>;
 pub type AsamiFunctionCall = FunctionCall<Arc<AsamiSigner>, AsamiSigner, ()>;
+pub type AsamiCoreContractError = ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>;
 
 #[rocket::async_trait]
 pub trait OnChainTxRequest: SqlxModelHub<Self::Model> + std::marker::Send + std::marker::Sync {

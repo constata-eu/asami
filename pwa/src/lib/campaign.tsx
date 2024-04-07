@@ -18,7 +18,7 @@ export const parseCampaignSiteAndContentId = (url) => {
     const path = u.pathname.replace(/\/$/, '').split("/");
     const contentId = path[path.length - 1];
 
-    if ( (u.host.match(/\.?x\.com$/) || u.host.match(/\.?twitter\.com#/)) && contentId.match(/^\d+$/) ) {
+    if ( (u.host.match(/\.?x\.com$/) || u.host.match(/\.?twitter\.com$/)) && contentId.match(/^\d+$/) ) {
       result.site = "X";
     } else if (u.host.match(/\.?instagram.com$/) && contentId.match(/^[\d\w\-_]+$/)) {
       result.site = "INSTAGRAM";

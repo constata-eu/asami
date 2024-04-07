@@ -15,6 +15,12 @@ abigen!(
 );
 
 abigen!(
+  AsamiCoreContract,
+  "../contract/build/contracts/AsamiCore.json",
+  derives(serde::Deserialize, serde::Serialize),
+);
+
+abigen!(
   IERC20,
   r#"[
     function approve(address spender, uint256 value) public virtual returns (bool)
@@ -26,10 +32,12 @@ abigen!(
 
 pub type AsamiContractSigner = AsamiContract<SignerMiddleware<Provider<Http>, LocalWallet>>;
 pub type DocContract = IERC20<SignerMiddleware<Provider<Http>, LocalWallet>>;
+pub type AsamiCoreContractSigner = AsamiCoreContract<SignerMiddleware<Provider<Http>, LocalWallet>>;
 
 #[derive(Clone)]
 pub struct OnChain {
   pub contract: AsamiContractSigner,
+  pub asami: AsamiCoreContractSigner,
   pub doc_contract: DocContract,
 }
 
@@ -63,6 +71,12 @@ impl OnChain {
       .parse()
       .map_err(|_| Error::Init("Invalid asami contract address in config".to_string()))?;
 
+    let asami_address: Address = config
+      .rsk
+      .asami_contract_address
+      .parse()
+      .map_err(|_| Error::Init("Invalid asami contract address in config".to_string()))?;
+
     let doc_address: Address = config
       .rsk
       .doc_contract_address
@@ -71,6 +85,7 @@ impl OnChain {
 
     Ok(Self {
       contract: AsamiContract::new(address, client.clone()),
+      asami: AsamiCoreContract::new(asami_address, client.clone()),
       doc_contract: IERC20::new(doc_address, client),
     })
   }

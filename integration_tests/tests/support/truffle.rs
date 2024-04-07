@@ -11,6 +11,7 @@ pub struct Truffle {
 #[derive(Clone, Debug, serde::Deserialize)]
 pub struct Addresses {
   pub asami: String,
+  pub asami_core: String,
   pub doc: String,
   pub deployer: Address,
 }
@@ -32,7 +33,7 @@ impl Truffle {
 
     let child_vec = Command::new("ganache")
       .current_dir(&dir)
-      .args(["-D", &format!("--logging.file={path_to_log}"), "--miner.instamine", "strict"])
+      .args(["-D", &format!("--logging.file={path_to_log}"), "--miner.instamine", "strict", "--miner.blockTime", "0"])
       .output()
       .unwrap()
       .stdout;

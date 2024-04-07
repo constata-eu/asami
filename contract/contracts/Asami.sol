@@ -517,7 +517,6 @@ contract Asami is ERC20Capped, ReentrancyGuard {
         return getCurrentCycle() + getCycleLength();
     }
 
-
     uint256 public feePool;
     struct BalanceChange {
       uint256 added;

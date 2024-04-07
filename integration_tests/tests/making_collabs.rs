@@ -1,5 +1,4 @@
-#[macro_use]
-pub mod support;
+use crate::support;
 use ::api::models::*;
 
 app_test!{ makes_collab_consumes_remaining (a)
