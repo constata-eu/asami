@@ -148,6 +148,10 @@ pub fn wei<T: AsRef<str>>(t: T) -> U256 {
   U256::from_dec_str(t.as_ref()).unwrap_or(U256::zero())
 }
 
+pub fn milli<T: AsRef<str>>(t: T) -> U256 {
+  wei(t) * U256::from(10).pow(U256::from(15))
+}
+
 pub fn weihex<T: AsRef<str>>(t: T) -> String {
   wei(t).encode_hex()
 }

@@ -1,1 +1,2 @@
-pub mod making_collabs_and_claiming_rewards;
+pub mod making_collabs_claiming_accounts_and_rewards;
+pub mod migrating_tokens_from_asami_v1;

@@ -96,7 +96,7 @@ impl TestApp {
     wallet
   }
 
-  pub fn contract(&self) -> &api::on_chain::AsamiContractSigner {
+  pub fn legacy_contract(&self) -> &api::on_chain::AsamiContractSigner {
     &self.app.on_chain.contract
   }
 
@@ -143,12 +143,21 @@ impl TestApp {
   ) {
     let (addr, _, unclaimed_asami, unclaimed_doc) = self.asami_core().accounts(account_id).call().await
       .expect(&format!("Cannot find account balances for {account_id}"));
+    let (asami_balance, rbtc_balance, doc_balance) = if addr == Address::zero() {
+      (u("0"), u("0"), u("0"))
+    } else {
+      (
+        self.asami_balance_of(&addr).await,
+        self.rbtc_balance_of(&addr).await,
+        self.doc_balance_of(&addr).await,
+      )
+    };
 
-    assert_eq!(unclaimed_asami, expected_unclaimed_asami, "unclaimed asami mismatch on '{reference}'");
+    assert_eq!(rbtc_balance, expected_rbtc, "rbtc balance mismatch on '{reference}'");
     assert_eq!(unclaimed_doc, expected_unclaimed_doc, "unclaimed doc mismatch on '{reference}'");
-    assert_eq!(self.asami_balance_of(&addr).await, expected_asami, "asami balance mismatch on '{reference}'");
-    assert_eq!(self.doc_balance_of(&addr).await, expected_doc, "doc balance mismatch on '{reference}'");
-    assert_eq!(self.rbtc_balance_of(&addr).await, expected_rbtc, "rbtc balance mismatch on '{reference}'");
+    assert_eq!(doc_balance, expected_doc, "doc balance mismatch on '{reference}'");
+    assert_eq!(asami_balance, expected_asami, "asami balance mismatch on '{reference}'");
+    assert_eq!(unclaimed_asami, expected_unclaimed_asami, "unclaimed asami mismatch on '{reference}'");
   }
 
   pub async fn admin_rbtc_balance(&self) -> U256 {
@@ -203,7 +212,7 @@ impl TestApp {
   }
 
   pub async fn contract_doc_balance(&self) -> U256 {
-    self.doc_balance_of(&self.contract().address()).await
+    self.doc_balance_of(&self.asami_core().address()).await
   }
 
   pub async fn send_doc_to(&self, addr: Address, amount: U256) {
@@ -301,7 +310,7 @@ impl TestApp {
   }
 
   pub async fn wait_tx_state(&self, reference: &str, tx: &models::OnChainTx, status: models::OnChainTxStatus) {
-    try_until(10, 100, &format!("Waiting for confirmation and failure on {reference}"), || async {
+    try_until(10, 100, &format!("Waiting tx state on {}", reference), || async {
       self.evm_mine().await;
       self.app.on_chain_tx().sync_tx_result().await.expect(&format!("on chain sync tx result failed: {reference}"));
       tx.reloaded().await.unwrap().attrs.status == status
@@ -309,9 +318,9 @@ impl TestApp {
   }
 
   pub async fn wait_tx_failure(&self, reference: &str, tx: &models::OnChainTx, expected_message: &str) {
-    self.wait_tx_state("waiting for failure on {reference}", tx, models::OnChainTxStatus::Failure).await;
+    self.wait_tx_state(&format!("waiting for failure on {reference}"), tx, models::OnChainTxStatus::Failure).await;
     assert_eq!(
-      tx.reloaded().await.expect("db error on {reference}").message().as_deref(),
+      tx.reloaded().await.expect(&format!("db error on {reference}")).message().as_deref(),
       Some(expected_message),
       "wrong error message for {reference}"
     );

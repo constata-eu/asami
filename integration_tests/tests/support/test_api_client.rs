@@ -5,7 +5,7 @@ pub use galvanic_assert::{
   matchers::{collection::*, variant::*, *},
   *,
 };
-pub use api::models::{self, u, U256, u256, hasher, Utc, wei};
+pub use api::models::{self, u, U256, u256, milli, hasher, Utc, wei};
 use api::{
   on_chain::{self, AsamiContractSigner, AsamiCoreContractSigner, DocContract, AsamiCoreContract, AsamiContract, IERC20, Provider, SignerMiddleware, Address, Http}
 };
@@ -29,7 +29,7 @@ pub struct ApiClient<'a> {
   pub session: Option<models::Session>,
   pub local_wallet: Option<LocalWallet>,
   pub account_id: Option<U256>,
-  pub contract: Option<AsamiContractSigner>,
+  pub legacy_contract: Option<AsamiContractSigner>,
   pub asami_contract: Option<AsamiCoreContractSigner>,
   pub doc_contract: Option<DocContract>,
 }
@@ -50,7 +50,7 @@ impl<'b> ApiClient<'b> {
       session_key: None, 
       session: None,
       account_id: None,
-      contract: None,
+      legacy_contract: None,
       doc_contract: None,
       asami_contract: None,
     }
@@ -88,8 +88,8 @@ impl<'b> ApiClient<'b> {
     self.local_wallet().address()
   }
 
-  pub fn contract(&self) -> &AsamiContractSigner {
-    self.contract.as_ref().unwrap()
+  pub fn legacy_contract(&self) -> &AsamiContractSigner {
+    self.legacy_contract.as_ref().unwrap()
   }
 
   pub fn asami_contract(&self) -> &AsamiCoreContractSigner {
@@ -191,16 +191,17 @@ impl<'b> ApiClient<'b> {
   }
 
   pub async fn create_self_managed_x_campaign(&self, budget: U256, rate: U256, days: i64) -> models::Campaign {
+    // TODO: This method can be removed.
     let two_days = Utc::now() + chrono::Duration::days(days);
 
     self.doc_contract()
-      .approve(self.contract().address(), budget)
+      .approve(self.legacy_contract().address(), budget)
       .send().await.expect("sending approval")
       .await.expect("getting approval receipt")
       .expect("approval receipt");
 
     let tx = self.app().on_chain_tx().send_tx(
-      self.contract().make_campaigns(vec![on_chain::CampaignInput{
+      self.legacy_contract().make_campaigns(vec![on_chain::CampaignInput{
         site: models::Site::X as u8,
         budget: budget,
         content_id: "1716421161867710954".to_string(),
@@ -247,7 +248,7 @@ impl<'b> ApiClient<'b> {
 
     self.test_app.send_tx(
       &format!("Claiming for setting up as advertiser: {message}"),
-      "94233",
+      "94523",
       self.test_app.asami_core().claim_accounts(vec![
         on_chain::ClaimAccountsParam{ account_id: self.account_id(), addr: self.address() },
       ])
@@ -263,7 +264,7 @@ impl<'b> ApiClient<'b> {
   pub async fn make_campaign(&self, message: &str, budget: U256, briefing: U256, duration_days: i64) {
     self.test_app.send_tx(
       &format!("Making campaign: {message}"),
-      "112859",
+      "112881",
       self.asami_contract().make_campaigns( vec![
         on_chain::MakeCampaignsParam{
           budget,
@@ -282,7 +283,7 @@ impl<'b> ApiClient<'b> {
     let client = std::sync::Arc::new(SignerMiddleware::new(provider, wallet.clone()));
     let address: Address = rsk.contract_address.parse().unwrap();
     let asami_address: Address = rsk.asami_contract_address.parse().unwrap();
-    self.contract = Some(AsamiContract::new(address, client.clone()));
+    self.legacy_contract = Some(AsamiContract::new(address, client.clone()));
     self.asami_contract = Some(AsamiCoreContract::new(asami_address, client.clone()));
 
     let doc_address: Address = rsk.doc_contract_address.parse().unwrap();
@@ -306,7 +307,7 @@ impl<'b> ApiClient<'b> {
   }
 
   pub async fn self_submit_fee_rate_vote(&self, rate: U256) -> api::AsamiResult<()> {
-    self.contract().submit_fee_rate_vote(rate)
+    self.asami_contract().submit_fee_rate_vote(rate)
       .send().await?
       .await?
       .expect("extracting receipt");
@@ -314,7 +315,7 @@ impl<'b> ApiClient<'b> {
   }
 
   pub async fn self_remove_fee_rate_vote(&self) -> api::AsamiResult<()> {
-    self.contract().remove_fee_rate_vote()
+    self.asami_contract().remove_fee_rate_vote()
       .send().await?
       .await?
       .expect("extracting receipt");
@@ -322,7 +323,7 @@ impl<'b> ApiClient<'b> {
   }
 
   pub async fn self_submit_admin_vote(&self, candidate: Address) -> api::AsamiResult<()> {
-    self.contract().submit_admin_vote(candidate)
+    self.asami_contract().submit_admin_vote(candidate)
       .send().await?
       .await?
       .expect("extracting receipt");
@@ -330,7 +331,7 @@ impl<'b> ApiClient<'b> {
   }
 
   pub async fn self_remove_admin_vote(&self) -> api::AsamiResult<()> {
-    self.contract().remove_admin_vote()
+    self.asami_contract().remove_admin_vote()
       .send().await?
       .await?
       .expect("extracting receipt");
@@ -338,7 +339,7 @@ impl<'b> ApiClient<'b> {
   }
 
   pub async fn self_vest_admin_vote(&self, candidate: Address) -> api::AsamiResult<()> {
-    self.contract().vest_admin_votes(vec![candidate])
+    self.asami_contract().vest_admin_votes(vec![candidate])
       .send().await?
       .await?
       .expect("extracting receipt");
@@ -346,7 +347,7 @@ impl<'b> ApiClient<'b> {
   }
 
   pub async fn self_set_admin_address(&self, address: Address) -> api::AsamiResult<()> {
-    self.contract().set_admin_address(address)
+    self.asami_contract().set_admin_address(address)
       .send().await?
       .await?
       .expect("extracting receipt");

@@ -237,15 +237,12 @@ impl OnChainTxHub {
     let client = self.state.on_chain.asami.client();
     for tx in self.select().status_eq(OnChainTxStatus::Submitted).all().await? {
       let Some(tx_hash) = tx.tx_hash().as_ref().and_then(|x| H256::decode_hex(x).ok()) else { 
-        dbg!("no_tx_hash");
         continue
       };
       let Some(original_tx) = client.get_transaction(tx_hash).await? else {
-        dbg!("no_transaction");
         continue;
       };
       let Some(receipt) = client.get_transaction_receipt(tx_hash).await? else {
-        dbg!("no_receipt");
         continue;
       };
       let (status, message) = if receipt.status.unwrap_or(U64::zero()) == U64::one() {

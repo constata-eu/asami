@@ -126,14 +126,13 @@ app_test!{ rejects_collabs_when_too_large_or_campaign_is_finished(a)
   a.send_revert_tx( "Further attempts get reverted", "amc1", make_collabs_call("50")).await;
 }
 
-app_test!{ cannot_use_gasless_claim_if_funds_too_low(a)
+app_test!{ gasless_claim_common_error_cases(a)
   let mut advertiser = a.client().await;
   advertiser.setup_as_advertiser("global advertiser for test").await;
   advertiser.make_campaign("global campaign for test", u("2000"), u("deadbeef"), 2).await;
 
   let mut alice = a.client().await;
   alice.make_client_wallet().await;
-
 
   a.send_tx(
     "A very small collab is registered",
@@ -148,16 +147,189 @@ app_test!{ cannot_use_gasless_claim_if_funds_too_low(a)
   ).await;
 
   a.assert_balances_of(
-    "Alice reward", 
+    "Alice balances after collab", 
     alice.account_id(),
-    u("10"),
+    wei("0"),
     wei("900000000000000000"), u("0"),
     wei("15000000000000000"), u("0")
   ).await;
 
+  a.send_revert_tx(
+    "The BTC amount to send is less than 1e11",
+    "gcb0",
+    a.asami_core().gasless_claim_balances(u("1"), wei("1000000"), vec![alice.account_id()]).value(wei("1000000")),
+  ).await;
+
+  a.send_revert_tx(
+    "The BTC value is not exactly what's going to be distributed",
+    "gcb1",
+    a.asami_core().gasless_claim_balances(u("1"), u("1"), vec![alice.account_id()]).value(u("2")),
+  ).await;
+
+  a.send_revert_tx(
+    "Alice has not claimed her account yet, so cannot claim pending balances",
+    "gcb2",
+    a.asami_core().gasless_claim_balances(u("5"), u("1"), vec![alice.account_id()]).value(u("1")),
+  ).await;
+
+  a.send_tx(
+    "Claiming Alice account",
+    "229761",
+    a.asami_core().claim_accounts(vec![
+      ClaimAccountsParam{ account_id: alice.account_id(), addr: alice.address() },
+    ])
+  ).await;
+
+  a.send_revert_tx(
+    "Alice cannot pay the gasless DOC fee",
+    "gcb3",
+    a.asami_core().gasless_claim_balances(u("5"), u("1"), vec![alice.account_id()]).value(u("1")),
+  ).await;
+
+  a.send_tx(
+    "Alice can withdraw if fee is low enough ",
+    "257592",
+    a.asami_core().gasless_claim_balances(wei("10000000"), u("1"), vec![alice.account_id()]).value(u("1")),
+  ).await;
+
+  a.assert_balances_of(
+    "Alice balances after gasless claim", 
+    alice.account_id(),
+    u("11"),
+    u("0"), wei("899999999990000000"),
+    u("0"), wei("15000000000000000")
+  ).await;
 }
 
-// Migrate fee distribution tests here.
-// Test cannot claim with an existing address.
-// Someone removes gasless withdrawal budget, no more gasless withdrawals are allowed.
+app_test!{ user_can_manage_a_gasless_amount_approval(a)
+  let mut advertiser = a.client().await;
+  advertiser.setup_as_advertiser("global advertiser for test").await;
+  advertiser.make_campaign("global campaign for test", u("2000"), u("deadbeef"), 2).await;
 
+  let mut alice = a.client().await;
+  alice.make_client_wallet().await;
+  a.send_tx(
+    "A collab is registered generating rewards",
+    "1084176",
+    a.asami_core().admin_make_collabs(
+      vec![MakeCollabsParam{
+        advertiser_id: advertiser.account_id(),
+        briefing: u("deadbeef"),
+        collabs: vec![ MakeCollabsParamItem{ account_id: alice.account_id(), doc_reward: u("100") }]
+      }]
+    )
+  ).await;
+
+  a.send_revert_tx(
+    "Alice cannot change her approvedGaslessAmount before claiming",
+    "cga0",
+    alice.asami_contract().change_gasless_approval(u("6"))
+  ).await;
+
+  a.send_tx(
+    "Claiming Alice account",
+    "229761",
+    a.asami_core().claim_accounts(vec![
+      ClaimAccountsParam{ account_id: alice.account_id(), addr: alice.address() },
+    ])
+  ).await;
+
+  a.send_revert_tx(
+    "The admin cannot charge more than the gasless approval, which defaults to 5",
+    "gcb4",
+    a.asami_core().gasless_claim_balances(u("6"), u("1"), vec![alice.account_id()]).value(u("1")),
+  ).await;
+
+  a.send_tx(
+    "Alice can change her gasless approval now",
+    "30955",
+    alice.asami_contract().change_gasless_approval(u("6"))
+  ).await;
+
+  a.send_tx(
+    "The admin can now do a gasless claim.",
+    "257650",
+    a.asami_core().gasless_claim_balances(u("6"), u("1"), vec![alice.account_id()]).value(u("1")),
+  ).await;
+}
+
+app_test!{ simultaneous_gasless_and_regular_claims_fail(a)
+  let mut advertiser = a.client().await;
+  advertiser.setup_as_advertiser("global advertiser for test").await;
+  advertiser.make_campaign("global campaign for test", u("2000"), u("deadbeef"), 2).await;
+
+  let mut alice = a.client().await;
+  alice.make_client_wallet().await;
+  a.send_tx(
+    "A collab is registered generating rewards",
+    "1084176",
+    a.asami_core().admin_make_collabs(
+      vec![MakeCollabsParam{
+        advertiser_id: advertiser.account_id(),
+        briefing: u("deadbeef"),
+        collabs: vec![ MakeCollabsParamItem{ account_id: alice.account_id(), doc_reward: u("100") }]
+      }]
+    )
+  ).await;
+  a.send_tx(
+    "Claiming Alice account",
+    "229761",
+    a.asami_core().claim_accounts(vec![
+      ClaimAccountsParam{ account_id: alice.account_id(), addr: alice.address() },
+    ])
+  ).await;
+
+  let txs = a.send_without_mining(
+    "These can get accepted independentnly, but last one will exceed budget",
+    a.admin_nonce().await,
+    vec![
+      a.asami_core().claim_balances(vec![alice.account_id()]),
+      a.asami_core().gasless_claim_balances(u("4"), u("1"), vec![alice.account_id()]).value(u("1")),
+    ]
+  ).await;
+
+  a.wait_tx_state("regular claim always passes", &txs[0], models::OnChainTxStatus::Success).await;
+  a.wait_tx_failure("gasless claim fails", &txs[1], "gcb3").await;
+}
+
+app_test!{ accounts_are_tied_to_an_address_forever(a) 
+  let mut alice = a.client().await;
+  alice.make_client_wallet().await;
+  let mut bob = a.client().await;
+  bob.make_client_wallet().await;
+
+  a.send_tx(
+    "Alice can claim her account",
+    "229761",
+    a.asami_core().claim_accounts(vec![
+      ClaimAccountsParam{ account_id: alice.account_id(), addr: alice.address() },
+    ])
+  ).await;
+
+  a.send_revert_tx(
+    "Alice cannot claim her account again",
+    "ca0",
+    a.asami_core().claim_accounts(vec![
+      ClaimAccountsParam{ account_id: alice.account_id(), addr: alice.address() },
+    ])
+  ).await;
+
+  a.send_revert_tx(
+    "Alice cannot reuse her address to claim bob account id",
+    "ca1",
+    a.asami_core().claim_accounts(vec![
+      ClaimAccountsParam{ account_id: bob.account_id(), addr: alice.address() },
+    ])
+  ).await;
+
+  a.send_tx(
+    "Bob can claim his account",
+    "229761",
+    a.asami_core().claim_accounts(vec![
+      ClaimAccountsParam{ account_id: bob.account_id(), addr: bob.address() },
+    ])
+  ).await;
+}
+
+
+// Migrate fee distribution tests here.

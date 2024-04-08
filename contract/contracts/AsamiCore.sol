@@ -2,6 +2,7 @@
 pragma solidity 0.8.19;
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./Asami.sol";
 
 contract AsamiCore is ERC20Capped, ReentrancyGuard {
     struct Account {
@@ -154,6 +155,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
 
             Account storage account = accounts[claim.accountId];
             require(account.addr == address(0), "ca0");
+            require(accountIdByAddress[claim.addr] == 0, "ca1");
 
             accountIdByAddress[claim.addr] = claim.accountId;
             account.addr = claim.addr;
@@ -185,13 +187,14 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
       uint256 _rbtcAmount,
       uint256[] calldata _accountIds
     ) external payable nonReentrant onlyAdmin {
-      require(_rbtcAmount > 1e11, "cb0");
-      require(msg.value == (_rbtcAmount * _accountIds.length), "cb0");
+      require(_rbtcAmount > 1e11, "gcb0");
+      require(msg.value == (_rbtcAmount * _accountIds.length), "gcb1");
 
       for (uint256 i = 0; i < _accountIds.length; i++){
         Account storage account = accounts[_accountIds[i]];
-        require(account.addr != address(0), "cb1");
-        require(account.unclaimedDocBalance > _fee, "cb2");
+        require(account.addr != address(0), "gcb2");
+        require(account.unclaimedDocBalance > _fee, "gcb3");
+        require(account.approvedGaslessAmount >= _fee, "gcb4");
 
         uint256 docs = account.unclaimedDocBalance - _fee;
         account.unclaimedDocBalance = 0;
@@ -205,6 +208,13 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
           _safeMint(account.addr, balance);
         }
       }
+    }
+
+    function changeGaslessApproval(uint256 newAmount) external {
+        uint256 accountId = accountIdByAddress[msg.sender];
+        Account storage account = accounts[accountId];
+        require(account.addr != address(0), "cga0");
+        account.approvedGaslessAmount = newAmount;
     }
 
     function claimAdminUnclaimedBalances() external nonReentrant {
@@ -536,5 +546,45 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     function setAdminAddress(address _admin) external {
         require(msg.sender == adminTreasury);
         admin = _admin;
+    }
+
+    bool public migrationDone;
+
+    function migrateTokensFromOldContract(address _oldContract) external {
+      require(!migrationDone, "mig0");
+      Asami oldContract = Asami(_oldContract);
+
+      uint256 i = 0;
+      while (true) {
+          try oldContract.holders(i) returns (address holder) {
+            i++;
+            uint256 balance = oldContract.balanceOf(holder);
+            if(balance > 0){
+              _safeMint(holder, oldContract.balanceOf(holder));
+            }
+          } catch {
+              break;
+          }
+      }
+
+      uint256 j = 0;
+      while (true) {
+          try oldContract.accountIds(j) returns (uint256 oldAccountId) {
+            j++;
+            ( , address addr, uint256 oldUnclaimedAsami,) = oldContract.accounts(oldAccountId);
+            Account storage account = accounts[oldAccountId];
+            if(addr != address(0)) {
+              accountIdByAddress[addr] = oldAccountId;
+              account.addr = addr;
+              account.approvedGaslessAmount = 5e18; 
+            } else {
+              account.unclaimedAsamiBalance = oldUnclaimedAsami;
+            }
+          } catch {
+              break;
+          }
+      }
+
+      migrationDone = true;
     }
 }
