@@ -6,7 +6,7 @@ app_test!{ full_contract_workflow_from_collabs_to_voting(a)
   advertiser.make_campaign("campaign that will be drained", u("2000"), u("deadbeef"), 2).await;
 
   let collabs_params = vec![MakeCollabsParam{
-    advertiser_id: wei("1"),
+    advertiser_id: advertiser.account_id(),
     briefing: u("deadbeef"),
     collabs: (0..20)
       .map(|i| MakeCollabsParamItem{ account_id: wei((i+1).to_string()), doc_reward: u("20") } )
@@ -134,17 +134,7 @@ app_test!{ gasless_claim_common_error_cases(a)
   let mut alice = a.client().await;
   alice.make_client_wallet().await;
 
-  a.send_tx(
-    "A very small collab is registered",
-    "1084176",
-    a.asami_core().admin_make_collabs(
-      vec![MakeCollabsParam{
-        advertiser_id: advertiser.account_id(),
-        briefing: u("deadbeef"),
-        collabs: vec![ MakeCollabsParamItem{ account_id: alice.account_id(), doc_reward: u("1") }]
-      }]
-    )
-  ).await;
+  a.send_make_collab_tx("A very small collab is registered", "10000", &advertiser, u("deadbeef"), &alice, u("1")).await;
 
   a.assert_balances_of(
     "Alice balances after collab", 
@@ -208,17 +198,7 @@ app_test!{ user_can_manage_a_gasless_amount_approval(a)
 
   let mut alice = a.client().await;
   alice.make_client_wallet().await;
-  a.send_tx(
-    "A collab is registered generating rewards",
-    "1084176",
-    a.asami_core().admin_make_collabs(
-      vec![MakeCollabsParam{
-        advertiser_id: advertiser.account_id(),
-        briefing: u("deadbeef"),
-        collabs: vec![ MakeCollabsParamItem{ account_id: alice.account_id(), doc_reward: u("100") }]
-      }]
-    )
-  ).await;
+  a.send_make_collab_tx("A collab is registered generating rewards", "10000", &advertiser, u("deadbeef"), &alice, u("100")).await;
 
   a.send_revert_tx(
     "Alice cannot change her approvedGaslessAmount before claiming",
@@ -260,17 +240,8 @@ app_test!{ simultaneous_gasless_and_regular_claims_fail(a)
 
   let mut alice = a.client().await;
   alice.make_client_wallet().await;
-  a.send_tx(
-    "A collab is registered generating rewards",
-    "1084176",
-    a.asami_core().admin_make_collabs(
-      vec![MakeCollabsParam{
-        advertiser_id: advertiser.account_id(),
-        briefing: u("deadbeef"),
-        collabs: vec![ MakeCollabsParamItem{ account_id: alice.account_id(), doc_reward: u("100") }]
-      }]
-    )
-  ).await;
+  a.send_make_collab_tx("A collab is registered generating rewards", "10000", &advertiser, u("deadbeef"), &alice, u("100")).await;
+
   a.send_tx(
     "Claiming Alice account",
     "229761",

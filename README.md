@@ -8,15 +8,18 @@ This is a mega-repo with all the project's code and documentation, pull requests
 You can contact us by creating an issue here.
 
 ###
+- Remove Handles Model.
+- Rename HandleRequests to Handles.
+- Collabs are registered to HandleRequests now.
+- No more "Collabs" table, just collab requests with an enhanced state tracking.
+- Add and manage "gasless claim balance requests" that trigger that transaction.
 
-
-- Must we keep the "HandleRequest" tables?
-  - Yes, HandleRequest becomes internal use only. We can rename it to "Handles", we check here for collabs.
-  - They don't have a price anymore.
-  - They do have a score.
-
-- Must we keep the "CollabRequest" tables to avoid registering collabs again (?)
-  - No, we're not migrating campaigns so there's no risk of wrong collabs.
+###
+###
+###
+###
+- Create a new Holders model to track asami token holders and movements.
+  -- Listen to  transfer events for DOC as well to keep account balances up to date?
 
 AsamiCore migration path:
 
@@ -41,13 +44,11 @@ AsamiCore migration path:
 
   - API limits campaign creation, nobody can create "valid" campaigns for someone else.
   - If a campaign creation event is received without a valid brief, it's discarded.
-  - Campaigns can be extended now.
+  - Campaigns can be extended now, but this could be done in 'adminspace'
 
   - This unique ID could have the brief ID to link both data points.
     - action: { "site": "X", "action": "repost", "contentId": "323232323" }
     - DB id is hash of creator + hash of action
-
-    
 
   - The campaign is created on-chain referencing the off-chain id.
   - The off-chain data source sees the on-chain payment and continues the campaign flow.

@@ -1,5 +1,6 @@
 use super::*;
 use api::{
+  on_chain,
   models::{self, U256, u},
   App,
   AppConfig
@@ -41,7 +42,7 @@ impl TestApp {
     config.rsk.contract_address = truffle.addresses.asami.clone();
     config.rsk.doc_contract_address = truffle.addresses.doc.clone();
     config.rsk.asami_contract_address = truffle.addresses.asami_core.clone();
-    let provider = Provider::<Http>::try_from(&config.rsk.rpc_url).unwrap();
+    let provider = Provider::<Http>::try_from(&config.rsk.rpc_url).unwrap().interval(std::time::Duration::from_millis(10));
     let app = App::new("password".to_string(), config).await.unwrap();
 
     let fig = Config::figment().merge((Config::LOG_LEVEL, LogLevel::Off));
@@ -74,7 +75,7 @@ impl TestApp {
   }
 
   pub async fn admin_nonce(&self) -> U256 {
-    self.provider.get_transaction_count(self.admin_address(), None).await.unwrap()
+    self.provider.get_transaction_count(self.client_admin_address(), None).await.unwrap()
   }
 
   pub async fn client(&self) -> ApiClient {
@@ -90,6 +91,7 @@ impl TestApp {
     self.app.on_chain.asami.client()
       .send_transaction(tx, None)
       .await.expect("sending tx")
+      .interval(std::time::Duration::from_millis(10))
       .await.expect("waiting tx confirmation")
       .expect("tx result");
     self.stop_mining().await;
@@ -108,8 +110,12 @@ impl TestApp {
     &self.app.on_chain.doc_contract
   }
 
-  pub fn admin_address(&self) -> Address {
+  pub fn client_admin_address(&self) -> Address {
     self.asami_core().client().address()
+  }
+
+  pub async fn admin_address(&self) -> Address {
+    self.asami_core().admin().call().await.expect("getting admin address")
   }
 
   pub async fn admin_treasury_address(&self) -> Address {
@@ -161,7 +167,7 @@ impl TestApp {
   }
 
   pub async fn admin_rbtc_balance(&self) -> U256 {
-    self.rbtc_balance_of(&self.admin_address()).await
+    self.rbtc_balance_of(&self.client_admin_address()).await
   }
 
   pub async fn admin_unclaimed_doc_balance(&self) -> U256 {
@@ -169,7 +175,7 @@ impl TestApp {
   }
 
   pub async fn admin_doc_balance(&self) -> U256 {
-    self.doc_balance_of(&self.admin_address()).await
+    self.doc_balance_of(&self.client_admin_address()).await
   }
 
   pub async fn admin_unclaimed_asami_balance(&self) -> U256 {
@@ -177,7 +183,7 @@ impl TestApp {
   }
 
   pub async fn admin_asami_balance(&self) -> U256 {
-    self.asami_balance_of(&self.admin_address()).await
+    self.asami_balance_of(&self.client_admin_address()).await
   }
 
   pub async fn admin_treasury_rbtc_balance(&self) -> U256 {
@@ -217,8 +223,25 @@ impl TestApp {
 
   pub async fn send_doc_to(&self, addr: Address, amount: U256) {
     self.start_mining().await;
-    self.doc_contract().transfer(addr, amount).send().await.unwrap().await.unwrap().unwrap();
+    self.doc_contract().transfer(addr, amount).send()
+      .await.unwrap()
+      .interval(std::time::Duration::from_millis(10))
+      .await.unwrap().unwrap();
     self.stop_mining().await;
+  }
+
+  pub async fn send_make_collab_tx(&self, reference: &str, max_gas: &str, advertiser: &ApiClient<'_>, briefing: U256, member: &ApiClient<'_>, reward: U256){
+    self.send_tx(
+      reference,
+      max_gas,
+      self.asami_core().admin_make_collabs(
+        vec![on_chain::MakeCollabsParam{
+          advertiser_id: advertiser.account_id(),
+          briefing,
+          collabs: vec![ on_chain::MakeCollabsParamItem{ account_id: member.account_id(), doc_reward: reward}]
+        }]
+      )
+    ).await;
   }
 
   pub async fn mock_admin_setting_campaign_requests_as_paid(&self) {
@@ -310,11 +333,20 @@ impl TestApp {
   }
 
   pub async fn wait_tx_state(&self, reference: &str, tx: &models::OnChainTx, status: models::OnChainTxStatus) {
-    try_until(10, 100, &format!("Waiting tx state on {}", reference), || async {
+    let success = wait_for(100, 10, || async {
       self.evm_mine().await;
       self.app.on_chain_tx().sync_tx_result().await.expect(&format!("on chain sync tx result failed: {reference}"));
       tx.reloaded().await.unwrap().attrs.status == status
     }).await;
+    let reloaded = tx.reloaded().await.unwrap();
+    assert!(
+      success,
+      "Waiting for tx status on '{}' to be '{:?}' but was '{:?}' ({:?})",
+      reference,
+      status,
+      reloaded.status(),
+      reloaded.message()
+    ); 
   }
 
   pub async fn wait_tx_failure(&self, reference: &str, tx: &models::OnChainTx, expected_message: &str) {

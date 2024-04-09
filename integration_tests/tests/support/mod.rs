@@ -37,15 +37,19 @@ pub fn wait_here() {
 }
 
 pub async fn try_until<T: std::future::Future<Output = bool>>(times: i32, sleep: u64, err: &str,  call: impl Fn() -> T) {
+  assert!(wait_for(times, sleep, call).await, "{err}");
+}
+
+pub async fn wait_for<T: std::future::Future<Output = bool>>(times: i32, sleep: u64, call: impl Fn() -> T) -> bool {
   use std::{thread, time};
   let millis = time::Duration::from_millis(sleep);
   for _i in 0..times {
     if call().await {
-      return;
+      return true;
     }
     thread::sleep(millis);
   }
-  assert!(false, "{err}");
+  return false;
 }
 
 #[allow(dead_code)]

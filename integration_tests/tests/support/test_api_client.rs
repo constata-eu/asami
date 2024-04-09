@@ -243,8 +243,12 @@ impl<'b> ApiClient<'b> {
   }
 
   pub async fn setup_as_advertiser(&mut self, message: &str) {
+    self.setup_as_advertiser_with_amount(message, u("2000")).await;
+  }
+
+  pub async fn setup_as_advertiser_with_amount(&mut self, message: &str, amount: U256) {
     self.make_client_wallet().await;
-    self.test_app.send_doc_to(self.address(), u("2000")).await;
+    self.test_app.send_doc_to(self.address(), amount.clone()).await;
 
     self.test_app.send_tx(
       &format!("Claiming for setting up as advertiser: {message}"),
@@ -256,8 +260,8 @@ impl<'b> ApiClient<'b> {
 
     self.test_app.send_tx(
       &format!("Approving spending for setting up as advertiser: {message}"),
-      "46284",
-      self.doc_contract().approve( self.test_app.asami_core().address(), u("10000"))
+      "46296",
+      self.doc_contract().approve(self.test_app.asami_core().address(), amount.clone())
     ).await;
   }
 
@@ -279,7 +283,7 @@ impl<'b> ApiClient<'b> {
     let rsk = &self.app().settings.rsk;
     let wallet = self.test_app.make_wallet().await;
 
-    let provider = Provider::<Http>::try_from(&rsk.rpc_url).unwrap();
+    let provider = Provider::<Http>::try_from(&rsk.rpc_url).unwrap().interval(std::time::Duration::from_millis(10));
     let client = std::sync::Arc::new(SignerMiddleware::new(provider, wallet.clone()));
     let address: Address = rsk.contract_address.parse().unwrap();
     let asami_address: Address = rsk.asami_contract_address.parse().unwrap();
@@ -304,22 +308,6 @@ impl<'b> ApiClient<'b> {
   pub async fn create_x_collab(&self, campaign: &models::Campaign) {
     campaign.make_collab(&self.x_handle().await).await.unwrap();
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
-  }
-
-  pub async fn self_submit_fee_rate_vote(&self, rate: U256) -> api::AsamiResult<()> {
-    self.asami_contract().submit_fee_rate_vote(rate)
-      .send().await?
-      .await?
-      .expect("extracting receipt");
-    Ok(())
-  }
-
-  pub async fn self_remove_fee_rate_vote(&self) -> api::AsamiResult<()> {
-    self.asami_contract().remove_fee_rate_vote()
-      .send().await?
-      .await?
-      .expect("extracting receipt");
-    Ok(())
   }
 
   pub async fn self_submit_admin_vote(&self, candidate: Address) -> api::AsamiResult<()> {

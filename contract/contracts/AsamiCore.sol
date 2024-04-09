@@ -76,9 +76,6 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     }
 
     IERC20 internal doc;
-    address[] public holders;
-    mapping(address => bool) public trackedHolders;
-
     address public admin; // An address that may be stored on a server.
     address public adminTreasury; // A cold storage address for admin money.
 
@@ -103,7 +100,6 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         doc = IERC20(_dollarOnChainAddress);
         adminTreasury = msg.sender;
         admin = _adminAddress;
-        // TODO: Create accounts, populate asami tokens and pending balances from previous contract.
     }
 
     function _beforeTokenTransfer(
@@ -112,7 +108,6 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         uint256 amount
     ) internal override {
         super._beforeTokenTransfer(from, to, amount);
-
         if (from != address(0)) {
           _registerRecentBalanceChange(from, amount, false);
 
@@ -126,20 +121,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
 
         if (to != address(0)) {
           _registerRecentBalanceChange(to, amount, true);
-
-          if (!trackedHolders[to] && amount > 0) {
-              holders.push(to);
-              trackedHolders[to] = true;
-          }
         }
-    }
-
-    function getHolders() public view returns (address[] memory) {
-        return holders;
-    }
-
-    function getClaimedAsamiTokens() public view returns (uint256) {
-        return assignedAsamiTokens;
     }
 
     struct ClaimAccountsParam {
@@ -408,13 +390,13 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
 
     function applyVotedFeeRate() external {
         uint256 currentCycle = getCurrentCycle();
-        require(currentCycle != lastVotedFeeRateAppliedOn);
+        require(currentCycle != lastVotedFeeRateAppliedOn, "afr0");
         feeRate = votedFeeRate;
         lastVotedFeeRateAppliedOn = currentCycle;
     }
 
     function submitFeeRateVote(uint256 _rate) external {
-        require(_rate > 0 && _rate < 1e20, "sfrv 0");
+        require(_rate > 0 && _rate < 1e20, "srv0");
 
         FeeRateVote storage vote = feeRateVotes[msg.sender];
         if (vote.votes > 0) {
@@ -422,7 +404,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         }
 
         uint256 votes = balanceOf(msg.sender);
-        require(votes > 0, "sfrv 1");
+        require(votes > 0, "srv1");
 
         votedFeeRate =
             ((votedFeeRate * votedFeeRateVoteCount) + (votes * _rate)) /
@@ -457,9 +439,9 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     }
 
     function submitAdminVote(address _candidate) external {
-        require(_candidate != address(0), "sav 0");
+        require(_candidate != address(0), "sav0");
         uint256 votes = balanceOf(msg.sender);
-        require(votes > 0, "sav 1");
+        require(votes > 0, "sav1");
 
         AdminVote storage existing = submittedAdminVotes[msg.sender];
         if (existing.votes > 0) {
@@ -504,13 +486,13 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
 
     function proclaimCycleAdminWinner(address _candidate) external {
         uint256 voteCountId = adminVoteCountIdByCandidate[_candidate];
-        require(voteCountId > 0);
+        require(voteCountId > 0, "pcw0");
         AdminVoteCount storage count = adminVoteCounts[voteCountId - 1];
 
-        require(count.votes > vestedAdminVotesTotal / 2, "pcw 0");
-        require(vestedAdminVotesTotal > 0, "pcw 1");
+        require(vestedAdminVotesTotal > 0, "pcw1");
+        require(count.votes > vestedAdminVotesTotal / 2, "pcw2");
         uint256 thisCycle = getCurrentCycle();
-        require(lastAdminElection < thisCycle, "pcw 2");
+        require(lastAdminElection < thisCycle, "pcw3");
 
         lastAdminElection = thisCycle;
         latestAdminElections[2] = latestAdminElections[1];
@@ -532,7 +514,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
 
     function removeAdminVoteHelper(address _holder) private {
         AdminVote storage vote = submittedAdminVotes[_holder];
-        require(vote.votes > 0, "ravh 0");
+        require(vote.votes > 0, "ravh0");
         if (vote.vested) {
             vestedAdminVotesTotal -= vote.votes;
 
@@ -544,33 +526,35 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     }
 
     function setAdminAddress(address _admin) external {
-        require(msg.sender == adminTreasury);
+        require(msg.sender == adminTreasury, "saa0");
         admin = _admin;
     }
 
-    bool public migrationDone;
+    uint256 public migrationCursor;
+    bool public migrationHoldersDone;
+    bool public migrationAccountsDone;
 
-    function migrateTokensFromOldContract(address _oldContract) external {
-      require(!migrationDone, "mig0");
+    function migrateTokensFromOldContract(address _oldContract, uint256 _items) external {
+      require(!migrationHoldersDone || !migrationAccountsDone, "mig0");
       Asami oldContract = Asami(_oldContract);
 
-      uint256 i = 0;
-      while (true) {
-          try oldContract.holders(i) returns (address holder) {
-            i++;
+      if (!migrationHoldersDone) {
+        for (uint256 i = 0; i < _items; i++) {
+          try oldContract.holders(migrationCursor+i) returns (address holder) {
             uint256 balance = oldContract.balanceOf(holder);
             if(balance > 0){
               _safeMint(holder, oldContract.balanceOf(holder));
             }
           } catch {
+              migrationHoldersDone = true;
               break;
           }
+        }
       }
 
-      uint256 j = 0;
-      while (true) {
-          try oldContract.accountIds(j) returns (uint256 oldAccountId) {
-            j++;
+      if (!migrationAccountsDone) {
+        for (uint256 i = 0; i < _items; i++) {
+          try oldContract.accountIds(migrationCursor + i) returns (uint256 oldAccountId) {
             ( , address addr, uint256 oldUnclaimedAsami,) = oldContract.accounts(oldAccountId);
             Account storage account = accounts[oldAccountId];
             if(addr != address(0)) {
@@ -581,10 +565,12 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
               account.unclaimedAsamiBalance = oldUnclaimedAsami;
             }
           } catch {
+              migrationAccountsDone = true;
               break;
           }
+        }
       }
 
-      migrationDone = true;
+      migrationCursor += _items;
     }
 }

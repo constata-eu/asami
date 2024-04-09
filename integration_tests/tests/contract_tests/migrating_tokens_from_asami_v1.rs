@@ -112,15 +112,21 @@ app_test!{ recreates_old_contract_and_performs_migration (a)
   assert_eq!(a.legacy_contract().total_supply().call().await.unwrap(), milli("2700"));
 
   a.send_tx(
-    "Migrating all asami tokens and pending balances",
-    "732863",
-    a.asami_core().migrate_tokens_from_old_contract(a.legacy_contract().address())
+    "Migrating 2 accounst and 2 holders",
+    "478045",
+    a.asami_core().migrate_tokens_from_old_contract(a.legacy_contract().address(), wei("2"))
+  ).await;
+
+  a.send_tx(
+    "Migrating all the rest",
+    "307984",
+    a.asami_core().migrate_tokens_from_old_contract(a.legacy_contract().address(), wei("10"))
   ).await;
 
   a.send_revert_tx(
-    "No more migrations allowed",
+    "All done, no more migration allowed.",
     "mig0",
-    a.asami_core().migrate_tokens_from_old_contract(a.legacy_contract().address())
+    a.asami_core().migrate_tokens_from_old_contract(a.legacy_contract().address(), wei("20"))
   ).await;
 
   assert_account(&a, advertiser.account_id(), advertiser.address(), u("5"), u("0")).await;
