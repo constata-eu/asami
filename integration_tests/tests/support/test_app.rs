@@ -84,8 +84,12 @@ impl TestApp {
     client
   }
 
+  pub fn make_random_local_wallet(&self) -> LocalWallet {
+    LocalWallet::new(&mut thread_rng()).with_chain_id(self.app.settings.rsk.chain_id)
+  }
+
   pub async fn make_wallet(&self) -> LocalWallet {
-    let wallet = LocalWallet::new(&mut thread_rng()).with_chain_id(self.app.settings.rsk.chain_id);
+    let wallet = self.make_random_local_wallet();
     let tx = TransactionRequest::new().to(wallet.address()).value(u("10"));
     self.start_mining().await;
     self.app.on_chain.asami.client()
@@ -230,6 +234,15 @@ impl TestApp {
     self.stop_mining().await;
   }
 
+  pub async fn send_asami_to(&self, addr: Address, amount: U256) {
+    self.start_mining().await;
+    self.asami_core().transfer(addr, amount).send()
+      .await.unwrap()
+      .interval(std::time::Duration::from_millis(10))
+      .await.unwrap().unwrap();
+    self.stop_mining().await;
+  }
+
   pub async fn send_make_collab_tx(&self, reference: &str, max_gas: &str, advertiser: &ApiClient<'_>, briefing: U256, member: &ApiClient<'_>, reward: U256){
     self.send_tx(
       reference,
@@ -302,12 +315,12 @@ impl TestApp {
       M: Middleware,
       D: Detokenize,
   {
-    let tx = self.app.on_chain_tx().send_tx(fn_call).await.expect(&format!("db error {reference}"));
+    let tx = self.app.on_chain_tx().send_tx(fn_call).await.expect(&format!("db error '{reference}'"));
     self.wait_tx_state(reference, &tx, models::OnChainTxStatus::Reverted).await;
     assert_eq!(
-      tx.reloaded().await.expect("db error on {reference}").message().as_deref(),
+      tx.reloaded().await.expect("db error on '{reference}'").message().as_deref(),
       Some(expected_message),
-      "wrong error message for {reference}"
+      "wrong error message for ➲ '{reference}'"
     );
     tx
   }

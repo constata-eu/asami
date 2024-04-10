@@ -125,3 +125,7 @@ app_test!{ registers_collab_for_last_accepted_handle(a)
   assert_eq!(new_bob.x_handle().await.collab_vec().await?.len(), 1);
   assert_eq!(old_bob.x_handle().await.collab_vec().await?.len(), 1);
 }
+
+app_test!{ test(a)
+  todo!("Make collaborations track the handle used, not only the account. Do not allow handle re-claims participating in campaigns again.");
+}

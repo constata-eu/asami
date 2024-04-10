@@ -268,7 +268,7 @@ impl<'b> ApiClient<'b> {
   pub async fn make_campaign(&self, message: &str, budget: U256, briefing: U256, duration_days: i64) {
     self.test_app.send_tx(
       &format!("Making campaign: {message}"),
-      "112881",
+      "117686",
       self.asami_contract().make_campaigns( vec![
         on_chain::MakeCampaignsParam{
           budget,

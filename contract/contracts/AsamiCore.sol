@@ -201,7 +201,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
 
     function claimAdminUnclaimedBalances() external nonReentrant {
       if (adminUnclaimedAsamiBalance > 0) {
-        _safeMint(adminTreasury, adminUnclaimedAsamiBalance);
+        _safeMint(admin, adminUnclaimedAsamiBalance);
         adminUnclaimedAsamiBalance = 0;
       }
 
@@ -364,27 +364,26 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
       return (feePool + recent.substracted) - recent.added;
     }
 
-    /* Claiming the fee poll share */ 
     function claimFeePoolShare(address[] calldata _holders) external nonReentrant {
         uint256 current = getCurrentCycle();
         uint256 supply = totalSupply() - recentTokens[current];
         uint256 pool = getFeePoolBeforeRecentChanges();
-        require(supply > 0, "cfps0");
-        require(pool > 0, "cfps1");
+        require(supply > 0, "cfp0");
+        require(pool > 0, "cfp1");
 
         for (uint256 i = 0; i < _holders.length; i++) {
           address holder = _holders[i];
 
-          require(lastFeePoolShareCycles[holder] < current, "cfps2");
+          require(lastFeePoolShareCycles[holder] < current, "cfp2");
 
           uint256 balance = getBalanceBeforeRecentChanges(holder);
-          require(balance > 0, "cfps3");
+          require(balance > 0, "cfp3");
           uint256 reward = (balance * pool) / supply;
 
           lastFeePoolShareCycles[holder] = current;
           changeFeePool(reward, false);
 
-          require(doc.transfer(holder, reward), "cfps4");
+          require(doc.transfer(holder, reward), "cfp4");
         }
     }
 

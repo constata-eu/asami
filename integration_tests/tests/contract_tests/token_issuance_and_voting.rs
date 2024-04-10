@@ -1,5 +1,3 @@
-//#[macro_use]
-//use ethers::signers::Signer;
 use ::api::on_chain::*;
 use crate::support::TestApp;
 use ::api::models::{U256};
@@ -213,7 +211,6 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
   assert_eq!(a.admin_address().await, og_admin_addr);
   assert_eq!(a.admin_treasury_address().await, og_admin_treasury_address);
 
-  // Bob keeps claiming the election two more times and becomes the new admin.
   a.evm_forward_to_next_cycle().await;
   a.send_tx("bob claims second election", "45544", a.asami_core().proclaim_cycle_admin_winner(bob.address())).await;
   assert_eq!(latest_admin_elections(&a).await, [bob.address(), bob.address(), advertiser.address()]);
@@ -225,7 +222,6 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
   assert_eq!(a.admin_address().await, bob.address());
   assert_eq!(a.admin_treasury_address().await, bob.address());
 
-  // The new admin can change the hot wallet address to whatever it wants.
   a.send_revert_tx(
     "advertiser can't set the admin address",
     "saa0",
@@ -244,10 +240,8 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
   ).await;
   assert_eq!(vested_admin_votes_total(&a).await, u("0"));
 
-  // Now that there are no votes, no claim is possible.
   a.evm_forward_to_next_cycle().await;
   a.send_revert_tx("no votes again, so no claims", "saa0", advertiser.asami_contract().set_admin_address(advertiser.address())).await;
-
   a.send_revert_tx("cannot vote for address 0", "sav0", advertiser.asami_contract().submit_admin_vote(Address::zero())).await;
 }
 
