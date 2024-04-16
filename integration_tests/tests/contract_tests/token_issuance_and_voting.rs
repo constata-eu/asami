@@ -85,7 +85,7 @@ app_test!{ rate_can_be_voted (a)
 
   a.evm_forward_to_next_cycle().await;
 
-  a.send_tx("admin votes for 20 with 30 votes", "95924", advertiser.asami_contract().submit_fee_rate_vote(u("20"))).await;
+  a.send_tx("admin votes for 20 with 30 votes", "96000", advertiser.asami_contract().submit_fee_rate_vote(u("20"))).await;
   assert_eq!(voted_fee_rate_vote_count(&a).await, u("30"));
   assert_eq!(voted_fee_rate(&a).await, u("20"));
   assert_eq!(fee_rate(&a).await, u("10"));
@@ -95,7 +95,7 @@ app_test!{ rate_can_be_voted (a)
   a.app.on_chain_tx().apply_voted_fee_rate().await.unwrap();
   assert_eq!(fee_rate(&a).await, u("20"));
 
-  a.send_tx("second vote", "78812", alice.asami_contract().submit_fee_rate_vote(u("1"))).await;
+  a.send_tx("second vote", "78900", alice.asami_contract().submit_fee_rate_vote(u("1"))).await;
   assert_eq!(voted_fee_rate_vote_count(&a).await, u("75"));
   assert_eq!(voted_fee_rate(&a).await, wei("8600000000000000000"));
 
@@ -111,7 +111,7 @@ app_test!{ rate_can_be_voted (a)
   assert_eq!(voted_fee_rate_vote_count(&a).await, u("45"));
   assert_eq!(voted_fee_rate(&a).await, u("1"));
 
-  a.send_tx("alice updates vote", "42760", alice.asami_contract().submit_fee_rate_vote(u("50"))).await;
+  a.send_tx("alice updates vote", "42900", alice.asami_contract().submit_fee_rate_vote(u("50"))).await;
   assert_eq!(voted_fee_rate_vote_count(&a).await, u("45"));
   assert_eq!(voted_fee_rate(&a).await, u("50"));
 
@@ -169,7 +169,7 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
 
   a.send_revert_tx("No winner without votes", "pcw0", a.asami_core().proclaim_cycle_admin_winner(advertiser.address())).await;
 
-  a.send_tx("advertiser starts by voting for himself", "95471",
+  a.send_tx("advertiser starts by voting for himself", "95600",
     advertiser.asami_contract().submit_admin_vote(advertiser.address())
   ).await;
   a.send_revert_tx("first votes have not vested", "pcw0", a.asami_core().proclaim_cycle_admin_winner(advertiser.address())).await;

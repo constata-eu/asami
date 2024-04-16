@@ -7,6 +7,7 @@ pub use galvanic_assert::{
 };
 pub use api::models::{self, u, U256, u256, milli, hasher, Utc, wei};
 use api::{
+  models::on_chain_tx::AsamiFunctionCall,
   on_chain::{self, AsamiContractSigner, AsamiCoreContractSigner, DocContract, AsamiCoreContract, AsamiContract, IERC20, Provider, SignerMiddleware, Address, Http}
 };
 use rocket::{ http::Header, local::asynchronous::LocalResponse };
@@ -76,10 +77,6 @@ impl<'b> ApiClient<'b> {
     self.account().await.handle_scope().site_eq(models::Site::X).one().await.unwrap()
   }
 
-  pub async fn login(&mut self) {
-    self.login_with_key( ES256KeyPair::generate() ).await
-  }
-
   pub fn local_wallet(&self) -> &LocalWallet {
     self.local_wallet.as_ref().unwrap()
   }
@@ -112,6 +109,9 @@ impl<'b> ApiClient<'b> {
     self.test_app.rbtc_balance_of(&self.address()).await
   }
 
+  pub async fn login(&mut self) {
+    self.login_with_key( ES256KeyPair::generate() ).await
+  }
 
   pub async fn login_with_key(&mut self, key: ES256KeyPair) {
     let token = api::models::hasher::hexdigest(key.public_key().to_pem().unwrap().as_bytes());
@@ -140,6 +140,19 @@ impl<'b> ApiClient<'b> {
     let session = self.test_app.app.session().find(&result.create_session.id).await.unwrap();
     self.account_id = Some(u256(session.account_id()));
     self.session = Some(session);
+  }
+
+  pub async fn api_create_and_pay_campaign_from_link(&self, link: &str, duration: i64, topic_ids: &[i32]) {
+    let campaign = self.gql_response(
+      &gql::CreateCampaign::build_query(gql::create_campaign_from_link::Variables {
+        input: gql::create_campaign_from_link::CreateCampaignFromLinkInput { link: link.to_string() }
+      }),
+      vec![]
+    ).await
+    dbg!(&campaign);
+    // now take brief from campaign and pay on-chain.
+    // call the global job scheduler until the campaign is done.
+    // query the campaign via graphql to see if it's running.
   }
 
   pub async fn build_baseline_scenario(&mut self) -> BaseLineScenario {
@@ -248,15 +261,16 @@ impl<'b> ApiClient<'b> {
 
   pub async fn setup_as_advertiser_with_amount(&mut self, message: &str, amount: U256) {
     self.make_client_wallet().await;
-    self.test_app.send_doc_to(self.address(), amount.clone()).await;
 
     self.test_app.send_tx(
       &format!("Claiming for setting up as advertiser: {message}"),
-      "94523",
+      "94550",
       self.test_app.asami_core().claim_accounts(vec![
         on_chain::ClaimAccountsParam{ account_id: self.account_id(), addr: self.address() },
       ])
     ).await;
+
+    self.test_app.send_doc_to(self.address(), amount.clone()).await;
 
     self.test_app.send_tx(
       &format!("Approving spending for setting up as advertiser: {message}"),
@@ -265,10 +279,10 @@ impl<'b> ApiClient<'b> {
     ).await;
   }
 
-  pub async fn make_campaign(&self, message: &str, budget: U256, briefing: U256, duration_days: i64) {
+  pub async fn contract_make_campaign(&self, message: &str, budget: U256, briefing: U256, duration_days: i64) {
     self.test_app.send_tx(
       &format!("Making campaign: {message}"),
-      "117686",
+      "118000",
       self.asami_contract().make_campaigns( vec![
         on_chain::MakeCampaignsParam{
           budget,
@@ -277,6 +291,17 @@ impl<'b> ApiClient<'b> {
         },
       ])
     ).await;
+  }
+
+
+  pub fn make_campaign_contract_call( &self, budget: U256, briefing: U256, duration_days: i64) -> AsamiFunctionCall {
+    self.asami_contract().make_campaigns( vec![
+      on_chain::MakeCampaignsParam{
+        budget,
+        briefing,
+        valid_until: models::utc_to_i(Utc::now() + chrono::Duration::days(duration_days)),
+      },
+    ])
   }
 
   pub async fn make_client_wallet(&mut self) {

@@ -51,8 +51,8 @@ Each function call should have a relation to its params for smart logging.
 
 model! {
   state: App,
-  table: on_chain_txs,
-  struct OnChainTx {
+  table: on_chain_jobs,
+  struct OnChainJob {
     #[sqlx_model_hints(int4, default)]
     id: i32,
     #[sqlx_model_hints(on_chain_tx_status, default)]

@@ -132,45 +132,4 @@ impl Account {
     )
   }
 
-  pub async fn create_campaign_request(
-    &self,
-    site: Site,
-    content_id: &str,
-    budget: U256,
-    price_score_ratio: U256,
-    valid_until: UtcDateTime,
-    topics: &[Topic],
-  ) -> AsamiResult<CampaignRequest> {
-    if self.is_claimed_or_claiming().await? {
-      return Err(Error::validation("account", "cannot_call_on_claimed_account"));
-    }
-
-    let campaign = self
-      .state
-      .campaign_request()
-      .insert(InsertCampaignRequest {
-        account_id: self.attrs.id.clone(),
-        site,
-        budget: budget.encode_hex(),
-        content_id: content_id.to_string(),
-        price_score_ratio: price_score_ratio.encode_hex(),
-        valid_until,
-      })
-      .save()
-      .await?;
-
-    for t in topics {
-      self
-        .state
-        .campaign_request_topic()
-        .insert(InsertCampaignRequestTopic {
-          campaign_request_id: campaign.attrs.id.clone(),
-          topic_id: t.attrs.id.clone(),
-        })
-        .save()
-        .await?;
-    }
-
-    Ok(campaign)
-  }
 }

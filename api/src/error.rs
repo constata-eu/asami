@@ -29,6 +29,10 @@ impl Error {
     Error::Service(name.to_string(), text.to_string())
   }
 
+  pub fn precondition(reason: &str) -> Self {
+    Error::Precondition(reason.to_string())
+  }
+
   pub fn validation(field: &str, value: &str) -> Self {
     Error::Validation(field.to_string(), value.to_string())
   }

@@ -19,9 +19,7 @@ model! {
     #[sqlx_model_hints(varchar, default)]
     score: Option<String>,
     #[sqlx_model_hints(handle_request_status, default)]
-    status: HandleRequestStatus,
-    #[sqlx_model_hints(int4, default)]
-    on_chain_tx_id: Option<i32>,
+    status: HandleStatus,
   },
   has_many {
     HandleRequestTopic(handle_request_id),
@@ -235,12 +233,11 @@ model! {
 }
 
 make_sql_enum![
-  "handle_request_status",
-  pub enum HandleRequestStatus {
-    Unverified, // Newly created, never sent on-chain.
-    Verified,   // Verified off-chain.
-    Appraised,  // Appraised off-chain.
-    Submitted,  // Sent, after this we listen for events regarding this handle.
-    Done,       // Local DB knows this handle is now on-chain.
+  "handle_status",
+  pub enum HandleStatus {
+    Unverified, 
+    Verified,
+    Active,
+    Inactive,
   }
 ];

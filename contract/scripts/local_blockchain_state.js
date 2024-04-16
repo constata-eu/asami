@@ -4,6 +4,7 @@ const MockDoc = artifacts.require("MockDoc");
 
 module.exports = async function(callback) {
   const accounts = await web3.eth.getAccounts();
+  console.log(accounts);
   const asami = await Asami.deployed();
   const asamiCore = await AsamiCore.deployed();
   const doc = await MockDoc.deployed();

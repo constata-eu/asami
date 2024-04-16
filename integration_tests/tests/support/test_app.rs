@@ -38,7 +38,7 @@ impl TestApp {
       .output()
       .expect("SQLX not available.");
 
-    let truffle = Truffle::start(&config.rsk.admin_address);
+    let truffle = Truffle::start();
     config.rsk.contract_address = truffle.addresses.asami.clone();
     config.rsk.doc_contract_address = truffle.addresses.doc.clone();
     config.rsk.asami_contract_address = truffle.addresses.asami_core.clone();
@@ -295,6 +295,14 @@ impl TestApp {
     key.with_key_id(&id)
   }
 
+  pub async fn get_campaign(&self, advertiser_id: U256, briefing_id: U256) -> on_chain::asami_core_contract::Campaign {
+    self.asami_core().get_campaign(advertiser_id, briefing_id).call().await.expect(&format!("no campaign {advertiser_id}-{briefing_id}"))
+  }
+
+  /* We will no longer have a facility to log arbitrary transactions, so this should go back to 
+   * keeping things sequential and in-memory.
+   * These calls will not test the scheduler at all.
+   */
   pub async fn send_tx<B, M, D>(&self, reference: &str, max_gas: &str, fn_call: FunctionCall<B, M, D>) -> models::OnChainTx
     where
       B: std::borrow::Borrow<M>,
@@ -369,5 +377,9 @@ impl TestApp {
       Some(expected_message),
       "wrong error message for {reference}"
     );
+  }
+
+  pub fn future_date(&self, days: i64) -> U256 {
+    models::utc_to_i(Utc::now() + chrono::Duration::days(days))
   }
 }

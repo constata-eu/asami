@@ -5,32 +5,24 @@ use super::{
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-#[graphql(description = "A campaign started by an advertiser")]
+#[graphql(description = "A campaign")]
 pub struct Campaign {
   #[graphql(description = "Unique numeric identifier of this resource")]
-  id: String,
+  id: i32,
   #[graphql(description = "The id of the account that created this.")]
   account_id: String,
-  #[graphql(description = "The total budget for this campaign to be split across users.")]
+  #[graphql(description = "The total budget for this campaign to be collected by users.")]
   budget: String,
-  #[graphql(description = "The amount remaining from the given budget.")]
-  remaining: String,
-  #[graphql(description = "The maximum amout the advertiser is willing to pay for each member's scored point.")]
-  price_score_ratio: String,
-  #[graphql(
-    description = "The campaign is finished when it spends all its budget, or when the remaining amount is refunded to the advertiser"
-  )]
-  finished: bool,
-  #[graphql(description = "Unspent budget can be reimbursed after this date.")]
-  valid_until: UtcDateTime,
   #[graphql(description = "The site where this campaign is to be run on.")]
-  site: Site,
-  #[graphql(description = "The content to share.")]
-  content_id: String,
+  campaign_kind: CampaignKind,
+  #[graphql(description = "Auxiliary data related to this campaign's briefing")]
+  briefing_json: String,
+  #[graphql(description = "Auxiliary data related to this campaign's briefing")]
+  briefing_hash: String,
   #[graphql(description = "The date in which this campaign was created.")]
   created_at: UtcDateTime,
-  #[graphql(description = "The last time this campaign received an update.")]
-  updated_at: Option<UtcDateTime>,
+  #[graphql(description = "The topic ids this campaign is restricted to.")]
+  topic_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -39,9 +31,10 @@ pub struct CampaignFilter {
   ids: Option<Vec<String>>,
   id_eq: Option<String>,
   account_id_eq: Option<String>,
-  finished_eq: Option<bool>,
-  remaining_gt: Option<String>,
-  content_id_like: Option<String>,
+  budget_gt: Option<String>,
+  budget_lt: Option<String>,
+  budget_eq: Option<String>,
+  briefing_hash_eq: Option<String>,
   available_to_account_id: Option<String>,
 }
 
@@ -127,7 +120,6 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
       id: d.attrs.id,
       account_id: d.attrs.account_id,
       budget: d.attrs.budget,
-      remaining: d.attrs.remaining,
       price_score_ratio: d.attrs.price_score_ratio,
       finished: d.attrs.finished,
       valid_until: d.attrs.valid_until,
@@ -136,5 +128,33 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
       created_at: d.attrs.created_at,
       updated_at: d.attrs.updated_at,
     })
+  }
+}
+
+#[derive(Clone, GraphQLInputObject, Serialize, Deserialize)]
+#[graphql(description = "The input for creating a new CampaignRequest.")]
+#[serde(rename_all = "camelCase")]
+pub struct CreateCampaignFromLinkInput {
+  pub link: String,
+  pub valid_until: UtcDateTime,
+  pub topic_ids: Vec<String>,
+}
+
+impl CreateCampaignFromLinkInput {
+  pub async fn process(self, context: &Context) -> FieldResult<Campaign> {
+    let topics = context.app.topic().select().id_in(&self.topic_ids).all().await?;
+
+    let req = context.account().await?
+      .create_campaign(
+        self.site,
+        &self.content_id,
+        u256(self.budget),
+        u256(self.price_score_ratio),
+        self.valid_until,
+        &topics,
+      )
+      .await?;
+
+    Ok(CampaignRequest::db_to_graphql(req).await?)
   }
 }

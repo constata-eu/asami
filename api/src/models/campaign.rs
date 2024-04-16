@@ -1,43 +1,134 @@
+/* Campaigns are created locally, then paid in the smart contract.
+ * Campaigns could be paid on-chain without being reported in the contract, but it would not
+ * have an effect in the front-end. These campaigns will be discarded.
+ */
 use super::*;
 
 model! {
   state: App,
   table: campaigns,
   struct Campaign {
-    #[sqlx_model_hints(varchar)]
-    id: String,
+    #[sqlx_model_hints(int4, default)]
+    id: i32,
     #[sqlx_model_hints(varchar)]
     account_id: String,
-    #[sqlx_model_hints(site)]
-    site: Site,
+    #[sqlx_model_hints(campaign_kind)]
+    campaign_kind: CampaignKind,
+    #[sqlx_model_hints(varchar)]
+    briefing_hash: String,
+    #[sqlx_model_hints(varchar)]
+    briefing_json: String,
     #[sqlx_model_hints(varchar)]
     budget: String,
-    #[sqlx_model_hints(varchar)]
-    remaining: String,
-    #[sqlx_model_hints(varchar)]
-    content_id: String,
-    #[sqlx_model_hints(varchar)]
-    price_score_ratio: String,
     #[sqlx_model_hints(timestamptz)]
     valid_until: UtcDateTime,
-    #[sqlx_model_hints(boolean, default)]
-    finished: bool,
-    #[sqlx_model_hints(boolean)]
-    funded_by_admin: bool,
+    #[sqlx_model_hints(varchar, default)]
+    report_hash: String,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
-    #[sqlx_model_hints(timestamptz, default)]
-    updated_at: Option<UtcDateTime>,
-    #[sqlx_model_hints(varchar)]
-    tx_hash: String,
   },
   has_many {
-    CampaignTopic(campaign_id),
-    IgCampaignRule(campaign_id)
+    CampaignTopic(campaign_id)
+  },
+  belongs_to {
+    Account(account_id),
   }
 }
 
+model! {
+  state: App,
+  table: campaign_topics,
+  struct CampaignTopic {
+    #[sqlx_model_hints(int4, default)]
+    id: i32,
+    #[sqlx_model_hints(int4)]
+    campaign_id: i32,
+    #[sqlx_model_hints(int4)]
+    topic_id: i32,
+  }
+}
+
+make_sql_enum![
+  "campaign_kind",
+  pub enum CampaignKind {
+    XRepost,        // Members will have to make a post on X.
+    IgClonePost,    // Members must clone a post on IG.
+  }
+];
+
 impl CampaignHub {
+  pub async fn create_from_link(&self, account: &Account, link: &str, valid_until: UtcDateTime, topics: &[Topic]) -> AsamiResult<Campaign> {
+    use url::{Url, Host, Position};
+    use regex::Regex;
+
+    let u = Url::parse(link).map_err(|_| AsamiError::validation("link", "invalid_url"))?;
+    let Some(path) = u.path_segments().map(|c| c.collect::<Vec<&str>>()) else {
+      return Err(AsamiError::validation("link", "no_segments"));
+    }
+    let Some(briefing) = path.get(path.len() - 1) else {
+      return Err(AsamiError::validation("link", "no_content_id"));
+    }
+
+    let x_regex = Regex::new(r#"^\d+$"#).map_err(|_| AsamiError::precondition("invalid_x_regex"))?;
+    let ig_regex = Regex::new(r#"^[\d\w\-_]+$"#).map_err(|_| AsamiError::precondition("invalid_ig_regex"))?;
+
+    let kind = if (u.host_str().ends_with("twitter.com") || u.host_str().ends_with("x.com")) && x_regex.match(&briefing) {
+      CampaignKind::XRepost
+    } else if u.host_str().ends_with("instagram.com") && ig_regex.match() {
+      CampaignKind::IgClonePost
+    } else {
+      return Err(AsamiError::validation("link", "invalid_domain_in_link"));
+    }
+
+    /*
+    try {
+      const u = new URL(url);
+      const path = u.pathname.replace(/\/$/, '').split("/");
+      const contentId = path[path.length - 1];
+
+      if ( (u.host.match(/\.?x\.com$/) || u.host.match(/\.?twitter\.com$/)) && contentId.match(/^\d+$/) ) {
+        result.site = "X";
+      } else if (u.host.match(/\.?instagram.com$/) && contentId.match(/^[\d\w\-_]+$/)) {
+        result.site = "INSTAGRAM";
+      } else {
+        result.error = "not_a_post_url";
+      }
+      result.contentId = contentId;
+
+    } catch {
+      result.error = "invalid_url";
+    }
+    */
+
+    let campaign = self
+      .state
+      .campaign()
+      .insert(InsertCampaign {
+        account_id: self.attrs.id.clone(),
+        site,
+        budget: budget.encode_hex(),
+        content_id: content_id.to_string(),
+        price_score_ratio: price_score_ratio.encode_hex(),
+        valid_until,
+      })
+      .save()
+      .await?;
+
+    for t in topics {
+      self
+        .state
+        .campaign_request_topic()
+        .insert(InsertCampaignRequestTopic {
+          campaign_request_id: campaign.attrs.id.clone(),
+          topic_id: t.attrs.id.clone(),
+        })
+        .save()
+        .await?;
+    }
+
+    Ok(campaign)
+  }
+
   pub async fn sync_x_collabs(&self) -> AsamiResult<Vec<CollabRequest>> {
     use twitter_v2::{api_result::*, authorization::BearerToken, TwitterApi};
 
@@ -124,8 +215,8 @@ impl Campaign {
     Ok(
       self
         .state
-        .collab_request()
-        .insert(InsertCollabRequest {
+        .collab()
+        .insert(InsertCollab {
           campaign_id: self.attrs.id.clone(),
           handle_id: handle.attrs.id.clone(),
         })
@@ -139,15 +230,3 @@ impl Campaign {
   }
 }
 
-model! {
-  state: App,
-  table: campaign_topics,
-  struct CampaignTopic {
-    #[sqlx_model_hints(int4, default)]
-    id: i32,
-    #[sqlx_model_hints(varchar)]
-    campaign_id: String,
-    #[sqlx_model_hints(varchar)]
-    topic_id: String,
-  }
-}

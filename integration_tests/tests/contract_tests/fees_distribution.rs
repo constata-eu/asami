@@ -58,7 +58,7 @@ app_test!{ distributes_fees_to_holders (a)
   a.evm_forward_to_next_cycle().await;
   a.send_tx(
     "admin had all the tokens, gets the whole pool",
-    "102095",
+    "102200",
     a.asami_core().claim_fee_pool_share(vec![a.admin_address().await])
   ).await;
   assert_eq!(a.admin_doc_balance().await,                     u("419900010"));
@@ -121,7 +121,7 @@ app_test!{ distributes_fees_to_holders (a)
 
   a.send_tx(
     "Claiming pool fees for everyone else",
-    "203195",
+    "203300",
     a.asami_core().claim_fee_pool_share(vec![a.admin_address().await, alice.address(), advertiser.address(),  bob.address() ])
   ).await;
   assert_eq!(a.asami_core().fee_pool().call().await?,       u("0")); 
@@ -204,7 +204,7 @@ app_test!{ distributes_fees_to_holders (a)
    * All hodlers got paid from the previous cycle collab.
    */
   a.evm_forward_to_next_cycle().await;
-  a.send_tx("everyone gets paid the 30 doc from last period", "5959059", a.asami_core().claim_fee_pool_share(holders.clone())).await;
+  a.send_tx("everyone gets paid the 30 doc from last period", "5959459", a.asami_core().claim_fee_pool_share(holders.clone())).await;
 
   assert_eq!(a.asami_core().assigned_asami_tokens().call().await?,  wei("60000000000000000000"));
   assert_eq!(a.asami_core().total_supply().call().await?,           wei("60000000000000000000"));
@@ -228,11 +228,3 @@ app_test!{ distributes_fees_to_holders (a)
   assert_eq!(a.contract_doc_balance().await,             wei(     "2400000000000000000051"));
   assert_eq!(a.asami_core().fee_pool().call().await?,    wei(                         "51"));
 }
-
-/*
- *
- * Making campaigns test:
- *   - Do not allow emtpy campaigns.
- *   - Allow extending campaigns.
- *   - Do not allow new campaigns to override old campaigns.
- */

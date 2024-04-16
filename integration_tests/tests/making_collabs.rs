@@ -128,4 +128,7 @@ app_test!{ registers_collab_for_last_accepted_handle(a)
 
 app_test!{ test(a)
   todo!("Make collaborations track the handle used, not only the account. Do not allow handle re-claims participating in campaigns again.");
+  // A user can collab, get paid, register a new account, re-link the handle, and have a new collaboration paid to them.
 }
+
+

@@ -15,7 +15,7 @@ app_test!{ full_contract_workflow_from_collabs_to_voting(a)
 
   a.send_tx(
     "Collaborations are registered for 20 different new accounts.",
-    "1084176",
+    "1084200",
     a.asami_core().admin_make_collabs(collabs_params.clone())
   ).await;
 
@@ -34,7 +34,7 @@ app_test!{ full_contract_workflow_from_collabs_to_voting(a)
 
   a.send_tx(
     "claiming 3 of those collaborator accounts",
-    "229761",
+    "231000",
     a.asami_core().claim_accounts(vec![
       ClaimAccountsParam{ account_id: alice.account_id(), addr: alice.address() },
       ClaimAccountsParam{ account_id: bob.account_id(), addr: bob.address() },
@@ -64,13 +64,13 @@ app_test!{ full_contract_workflow_from_collabs_to_voting(a)
   ).await;
 
   a.assert_balances_of("carl after claim", carl.account_id(),
-    wei("9999660556000000000"),
+    wei("9999759954000000000"),
     u("0"), u("36"),
     u("0"), wei("600000000000000000")
   ).await;
 
   a.assert_admin_balances("Before its own claim.",
-    u("6"), u("419997000"), u("99160000000"), // 6 unclaimed doc from gasless 
+    u("6"), u("419998000"), u("99160000000"), // 6 unclaimed doc from gasless 
     u("60"), u("0"), u("0")
   ).await;
   a.send_tx(
@@ -79,8 +79,8 @@ app_test!{ full_contract_workflow_from_collabs_to_voting(a)
     a.asami_core().claim_admin_unclaimed_balances()
   ).await;
   a.assert_admin_balances("admin after its own claim.",
-    u("0"), u("419997000"), u("99160000006"),
-    u("0"), u("0"), u("60")
+    u("0"), u("419998000"), u("99160000006"),
+    u("0"), u("60"), u("0")
   ).await;
 }
 
@@ -134,7 +134,7 @@ app_test!{ gasless_claim_common_error_cases(a)
   let mut alice = a.client().await;
   alice.make_client_wallet().await;
 
-  a.send_make_collab_tx("A very small collab is registered", "10000", &advertiser, u("deadbeef"), &alice, u("1")).await;
+  a.send_make_collab_tx("A very small collab is registered", "195900", &advertiser, u("deadbeef"), &alice, u("1")).await;
 
   a.assert_balances_of(
     "Alice balances after collab", 
@@ -198,7 +198,7 @@ app_test!{ user_can_manage_a_gasless_amount_approval(a)
 
   let mut alice = a.client().await;
   alice.make_client_wallet().await;
-  a.send_make_collab_tx("A collab is registered generating rewards", "10000", &advertiser, u("deadbeef"), &alice, u("100")).await;
+  a.send_make_collab_tx("A collab is registered generating rewards", "196000", &advertiser, u("deadbeef"), &alice, u("100")).await;
 
   a.send_revert_tx(
     "Alice cannot change her approvedGaslessAmount before claiming",
@@ -240,7 +240,7 @@ app_test!{ simultaneous_gasless_and_regular_claims_fail(a)
 
   let mut alice = a.client().await;
   alice.make_client_wallet().await;
-  a.send_make_collab_tx("A collab is registered generating rewards", "10000", &advertiser, u("deadbeef"), &alice, u("100")).await;
+  a.send_make_collab_tx("A collab is registered generating rewards", "196000", &advertiser, u("deadbeef"), &alice, u("100")).await;
 
   a.send_tx(
     "Claiming Alice account",

@@ -6,30 +6,32 @@ import "./Asami.sol";
 
 contract AsamiCore is ERC20Capped, ReentrancyGuard {
     struct Account {
-      address addr;
-      uint256 approvedGaslessAmount;
+      bool claimed;
+      address trustedAdmin;
+      uint256 maxGaslessDocToSpend;
+      uint256 minGaslessRbtcToReceive;
       uint256 unclaimedAsamiBalance;
       uint256 unclaimedDocBalance;
+      bool adminCanMove;
       mapping( uint256 => Campaign ) campaigns;
     }
-    mapping(uint256 => Account) public accounts;
-    mapping(address => uint256) public accountIdByAddress;
+    mapping(address => Account) public accounts;
 
     struct Campaign {
         uint256 budget;
         uint256 validUntil;
         uint256 reportHash;
-        mapping( uint256 => bool ) collabMemberIds;
     }
 
-    uint256 public adminUnclaimedAsamiBalance = 0;
-    uint256 public adminUnclaimedDocBalance = 0;
+    function getCampaign(uint256 _accountId, uint256 _briefingHash) public view returns (Campaign memory) {
+        return accounts[_accountId].campaigns[_briefingHash];
+    }
 
+    /* To make the protocol more predictable, changes are applied only once every period */
     uint256 public defaultFeeRate = 10 * 1e18;
     uint256 public feeRate = defaultFeeRate;
     uint256 public votedFeeRate = defaultFeeRate;
     uint256 public votedFeeRateVoteCount = 0;
-    /* To make the protocol more predictable, changes are applied only once every period */
     uint256 public lastVotedFeeRateAppliedOn = 0;
 
     struct FeeRateVote {
@@ -38,60 +40,17 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     }
     mapping(address => FeeRateVote) public feeRateVotes;
 
-    struct AdminVote {
-        uint256 votes;
-        address candidate;
-        uint256 cycle;
-        bool vested;
-    }
-    /* Maps holders to their vote */
-    mapping(address => AdminVote) public submittedAdminVotes;
-
-    struct AdminVoteCount {
-        uint256 votes;
-        address candidate;
-    }
-
-    /*
-    We're only storing all historic vote counts to have a view function that helps find out
-    which candidate to proclaim without relying on events.
-    */
-    AdminVoteCount[] public adminVoteCounts;
-    mapping(address => uint256) public adminVoteCountIdByCandidate;
-
-    function allAdminVoteCounts()
-        public
-        view
-        returns (AdminVoteCount[] memory)
-    {
-        return adminVoteCounts;
-    }
-
-    uint256 public vestedAdminVotesTotal;
-    uint256 public lastAdminElection;
-    address[3] public latestAdminElections;
-
-    function getLatestAdminElections() public view returns (address[3] memory) {
-        return latestAdminElections;
-    }
-
     IERC20 internal doc;
-    address public admin; // An address that may be stored on a server.
-    address public adminTreasury; // A cold storage address for admin money.
-
     uint256 public assignedAsamiTokens;
 
-    event AdminVoteSaved(AdminVote vote);
     event AccountUpdated(uint256 accountId);
-    event CampaignCreated(uint256 accountId, uint256 briefing);
-    event CampaignSaved(uint256 campaignId);
-    event CampaignReimbursed(uint256 campaignId);
+    event CampaignCreated(uint256 accountId, uint256 campaignId);
+    event CampaignSaved(uint256 accountId, uint256 campaignId);
+    event CampaignExtended(uint256 accountId, uint256 campaignId);
+    event CampaignToppedUp(uint256 accountId, uint256 campaignId);
+    event CampaignReimbursed(uint256 accountId, uint256 campaignId);
+    event ReportSubmitted(uint256 accountId, uint256 campaignId);
     event CollabSaved(uint256 advertiserId, uint256 briefing, uint256 accountId, uint256 gross, uint256 fee);
-
-    modifier onlyAdmin() {
-        require(msg.sender == admin || msg.sender == adminTreasury);
-        _;
-    }
 
     constructor(
         address _dollarOnChainAddress,
@@ -129,9 +88,45 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         address addr;
     }
 
+    function moveAccount(address _to) external {
+      require(!accounts[_to].claimed, "ma0");
+      accounts[_to] = accounts[msg.sender];
+      accounts[msg.sender] = Account(false, address(0), 0, 0, 0, 0, false, false);
+    }
+
+    function setTrustedAdmin(address _trustedAdmin, bool _adminCanChangeAddr) external {
+      Account storage account = accounts[msg.sender];
+      account.trustedAdmin = _newTrustedAdmin;
+      account.adminCanChangAddr = _adminCanChangeAddr;
+    }
+
+    function setGaslessRequirements(uint256 _maxGaslessDocToSpend, uint256 _minGaslessRbtcToReceive) external {
+      Account storage account = accounts[msg.sender];
+      account.maxGaslessDocToSpend = _maxGaslessDocToSpend;
+      account.minGaslessDocToReceive = _minGaslessRbtcToReceive;
+    }
+
+    /* Admin knows about the new address */
+    function adminMoveAccount(address _from, address _to) external {
+      require(accounts[_from].trustedAdmin == msg.sender, "ama0");
+      require(accounts[_from].adminCanMove, "ama1");
+      require(!accounts[_to].claimed, "ma2");
+      accounts[_to] = accounts[_from];
+      accounts[_to].adminCanMove = false;
+      accounts[_from] = Account(false, address(0), 0, 0, 0, 0, false, false);
+    }
+
+    /* 
+      Instead of claiming, the admin can use an account on their behalf,
+      then the account owner can transfer ownership.
+      Anyone can transfer ownership of their account.
+      - The account's admin can have a special permission to delegate.
+      - This would make it easier for the account's admin to call any delegated action.
+      - Admin delegation becomes reversible too.
+    */
     function claimAccounts(
         ClaimAccountsParam[] calldata _input
-    ) external onlyAdmin nonReentrant {
+    ) external nonReentrant {
         for (uint256 i = 0; i < _input.length; i++) {
             ClaimAccountsParam calldata claim = _input[i];
 
@@ -163,6 +158,52 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         }
       }
     }
+
+    /*
+      The admin becomes just another account.
+      An admin can withdraw on behalf of its users.
+      An admin is also an account that accumulates unclaimed balances and can withdraw them.
+      A gasless claim can be done by any user.
+      As long as the member has reasonable max doc to pay, min rbtc to receive.
+      New accounts can be created with reasonable defaults.
+
+      Storing an address, an admin address, and a delegation flag
+      Storing an address, an admin address.
+      Having the admin there is a good safety measure. Always up to the user.
+     
+
+      If anyone can be an admin, how can we prevent someone from registering a single collab for 210.000.000 and getting all the tokens issued.
+          - We limit the issuance to only the first collaborations in a period?
+             That sounds unfair.
+
+          - Blocks of tokens are auctioned to all fee generators. 
+         
+
+          - One asami token represents one DOC that was charged in fees and distributed to all holders.
+
+          - Why bother with real collabs if syntetic collabs can work too?
+          
+          - Fake collabs are like empty blocks, a way to participate in an auction for the 'block reward' 
+          - Real admins get direct rewards for their work and some extras for gasless claims.
+          - Every tokens holders votes for the base protocol fee.
+          - Admins can set their own markup fee which they get directly, which is added to the base protocol fee.
+          - User can set the max markup fee they allow from their admin.
+          - Users can tweak all values to be less favorable to them.
+          - Admins raising prices may need to ask for higher allowance from members.
+
+          - Defaults apply to all three values with pre-set reasonable amounts. (ie: gasless doc fee to 5, gasless rbtc to deliver)
+          - Defaults can be updated by anyone calling a SC function that:
+              - Gives enough to pay 300.000 gas at tx.gasprice gwei each.
+              - Gets the RBTC price from the MOC contract.
+              - Gives them that much Rbtc at the MOC reported price. 
+              - Collects that much doc plus the admin fee % 
+
+          - A bad actor can still register bogus transactions to try to claim more issuance.
+          - But in doing so they will be paying more DOC fees which will be shared among existing holders.
+          - When people catch up to this on one period, they will all do it.
+          - We're effectivelly auctioning a number of tokens and to buy them you have to pay fees.
+          - There's no reason to pay fees just to get tokens issued. (or is there?)
+    */
 
     function gaslessClaimBalances(
       uint256 _fee,
@@ -226,17 +267,117 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     ) public nonReentrant {
         uint256 accountId = accountIdByAddress[msg.sender];
         Account storage account = accounts[accountId];
-        require(account.addr != address(0), "mc 0");
+        require(account.addr != address(0), "mc0");
 
         for (uint i = 0; i < _inputs.length; i++) {
             MakeCampaignsParam memory input = _inputs[i];
-            require(input.budget > 0, "mc 1");
-            require(doc.transferFrom(msg.sender, address(this), input.budget), "mc 2");
+            require(input.budget > 0, "mc1");
+            require(input.validUntil > block.timestamp, "mc2");
             Campaign storage c = account.campaigns[input.briefing];
             c.budget = input.budget;
             c.validUntil = input.validUntil;
+            require(doc.transferFrom(msg.sender, address(this), input.budget), "mc3");
 
             emit CampaignCreated(accountId, input.briefing);
+        }
+    }
+
+    struct ExtendCampaignsParam {
+        uint256 validUntil;
+        uint256 briefing;
+    }
+
+    function extendCampaigns(
+        ExtendCampaignsParam[] calldata _inputs
+    ) public nonReentrant {
+        uint256 accountId = accountIdByAddress[msg.sender];
+        Account storage account = accounts[accountId];
+        require(account.addr != address(0), "ec0");
+
+        for (uint i = 0; i < _inputs.length; i++) {
+            ExtendCampaignsParam memory input = _inputs[i];
+            require(input.validUntil > 0, "ec1");
+            Campaign storage c = account.campaigns[input.briefing];
+            require(c.validUntil != 0, "ec2");
+            require(input.validUntil > c.validUntil, "ec3");
+            c.validUntil = input.validUntil;
+            c.reportHash = 0;
+
+            emit CampaignExtended(accountId, input.briefing);
+        }
+    }
+
+    struct TopUpCampaignsParam {
+        uint256 accountId;
+        uint256 budget;
+        uint256 briefing;
+    }
+
+    function topUpCampaigns(
+        TopUpCampaignsParam[] calldata _inputs
+    ) public nonReentrant {
+        for (uint i = 0; i < _inputs.length; i++) {
+            TopUpCampaignsParam memory input = _inputs[i];
+            require(input.budget > 0, "tc0");
+
+            Account storage account = accounts[input.accountId];
+            require(account.addr != address(0), "tc1");
+
+            Campaign storage c = account.campaigns[input.briefing];
+            require(c.validUntil > block.timestamp, "tc2");
+            c.budget += input.budget;
+
+            require(doc.transferFrom(msg.sender, address(this), input.budget), "tc3");
+            emit CampaignToppedUp(input.accountId, input.briefing);
+        }
+    }
+
+    struct ReimburseCampaignsParam {
+        uint256 accountId;
+        uint256 briefing;
+    }
+
+    function reimburseCampaigns(
+        ReimburseCampaignsParam[] calldata _inputs
+    ) external nonReentrant {
+        for (uint i = 0; i < _inputs.length; i++) {
+            ReimburseCampaignsParam memory input = _inputs[i];
+
+            Account storage account = accounts[input.accountId];
+            require(account.addr != address(0), "rc1");
+
+            Campaign storage campaign = account.campaigns[input.briefing];
+            require(campaign.budget > 0, "rc2");
+            require(campaign.validUntil < block.timestamp, "rc3");
+
+            campaign.budget = 0;
+            require(doc.transfer(account.addr, campaign.budget), "rdc 4");
+            emit CampaignReimbursed(input.accountId, input.briefing);
+        }
+    }
+
+    struct SubmitReportsParam {
+        uint256 accountId;
+        uint256 briefing;
+        uint256 reportHash;
+    }
+
+    function submitReports(
+        SubmitReportsParam[] calldata _inputs
+    ) external onlyAdmin {
+        for (uint i = 0; i < _inputs.length; i++) {
+            SubmitReportsParam memory input = _inputs[i];
+            require(input.reportHash > 0, "sr0");
+
+            Account storage account = accounts[input.accountId];
+            require(account.addr != address(0), "sr1");
+
+            Campaign storage campaign = account.campaigns[input.briefing];
+            require(campaign.validUntil > 0, "sr2");
+            require(campaign.validUntil < block.timestamp, "sr3");
+            require(campaign.reportHash == 0, "sr4");
+            campaign.reportHash = input.reportHash;
+            emit ReportSubmitted(input.accountId, input.briefing);
         }
     }
 

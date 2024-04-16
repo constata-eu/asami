@@ -17,7 +17,7 @@ pub struct Addresses {
 }
 
 impl Truffle {
-  pub fn start(admin_address: &str) -> Self {
+  pub fn start() -> Self {
     Command::new("bash")
       .args(&["-c", r#"pgrep -f "bin/ganache" | xargs -r kill -9"#])
       .output().expect("Could not kill previous server");
@@ -28,12 +28,22 @@ impl Truffle {
 
     let dir = std::fs::canonicalize("../contract").unwrap();
 
-    Command::new("truffle").current_dir(&dir).args(["compile"]).output().unwrap();
-    Command::new("truffle").current_dir(&dir).args(["compile", "test/MockDock.sol"]).output().unwrap();
+    Command::new("rm").args(&["-rf", "../contract/ganache_data_copy"]).output()
+      .expect("Could not remove previous log");
+    Command::new("cp").args(&["-r", "../contract/ganache_data", "../contract/ganache_data_copy"])
+      .output().expect("Could not kill previous server");
 
     let child_vec = Command::new("ganache")
       .current_dir(&dir)
-      .args(["-D", &format!("--logging.file={path_to_log}"), "--miner.instamine", "strict", "--miner.blockTime", "0"])
+      .args([
+        "-D",
+        &format!("--logging.file={path_to_log}"),
+        "--miner.instamine", "strict",
+        "--miner.blockTime", "0",
+        "--db", "./ganache_data_copy",
+        "-i", "12345",
+        "--mnemonic", "correct battery horse staple"
+      ])
       .output()
       .unwrap()
       .stdout;
@@ -47,19 +57,8 @@ impl Truffle {
       }
     }
 
-    Command::new("truffle").current_dir(&dir).args(["migrate", "--network", "local"]).output().unwrap();
-
-    let out = Command::new("truffle")
-      .current_dir(&dir)
-      .env("ADMIN_ADDRESS", &admin_address)
-      .env("MEMBER_ADDRESS", "0x6868db995fdEEf093320A8Ee64b01F450b044f2C")
-      .args(["exec", "scripts/local_blockchain_state.js", "--network", "local"])
-      .output()
-      .unwrap();
-
-    let out_str = String::from_utf8(out.stdout).unwrap();
-    let addresses: Addresses = serde_json::from_str(&out_str.lines().last().unwrap())
-      .expect("Local blockchain init script may have exited with an error.");
+    let json = std::fs::read_to_string("../contract/ganache_data/addresses.json").expect("cannot read ganache_data/addresses.json");
+    let addresses: Addresses = serde_json::from_str(&json).expect("Wrong addresses.json file contents. Rebuild ganache state.");
 
     Truffle { child, dir, addresses }
   }

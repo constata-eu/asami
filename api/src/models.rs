@@ -1,5 +1,5 @@
 use super::{
-  on_chain::{self, AsamiContractSigner, LogMeta},
+  on_chain::{self, AsamiContract, LogMeta},
   *,
 };
 pub use chrono::{DateTime, Datelike, Duration, TimeZone, Utc};
@@ -22,12 +22,6 @@ pub mod claim_account_request;
 pub use claim_account_request::*;
 pub mod synced_event;
 pub use synced_event::*;
-pub mod campaign_request;
-pub use campaign_request::*;
-pub mod handle_request;
-pub use handle_request::*;
-pub mod collab_request;
-pub use collab_request::*;
 pub mod campaign;
 pub use campaign::*;
 pub mod account;
@@ -46,16 +40,10 @@ pub mod on_chain_tx;
 pub use on_chain_tx::*;
 pub mod site;
 pub use site::*;
-pub mod set_score_and_topics_request;
-pub use set_score_and_topics_request::*;
-pub mod set_price_request;
-pub use set_price_request::*;
 pub mod auth_method;
 pub use auth_method::*;
 pub mod topic;
 pub use topic::*;
-pub mod topic_request;
-pub use topic_request::*;
 pub mod collab;
 pub use collab::*;
 

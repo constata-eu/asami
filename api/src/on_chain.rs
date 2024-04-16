@@ -9,13 +9,13 @@ pub use ethers::{
 use std::sync::Arc;
 
 abigen!(
-  AsamiContract,
+  LegacyContract,
   "../contract/build/contracts/Asami.json",
   derives(serde::Deserialize, serde::Serialize),
 );
 
 abigen!(
-  AsamiCoreContract,
+  AsamiContract,
   "../contract/build/contracts/AsamiCore.json",
   derives(serde::Deserialize, serde::Serialize),
 );
@@ -30,14 +30,14 @@ abigen!(
   derives(serde::Deserialize, serde::Serialize),
 );
 
-pub type AsamiContractSigner = AsamiContract<SignerMiddleware<Provider<Http>, LocalWallet>>;
+pub type LegacyContract = LegacyContract<SignerMiddleware<Provider<Http>, LocalWallet>>;
 pub type DocContract = IERC20<SignerMiddleware<Provider<Http>, LocalWallet>>;
-pub type AsamiCoreContractSigner = AsamiCoreContract<SignerMiddleware<Provider<Http>, LocalWallet>>;
+pub type AsamiContract = AsamiContract<SignerMiddleware<Provider<Http>, LocalWallet>>;
 
 #[derive(Clone)]
 pub struct OnChain {
-  pub contract: AsamiContractSigner,
-  pub asami: AsamiCoreContractSigner,
+  pub legacy_contract: LegacyContract,
+  pub asami_contract: AsamiContract,
   pub doc_contract: DocContract,
 }
 
@@ -84,8 +84,8 @@ impl OnChain {
       .map_err(|_| Error::Init("Invalid doc contract address in config".to_string()))?;
 
     Ok(Self {
-      contract: AsamiContract::new(address, client.clone()),
-      asami: AsamiCoreContract::new(asami_address, client.clone()),
+      legacy_contract: LegacyContract::new(address, client.clone()),
+      asami_contract: AsamiContract::new(asami_address, client.clone()),
       doc_contract: IERC20::new(doc_address, client),
     })
   }
