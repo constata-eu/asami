@@ -5,26 +5,60 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./Asami.sol";
 
 contract AsamiCore is ERC20Capped, ReentrancyGuard {
+    /* 
+      Contract tracks time in 14 day cycles from the moment it was deployed.
+      This cycle marks how often new voted fee rates are applied, how often revenue sharing happens,
+      and the new asami token issuance.
+    */
+    uint256 initialCycle;
+    uint256 cycleLength = 60 * 60 * 24 * 15;
+
+    function getCurrentCycle() public view returns (uint256) {
+        return (block.timestamp / cycleLength) - initialCycle;
+    }
+
     struct Account {
-      bool claimed;
+      /* 
+        The trusted admin is used to register collaborations in the campaigns this account creates.
+        Accounts with to trusted admin cannot run campaigns.
+
+        It can also perform gasless claims.
+        Accounts with no trusted admin can have their gasless claims executed by anyone.
+      */
       address trustedAdmin;
       uint256 maxGaslessDocToSpend;
       uint256 minGaslessRbtcToReceive;
       uint256 unclaimedAsamiBalance;
       uint256 unclaimedDocBalance;
-      bool adminCanMove;
+      uint256 feeRateWhenAdmin;
+      FeeRateVote feeRateVote;
       mapping( uint256 => Campaign ) campaigns;
+      mapping( uint256 => SubAccount ) subAccounts;
     }
     mapping(address => Account) public accounts;
-
-    struct Campaign {
-        uint256 budget;
-        uint256 validUntil;
-        uint256 reportHash;
+    
+    /*
+      Sub accounts can be used by someone acting as an admin to collect rewards on behalf
+      of someone who does not have an account yet, usually a web2 user.
+      Sub accounts can then be promoted to accounts by the admin.
+    */
+    struct SubAccount {
+      uint256 unclaimedAsamiBalance;
+      uint256 unclaimedDocBalance;
     }
 
-    function getCampaign(uint256 _accountId, uint256 _briefingHash) public view returns (Campaign memory) {
-        return accounts[_accountId].campaigns[_briefingHash];
+    function getSubAccount(address _account, uint256 _index) public view returns (SubAccount memory) {
+      return accounts[_account][_index];
+    }
+
+    struct Campaign {
+      uint256 budget;
+      uint256 validUntil;
+      uint256 reportHash;
+    }
+
+    function getCampaign(address _account, uint256 _briefingHash) public view returns (Campaign memory) {
+      return accounts[_account].campaigns[_briefingHash];
     }
 
     /* To make the protocol more predictable, changes are applied only once every period */
@@ -38,7 +72,6 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         uint256 votes;
         uint256 rate;
     }
-    mapping(address => FeeRateVote) public feeRateVotes;
 
     IERC20 internal doc;
     uint256 public assignedAsamiTokens;
@@ -50,7 +83,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     event CampaignToppedUp(uint256 accountId, uint256 campaignId);
     event CampaignReimbursed(uint256 accountId, uint256 campaignId);
     event ReportSubmitted(uint256 accountId, uint256 campaignId);
-    event CollabSaved(uint256 advertiserId, uint256 briefing, uint256 accountId, uint256 gross, uint256 fee);
+    event CollabSaved(uint256 advertiserId, uint256 briefingHash, uint256 accountId, uint256 gross, uint256 fee);
 
     constructor(
         address _dollarOnChainAddress,
@@ -58,7 +91,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     ) ERC20("Asami Core", "ASAMI") ERC20Capped(21 * 1e24) {
         doc = IERC20(_dollarOnChainAddress);
         adminTreasury = msg.sender;
-        admin = _adminAddress;
+        initialCycle = block.timestamp / cycleLength;
     }
 
     function _beforeTokenTransfer(
@@ -70,11 +103,8 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         if (from != address(0)) {
           _registerRecentBalanceChange(from, amount, false);
 
-          if (feeRateVotes[from].votes > 0) {
+          if (accounts[from].feeRateVote.votes > 0) {
               removeFeeRateVoteHelper(from);
-          }
-          if (submittedAdminVotes[from].votes > 0) {
-              removeAdminVoteHelper(from);
           }
         }
 
@@ -83,67 +113,52 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         }
     }
 
-    struct ClaimAccountsParam {
-        uint256 accountId;
+    struct PromoteSubAccountsParam {
+        uint256 id;
         address addr;
     }
 
-    function moveAccount(address _to) external {
-      require(!accounts[_to].claimed, "ma0");
-      accounts[_to] = accounts[msg.sender];
-      accounts[msg.sender] = Account(false, address(0), 0, 0, 0, 0, false, false);
+    /* Admin that had some sub-accounts can now promote those */
+    function promoteSubAccounts(PromoteSubAccountsParam[] _params) external nonReentrant {
+      for(uint256 i = 0; i < _params.length; i++) {
+        PromoteSubAccountsParam calldata param = _params[i];
+        SubAccount storage sub = accounts[msg.sender].subAccounts[param.id];
+        Account storage account = accounts[param.addr];
+        account.unclaimedAsamiBalance += sub.unclaimedAsamiBalance;
+        sub.unclaimedAsamiBalance = 0;
+        account.unclaimedDocBalance += sub.unclaimedDocBalance;
+        sub.unclaimedDocBalance = 0;
+      }
     }
 
-    function setTrustedAdmin(address _trustedAdmin, bool _adminCanChangeAddr) external {
+    function configAccount(address _trustedAdmin, uint256 _maxGaslessDocToSpend, uint256 _minGaslessRbtcToReceive, uint256 _feeRateWhenAdmin) external {
       Account storage account = accounts[msg.sender];
-      account.trustedAdmin = _newTrustedAdmin;
-      account.adminCanChangAddr = _adminCanChangeAddr;
-    }
-
-    function setGaslessRequirements(uint256 _maxGaslessDocToSpend, uint256 _minGaslessRbtcToReceive) external {
-      Account storage account = accounts[msg.sender];
+      account.trustedAdmin = _trustedAdmin;
       account.maxGaslessDocToSpend = _maxGaslessDocToSpend;
       account.minGaslessDocToReceive = _minGaslessRbtcToReceive;
+      account.feeRateWhenAdmin = _feeRateWhenAdmin;
     }
 
-    /* Admin knows about the new address */
-    function adminMoveAccount(address _from, address _to) external {
-      require(accounts[_from].trustedAdmin == msg.sender, "ama0");
-      require(accounts[_from].adminCanMove, "ama1");
-      require(!accounts[_to].claimed, "ma2");
-      accounts[_to] = accounts[_from];
-      accounts[_to].adminCanMove = false;
-      accounts[_from] = Account(false, address(0), 0, 0, 0, 0, false, false);
+    function claimBalances() external nonReentrant {
+      Account storage account = accounts[msg.sender];
+
+      if (account.unclaimedAsamiBalance > 0) {
+        uint256 balance = account.unclaimedAsamiBalance;
+        account.unclaimedAsamiBalance = 0;
+        _safeMint(account.addr, balance);
+      }
+
+      if (account.unclaimedDocBalance > 0) {
+        uint256 balance = account.unclaimedDocBalance;
+        account.unclaimedDocBalance = 0;
+        doc.transfer(account.addr, balance);
+      }
     }
 
-    /* 
-      Instead of claiming, the admin can use an account on their behalf,
-      then the account owner can transfer ownership.
-      Anyone can transfer ownership of their account.
-      - The account's admin can have a special permission to delegate.
-      - This would make it easier for the account's admin to call any delegated action.
-      - Admin delegation becomes reversible too.
-    */
-    function claimAccounts(
-        ClaimAccountsParam[] calldata _input
-    ) external nonReentrant {
-        for (uint256 i = 0; i < _input.length; i++) {
-            ClaimAccountsParam calldata claim = _input[i];
-
-            Account storage account = accounts[claim.accountId];
-            require(account.addr == address(0), "ca0");
-            require(accountIdByAddress[claim.addr] == 0, "ca1");
-
-            accountIdByAddress[claim.addr] = claim.accountId;
-            account.addr = claim.addr;
-            account.approvedGaslessAmount = 5e18; 
-        }
-    }
-
-    function claimBalances(uint256[] calldata _accountIds) external nonReentrant {
-      for (uint256 i = 0; i < _accountIds.length; i++){
-        Account storage account = accounts[_accountIds[i]];
-        require(account.addr != address(0), "cb0");
+    function adminClaimBalancesFree(address[] calldata _addresses) external nonReentrant {
+      for (uint256 i = 0; i < _addresses.length; i++){
+        Account storage account = accounts[_addresses[i]];
+        require(account.trustedAdmin != msg.sender || account.trustedAdmin == address(0), "acb0");
 
         if (account.unclaimedAsamiBalance > 0) {
           uint256 balance = account.unclaimedAsamiBalance;
@@ -159,70 +174,25 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
       }
     }
 
-    /*
-      The admin becomes just another account.
-      An admin can withdraw on behalf of its users.
-      An admin is also an account that accumulates unclaimed balances and can withdraw them.
-      A gasless claim can be done by any user.
-      As long as the member has reasonable max doc to pay, min rbtc to receive.
-      New accounts can be created with reasonable defaults.
-
-      Storing an address, an admin address, and a delegation flag
-      Storing an address, an admin address.
-      Having the admin there is a good safety measure. Always up to the user.
-     
-
-      If anyone can be an admin, how can we prevent someone from registering a single collab for 210.000.000 and getting all the tokens issued.
-          - We limit the issuance to only the first collaborations in a period?
-             That sounds unfair.
-
-          - Blocks of tokens are auctioned to all fee generators. 
-         
-
-          - One asami token represents one DOC that was charged in fees and distributed to all holders.
-
-          - Why bother with real collabs if syntetic collabs can work too?
-          
-          - Fake collabs are like empty blocks, a way to participate in an auction for the 'block reward' 
-          - Real admins get direct rewards for their work and some extras for gasless claims.
-          - Every tokens holders votes for the base protocol fee.
-          - Admins can set their own markup fee which they get directly, which is added to the base protocol fee.
-          - User can set the max markup fee they allow from their admin.
-          - Users can tweak all values to be less favorable to them.
-          - Admins raising prices may need to ask for higher allowance from members.
-
-          - Defaults apply to all three values with pre-set reasonable amounts. (ie: gasless doc fee to 5, gasless rbtc to deliver)
-          - Defaults can be updated by anyone calling a SC function that:
-              - Gives enough to pay 300.000 gas at tx.gasprice gwei each.
-              - Gets the RBTC price from the MOC contract.
-              - Gives them that much Rbtc at the MOC reported price. 
-              - Collects that much doc plus the admin fee % 
-
-          - A bad actor can still register bogus transactions to try to claim more issuance.
-          - But in doing so they will be paying more DOC fees which will be shared among existing holders.
-          - When people catch up to this on one period, they will all do it.
-          - We're effectivelly auctioning a number of tokens and to buy them you have to pay fees.
-          - There's no reason to pay fees just to get tokens issued. (or is there?)
-    */
-
     function gaslessClaimBalances(
       uint256 _fee,
       uint256 _rbtcAmount,
-      uint256[] calldata _accountIds
-    ) external payable nonReentrant onlyAdmin {
+      address[] calldata _addresses
+    ) external payable nonReentrant {
       require(_rbtcAmount > 1e11, "gcb0");
-      require(msg.value == (_rbtcAmount * _accountIds.length), "gcb1");
+      require(msg.value == (_rbtcAmount * _addresses.length), "gcb1");
 
-      for (uint256 i = 0; i < _accountIds.length; i++){
-        Account storage account = accounts[_accountIds[i]];
-        require(account.addr != address(0), "gcb2");
+      for (uint256 i = 0; i < _addresses.length; i++){
+        Account storage account = accounts[_addresses[i]];
+        require(account.trustedAdmin == msg.sender || account.trustedAdmin == address(0), "gcb2");
         require(account.unclaimedDocBalance > _fee, "gcb3");
-        require(account.approvedGaslessAmount >= _fee, "gcb4");
+        require(account.maxGaslessDocToSpend >= _fee, "gcb4");
+        require(_rbtcAmount >= account.minGaslessRbtcToReceive, "gcb5");
 
         uint256 docs = account.unclaimedDocBalance - _fee;
         account.unclaimedDocBalance = 0;
         doc.transfer(account.addr, docs);
-        adminUnclaimedDocBalance += _fee;
+        accounts[msg.sender].unclaimedDocBalance += _fee;
         payable(account.addr).transfer(_rbtcAmount);
 
         if (account.unclaimedAsamiBalance > 0) {
@@ -233,84 +203,67 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
       }
     }
 
-    function changeGaslessApproval(uint256 newAmount) external {
-        uint256 accountId = accountIdByAddress[msg.sender];
-        Account storage account = accounts[accountId];
-        require(account.addr != address(0), "cga0");
-        account.approvedGaslessAmount = newAmount;
-    }
-
-    function claimAdminUnclaimedBalances() external nonReentrant {
-      if (adminUnclaimedAsamiBalance > 0) {
-        _safeMint(admin, adminUnclaimedAsamiBalance);
-        adminUnclaimedAsamiBalance = 0;
-      }
-
-      if (adminUnclaimedDocBalance > 0) {
-        doc.transfer(adminTreasury, adminUnclaimedDocBalance);
-        adminUnclaimedDocBalance = 0;
-      }
-    }
-
-    function withdrawAccidentallySentRbtc() external onlyAdmin {
-      payable(adminTreasury).transfer(address(this).balance);
-    }
-
     struct MakeCampaignsParam {
         uint256 budget;
         uint256 validUntil;
-        uint256 briefing;
+        uint256 briefingHash;
+    }
+
+    function setTrustedAdminAndMakeCampaign(
+        address _trustedAdmin,
+        MakeCampaignsParam[] calldata _inputs
+    ) public nonReentrant {
+        Account storage account = accounts[msg.sender];
+        account.trustedAdmin = _trustedAdmin;
+        makeCampaigns(_inputs);
     }
 
     function makeCampaigns(
         MakeCampaignsParam[] calldata _inputs
     ) public nonReentrant {
-        uint256 accountId = accountIdByAddress[msg.sender];
-        Account storage account = accounts[accountId];
-        require(account.addr != address(0), "mc0");
+        Account storage account = accounts[msg.sender];
 
         for (uint i = 0; i < _inputs.length; i++) {
             MakeCampaignsParam memory input = _inputs[i];
-            require(input.budget > 0, "mc1");
-            require(input.validUntil > block.timestamp, "mc2");
-            Campaign storage c = account.campaigns[input.briefing];
+            require(input.budget > 0, "mc0");
+            require(input.validUntil > block.timestamp, "mc1");
+            Campaign storage c = account.campaigns[input.briefingHash];
             c.budget = input.budget;
             c.validUntil = input.validUntil;
-            require(doc.transferFrom(msg.sender, address(this), input.budget), "mc3");
+            require(doc.transferFrom(msg.sender, address(this), input.budget), "mc2");
 
-            emit CampaignCreated(accountId, input.briefing);
+            emit CampaignCreated(msg.sender, input.briefingHash);
         }
     }
 
     struct ExtendCampaignsParam {
         uint256 validUntil;
-        uint256 briefing;
+        uint256 briefingHash;
     }
 
     function extendCampaigns(
         ExtendCampaignsParam[] calldata _inputs
     ) public nonReentrant {
-        uint256 accountId = accountIdByAddress[msg.sender];
-        Account storage account = accounts[accountId];
+        Account storage account = accounts[msg.sender];
         require(account.addr != address(0), "ec0");
 
         for (uint i = 0; i < _inputs.length; i++) {
             ExtendCampaignsParam memory input = _inputs[i];
             require(input.validUntil > 0, "ec1");
-            Campaign storage c = account.campaigns[input.briefing];
+            Campaign storage c = account.campaigns[input.briefingHash];
             require(c.validUntil != 0, "ec2");
             require(input.validUntil > c.validUntil, "ec3");
             c.validUntil = input.validUntil;
             c.reportHash = 0;
 
-            emit CampaignExtended(accountId, input.briefing);
+            emit CampaignExtended(msg.sender, input.briefingHash);
         }
     }
 
     struct TopUpCampaignsParam {
-        uint256 accountId;
+        address account;
         uint256 budget;
-        uint256 briefing;
+        uint256 briefingHash;
     }
 
     function topUpCampaigns(
@@ -319,22 +272,23 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         for (uint i = 0; i < _inputs.length; i++) {
             TopUpCampaignsParam memory input = _inputs[i];
             require(input.budget > 0, "tc0");
+            require(input.account != address(0), "tc1");
 
-            Account storage account = accounts[input.accountId];
-            require(account.addr != address(0), "tc1");
+            Account storage account = accounts[input.account];
+            Campaign storage c = account.campaigns[input.briefingHash];
 
-            Campaign storage c = account.campaigns[input.briefing];
             require(c.validUntil > block.timestamp, "tc2");
+
             c.budget += input.budget;
 
             require(doc.transferFrom(msg.sender, address(this), input.budget), "tc3");
-            emit CampaignToppedUp(input.accountId, input.briefing);
+            emit CampaignToppedUp(input.account, input.briefingHash);
         }
     }
 
     struct ReimburseCampaignsParam {
-        uint256 accountId;
-        uint256 briefing;
+        address account;
+        uint256 briefingHash;
     }
 
     function reimburseCampaigns(
@@ -343,97 +297,142 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         for (uint i = 0; i < _inputs.length; i++) {
             ReimburseCampaignsParam memory input = _inputs[i];
 
-            Account storage account = accounts[input.accountId];
-            require(account.addr != address(0), "rc1");
-
-            Campaign storage campaign = account.campaigns[input.briefing];
-            require(campaign.budget > 0, "rc2");
-            require(campaign.validUntil < block.timestamp, "rc3");
+            Account storage account = accounts[input.account];
+            Campaign storage campaign = account.campaigns[input.briefingHash];
+            require(campaign.budget > 0, "rc1");
+            require(campaign.validUntil < block.timestamp, "rc2");
 
             campaign.budget = 0;
-            require(doc.transfer(account.addr, campaign.budget), "rdc 4");
-            emit CampaignReimbursed(input.accountId, input.briefing);
+            require(doc.transfer(account, campaign.budget), "rdc 3");
+            emit CampaignReimbursed(input.account, input.briefingHash);
         }
     }
 
     struct SubmitReportsParam {
-        uint256 accountId;
-        uint256 briefing;
+        address account;
+        uint256 briefingHash;
         uint256 reportHash;
     }
 
     function submitReports(
         SubmitReportsParam[] calldata _inputs
-    ) external onlyAdmin {
+    ) external {
         for (uint i = 0; i < _inputs.length; i++) {
             SubmitReportsParam memory input = _inputs[i];
             require(input.reportHash > 0, "sr0");
 
-            Account storage account = accounts[input.accountId];
-            require(account.addr != address(0), "sr1");
+            Account storage account = accounts[input.account];
+            require(account.trustedAdmin == msg.sender, "sr1");
 
-            Campaign storage campaign = account.campaigns[input.briefing];
+            Campaign storage campaign = account.campaigns[input.briefingHash];
             require(campaign.validUntil > 0, "sr2");
             require(campaign.validUntil < block.timestamp, "sr3");
             require(campaign.reportHash == 0, "sr4");
             campaign.reportHash = input.reportHash;
-            emit ReportSubmitted(input.accountId, input.briefing);
+            emit ReportSubmitted(input.account, input.briefingHash);
         }
     }
 
     struct MakeCollabsParam {
-        uint256 advertiserId;
-        uint256 briefing;
+        address advertiser;
+        uint256 briefingHash;
         MakeCollabsParamItem[] collabs;
     }
 
     struct MakeCollabsParamItem {
-        uint256 accountId;
+        address account;
+        uint256 subAccountId;
         uint256 docReward;
     }
 
+    /* Make sure all the accounts involved are marked as claimed (?) */
     function adminMakeCollabs(
         MakeCollabsParam[] calldata _input
-    ) external onlyAdmin nonReentrant {
+    ) external nonReentrant {
         uint256 asamiTokenCap = cap();
+        uint256 current = getCurrentCycle();
+        Account storage admin = accounts[msg.sender];
+        if( !admin.claimed ){ admin.claimed = true; }
+
+        /* It's impossible to make collabs if the fees would exceed the reward */
+        require((feeRate + admin.feeRateWhenAdmin) < 100e18, "amc0");
 
         for (uint256 i = 0; i < _input.length; i++) {
           Account storage advertiser = accounts[_input[i].advertiserId];
-          Campaign storage campaign = advertiser.campaigns[_input[i].briefing];
+          Campaign storage campaign = advertiser.campaigns[_input[i].briefingHash];
+          require(advertiser.trustedAdmin == msg.sender, "amc1");
+
           uint256 newAdvertiserTokens = 0;
           uint256 newFees = 0;
-          uint256 budget = campaign.budget;
-          require(campaign.validUntil > block.timestamp, "amc1");
+          uint256 newAdminFees = 0;
+          uint256 newAdminTokens = 0;
+          uint256 reducedBudget = campaign.budget;
+          require(campaign.validUntil > block.timestamp, "amc2");
 
           for (uint256 j = 0; j < _input[i].collabs.length; j++) {
             MakeCollabsParamItem calldata item = _input[i].collabs[j];
-            require(item.accountId > 0, "amc2");
+            require(item.accountId > 0, "amc3");
 
             Account storage member = accounts[item.accountId];
 
             uint256 gross = item.docReward;
-            require(budget >= gross, "amc4");
-            budget -= gross;
+            require(reducedBudget >= gross, "amc4");
+            reducedBudget -= gross;
 
             uint256 fee = (gross * feeRate) / 1e20;
-            uint256 reward = gross - fee;
+            uint256 adminFee = (gross * admin.feeRateWhenAdmin) / 1e20;
+            uint256 reward = gross - fee - adminFee;
 
             uint256 remainingToCap = asamiTokenCap - assignedAsamiTokens;
-            uint256 newTokens = (fee > remainingToCap) ? remainingToCap : fee;
-            uint256 advertiserTokens = (newTokens * 10 * 1e18) / 100e18;
-            uint256 memberTokens = (newTokens * 15 * 1e18) / 100e18;
-            uint256 adminTokens = newTokens - advertiserTokens - memberTokens;
 
-            adminUnclaimedAsamiBalance += adminTokens;
-            newAdvertiserTokens += advertiserTokens;
-            member.unclaimedAsamiBalance += memberTokens;
+            if (remainingToCap > 0) {
+              uint256 tokensAtRate = fee * getIssuanceRate();
+              uint256 newTokens = (fee > remainingToCap) ? remainingToCap : fee;
+              uint256 advertiserTokens = (newTokens * 30 * 1e18) / 100e18;
+              uint256 memberTokens = (newTokens * 30 * 1e18) / 100e18;
+              uint256 adminTokens = newTokens - advertiserTokens - memberTokens;
+
+              if(newTokens > 0) {
+                newAdminTokens += adminTokens;
+                newAdvertiserTokens += advertiserTokens;
+                if (item.account == address(0)) {
+                  admin.subAccounts[item.subAccountId].unclaimedAsamiTokens += memberTokens;
+                } else {
+                  accounts[item.account].unclaimedAsamiTokens += memberTokens;
+                }
+
+                assignedAsamiTokens += newTokens; /* TODO: Test gas usage for a local variable instead */
+              }
+            }
+            
             member.unclaimedDocBalance += reward;
-            assignedAsamiTokens += newTokens;
+            if (item.account == address(0)) {
+              admin.subAccounts[item.subAccountId].unclaimedDocBalance += reward;
+            } else {
+              accounts[item.account].unclaimedDocBalance += reward;
+            }
             newFees += fee;
+            newAdminFees += adminFee;
           }
+
+          /* To save on gas costs, values are added in memory then stored at once */
+          /* TODO: measure gas cost for just updating the admin.unclaimedDocBalance */
           changeFeePool(newFees, true);
-          campaign.budget = budget;
+          admin.unclaimedDocBalance += newAdminFees;
+          admin.unclaimedAsamiBalance += newAdminTokens;
           advertiser.unclaimedAsamiBalance += newAdvertiserTokens;
+
+          /* 
+            Storing the fee amount collected in this cycle is only
+            useful to adjust the issuance rate on the next cycle.
+            If we've issued al tokens, there's no point in adjusting the
+            issuance rate on next cycle, therefore, no point in storing this value
+          */
+          if(assignedAsamiTokens < asamiTokenCap) {
+            feesCollectedPerPeriodDuringTokenIssuance[current] += newFees;
+          }
+
+          campaign.budget = reducedBudget;
       }
     }
 
@@ -442,24 +441,10 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         _mint(_addr, _amount);
     }
 
-    function getCycleLength() public pure returns (uint256) {
-        return 60 * 60 * 24 * 15;
-    }
-
-    function getCurrentCycle() public view returns (uint256) {
-        return block.timestamp / getCycleLength();
-    }
-
-    function getNextCycle() public view returns (uint256) {
-        return getCurrentCycle() + getCycleLength();
-    }
-
-    /* Accounts with unclaimed DOC rewards always have an option to have their funds sent by the admin paying for the transaction fees. */
-    uint256 public adminUnclaimedDoc;
-    uint256 public adminUnclaimedTokens;
-    uint256 public adminGaslessClaimRewardPrice;
-    uint256 public adminGaslessClaimAccountPrice;
-
+    /* 
+      The feePool accumulates all the protocol fees to be distributed at the end of each cycle.
+      The feePool is distributed based on holder balances at the end of the cycle.
+    */
     uint256 public feePool;
 
     struct BalanceChange {
@@ -536,9 +521,9 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     }
 
     function submitFeeRateVote(uint256 _rate) external {
-        require(_rate > 0 && _rate < 1e20, "srv0");
+        require(_rate > 0 && _rate < 100e18, "srv0");
 
-        FeeRateVote storage vote = feeRateVotes[msg.sender];
+        FeeRateVote storage vote = accounts[msg.sender].feeRateVote;
         if (vote.votes > 0) {
             removeFeeRateVoteHelper(msg.sender);
         }
@@ -559,7 +544,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     }
 
     function removeFeeRateVoteHelper(address _holder) private {
-        FeeRateVote storage vote = feeRateVotes[_holder];
+        FeeRateVote storage vote = accounts[_holder].feeRateVote;
         require(vote.votes > 0, "rfrv 0");
         uint256 nextVoteCount = votedFeeRateVoteCount - vote.votes;
         uint256 currentVolume = votedFeeRate * votedFeeRateVoteCount;
@@ -575,115 +560,63 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
             votedFeeRate = defaultFeeRate;
             votedFeeRateVoteCount = 0;
         }
-        delete feeRateVotes[_holder];
+        delete accounts[_holder].feeRateVote;
     }
 
-    function submitAdminVote(address _candidate) external {
-        require(_candidate != address(0), "sav0");
-        uint256 votes = balanceOf(msg.sender);
-        require(votes > 0, "sav1");
+    /* Asami token issuance rate:
+      The issuance goal is 100.000 tokens every 15 days until reaching 21.000.000 (a little above 1 year).
+      That is, tokens will be issued in 210 cycles.
+      Tokens are assigned to people paying into the fees pool.
+      For every cycle we calculate the previous 10 cycles average fees, and come up with an equivalence of DoC paid vs tokens awarded.
+      This equivalence is stored and updated for every cycle, and should adjust issuance to target 100.000 tokens every cycle.
+    */
+    uint256 public tokensTargetPerPeriod = 100000;
+    uint256 public tokensToIssuePerDoc = 4000;
+    mapping(uint256 => uint256) feesCollectedPerPeriodDuringTokenIssuance;
 
-        AdminVote storage existing = submittedAdminVotes[msg.sender];
-        if (existing.votes > 0) {
-            removeAdminVoteHelper(msg.sender);
-        }
-
-        submittedAdminVotes[msg.sender] = AdminVote({
-            candidate: _candidate,
-            votes: votes,
-            cycle: getCurrentCycle(),
-            vested: false
-        });
-
-        emit AdminVoteSaved(submittedAdminVotes[msg.sender]);
+    /* 
+       The amount of tokens to issue for a given number of DOC collected as fee.
+       According to last period's collected fees and the tokens target per period.
+    */
+    function getIssuanceRate() public view returns (uint256) {
+      uint256 current = getCurrentCycle();
+      /* The initial value is roughly based on the fees collected by V1 during it's lifetime */
+      if (current == 0) {
+        return 4000;
+      }
+      return tokensTargetPerPeriod / feesCollectedPerPeriodDuringTokenIssuance[current - 1];
     }
 
-    function vestAdminVotes(address[] calldata _holders) external {
-        uint256 thisCycle = getCurrentCycle();
+    /* The adminTreasury address is the deployer address which can only be used to retrieve accidentally sent RBTC into the contract. */
+    address adminTreasury;
 
-        for (uint256 i = 0; i < _holders.length; i++) {
-            AdminVote storage vote = submittedAdminVotes[_holders[i]];
-            require(vote.cycle > 0, "vav 0");
-            require(vote.cycle < thisCycle, "vav 1");
-            require(!vote.vested, "vav 2");
-            vote.vested = true;
-            vestedAdminVotesTotal += vote.votes;
-
-            uint256 voteCountId = adminVoteCountIdByCandidate[vote.candidate];
-            if (voteCountId > 0) {
-                AdminVoteCount storage count = adminVoteCounts[voteCountId - 1];
-                count.votes += vote.votes;
-            } else {
-                AdminVoteCount storage count = adminVoteCounts.push();
-                count.votes = vote.votes;
-                count.candidate = vote.candidate;
-                adminVoteCountIdByCandidate[vote.candidate] = adminVoteCounts
-                    .length;
-            }
-            emit AdminVoteSaved(vote);
-        }
+    function withdrawAccidentallySentRbtc() external {
+      require(msg.sender == adminTreasury, "wasr0");
+      payable(adminTreasury).transfer(address(this).balance);
     }
 
-    function proclaimCycleAdminWinner(address _candidate) external {
-        uint256 voteCountId = adminVoteCountIdByCandidate[_candidate];
-        require(voteCountId > 0, "pcw0");
-        AdminVoteCount storage count = adminVoteCounts[voteCountId - 1];
-
-        require(vestedAdminVotesTotal > 0, "pcw1");
-        require(count.votes > vestedAdminVotesTotal / 2, "pcw2");
-        uint256 thisCycle = getCurrentCycle();
-        require(lastAdminElection < thisCycle, "pcw3");
-
-        lastAdminElection = thisCycle;
-        latestAdminElections[2] = latestAdminElections[1];
-        latestAdminElections[1] = latestAdminElections[0];
-        latestAdminElections[0] = _candidate;
-
-        if (
-            _candidate == latestAdminElections[1] &&
-            _candidate == latestAdminElections[2]
-        ) {
-            admin = _candidate;
-            adminTreasury = _candidate;
-        }
-    }
-
-    function removeAdminVote() external {
-        removeAdminVoteHelper(msg.sender);
-    }
-
-    function removeAdminVoteHelper(address _holder) private {
-        AdminVote storage vote = submittedAdminVotes[_holder];
-        require(vote.votes > 0, "ravh0");
-        if (vote.vested) {
-            vestedAdminVotesTotal -= vote.votes;
-
-            uint256 voteCountId = adminVoteCountIdByCandidate[vote.candidate];
-            require(voteCountId > 0);
-            adminVoteCounts[voteCountId - 1].votes -= vote.votes;
-        }
-        delete submittedAdminVotes[_holder];
-    }
-
-    function setAdminAddress(address _admin) external {
-        require(msg.sender == adminTreasury, "saa0");
-        admin = _admin;
-    }
-
+    /* 
+       This is the migration from the old contract.
+       It only issues new asami tokens to these users again,
+       based on the tokens they had in the previous version of the contract.
+    */
     uint256 public migrationCursor;
     bool public migrationHoldersDone;
     bool public migrationAccountsDone;
 
-    function migrateTokensFromOldContract(address _oldContract, uint256 _items) external {
+    function migrateTokensFromOldContract(address _oldContract, address _admin, uint256 _items) external {
       require(!migrationHoldersDone || !migrationAccountsDone, "mig0");
       Asami oldContract = Asami(_oldContract);
+
+      assignedAsamiTokens = oldContract.claimedAsamiTokens;
+      Account storage admin = accounts[_admin];
 
       if (!migrationHoldersDone) {
         for (uint256 i = 0; i < _items; i++) {
           try oldContract.holders(migrationCursor+i) returns (address holder) {
-            uint256 balance = oldContract.balanceOf(holder);
+            uint256 balance = oldContract.balanceOf(holder) * getIssuanceRate();
             if(balance > 0){
-              _safeMint(holder, oldContract.balanceOf(holder));
+              _safeMint(holder, balance);
             }
           } catch {
               migrationHoldersDone = true;
@@ -692,21 +625,17 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         }
       }
 
+
       if (!migrationAccountsDone) {
         for (uint256 i = 0; i < _items; i++) {
           try oldContract.accountIds(migrationCursor + i) returns (uint256 oldAccountId) {
             ( , address addr, uint256 oldUnclaimedAsami,) = oldContract.accounts(oldAccountId);
-            Account storage account = accounts[oldAccountId];
-            if(addr != address(0)) {
-              accountIdByAddress[addr] = oldAccountId;
-              account.addr = addr;
-              account.approvedGaslessAmount = 5e18; 
-            } else {
-              account.unclaimedAsamiBalance = oldUnclaimedAsami;
+            if(addr == address(0) && oldUnclaimedAsami > 0) {
+              accounts[addr].unclaimedAsamiBalance = oldUnclaimedAsami;
             }
           } catch {
-              migrationAccountsDone = true;
-              break;
+            migrationAccountsDone = true;
+            break;
           }
         }
       }
