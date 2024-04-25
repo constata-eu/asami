@@ -1,7 +1,4 @@
-use super::{
-  on_chain::{self, AsamiContract, LogMeta},
-  *,
-};
+use super::{ on_chain::LogMeta, *, };
 pub use chrono::{DateTime, Datelike, Duration, TimeZone, Utc};
 pub use serde::{Deserialize, Serialize};
 pub use sqlx::{self, types::Decimal};
@@ -36,8 +33,8 @@ pub mod ig_crawl;
 pub use ig_crawl::*;
 pub mod audit_log_entry;
 pub use audit_log_entry::*;
-pub mod on_chain_tx;
-pub use on_chain_tx::*;
+pub mod on_chain_job;
+pub use on_chain_job::*;
 pub mod site;
 pub use site::*;
 pub mod auth_method;
@@ -46,11 +43,13 @@ pub mod topic;
 pub use topic::*;
 pub mod collab;
 pub use collab::*;
+pub mod holder;
+pub use holder::*;
 
 #[macro_export]
 macro_rules! make_sql_enum {
   ($sql_name:tt, pub enum $name:ident { $($variants:ident),* $(,)?}) => (
-    #[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum)]
+    #[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum, strum_macros::EnumIter)]
     #[sqlx(type_name = $sql_name, rename_all = "snake_case")]
     pub enum $name { $($variants),* }
 

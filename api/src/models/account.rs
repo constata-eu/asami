@@ -47,7 +47,7 @@ impl Account {
       return Ok(vec![]);
     }
 
-    let done: Vec<String> = self
+    let done: Vec<i32> = self
       .state
       .collab()
       .select()
@@ -58,7 +58,7 @@ impl Account {
       .map(|x| x.attrs.campaign_id)
       .collect();
 
-    let ignored: Vec<String> = self
+    let ignored: Vec<i32> = self
       .campaign_preference_scope()
       .not_interested_on_is_set(true)
       .all()
@@ -69,8 +69,8 @@ impl Account {
 
     let mut campaigns = vec![];
 
-    for c in self.state.campaign().select().finished_eq(false).all().await?.into_iter() {
-      if c.valid_until() <= &Utc::now() {
+    for c in self.state.campaign().select().budget_gt(weihex("0")).all().await?.into_iter() {
+      if c.valid_until().map(|end| end <= Utc::now()).unwrap_or(true) {
         continue;
       };
       if ignored.contains(c.id()) {
@@ -84,7 +84,8 @@ impl Account {
       };
 
       for h in &handles {
-        if h.validate_collaboration(&c).await.is_ok() {
+        let Some(trigger) = h.user_id() else { continue; };
+        if h.validate_collaboration(&c, trigger).await.is_ok() {
           campaigns.push(c);
           break;
         }
@@ -94,11 +95,11 @@ impl Account {
     Ok(campaigns)
   }
 
-  pub async fn create_handle_request(&self, site: Site, username: &str) -> sqlx::Result<HandleRequest> {
+  pub async fn create_handle(&self, site: Site, username: &str) -> sqlx::Result<Handle> {
     self
       .state
-      .handle_request()
-      .insert(InsertHandleRequest {
+      .handle()
+      .insert(InsertHandle {
         account_id: self.attrs.id.clone(),
         username: username.to_string(),
         site,

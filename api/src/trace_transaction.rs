@@ -11,7 +11,7 @@ use std::str::FromStr;
 async fn main() -> anyhow::Result<()> {
   let app = api::App::from_stdin_password().await.unwrap();
 
-  let client = app.on_chain.contract.client();
+  let client = app.on_chain.asami_contract.client();
 
   let tx_hash = "0x4b8105da33f8e9b14ec1ac0dde9b1f6ad3c7f16ba4f052a52b4fca2a9e84327b";
   let h: H256 = H256::from_str(tx_hash)?;

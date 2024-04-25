@@ -13,28 +13,31 @@ pub struct Campaign {
   account_id: String,
   #[graphql(description = "The total budget for this campaign to be collected by users.")]
   budget: String,
-  #[graphql(description = "The site where this campaign is to be run on.")]
+  #[graphql(description = "The kind of campaign, what's expected from the member.")]
   campaign_kind: CampaignKind,
   #[graphql(description = "Auxiliary data related to this campaign's briefing")]
   briefing_json: String,
   #[graphql(description = "Auxiliary data related to this campaign's briefing")]
   briefing_hash: String,
+  #[graphql(description = "The campaign expiration date, after which funds may be returned")]
+  valid_until: Option<UtcDateTime>,
   #[graphql(description = "The date in which this campaign was created.")]
   created_at: UtcDateTime,
   #[graphql(description = "The topic ids this campaign is restricted to.")]
-  topic_ids: Vec<String>,
+  topic_ids: Vec<i32>,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CampaignFilter {
-  ids: Option<Vec<String>>,
-  id_eq: Option<String>,
+  ids: Option<Vec<i32>>,
+  id_eq: Option<i32>,
   account_id_eq: Option<String>,
   budget_gt: Option<String>,
   budget_lt: Option<String>,
   budget_eq: Option<String>,
   briefing_hash_eq: Option<String>,
+  briefing_json_like: Option<String>,
   available_to_account_id: Option<String>,
 }
 
@@ -50,7 +53,6 @@ async fn make_available_to_account_id_filter(context: &Context, account_id: Stri
     .map(|x| x.attrs.id)
     .collect();
   Ok(CampaignFilter {
-    finished_eq: Some(false),
     ids: Some(offers),
     ..Default::default()
   })
@@ -62,7 +64,6 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     match field {
       "id" => Some(CampaignOrderBy::Id),
       "createdAt" => Some(CampaignOrderBy::CreatedAt),
-      "updatedAt" => Some(CampaignOrderBy::UpdatedAt),
       _ => None,
     }
   }
@@ -98,9 +99,8 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
         id_in: f.ids,
         account_id_eq: f.account_id_eq,
         id_eq: f.id_eq,
-        finished_eq: f.finished_eq,
-        remaining_gt: f.remaining_gt,
-        content_id_like: into_like_search(f.content_id_like),
+        budget_gt: f.budget_gt,
+        briefing_json_like: into_like_search(f.briefing_json_like),
         ..Default::default()
       })
     } else {
@@ -108,7 +108,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     }
   }
 
-  fn select_by_id(_context: &Context, id: String) -> FieldResult<models::SelectCampaign> {
+  fn select_by_id(_context: &Context, id: i32) -> FieldResult<models::SelectCampaign> {
     Ok(models::SelectCampaign {
       id_eq: Some(id),
       ..Default::default()
@@ -116,17 +116,17 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
   }
 
   async fn db_to_graphql(d: models::Campaign) -> AsamiResult<Self> {
+    let topic_ids = d.topic_ids().await?;
     Ok(Campaign {
       id: d.attrs.id,
       account_id: d.attrs.account_id,
       budget: d.attrs.budget,
-      price_score_ratio: d.attrs.price_score_ratio,
-      finished: d.attrs.finished,
       valid_until: d.attrs.valid_until,
-      site: d.attrs.site,
-      content_id: d.attrs.content_id,
+      campaign_kind: d.attrs.campaign_kind,
+      briefing_json: d.attrs.briefing_json,
+      briefing_hash: d.attrs.briefing_hash,
       created_at: d.attrs.created_at,
-      updated_at: d.attrs.updated_at,
+      topic_ids
     })
   }
 }
@@ -136,25 +136,14 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
 #[serde(rename_all = "camelCase")]
 pub struct CreateCampaignFromLinkInput {
   pub link: String,
-  pub valid_until: UtcDateTime,
-  pub topic_ids: Vec<String>,
+  pub topic_ids: Vec<i32>,
 }
 
 impl CreateCampaignFromLinkInput {
   pub async fn process(self, context: &Context) -> FieldResult<Campaign> {
     let topics = context.app.topic().select().id_in(&self.topic_ids).all().await?;
+    let campaign = context.app.campaign().create_from_link(&context.account().await?, &self.link, &topics).await?;
 
-    let req = context.account().await?
-      .create_campaign(
-        self.site,
-        &self.content_id,
-        u256(self.budget),
-        u256(self.price_score_ratio),
-        self.valid_until,
-        &topics,
-      )
-      .await?;
-
-    Ok(CampaignRequest::db_to_graphql(req).await?)
+    Ok(Campaign::db_to_graphql(campaign).await?)
   }
 }

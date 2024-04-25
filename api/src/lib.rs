@@ -35,7 +35,7 @@ pub async fn config(app: &State<App>) -> serde_json::Value {
   serde_json::json![{
     "instagram_verification_image_url": app.settings.instagram.verification_image_url,
     "instagram_verification_caption": app.settings.instagram.verification_caption,
-    "contractAddress": app.settings.rsk.contract_address.clone(),
+    "contractAddress": app.settings.rsk.asami_contract_address.clone(),
     "docContractAddress": app.settings.rsk.doc_contract_address.clone(),
   }]
 }

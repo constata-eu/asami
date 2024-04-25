@@ -14,16 +14,10 @@ mod account;
 use account::*;
 mod campaign;
 use campaign::*;
-mod campaign_request;
-use campaign_request::*;
 mod session;
 use session::*;
 mod handle;
 use handle::*;
-mod handle_request;
-use handle_request::*;
-mod set_price_request;
-use set_price_request::*;
 mod collab;
 use collab::*;
 mod claim_account_request;
@@ -291,12 +285,9 @@ make_graphql_query! {
   "1.0";
   showables {
     [Account, allAccounts, allAccountsMeta, "_allAccountsMeta", AccountFilter, String],
-    [CampaignRequest, allCampaignRequests, allCampaignRequestsMeta, "_allCampaignRequestsMeta", CampaignRequestFilter, i32],
-    [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, String],
-    [HandleRequest, allHandleRequests, allHandleRequestsMeta, "_allHandleRequestsMeta", HandleRequestFilter, i32],
-    [Handle, allHandles, allHandlesMeta, "_allHandlesMeta", HandleFilter, String],
-    [SetPriceRequest, allSetPriceRequests, allSetPriceRequestsMeta, "_allSetPriceRequestsMeta", SetPriceRequestFilter, i32],
-    [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, String],
+    [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, i32],
+    [Handle, allHandles, allHandlesMeta, "_allHandlesMeta", HandleFilter, i32],
+    [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, i32],
     [ClaimAccountRequest, allClaimAccountRequests, allClaimAccountRequestsMeta, "_allClaimAccountRequestsMeta", ClaimAccountRequestFilter, i32],
     [CampaignPreference, allCampaignPreferences, allCampaignPreferencesMeta, "_allCampaignPreferencesMeta", CampaignPreferenceFilter, i32],
     [IgCampaignRule, allIgCampaignRules, allIgCampaignRulesMeta, "_allIgCampaignRulesMeta", IgCampaignRuleFilter, i32],
@@ -311,21 +302,14 @@ impl Mutation {
     Ok(Session::db_to_graphql(context.current_session()?.0.clone()).await?)
   }
 
-  pub async fn create_campaign_request(
+  pub async fn create_campaign_from_link(
     context: &Context,
-    input: CreateCampaignRequestInput,
-  ) -> FieldResult<CampaignRequest> {
+    input: CreateCampaignFromLinkInput,
+  ) -> FieldResult<Campaign> {
     input.process(context).await
   }
 
-  pub async fn create_handle_request(context: &Context, input: CreateHandleRequestInput) -> FieldResult<HandleRequest> {
-    input.process(context).await
-  }
-
-  pub async fn create_set_price_request(
-    context: &Context,
-    input: CreateSetPriceRequestInput,
-  ) -> FieldResult<SetPriceRequest> {
+  pub async fn create_handle(context: &Context, input: CreateHandleInput) -> FieldResult<Handle> {
     input.process(context).await
   }
 

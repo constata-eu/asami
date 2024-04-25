@@ -10,7 +10,7 @@ pub struct IgCampaignRule {
   #[graphql(description = "Unique Id for this campaign rules")]
   id: i32,
   #[graphql(description = "The campaign this rules belong to")]
-  campaign_id: String,
+  campaign_id: i32,
   #[graphql(description = "The base64 encoded image itself.")]
   image: String,
   #[graphql(description = "The caption the user must post for this image.")]
@@ -22,7 +22,7 @@ pub struct IgCampaignRule {
 pub struct IgCampaignRuleFilter {
   ids: Option<Vec<i32>>,
   id_eq: Option<i32>,
-  campaign_id_eq: Option<String>,
+  campaign_id_eq: Option<i32>,
 }
 
 #[rocket::async_trait]

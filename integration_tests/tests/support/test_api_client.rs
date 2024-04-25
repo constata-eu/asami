@@ -7,8 +7,8 @@ pub use galvanic_assert::{
 };
 pub use api::models::{self, u, U256, u256, milli, hasher, Utc, wei};
 use api::{
-  models::on_chain_tx::AsamiFunctionCall,
-  on_chain::{self, AsamiContractSigner, AsamiCoreContractSigner, DocContract, AsamiCoreContract, AsamiContract, IERC20, Provider, SignerMiddleware, Address, Http}
+  models::on_chain_job::AsamiFunctionCall,
+  on_chain::{self, AsamiContract, LegacyContract, DocContract, AsamiContractCode, LegacyContractCode, IERC20, Provider, SignerMiddleware, Address, Http}
 };
 use rocket::{ http::Header, local::asynchronous::LocalResponse };
 use jwt_simple::{ algorithms::*, prelude::*, };
@@ -30,8 +30,8 @@ pub struct ApiClient<'a> {
   pub session: Option<models::Session>,
   pub local_wallet: Option<LocalWallet>,
   pub account_id: Option<U256>,
-  pub legacy_contract: Option<AsamiContractSigner>,
-  pub asami_contract: Option<AsamiCoreContractSigner>,
+  pub legacy_contract: Option<LegacyContract>,
+  pub asami_contract: Option<AsamiContract>,
   pub doc_contract: Option<DocContract>,
 }
 
@@ -85,11 +85,11 @@ impl<'b> ApiClient<'b> {
     self.local_wallet().address()
   }
 
-  pub fn legacy_contract(&self) -> &AsamiContractSigner {
+  pub fn legacy_contract(&self) -> &LegacyContract {
     self.legacy_contract.as_ref().unwrap()
   }
 
-  pub fn asami_contract(&self) -> &AsamiCoreContractSigner {
+  pub fn asami_contract(&self) -> &AsamiContract {
     self.asami_contract.as_ref().unwrap()
   }
 
@@ -142,19 +142,7 @@ impl<'b> ApiClient<'b> {
     self.session = Some(session);
   }
 
-  pub async fn api_create_and_pay_campaign_from_link(&self, link: &str, duration: i64, topic_ids: &[i32]) {
-    let campaign = self.gql_response(
-      &gql::CreateCampaign::build_query(gql::create_campaign_from_link::Variables {
-        input: gql::create_campaign_from_link::CreateCampaignFromLinkInput { link: link.to_string() }
-      }),
-      vec![]
-    ).await
-    dbg!(&campaign);
-    // now take brief from campaign and pay on-chain.
-    // call the global job scheduler until the campaign is done.
-    // query the campaign via graphql to see if it's running.
-  }
-
+  /*
   pub async fn build_baseline_scenario(&mut self) -> BaseLineScenario {
     self.login_with_key(ES256KeyPair::generate()).await;
     let rate = u256(self.test_app.app.indexer_state().get().await.unwrap().suggested_price_per_point());
@@ -241,6 +229,7 @@ impl<'b> ApiClient<'b> {
       .appraise(rate, score).await.unwrap();
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
   }
+  */
 
   pub async fn gql_claim_account_request(&self, wallet: &LocalWallet) -> graphql_client::Response<gql::create_claim_account_request::ResponseData> {
     let rsk = &self.test_app.app.settings.rsk;
@@ -262,31 +251,44 @@ impl<'b> ApiClient<'b> {
   pub async fn setup_as_advertiser_with_amount(&mut self, message: &str, amount: U256) {
     self.make_client_wallet().await;
 
-    self.test_app.send_tx(
-      &format!("Claiming for setting up as advertiser: {message}"),
-      "94550",
-      self.test_app.asami_core().claim_accounts(vec![
-        on_chain::ClaimAccountsParam{ account_id: self.account_id(), addr: self.address() },
-      ])
-    ).await;
-
     self.test_app.send_doc_to(self.address(), amount.clone()).await;
 
     self.test_app.send_tx(
       &format!("Approving spending for setting up as advertiser: {message}"),
       "46296",
-      self.doc_contract().approve(self.test_app.asami_core().address(), amount.clone())
+      self.doc_contract().approve(self.test_app.asami_contract().address(), amount.clone())
     ).await;
   }
 
-  pub async fn contract_make_campaign(&self, message: &str, budget: U256, briefing: U256, duration_days: i64) {
+  /* Gets a campaign briefing hash, and pays for it */
+  pub async fn start_and_pay_campaign(&self, link: &str, duration: i64, topic_ids: &[i32]) {
+    use gql::create_campaign_from_link::*;
+    let campaign: graphql_client::Response<ResponseData> = self.gql_response(
+      &gql::CreateCampaignFromLink::build_query(Variables {
+        input: CreateCampaignFromLinkInput {
+            link: link.to_string(),
+            topic_ids: topic_ids.iter().map(|x| *x as i64).collect(),
+        }
+      }),
+      vec![]
+    ).await;
+    // now take brief from campaign and pay on-chain.
+    dbg!(&campaign);
+    // call the global job scheduler until the campaign is done.
+    //      Campaign budget change should have been synced from an event.
+    // query the campaign via graphql to see if it's running.
+    //
+  }
+
+
+  pub async fn pay_campaign(&self, message: &str, budget: U256, briefing_hash: U256, duration_days: i64) {
     self.test_app.send_tx(
       &format!("Making campaign: {message}"),
       "118000",
       self.asami_contract().make_campaigns( vec![
         on_chain::MakeCampaignsParam{
           budget,
-          briefing,
+          briefing_hash,
           valid_until: models::utc_to_i(Utc::now() + chrono::Duration::days(duration_days)),
         },
       ])
@@ -294,11 +296,11 @@ impl<'b> ApiClient<'b> {
   }
 
 
-  pub fn make_campaign_contract_call( &self, budget: U256, briefing: U256, duration_days: i64) -> AsamiFunctionCall {
+  pub fn make_campaign_contract_call( &self, budget: U256, briefing_hash: U256, duration_days: i64) -> AsamiFunctionCall {
     self.asami_contract().make_campaigns( vec![
       on_chain::MakeCampaignsParam{
         budget,
-        briefing,
+        briefing_hash,
         valid_until: models::utc_to_i(Utc::now() + chrono::Duration::days(duration_days)),
       },
     ])
@@ -310,10 +312,10 @@ impl<'b> ApiClient<'b> {
 
     let provider = Provider::<Http>::try_from(&rsk.rpc_url).unwrap().interval(std::time::Duration::from_millis(10));
     let client = std::sync::Arc::new(SignerMiddleware::new(provider, wallet.clone()));
-    let address: Address = rsk.contract_address.parse().unwrap();
+    let legacy_address: Address = rsk.legacy_contract_address.parse().unwrap();
     let asami_address: Address = rsk.asami_contract_address.parse().unwrap();
-    self.legacy_contract = Some(AsamiContract::new(address, client.clone()));
-    self.asami_contract = Some(AsamiCoreContract::new(asami_address, client.clone()));
+    self.legacy_contract = Some(LegacyContract::new(legacy_address, client.clone()));
+    self.asami_contract = Some(AsamiContract::new(asami_address, client.clone()));
 
     let doc_address: Address = rsk.doc_contract_address.parse().unwrap();
     self.doc_contract = Some(IERC20::new(doc_address, client.clone()));
@@ -330,42 +332,12 @@ impl<'b> ApiClient<'b> {
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
   }
 
+  /*
   pub async fn create_x_collab(&self, campaign: &models::Campaign) {
     campaign.make_collab(&self.x_handle().await).await.unwrap();
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
   }
-
-  pub async fn self_submit_admin_vote(&self, candidate: Address) -> api::AsamiResult<()> {
-    self.asami_contract().submit_admin_vote(candidate)
-      .send().await?
-      .await?
-      .expect("extracting receipt");
-    Ok(())
-  }
-
-  pub async fn self_remove_admin_vote(&self) -> api::AsamiResult<()> {
-    self.asami_contract().remove_admin_vote()
-      .send().await?
-      .await?
-      .expect("extracting receipt");
-    Ok(())
-  }
-
-  pub async fn self_vest_admin_vote(&self, candidate: Address) -> api::AsamiResult<()> {
-    self.asami_contract().vest_admin_votes(vec![candidate])
-      .send().await?
-      .await?
-      .expect("extracting receipt");
-    Ok(())
-  }
-
-  pub async fn self_set_admin_address(&self, address: Address) -> api::AsamiResult<()> {
-    self.asami_contract().set_admin_address(address)
-      .send().await?
-      .await?
-      .expect("extracting receipt");
-    Ok(())
-  }
+  */
 
   pub async fn gql<'a, T: core::fmt::Debug, Q>(&'a self, query: Q, extra_headers: Vec<Header<'static>>) -> T
     where Q: Serialize, T: DeserializeOwned
@@ -442,6 +414,7 @@ impl<'b> ApiClient<'b> {
       .dispatch().await
   }
 
+  /*
   pub async fn get_campaign_offers(&self) -> gql::all_campaigns::ResponseData {
     self.gql(
       &gql::AllCampaigns::build_query(gql::all_campaigns::Variables{
@@ -450,8 +423,6 @@ impl<'b> ApiClient<'b> {
           ids: None,
           id_eq: None,
           account_id_eq: None,
-          finished_eq: None,
-          content_id_like: None,
         }),
         page: None,
         per_page: None,
@@ -461,6 +432,7 @@ impl<'b> ApiClient<'b> {
       vec![]
     ).await
   }
+  */
 }
 
 macro_rules! make_graphql_queries {
@@ -484,8 +456,7 @@ pub mod gql {
   make_graphql_queries![
     CreateSession,
     CreateClaimAccountRequest,
-    CreateCampaignRequest,
-    CampaignRequest,
+    CreateCampaignFromLink,
     Campaign,
     AllCampaigns,
     AllCampaignsMeta,
@@ -493,9 +464,9 @@ pub mod gql {
     AllCampaignPreferences,
     AllCampaignPreferencesMeta,
     CreateCampaignPreference,
-    CreateHandleRequest,
-    AllHandleRequests,
-    AllHandleRequestsMeta,
+    CreateHandle,
+    AllHandles,
+    AllHandlesMeta,
     AllCollabs,
     AllCollabsMeta,
   ];

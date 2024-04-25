@@ -2,33 +2,50 @@
 pub mod support;
 use api::models::*;
 
-app_test!{ logs_on_chain_txs (a) 
+app_test!{ runs_on_chain_jobs (a) 
+  assert_eq!(a.app.on_chain_job().select().count().await?, 0);
+  a.app.on_chain_job().run_scheduler().await?;
+
+  let all = a.app.on_chain_job().select().all().await?;
+  assert_eq!(all.len(), 10);
+  assert!(all.iter().all(|x| x.status() == &OnChainJobStatus::Scheduled));
+
+  a.app.on_chain_job().run_scheduler().await?;
+
+  let current = a.app.on_chain_job().current().one().await?;
+  assert_eq!(current.status(), &OnChainJobStatus::Skipped);
+  assert_eq!(current.status_line().as_ref().unwrap(), "no_subaccounts_to_promote");
+
+  /*
   let bob = a.client().await;
-  let request = bob.account().await.create_handle_request(models::Site::X, "bob_on_x").await.unwrap()
+
+  let request = bob.account().await.create_handle(models::Site::X, "bob_on_x").await.unwrap()
     .verify("179383862".into()).await.unwrap()
     .appraise(wei("10"), wei("10")).await.unwrap();
 
-  assert!(a.app.on_chain_tx().select().all().await?.is_empty());
+  assert!(a.app.on_chain_job().select().all().await?.is_empty());
 
   a.app.handle_request().submit_all().await?;
-  let mut on_chain_tx = a.app.on_chain_tx().find(1).await?;
+  let mut on_chain_job = a.app.on_chain_job().find(1).await?;
 
-  assert_eq!(on_chain_tx.function_name(), "adminMakeHandles");
-  assert!(on_chain_tx.submitted());
+  assert_eq!(on_chain_job.kind, OnChainJobKind::PromoteSubAccounts);
+  assert!(on_chain_job.submitted());
 
   a.run_idempotent_background_tasks_a_few_times().await;
 
-  on_chain_tx.reload().await?;
+  on_chain_job.reload().await?;
 
-  assert!(on_chain_tx.success());
+  assert!(on_chain_job.success());
 
   assert!(
-    on_chain_tx.audit_log_entries().await?.iter().all(|x| *x.severity() == AuditLogSeverity::Info)
+    on_chain_job.audit_log_entries().await?.iter().all(|x| *x.severity() == AuditLogSeverity::Info)
   );
 
   assert_eq!(*request.reloaded().await?.status(), HandleRequestStatus::Done);
+  */
 }
 
+/*
 app_test!{ pre_validates_campaign_requests_before_bulk_submission (a)
   let mut alice = a.client().await;
   let mut alice_req = alice.build_x_campaign(u("10"), u("10"), 2, &[]).await;
@@ -80,10 +97,11 @@ app_test!{ pre_validates_admin_set_price_requests_before_bulk_submission (a)
 
   bob_req.reload().await?;
   assert_eq!(*bob_req.status(), GenericRequestStatus::Submitted);
-  assert!(bob_req.on_chain_tx().await?.unwrap().submitted());
+  assert!(bob_req.on_chain_job().await?.unwrap().submitted());
 
   a.run_idempotent_background_tasks_a_few_times().await;
   bob_req.reload().await?;
   assert_eq!(*bob_req.status(), GenericRequestStatus::Done);
-  assert!(bob_req.on_chain_tx().await?.unwrap().success());
+  assert!(bob_req.on_chain_job().await?.unwrap().success());
 }
+*/

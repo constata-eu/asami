@@ -10,7 +10,7 @@ pub struct CampaignPreference {
   #[graphql(description = "Unique numeric identifier of this resource")]
   id: i32,
   #[graphql(description = "The campaign this preferences apply to.")]
-  campaign_id: String,
+  campaign_id: i32,
   #[graphql(description = "Date in which the user marked to not be interested in this campaign.")]
   not_interested_on: Option<UtcDateTime>,
   #[graphql(description = "Date in which the user attempted to retweet this campaign.")]
@@ -22,7 +22,7 @@ pub struct CampaignPreference {
 pub struct CampaignPreferenceFilter {
   ids: Option<Vec<i32>>,
   id_eq: Option<i32>,
-  campaign_id_eq: Option<String>,
+  campaign_id_eq: Option<i32>,
 }
 
 #[rocket::async_trait]
@@ -78,7 +78,7 @@ impl Showable<models::CampaignPreference, CampaignPreferenceFilter> for Campaign
 #[graphql(description = "The input for creating a new CampaignPreference.")]
 #[serde(rename_all = "camelCase")]
 pub struct CreateCampaignPreferenceInput {
-  pub campaign_id: String,
+  pub campaign_id: i32,
   pub not_interested: bool,
   pub attempted: bool,
 }
@@ -90,7 +90,7 @@ impl CreateCampaignPreferenceInput {
       .campaign_preference()
       .select()
       .account_id_eq(context.account_id()?)
-      .campaign_id_eq(self.campaign_id.clone())
+      .campaign_id_eq(self.campaign_id)
       .optional()
       .await?;
 
@@ -105,7 +105,7 @@ impl CreateCampaignPreferenceInput {
         .campaign_preference()
         .insert(InsertCampaignPreference {
           account_id: context.account_id()?,
-          campaign_id: self.campaign_id.clone(),
+          campaign_id: self.campaign_id,
           not_interested_on,
           attempted_on,
         })

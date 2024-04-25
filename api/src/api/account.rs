@@ -71,7 +71,7 @@ impl Showable<models::Account, AccountFilter> for Account {
     let (doc_balance, asami_balance) = match address {
       Some(address) => (
         Some(d.state.on_chain.doc_contract.balance_of(address).call().await?.encode_hex()),
-        Some(d.state.on_chain.contract.balance_of(address).call().await?.encode_hex()),
+        Some(d.state.on_chain.asami_contract.balance_of(address).call().await?.encode_hex()),
       ),
       None => (None, None),
     };

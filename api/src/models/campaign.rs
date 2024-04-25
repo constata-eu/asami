@@ -20,15 +20,16 @@ model! {
     briefing_json: String,
     #[sqlx_model_hints(varchar)]
     budget: String,
-    #[sqlx_model_hints(timestamptz)]
-    valid_until: UtcDateTime,
+    #[sqlx_model_hints(timestamptz, default)]
+    valid_until: Option<UtcDateTime>,
     #[sqlx_model_hints(varchar, default)]
-    report_hash: String,
+    report_hash: Option<String>,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
   },
   has_many {
-    CampaignTopic(campaign_id)
+    CampaignTopic(campaign_id),
+    IgCampaignRule(campaign_id)
   },
   belongs_to {
     Account(account_id),
@@ -57,59 +58,49 @@ make_sql_enum![
 ];
 
 impl CampaignHub {
-  pub async fn create_from_link(&self, account: &Account, link: &str, valid_until: UtcDateTime, topics: &[Topic]) -> AsamiResult<Campaign> {
-    use url::{Url, Host, Position};
+  pub async fn create_from_link(&self, account: &Account, link: &str, topics: &[Topic]) -> AsamiResult<Campaign> {
+    use url::Url;
     use regex::Regex;
 
-    let u = Url::parse(link).map_err(|_| AsamiError::validation("link", "invalid_url"))?;
+    let u = Url::parse(link).map_err(|_| Error::validation("link", "invalid_url"))?;
+
     let Some(path) = u.path_segments().map(|c| c.collect::<Vec<&str>>()) else {
-      return Err(AsamiError::validation("link", "no_segments"));
-    }
+      return Err(Error::validation("link", "no_segments"));
+    };
+
     let Some(briefing) = path.get(path.len() - 1) else {
-      return Err(AsamiError::validation("link", "no_content_id"));
-    }
+      return Err(Error::validation("link", "no_content_id"));
+    };
 
-    let x_regex = Regex::new(r#"^\d+$"#).map_err(|_| AsamiError::precondition("invalid_x_regex"))?;
-    let ig_regex = Regex::new(r#"^[\d\w\-_]+$"#).map_err(|_| AsamiError::precondition("invalid_ig_regex"))?;
+    let Some(host) = u.host_str() else { return Err(Error::validation("link", "no_host")); };
 
-    let kind = if (u.host_str().ends_with("twitter.com") || u.host_str().ends_with("x.com")) && x_regex.match(&briefing) {
+    let x_regex = Regex::new(r#"^\d+$"#).map_err(|_| Error::precondition("invalid_x_regex"))?;
+    let ig_regex = Regex::new(r#"^[\d\w\-_]+$"#).map_err(|_| Error::precondition("invalid_ig_regex"))?;
+
+    let campaign_kind = if (host.ends_with("twitter.com") || host.ends_with("x.com")) && x_regex.is_match(&briefing) {
       CampaignKind::XRepost
-    } else if u.host_str().ends_with("instagram.com") && ig_regex.match() {
+    } else if host.ends_with("instagram.com") && ig_regex.is_match(&briefing) {
       CampaignKind::IgClonePost
     } else {
-      return Err(AsamiError::validation("link", "invalid_domain_in_link"));
-    }
+      return Err(Error::validation("link", "invalid_domain_or_route"));
+    };
 
-    /*
-    try {
-      const u = new URL(url);
-      const path = u.pathname.replace(/\/$/, '').split("/");
-      const contentId = path[path.length - 1];
+    let Ok(briefing_hash) = U256::from_str_radix(&models::hasher::hexdigest(briefing.as_bytes()), 16) else {
+      return Err(Error::precondition("conversion_from_briefing_hash_to_u256_should_never_fail"));
+    };
 
-      if ( (u.host.match(/\.?x\.com$/) || u.host.match(/\.?twitter\.com$/)) && contentId.match(/^\d+$/) ) {
-        result.site = "X";
-      } else if (u.host.match(/\.?instagram.com$/) && contentId.match(/^[\d\w\-_]+$/)) {
-        result.site = "INSTAGRAM";
-      } else {
-        result.error = "not_a_post_url";
-      }
-      result.contentId = contentId;
-
-    } catch {
-      result.error = "invalid_url";
-    }
-    */
+    let briefing_json = serde_json::to_string(&briefing)
+      .map_err(|_| Error::precondition("briefing_is_always_json_encodeable") )?;
 
     let campaign = self
       .state
       .campaign()
       .insert(InsertCampaign {
-        account_id: self.attrs.id.clone(),
-        site,
-        budget: budget.encode_hex(),
-        content_id: content_id.to_string(),
-        price_score_ratio: price_score_ratio.encode_hex(),
-        valid_until,
+        account_id: account.attrs.id.clone(),
+        campaign_kind,
+        budget: weihex("0"),
+        briefing_hash: briefing_hash.to_string(),
+        briefing_json,
       })
       .save()
       .await?;
@@ -117,9 +108,9 @@ impl CampaignHub {
     for t in topics {
       self
         .state
-        .campaign_request_topic()
-        .insert(InsertCampaignRequestTopic {
-          campaign_request_id: campaign.attrs.id.clone(),
+        .campaign_topic()
+        .insert(InsertCampaignTopic {
+          campaign_id: campaign.attrs.id.clone(),
           topic_id: t.attrs.id.clone(),
         })
         .save()
@@ -129,7 +120,7 @@ impl CampaignHub {
     Ok(campaign)
   }
 
-  pub async fn sync_x_collabs(&self) -> AsamiResult<Vec<CollabRequest>> {
+  pub async fn sync_x_collabs(&self) -> AsamiResult<Vec<Collab>> {
     use twitter_v2::{api_result::*, authorization::BearerToken, TwitterApi};
 
     let mut reqs = vec![];
@@ -137,10 +128,10 @@ impl CampaignHub {
     let auth = BearerToken::new(&conf.bearer_token);
     let api = TwitterApi::new(auth);
 
-    for campaign in self.select().finished_eq(false).site_eq(Site::X).all().await? {
+    for campaign in self.select().budget_gt(weihex("0")).campaign_kind_eq(CampaignKind::XRepost).all().await? {
       let post_id = campaign
         .attrs
-        .content_id
+        .briefing_json
         .parse::<u64>()
         .map_err(|_| Error::Validation("content_id".into(), "was stored in the db not as u64".into()))?;
 
@@ -180,15 +171,16 @@ impl CampaignHub {
   pub async fn try_x_collab_for_newest_handle(
     &self,
     campaign: &Campaign,
-    user_id: &String,
-  ) -> AsamiResult<Option<CollabRequest>> {
+    user_id: &str,
+  ) -> AsamiResult<Option<Collab>> {
     let Some(handle) = self
       .state
       .handle()
       .select()
       .site_eq(Site::X)
-      .user_id_eq(user_id)
+      .user_id_eq(user_id.to_string())
       .order_by(HandleOrderBy::Id)
+      .status_eq(HandleStatus::Active)
       .desc(true)
       .optional()
       .await?
@@ -196,7 +188,9 @@ impl CampaignHub {
       return Ok(None);
     };
 
-    match campaign.make_collab(&handle).await {
+    let Some(trigger) = handle.user_id().as_ref() else { return Ok(None) };
+
+    match campaign.make_collab(&handle, trigger).await {
       Ok(req) => Ok(Some(req)),
       Err(Error::Validation(_, _)) => Ok(None),
       Err(e) => Err(e),
@@ -205,12 +199,12 @@ impl CampaignHub {
 }
 
 impl Campaign {
-  pub async fn topic_ids(&self) -> sqlx::Result<Vec<String>> {
+  pub async fn topic_ids(&self) -> sqlx::Result<Vec<i32>> {
     Ok(self.campaign_topic_vec().await?.into_iter().map(|t| t.attrs.topic_id).collect())
   }
 
-  pub async fn make_collab(&self, handle: &Handle) -> AsamiResult<CollabRequest> {
-    handle.validate_collaboration(self).await?;
+  pub async fn make_collab(&self, handle: &Handle, trigger: &str) -> AsamiResult<Collab> {
+    handle.validate_collaboration(self, trigger).await?;
 
     Ok(
       self
@@ -219,6 +213,11 @@ impl Campaign {
         .insert(InsertCollab {
           campaign_id: self.attrs.id.clone(),
           handle_id: handle.attrs.id.clone(),
+          advertiser_id: self.attrs.account_id.clone(),
+          member_id: handle.account_id().clone(),
+          collab_trigger_unique_id: trigger.to_string(),
+          reward: weihex("0"),
+          fee: None
         })
         .save()
         .await?,
@@ -226,7 +225,7 @@ impl Campaign {
   }
 
   pub async fn is_missing_ig_rules(&self) -> AsamiResult<bool> {
-    Ok(self.ig_campaign_rule_scope().count().await? == 0 && self.attrs.site == Site::Instagram)
+    Ok(self.ig_campaign_rule_scope().count().await? == 0 && self.attrs.campaign_kind == CampaignKind::IgClonePost)
   }
 }
 

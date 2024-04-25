@@ -4,8 +4,8 @@ use ethers::abi::Address;
 
 #[derive(Clone, Debug, serde::Deserialize)]
 pub struct Addresses {
+  pub legacy: String,
   pub asami: String,
-  pub asami_core: String,
   pub doc: String,
   pub deployer: Address,
 }

@@ -3,7 +3,7 @@ use super::*;
 model! {
   state: App,
   table: handles,
-  struct Handles {
+  struct Handle {
     #[sqlx_model_hints(int4, default)]
     id: i32,
     #[sqlx_model_hints(varchar)]
@@ -124,7 +124,7 @@ impl HandleHub {
           };
 
           let score = U256::from(public_metrics.followers_count) * wei("85") / wei("100");
-          handle_requests.push(req.verify(author_id.to_string()).await?.set_score(score).await?);
+          handles.push(req.verify(author_id.to_string()).await?.set_score(score).await?);
         } else {
           self.state.info("verify_and_score_x", "skipped_post_no_regex_capture", &post.text).await;
         }
@@ -149,7 +149,7 @@ impl HandleHub {
         &checkpoint,
       )
       .await;
-    Ok(handle_requests)
+    Ok(handles)
   }
 }
 
@@ -167,16 +167,20 @@ impl Handle {
       .await
   }
 
-  pub async fn topic_ids(&self) -> sqlx::Result<Vec<String>> {
+  pub async fn topic_ids(&self) -> sqlx::Result<Vec<i32>> {
     Ok(self.handle_topic_vec().await?.into_iter().map(|t| t.attrs.topic_id).collect())
   }
 
-  pub async fn validate_collaboration(&self, campaign: &Campaign) -> AsamiResult<()> {
-    if *campaign.finished() {
-      return Err(Error::validation("site", "campaign_was_finished"));
+  pub async fn validate_collaboration(&self, campaign: &Campaign, trigger: &str) -> AsamiResult<()> {
+    if campaign.budget() > &weihex("0") {
+      return Err(Error::validation("site", "campaign_has_no_funds"));
     }
 
-    if self.site() != campaign.site() {
+    if campaign.valid_until().map(|end| end <= Utc::now()).unwrap_or(true) {
+      return Err(Error::validation("site", "campaign_has_expired"));
+    }
+
+    if !self.site().can_do_campaign_kind(campaign.campaign_kind()) {
       return Err(Error::validation("site", "campaign_and_handle_sites_dont_match"));
     }
 
@@ -185,13 +189,11 @@ impl Handle {
       return Err(Error::validation("topics", "handle_is_missing_topics"));
     }
 
-    todo!("Check here that no other handle with the same user id has participated in the campaign");
-
     let collab_exists = self
       .state
       .collab()
       .select()
-      .handle_id_eq(self.attrs.id.clone())
+      .collab_trigger_unique_id_eq(trigger.to_string())
       .campaign_id_eq(campaign.attrs.id.clone())
       .count()
       .await?
@@ -213,8 +215,8 @@ model! {
     id: i32,
     #[sqlx_model_hints(int4)]
     handle_id: i32,
-    #[sqlx_model_hints(varchar)]
-    topic_id: String,
+    #[sqlx_model_hints(int4)]
+    topic_id: i32,
   }
 }
 

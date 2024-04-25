@@ -48,7 +48,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     }
 
     function getSubAccount(address _account, uint256 _index) public view returns (SubAccount memory) {
-      return accounts[_account][_index];
+      return accounts[_account].subAccounts[_index];
     }
 
     struct Campaign {
@@ -76,18 +76,17 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     IERC20 internal doc;
     uint256 public assignedAsamiTokens;
 
-    event AccountUpdated(uint256 accountId);
-    event CampaignCreated(uint256 accountId, uint256 campaignId);
-    event CampaignSaved(uint256 accountId, uint256 campaignId);
-    event CampaignExtended(uint256 accountId, uint256 campaignId);
-    event CampaignToppedUp(uint256 accountId, uint256 campaignId);
-    event CampaignReimbursed(uint256 accountId, uint256 campaignId);
-    event ReportSubmitted(uint256 accountId, uint256 campaignId);
-    event CollabSaved(uint256 advertiserId, uint256 briefingHash, uint256 accountId, uint256 gross, uint256 fee);
+    event AccountUpdated(address account);
+    event CampaignCreated(address account, uint256 campaignId);
+    event CampaignSaved(address account, uint256 campaignId);
+    event CampaignExtended(address account, uint256 campaignId);
+    event CampaignToppedUp(address account, uint256 campaignId);
+    event CampaignReimbursed(address account, uint256 campaignId);
+    event ReportSubmitted(address account, uint256 campaignId);
+    event CollabSaved(address advertiser, uint256 briefingHash, address account, uint256 gross, uint256 fee);
 
     constructor(
-        address _dollarOnChainAddress,
-        address _adminAddress
+        address _dollarOnChainAddress
     ) ERC20("Asami Core", "ASAMI") ERC20Capped(21 * 1e24) {
         doc = IERC20(_dollarOnChainAddress);
         adminTreasury = msg.sender;
@@ -119,7 +118,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     }
 
     /* Admin that had some sub-accounts can now promote those */
-    function promoteSubAccounts(PromoteSubAccountsParam[] _params) external nonReentrant {
+    function promoteSubAccounts(PromoteSubAccountsParam[] calldata _params) external nonReentrant {
       for(uint256 i = 0; i < _params.length; i++) {
         PromoteSubAccountsParam calldata param = _params[i];
         SubAccount storage sub = accounts[msg.sender].subAccounts[param.id];
@@ -135,7 +134,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
       Account storage account = accounts[msg.sender];
       account.trustedAdmin = _trustedAdmin;
       account.maxGaslessDocToSpend = _maxGaslessDocToSpend;
-      account.minGaslessDocToReceive = _minGaslessRbtcToReceive;
+      account.minGaslessRbtcToReceive = _minGaslessRbtcToReceive;
       account.feeRateWhenAdmin = _feeRateWhenAdmin;
     }
 
@@ -145,13 +144,13 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
       if (account.unclaimedAsamiBalance > 0) {
         uint256 balance = account.unclaimedAsamiBalance;
         account.unclaimedAsamiBalance = 0;
-        _safeMint(account.addr, balance);
+        _safeMint(msg.sender, balance);
       }
 
       if (account.unclaimedDocBalance > 0) {
         uint256 balance = account.unclaimedDocBalance;
         account.unclaimedDocBalance = 0;
-        doc.transfer(account.addr, balance);
+        doc.transfer(msg.sender, balance);
       }
     }
 
@@ -163,13 +162,13 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         if (account.unclaimedAsamiBalance > 0) {
           uint256 balance = account.unclaimedAsamiBalance;
           account.unclaimedAsamiBalance = 0;
-          _safeMint(account.addr, balance);
+          _safeMint(_addresses[i], balance);
         }
 
         if (account.unclaimedDocBalance > 0) {
           uint256 balance = account.unclaimedDocBalance;
           account.unclaimedDocBalance = 0;
-          doc.transfer(account.addr, balance);
+          doc.transfer(_addresses[i], balance);
         }
       }
     }
@@ -191,14 +190,14 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
 
         uint256 docs = account.unclaimedDocBalance - _fee;
         account.unclaimedDocBalance = 0;
-        doc.transfer(account.addr, docs);
+        doc.transfer(_addresses[i], docs);
         accounts[msg.sender].unclaimedDocBalance += _fee;
-        payable(account.addr).transfer(_rbtcAmount);
+        payable(_addresses[i]).transfer(_rbtcAmount);
 
         if (account.unclaimedAsamiBalance > 0) {
           uint256 balance = account.unclaimedAsamiBalance;
           account.unclaimedAsamiBalance = 0;
-          _safeMint(account.addr, balance);
+          _safeMint(_addresses[i], balance);
         }
       }
     }
@@ -236,6 +235,11 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         }
     }
 
+    /* A campaign's expiration can be extended, and this will mean that
+       people will be able to participate for longer, but also that the funds
+       locked in it will be held longer.
+       That's why only the advertiser can call this, knowing their money will be held longer.
+    */
     struct ExtendCampaignsParam {
         uint256 validUntil;
         uint256 briefingHash;
@@ -245,14 +249,12 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         ExtendCampaignsParam[] calldata _inputs
     ) public nonReentrant {
         Account storage account = accounts[msg.sender];
-        require(account.addr != address(0), "ec0");
 
         for (uint i = 0; i < _inputs.length; i++) {
             ExtendCampaignsParam memory input = _inputs[i];
-            require(input.validUntil > 0, "ec1");
             Campaign storage c = account.campaigns[input.briefingHash];
-            require(c.validUntil != 0, "ec2");
-            require(input.validUntil > c.validUntil, "ec3");
+            require(c.validUntil != 0, "ec1");
+            require(input.validUntil > c.validUntil, "ec2");
             c.validUntil = input.validUntil;
             c.reportHash = 0;
 
@@ -287,7 +289,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     }
 
     struct ReimburseCampaignsParam {
-        address account;
+        address addr;
         uint256 briefingHash;
     }
 
@@ -297,14 +299,14 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         for (uint i = 0; i < _inputs.length; i++) {
             ReimburseCampaignsParam memory input = _inputs[i];
 
-            Account storage account = accounts[input.account];
+            Account storage account = accounts[input.addr];
             Campaign storage campaign = account.campaigns[input.briefingHash];
-            require(campaign.budget > 0, "rc1");
-            require(campaign.validUntil < block.timestamp, "rc2");
+            require(campaign.budget > 0, "rc0");
+            require(campaign.validUntil < block.timestamp, "rc1");
 
             campaign.budget = 0;
-            require(doc.transfer(account, campaign.budget), "rdc 3");
-            emit CampaignReimbursed(input.account, input.briefingHash);
+            require(doc.transfer(input.addr, campaign.budget), "rdc2");
+            emit CampaignReimbursed(input.addr, input.briefingHash);
         }
     }
 
@@ -334,14 +336,13 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     }
 
     struct MakeCollabsParam {
-        address advertiser;
+        address advertiserAddr;
         uint256 briefingHash;
         MakeCollabsParamItem[] collabs;
     }
 
     struct MakeCollabsParamItem {
-        address account;
-        uint256 subAccountId;
+        address accountAddr;
         uint256 docReward;
     }
 
@@ -349,78 +350,41 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     function adminMakeCollabs(
         MakeCollabsParam[] calldata _input
     ) external nonReentrant {
-        uint256 asamiTokenCap = cap();
-        uint256 current = getCurrentCycle();
-        Account storage admin = accounts[msg.sender];
-        if( !admin.claimed ){ admin.claimed = true; }
-
         /* It's impossible to make collabs if the fees would exceed the reward */
-        require((feeRate + admin.feeRateWhenAdmin) < 100e18, "amc0");
+        require((feeRate + accounts[msg.sender].feeRateWhenAdmin) < 100e18, "amc0");
 
         for (uint256 i = 0; i < _input.length; i++) {
-          Account storage advertiser = accounts[_input[i].advertiserId];
+          Account storage advertiser = accounts[_input[i].advertiserAddr];
           Campaign storage campaign = advertiser.campaigns[_input[i].briefingHash];
           require(advertiser.trustedAdmin == msg.sender, "amc1");
-
-          uint256 newAdvertiserTokens = 0;
-          uint256 newFees = 0;
-          uint256 newAdminFees = 0;
-          uint256 newAdminTokens = 0;
-          uint256 reducedBudget = campaign.budget;
           require(campaign.validUntil > block.timestamp, "amc2");
 
-          for (uint256 j = 0; j < _input[i].collabs.length; j++) {
-            MakeCollabsParamItem calldata item = _input[i].collabs[j];
-            require(item.accountId > 0, "amc3");
+          uint256 newFees = 0;
 
-            Account storage member = accounts[item.accountId];
+          for (uint256 j = 0; j < _input[i].collabs.length; j++) {
+            Account storage admin = accounts[msg.sender];
+            MakeCollabsParamItem calldata item = _input[i].collabs[j];
+            require(item.accountAddr != address(0), "amc3");
 
             uint256 gross = item.docReward;
-            require(reducedBudget >= gross, "amc4");
-            reducedBudget -= gross;
+            require(campaign.budget >= gross, "amc4");
+            campaign.budget -= gross;
 
             uint256 fee = (gross * feeRate) / 1e20;
             uint256 adminFee = (gross * admin.feeRateWhenAdmin) / 1e20;
             uint256 reward = gross - fee - adminFee;
 
-            uint256 remainingToCap = asamiTokenCap - assignedAsamiTokens;
-
-            if (remainingToCap > 0) {
-              uint256 tokensAtRate = fee * getIssuanceRate();
-              uint256 newTokens = (fee > remainingToCap) ? remainingToCap : fee;
-              uint256 advertiserTokens = (newTokens * 30 * 1e18) / 100e18;
-              uint256 memberTokens = (newTokens * 30 * 1e18) / 100e18;
-              uint256 adminTokens = newTokens - advertiserTokens - memberTokens;
-
-              if(newTokens > 0) {
-                newAdminTokens += adminTokens;
-                newAdvertiserTokens += advertiserTokens;
-                if (item.account == address(0)) {
-                  admin.subAccounts[item.subAccountId].unclaimedAsamiTokens += memberTokens;
-                } else {
-                  accounts[item.account].unclaimedAsamiTokens += memberTokens;
-                }
-
-                assignedAsamiTokens += newTokens; /* TODO: Test gas usage for a local variable instead */
-              }
+            uint256 memberTokens = _tryAssigningTokensAndReturnMemberTokens(fee, advertiser, admin);
+            if(memberTokens > 0 ) {
+               accounts[item.accountAddr].unclaimedAsamiBalance += memberTokens;
             }
-            
-            member.unclaimedDocBalance += reward;
-            if (item.account == address(0)) {
-              admin.subAccounts[item.subAccountId].unclaimedDocBalance += reward;
-            } else {
-              accounts[item.account].unclaimedDocBalance += reward;
-            }
+            accounts[item.accountAddr].unclaimedDocBalance += reward;
             newFees += fee;
-            newAdminFees += adminFee;
+            admin.unclaimedDocBalance += adminFee;
           }
 
           /* To save on gas costs, values are added in memory then stored at once */
-          /* TODO: measure gas cost for just updating the admin.unclaimedDocBalance */
           changeFeePool(newFees, true);
-          admin.unclaimedDocBalance += newAdminFees;
-          admin.unclaimedAsamiBalance += newAdminTokens;
-          advertiser.unclaimedAsamiBalance += newAdvertiserTokens;
 
           /* 
             Storing the fee amount collected in this cycle is only
@@ -428,12 +392,97 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
             If we've issued al tokens, there's no point in adjusting the
             issuance rate on next cycle, therefore, no point in storing this value
           */
-          if(assignedAsamiTokens < asamiTokenCap) {
-            feesCollectedPerPeriodDuringTokenIssuance[current] += newFees;
+          if(assignedAsamiTokens < cap()) {
+            feesCollectedPerPeriodDuringTokenIssuance[getCurrentCycle()] += newFees;
+          }
+      }
+    }
+
+    struct MakeSubAccountCollabsParam {
+        address advertiserAddr;
+        uint256 briefingHash;
+        MakeSubAccountCollabsParamItem[] collabs;
+    }
+
+    struct MakeSubAccountCollabsParamItem {
+        uint256 subAccountId;
+        uint256 docReward;
+    }
+
+
+    /* Make sure all the accounts involved are marked as claimed (?) */
+    function adminMakeSubAccountCollabs(
+        MakeSubAccountCollabsParam[] calldata _input
+    ) external nonReentrant {
+        /* It's impossible to make collabs if the fees would exceed the reward */
+        require((feeRate + accounts[msg.sender].feeRateWhenAdmin) < 100e18, "amc0");
+
+        for (uint256 i = 0; i < _input.length; i++) {
+          Account storage advertiser = accounts[_input[i].advertiserAddr];
+          Campaign storage campaign = advertiser.campaigns[_input[i].briefingHash];
+          require(advertiser.trustedAdmin == msg.sender, "amc1");
+          require(campaign.validUntil > block.timestamp, "amc2");
+
+          uint256 newFees = 0;
+
+          for (uint256 j = 0; j < _input[i].collabs.length; j++) {
+            Account storage admin = accounts[msg.sender];
+            MakeSubAccountCollabsParamItem calldata item = _input[i].collabs[j];
+
+            uint256 gross = item.docReward;
+            require(campaign.budget >= gross, "amc4");
+            campaign.budget -= gross;
+
+            uint256 fee = (gross * feeRate) / 1e20;
+            uint256 adminFee = (gross * admin.feeRateWhenAdmin) / 1e20;
+            uint256 reward = gross - fee - adminFee;
+
+            uint256 memberTokens = _tryAssigningTokensAndReturnMemberTokens(fee, advertiser, admin);
+            if(memberTokens > 0 ) {
+               admin.subAccounts[item.subAccountId].unclaimedAsamiBalance += memberTokens;
+            }
+            admin.subAccounts[item.subAccountId].unclaimedDocBalance += reward;
+            newFees += fee;
+            admin.unclaimedDocBalance += adminFee;
           }
 
-          campaign.budget = reducedBudget;
+          /* To save on gas costs, values are added in memory then stored at once */
+          changeFeePool(newFees, true);
+
+          /* 
+            Storing the fee amount collected in this cycle is only
+            useful to adjust the issuance rate on the next cycle.
+            If we've issued al tokens, there's no point in adjusting the
+            issuance rate on next cycle, therefore, no point in storing this value
+          */
+          if(assignedAsamiTokens < cap()) {
+            feesCollectedPerPeriodDuringTokenIssuance[getCurrentCycle()] += newFees;
+          }
       }
+    }
+
+    function _tryAssigningTokensAndReturnMemberTokens(
+      uint256 _fee,
+      Account storage _advertiser,
+      Account storage _admin
+    ) private returns (uint256) {
+      uint256 remainingToCap = cap() - assignedAsamiTokens;
+
+      if (remainingToCap > 0) {
+        uint256 tokensAtRate = _fee * getIssuanceRate();
+        uint256 newTokens = (tokensAtRate > remainingToCap) ? remainingToCap : tokensAtRate;
+        uint256 advertiserTokens = (newTokens * 30 * 1e18) / 100e18;
+        uint256 memberTokens = (newTokens * 30 * 1e18) / 100e18;
+
+        if(newTokens > 0) {
+          _advertiser.unclaimedAsamiBalance += advertiserTokens;
+          _admin.unclaimedAsamiBalance += newTokens - advertiserTokens - memberTokens;
+          assignedAsamiTokens += newTokens; 
+          return memberTokens;
+        }
+      }
+
+      return 0;
     }
 
     function _safeMint(address _addr, uint256 _amount) private {
@@ -588,7 +637,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     }
 
     /* The adminTreasury address is the deployer address which can only be used to retrieve accidentally sent RBTC into the contract. */
-    address adminTreasury;
+    address public adminTreasury;
 
     function withdrawAccidentallySentRbtc() external {
       require(msg.sender == adminTreasury, "wasr0");
@@ -604,12 +653,11 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     bool public migrationHoldersDone;
     bool public migrationAccountsDone;
 
-    function migrateTokensFromOldContract(address _oldContract, address _admin, uint256 _items) external {
+    function migrateTokensFromOldContract(address _oldContract, address _adminAddr, uint256 _items) external {
       require(!migrationHoldersDone || !migrationAccountsDone, "mig0");
       Asami oldContract = Asami(_oldContract);
-
-      assignedAsamiTokens = oldContract.claimedAsamiTokens;
-      Account storage admin = accounts[_admin];
+      assignedAsamiTokens = oldContract.claimedAsamiTokens();
+      Account storage admin = accounts[_adminAddr];
 
       if (!migrationHoldersDone) {
         for (uint256 i = 0; i < _items; i++) {
@@ -625,13 +673,12 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         }
       }
 
-
       if (!migrationAccountsDone) {
         for (uint256 i = 0; i < _items; i++) {
           try oldContract.accountIds(migrationCursor + i) returns (uint256 oldAccountId) {
             ( , address addr, uint256 oldUnclaimedAsami,) = oldContract.accounts(oldAccountId);
             if(addr == address(0) && oldUnclaimedAsami > 0) {
-              accounts[addr].unclaimedAsamiBalance = oldUnclaimedAsami;
+              admin.subAccounts[oldAccountId].unclaimedAsamiBalance = oldUnclaimedAsami * getIssuanceRate();
             }
           } catch {
             migrationAccountsDone = true;

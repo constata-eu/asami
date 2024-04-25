@@ -10,39 +10,28 @@ mutation CreateSession {
     __typename
   }
 }
-mutation CreateCampaignRequest($input: CreateCampaignRequestInput!) {
-  createCampaignRequest(input: $input) {
+mutation CreateCampaignFromLink($input: CreateCampaignFromLinkInput!) {
+  createCampaignFromLink(input: $input) {
     id
     accountId
     budget
-    site
-    status
-    contentId
+    campaignKind
+    briefingJson
+    briefingHash
+    validUntil
     createdAt
     topicIds
-    updatedAt
     __typename
   }
 }
-mutation CreateHandleRequest($input: CreateHandleRequestInput!) {
-  createHandleRequest(input: $input) {
+mutation CreateHandle($input: CreateHandleInput!) {
+  createHandle(input: $input) {
     id
     accountId
     site
     username
     userId
-    price
     score
-    status
-    __typename
-  }
-}
-mutation CreateSetPriceRequest($input: CreateSetPriceRequestInput!) {
-  createSetPriceRequest(input: $input) {
-    id
-    accountId
-    handleId
-    price
     status
     __typename
   }
@@ -95,53 +84,17 @@ query AllAccountsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder:
     __typename
   }
 }
-query CampaignRequest($id: Int!) {
-  CampaignRequest(id: $id) {
-    id
-    accountId
-    budget
-    site
-    status
-    contentId
-    createdAt
-    topicIds
-    updatedAt
-    __typename
-  }
-}
-query AllCampaignRequests($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignRequestFilter) {
-  allCampaignRequests(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
-    id
-    accountId
-    budget
-    site
-    status
-    contentId
-    createdAt
-    topicIds
-    updatedAt
-    __typename
-  }
-}
-query AllCampaignRequestsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignRequestFilter) {
-  _allCampaignRequestsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
-    count
-    __typename
-  }
-}
-query Campaign($id: String!) {
+query Campaign($id: Int!) {
   Campaign(id: $id) {
     id
     accountId
     budget
-    remaining
-    priceScoreRatio
-    finished
+    campaignKind
+    briefingJson
+    briefingHash
     validUntil
-    site
-    contentId
     createdAt
-    updatedAt
+    topicIds
     __typename
   }
 }
@@ -150,14 +103,12 @@ query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: St
     id
     accountId
     budget
-    remaining
-    priceScoreRatio
-    finished
+    campaignKind
+    briefingJson
+    briefingHash
     validUntil
-    site
-    contentId
     createdAt
-    updatedAt
+    topicIds
     __typename
   }
 }
@@ -167,47 +118,15 @@ query AllCampaignsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder
     __typename
   }
 }
-query HandleRequest($id: Int!) {
-  HandleRequest(id: $id) {
-    id
-    accountId
-    site
-    username
-    userId
-    price
-    score
-    status
-    __typename
-  }
-}
-query AllHandleRequests($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HandleRequestFilter) {
-  allHandleRequests(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
-    id
-    accountId
-    site
-    username
-    userId
-    price
-    score
-    status
-    __typename
-  }
-}
-query AllHandleRequestsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HandleRequestFilter) {
-  _allHandleRequestsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
-    count
-    __typename
-  }
-}
-query Handle($id: String!) {
+query Handle($id: Int!) {
   Handle(id: $id) {
     id
     accountId
     site
     username
     userId
-    price
     score
+    status
     __typename
   }
 }
@@ -218,8 +137,8 @@ query AllHandles($page: Int, $perPage: Int, $sortField: String, $sortOrder: Stri
     site
     username
     userId
-    price
     score
+    status
     __typename
   }
 }
@@ -229,40 +148,14 @@ query AllHandlesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: 
     __typename
   }
 }
-query SetPriceRequest($id: Int!) {
-  SetPriceRequest(id: $id) {
-    id
-    accountId
-    handleId
-    price
-    status
-    __typename
-  }
-}
-query AllSetPriceRequests($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: SetPriceRequestFilter) {
-  allSetPriceRequests(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
-    id
-    accountId
-    handleId
-    price
-    status
-    __typename
-  }
-}
-query AllSetPriceRequestsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: SetPriceRequestFilter) {
-  _allSetPriceRequestsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
-    count
-    __typename
-  }
-}
-query Collab($id: String!) {
+query Collab($id: Int!) {
   Collab(id: $id) {
     id
     campaignId
     advertiserId
     handleId
     memberId
-    gross
+    reward
     fee
     __typename
   }
@@ -274,7 +167,7 @@ query AllCollabs($page: Int, $perPage: Int, $sortField: String, $sortOrder: Stri
     advertiserId
     handleId
     memberId
-    gross
+    reward
     fee
     __typename
   }

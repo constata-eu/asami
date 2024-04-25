@@ -40,6 +40,7 @@ impl App {
   }
 
   pub async fn run_background_tasks(&self) -> anyhow::Result<()> {
+    /*
     self.on_chain_tx().proclaim_cycle_admin_winner().await?;
     self.on_chain_tx().apply_handle_updates().await?;
     self.on_chain_tx().apply_voted_fee_rate().await?;
@@ -55,9 +56,10 @@ impl App {
     self.claim_account_request().submit_all().await?;
     self.campaign_request().submit_approvals().await?;
     self.campaign_request().submit_all().await?;
+    */
 
     self.synced_event().sync_on_chain_events().await?;
-    self.on_chain_tx().sync_tx_result().await?;
+    //self.on_chain_job().sync_tx_result().await?;
     Ok(())
   }
 
@@ -124,7 +126,7 @@ pub struct Rsk {
   pub chain_id: u64,
   pub rpc_url: String,
   pub start_sync_from_block: i64,
-  pub contract_address: String,
+  pub legacy_contract_address: String,
   pub asami_contract_address: String,
   pub doc_contract_address: String,
   pub wallet_mnemonic: String,

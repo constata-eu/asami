@@ -9,13 +9,13 @@ pub use ethers::{
 use std::sync::Arc;
 
 abigen!(
-  LegacyContract,
+  LegacyContractCode,
   "../contract/build/contracts/Asami.json",
   derives(serde::Deserialize, serde::Serialize),
 );
 
 abigen!(
-  AsamiContract,
+  AsamiContractCode,
   "../contract/build/contracts/AsamiCore.json",
   derives(serde::Deserialize, serde::Serialize),
 );
@@ -30,9 +30,9 @@ abigen!(
   derives(serde::Deserialize, serde::Serialize),
 );
 
-pub type LegacyContract = LegacyContract<SignerMiddleware<Provider<Http>, LocalWallet>>;
+pub type LegacyContract = LegacyContractCode<SignerMiddleware<Provider<Http>, LocalWallet>>;
 pub type DocContract = IERC20<SignerMiddleware<Provider<Http>, LocalWallet>>;
-pub type AsamiContract = AsamiContract<SignerMiddleware<Provider<Http>, LocalWallet>>;
+pub type AsamiContract = AsamiContractCode<SignerMiddleware<Provider<Http>, LocalWallet>>;
 
 #[derive(Clone)]
 pub struct OnChain {
@@ -65,9 +65,9 @@ impl OnChain {
       provider,
       wallet.with_chain_id(config.rsk.chain_id),
     ));
-    let address: Address = config
+    let legacy_address: Address = config
       .rsk
-      .contract_address
+      .legacy_contract_address
       .parse()
       .map_err(|_| Error::Init("Invalid asami contract address in config".to_string()))?;
 
@@ -84,7 +84,7 @@ impl OnChain {
       .map_err(|_| Error::Init("Invalid doc contract address in config".to_string()))?;
 
     Ok(Self {
-      legacy_contract: LegacyContract::new(address, client.clone()),
+      legacy_contract: LegacyContract::new(legacy_address, client.clone()),
       asami_contract: AsamiContract::new(asami_address, client.clone()),
       doc_contract: IERC20::new(doc_address, client),
     })

@@ -33,7 +33,7 @@ async fn main() {
 
   every![settings.x.crawl_cooldown_minutes * 60 * 1000, |s| {
     run!("sync_x_collabs" { s.campaign().sync_x_collabs().await });
-    run!("verify_and_appraise_x_handles" { s.handle_request().verify_and_appraise_x().await });
+    run!("verify_and_appraise_x_handles" { s.handle().verify_and_score_x().await });
   }];
 
   every![60 * 1000, |s| {

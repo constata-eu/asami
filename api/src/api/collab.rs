@@ -8,32 +8,32 @@ use super::{
 #[graphql(description = "A collab is created when a member reposts a campaign's content.")]
 pub struct Collab {
   #[graphql(description = "Unique numeric identifier of this resource in the smart contract.")]
-  id: String,
+  id: i32,
   #[graphql(description = "The campaign whose content was reposted.")]
-  campaign_id: String,
+  campaign_id: i32,
   #[graphql(description = "The person that created the campaign.")]
   advertiser_id: String,
   #[graphql(description = "The handle that reposted the content.")]
-  handle_id: String,
+  handle_id: i32,
   #[graphql(description = "The member who owns the handle.")]
   member_id: String,
   #[graphql(description = "The gross amount paid by the advertiser (campaign creator) for this collab.")]
-  gross: String,
-  #[graphql(description = "The fee deducted by asami from the gross amount.")]
-  fee: String,
+  reward: String,
+  #[graphql(description = "The fee deducted by asami from the gross amount, field only available when reward cleared.")]
+  fee: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CollabFilter {
-  ids: Option<Vec<String>>,
-  id_eq: Option<String>,
-  campaign_id_eq: Option<String>,
-  campaign_id_in: Option<Vec<String>>,
+  ids: Option<Vec<i32>>,
+  id_eq: Option<i32>,
+  campaign_id_eq: Option<i32>,
+  campaign_id_in: Option<Vec<i32>>,
   advertiser_id_eq: Option<String>,
   advertiser_id_in: Option<Vec<String>>,
-  handle_id_eq: Option<String>,
-  handle_id_in: Option<Vec<String>>,
+  handle_id_eq: Option<i32>,
+  handle_id_in: Option<Vec<i32>>,
   member_id_eq: Option<String>,
   member_id_in: Option<Vec<String>>,
 }
@@ -67,7 +67,7 @@ impl Showable<models::Collab, CollabFilter> for Collab {
     }
   }
 
-  fn select_by_id(_context: &Context, id: String) -> FieldResult<models::SelectCollab> {
+  fn select_by_id(_context: &Context, id: i32) -> FieldResult<models::SelectCollab> {
     Ok(models::SelectCollab {
       id_eq: Some(id),
       ..Default::default()
@@ -81,7 +81,7 @@ impl Showable<models::Collab, CollabFilter> for Collab {
       advertiser_id: d.attrs.advertiser_id,
       handle_id: d.attrs.handle_id,
       member_id: d.attrs.member_id,
-      gross: d.attrs.gross,
+      reward: d.attrs.reward,
       fee: d.attrs.fee,
     })
   }

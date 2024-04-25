@@ -5,11 +5,11 @@ use super::{
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
-#[graphql(description = "A social network handle associated to an account.")]
+#[graphql(description = "A request to verify a handle for an account.")]
 pub struct Handle {
-  #[graphql(description = "Unique numeric identifier of this resource in the smart contract.")]
-  id: String,
-  #[graphql(description = "The id of the account that created this.")]
+  #[graphql(description = "Unique numeric identifier of this resource")]
+  id: i32,
+  #[graphql(description = "The id of the account that made the request.")]
   account_id: String,
   #[graphql(description = "The social network of this handle: X, Instagram, Nostr.")]
   site: Site,
@@ -18,21 +18,22 @@ pub struct Handle {
   )]
   username: String,
   #[graphql(description = "The unique user_id in the given social network. This never changes.")]
-  user_id: String,
-  #[graphql(description = "The price for each collab made with this handle. This is the price for a single repost.")]
-  price: String,
+  user_id: Option<String>,
   #[graphql(description = "The score given to this handle by Asami's admin.")]
-  score: String,
+  score: Option<String>,
+  #[graphql(description = "Status of this handle.")]
+  status: HandleStatus,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HandleFilter {
-  ids: Option<Vec<String>>,
-  id_eq: Option<String>,
+  ids: Option<Vec<i32>>,
+  id_eq: Option<i32>,
   username_like: Option<String>,
-  user_id_like: Option<String>,
+  status_in: Option<Vec<HandleStatus>>,
   site_eq: Option<Site>,
+  user_id_like: Option<String>,
   account_id_eq: Option<String>,
 }
 
@@ -45,25 +46,33 @@ impl Showable<models::Handle, HandleFilter> for Handle {
     }
   }
 
-  fn filter_to_select(_context: &Context, filter: Option<HandleFilter>) -> FieldResult<models::SelectHandle> {
+  fn filter_to_select(
+    context: &Context,
+    filter: Option<HandleFilter>,
+  ) -> FieldResult<models::SelectHandle> {
     if let Some(f) = filter {
       Ok(models::SelectHandle {
         id_in: f.ids,
-        account_id_eq: f.account_id_eq,
         id_eq: f.id_eq,
-        username_like: f.username_like,
-        user_id_like: f.user_id_like,
+        username_like: into_like_search(f.username_like),
+        status_in: f.status_in,
         site_eq: f.site_eq,
+        user_id_like: f.user_id_like,
+        account_id_eq: Some(context.account_id()?),
         ..Default::default()
       })
     } else {
-      Ok(Default::default())
+      Ok(models::SelectHandle {
+        account_id_eq: Some(context.account_id()?),
+        ..Default::default()
+      })
     }
   }
 
-  fn select_by_id(_context: &Context, id: String) -> FieldResult<models::SelectHandle> {
+  fn select_by_id(context: &Context, id: i32) -> FieldResult<models::SelectHandle> {
     Ok(models::SelectHandle {
       id_eq: Some(id),
+      account_id_eq: Some(context.account_id()?),
       ..Default::default()
     })
   }
@@ -75,8 +84,24 @@ impl Showable<models::Handle, HandleFilter> for Handle {
       site: d.attrs.site,
       username: d.attrs.username,
       user_id: d.attrs.user_id,
-      price: d.attrs.price,
       score: d.attrs.score,
+      status: d.attrs.status,
     })
+  }
+}
+
+#[derive(Clone, GraphQLInputObject, Serialize, Deserialize)]
+#[graphql(description = "The input for creating a new Handle.")]
+#[serde(rename_all = "camelCase")]
+pub struct CreateHandleInput {
+  pub username: String,
+  pub site: Site,
+}
+
+impl CreateHandleInput {
+  pub async fn process(self, context: &Context) -> FieldResult<Handle> {
+    let req = context.account().await?.create_handle(self.site, &self.username).await?;
+
+    Ok(Handle::db_to_graphql(req).await?)
   }
 }

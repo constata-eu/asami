@@ -1,53 +1,20 @@
 use super::*;
+use strum::IntoEnumIterator;
 use ethers::{
   abi::{Address, Detokenize},
   middleware::{contract::FunctionCall, Middleware},
   prelude::{SignerMiddleware, Wallet, ContractError},
-  signers::{LocalWallet},
+  signers::LocalWallet,
   providers::{Http, Provider},
 };
-use sqlx_models_orm::{SqlxModel, SqlxModelHub, SqlxSelectModelHub};
+use sqlx_models_orm::{SqlxModelHub, SqlxSelectModelHub};
 use std::{borrow::Borrow, sync::Arc};
 
-/*
-- OnChainTx are Jobs.
-- Some reactions must be done by listening to events.
-- Since most functions can be called by anyone, blockchain reactiosn should be dispatched by events.
+pub type AsamiSigner = SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>;
+pub type AsamiFunctionCall = FunctionCall<Arc<AsamiSigner>, AsamiSigner, ()>;
+pub type AsamiContractError = ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>;
 
-- Scheduler calls on all possible work types to see if they 
-
-Scheduler can decide the next job based on the currently completed one.
-Scheduler calls out to all models so they can save a spot.(otherwise we'll have empty jobs just to remember we tried to schedule them).
-Scheduler goes through each job, creating the OnChainTx if needed, syncing its result if already sent.
-No need to store the function name in the OnChainTx as they will all have a 'kind'.
-Each specific JOB knows how to:
-  - The scheduler knows how to build the function call
-  - 
-A job *is* a transaction created by the 
-
-Each function call should have a relation to its params for smart logging.
-*/
-
-// Tx only does scheduling. Tx calls back to model for actual params.
-// Tx calls back to the models that requested it to say it's done.
-// Models receive call and react 
-//
-// Make "process_all" be "lock-step", "schedule_next":
-//      - Check previous OnChainTx state.
-//         - if done or failed, decide next step, and create it.
-//         - Work is creating an on-chain-tx. Logging the call/params/etc.
-//         - Requests can be "set failed" the same they are now "set done".
-//
-// What happens if a batch of collabs fails because some of them are not supposed to be there?
-//   - A standard "request" state is:
-//      - Registered (Received)
-//      - Processing (it's been added to an on-chain-tx, and references it.)
-//      - Done (batch tx done)
-//      - Failed (batch tx failed, or other error).
-//      - How can they be retried?
-//          * Set state from 'Failed' to 'Registered' and it should be picked up again.
-//          * Maybe store the previous attempt, or log it. 
-
+/* Claim account requests don't exist, they're part of the account workflow and state */
 
 model! {
   state: App,
@@ -55,34 +22,79 @@ model! {
   struct OnChainJob {
     #[sqlx_model_hints(int4, default)]
     id: i32,
-    #[sqlx_model_hints(on_chain_tx_status, default)]
-    status: OnChainTxStatus,
-    #[sqlx_model_hints(varchar)]
-    function_name: String,
+    #[sqlx_model_hints(on_chain_job_status, default)]
+    status: OnChainJobStatus,
+    #[sqlx_model_hints(on_chain_job_kind)]
+    kind: OnChainJobKind,
     #[sqlx_model_hints(varchar, default)]
     tx_hash: Option<String>,
-    #[sqlx_model_hints(timestamptz, default)]
-    created_at: UtcDateTime,
     #[sqlx_model_hints(varchar, default)]
     gas_used: Option<String>,
     #[sqlx_model_hints(varchar, default)]
     nonce: Option<String>,
     #[sqlx_model_hints(varchar, default)]
-    message: Option<String>,
+    status_line: Option<String>,
+    #[sqlx_model_hints(timestamptz, default)]
+    created_at: UtcDateTime,
+  },
+  queries {
+      current("status IN ('scheduled', 'submitted', 'confirmed') ORDER BY id limit 1")
+  },
+  has_many {
+    OnChainJobAccount(job_id),
+    OnChainJobCampaign(job_id),
+    OnChainJobCollab(job_id),
+    OnChainJobHolder(job_id),
   }
 }
 
-impl_loggable!(OnChainTx);
+impl_loggable!(OnChainJob);
 
-impl OnChainTxHub {
-  pub async fn send_tx<B, M, D>(&self, fn_call: FunctionCall<B, M, D>) -> sqlx::Result<OnChainTx>
+impl OnChainJobHub {
+  pub async fn run_scheduler(&self) -> anyhow::Result<()> {
+    let Some(job) = self.current().optional().await? else {
+      for kind in OnChainJobKind::iter() {
+        self.insert(InsertOnChainJob{ kind }).save().await?;
+      }
+      return Ok(());
+    };
+
+    return Ok(());
+
+    // Finds last non-ended job:
+    //  all ended? schedule new and run again.
+    //
+    // Is scheduled;
+    //  -> Run transaction, associate data.
+    //  -> If reverted, mark as reverted and store message.
+    //      -> also store logs, make this loggable.
+    //
+    // Is submitted:
+    //  -> Check if Confirmed.
+    //    -> Success?
+      //    -> Set status to Confirmed.
+      //    -> Store status message.
+      //    -> Execute callback code for 'on_confirm'
+    //    -> Failed?
+    //      -> Set status to Failed
+    //      -> Store receipt in log.
+    //      -> Store error message in msg.
+    //
+    //
+    //
+    //
+    // Start from there.
+  }
+
+  /*
+  pub async fn send_tx<B, M, D>(&self, fn_call: FunctionCall<B, M, D>) -> sqlx::Result<OnChainJob>
   where
     B: Borrow<M>,
     M: Middleware,
     D: Detokenize,
   {
     let unsent = self
-      .insert(InsertOnChainTx {
+      .insert(InsertOnChainJob {
         function_name: fn_call.function.name.clone(),
       })
       .save()
@@ -93,46 +105,21 @@ impl OnChainTxHub {
       Err(e) => {
         let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error") );
         unsent.fail("early_revert_message", format!("{e:?}")).await?;
-        let reverted = unsent.update().status(OnChainTxStatus::Reverted).message(Some(desc)).save().await?;
+        let reverted = unsent.update().status(OnChainJobStatus::Reverted).message(Some(desc)).save().await?;
         Ok(reverted)
       }
       Ok(pending_tx) => {
         let tx_hash = pending_tx.tx_hash().encode_hex();
-        let submitted = unsent.update().status(OnChainTxStatus::Submitted).tx_hash(Some(tx_hash)).save().await?;
+        let submitted = unsent.update().status(OnChainJobStatus::Submitted).tx_hash(Some(tx_hash)).save().await?;
         Ok(submitted)
       }
     }
   }
+  */
 
-  pub async fn apply_handle_updates(&self) -> anyhow::Result<Option<OnChainTx>> {
-    let c = &self.state.on_chain.contract;
-    let this_cycle = c.get_current_cycle().call().await?;
-
-    let applicable: Vec<U256> = c
-      .get_handles()
-      .call()
-      .await?
-      .iter()
-      .enumerate()
-      .filter_map(|(i, u)| {
-        if (u.last_updated == this_cycle) || !u.needs_update {
-          None
-        } else {
-          Some(i.into())
-        }
-      })
-      .take(50)
-      .collect();
-
-    if applicable.is_empty() {
-      return Ok(None);
-    }
-
-    Ok(Some(self.send_tx(c.apply_handle_updates(applicable)).await?))
-  }
-
-  pub async fn apply_voted_fee_rate(&self) -> anyhow::Result<Option<OnChainTx>> {
-    let c = &self.state.on_chain.contract;
+  /*
+  pub async fn apply_voted_fee_rate(&self) -> anyhow::Result<Option<OnChainJob>> {
+    let c = &self.state.on_chain.asami_contract;
     let this_cycle = c.get_current_cycle().call().await?;
     let last_applied = c.last_voted_fee_rate_applied_on().await?;
 
@@ -143,82 +130,38 @@ impl OnChainTxHub {
     Ok(Some(self.send_tx(c.apply_voted_fee_rate()).await?))
   }
 
-  pub async fn proclaim_cycle_admin_winner(&self) -> anyhow::Result<Option<OnChainTx>> {
-    let c = &self.state.on_chain.contract;
-    let this_cycle = c.get_current_cycle().call().await?;
-    let last_admin_election = c.last_admin_election().call().await?;
-
-    if this_cycle == last_admin_election {
-      return Ok(None);
-    }
-
-    let vested_votes = c.vested_admin_votes_total().call().await?;
-    let admin_vote_counts = c.all_admin_vote_counts().call().await?;
-
-    for i in &admin_vote_counts {
-      if i.votes > vested_votes / wei("2") {
-        return Ok(Some(self.send_tx(c.proclaim_cycle_admin_winner(i.candidate)).await?));
-      }
-    }
-
-    Ok(None)
-  }
-
-  pub async fn reimburse_due_campaigns(&self) -> anyhow::Result<Option<OnChainTx>> {
-    let c = &self.state.on_chain.contract;
+  pub async fn reimburse_due_campaigns(&self) -> anyhow::Result<Option<OnChainJob>> {
+    let c = &self.state.on_chain.asami_contract;
     let block_number = c.client().get_block_number().await?;
     let Some(now) = c.client().get_block(block_number).await?.map(|b| b.timestamp) else {
       return Ok(None);
     };
 
-    let past_due: Vec<U256> = c
-      .get_campaigns()
-      .call()
-      .await?
-      .iter()
-      .filter_map(|c| {
-        if (c.valid_until >= now) || (c.remaining == u("0")) {
-          None
-        } else {
-          Some(c.id)
-        }
-      })
-      .take(50)
-      .collect();
+    let candidates: Vec<Campaign> = self.state.campaign()
+      .select()
+      .budget_gt(weihex("0"))
+      .limit(50)
+      .all().await?;
+
+    let mut past_due = vec![];
+
+    for c in &candidates {
+      if c.valid_until() > &i_to_utc(now) {
+          continue;
+      }
+      let Some(addr) = c.account().await?.decoded_addr()? else { continue };
+      past_due.push(on_chain::ReimburseCampaignsParam{ addr, briefing_hash: u256(c.briefing_hash())});
+    }
 
     if past_due.is_empty() {
       return Ok(None);
     }
 
-    Ok(Some(self.send_tx(c.reimburse_due_campaigns(past_due)).await?))
+    Ok(Some(self.send_tx(c.reimburse_campaigns(past_due)).await?))
   }
 
-  pub async fn vest_admin_votes(&self) -> anyhow::Result<Option<OnChainTx>> {
-    let c = &self.state.on_chain.contract;
-    let this_cycle = c.get_current_cycle().call().await?;
-
-    let mut vestable: Vec<Address> = vec![];
-
-    for holder in c.get_holders().call().await? {
-      let vote = c.submitted_admin_votes(holder).call().await?;
-      if vote.2 > u("0") && vote.2 < this_cycle && !vote.3 {
-        vestable.push(holder);
-      }
-
-      if vestable.len() > 50 {
-        break;
-      }
-    }
-
-    if vestable.is_empty() {
-      return Ok(None);
-    }
-
-    Ok(Some(self.send_tx(c.vest_admin_votes(vestable)).await?))
-  }
-
-  pub async fn distribute_fee_pool(&self) -> anyhow::Result<Option<OnChainTx>> {
-    let c = &self.state.on_chain.contract;
+  pub async fn distribute_fee_pool(&self) -> anyhow::Result<Option<OnChainJob>> {
+    let c = &self.state.on_chain.asami_contract;
     let this_cycle = c.get_current_cycle().call().await?;
 
     let total_supply = c.total_supply().call().await?;
@@ -229,32 +172,25 @@ impl OnChainTxHub {
       return Ok(None);
     }
 
-    let mut pending = vec![];
+    let holders: Vec<Address> = self.state.holder().select()
+        .last_fee_pool_share_ne(this_cycle.encode_hex())
+        .balance_ne(weihex("0"))
+        .limit(50)
+        .all().await?
+        .into_iter()
+        .filter_map(|h| Address::decode_hex(h.attrs.address).ok() )
+        .collect();
 
-    for holder in c.get_holders().call().await? {
-      if this_cycle == c.last_fee_pool_share_cycles(holder).call().await? {
-        continue;
-      }
-      if u("0") == c.get_balance_before_recent_changes(holder).call().await? {
-        continue;
-      }
-      pending.push(holder);
-
-      if pending.len() == 50 {
-        break;
-      }
-    }
-
-    if pending.is_empty() {
+    if holders.is_empty() {
       return Ok(None);
     }
 
-    Ok(Some(self.send_tx(c.claim_fee_pool_share(pending)).await?))
+    Ok(Some(self.send_tx(c.claim_fee_pool_share(holders)).await?))
   }
 
   pub async fn sync_tx_result(&self) -> anyhow::Result<()> {
-    let client = self.state.on_chain.asami.client();
-    for tx in self.select().status_eq(OnChainTxStatus::Submitted).all().await? {
+    let client = self.state.on_chain.asami_contract.client();
+    for tx in self.select().status_eq(OnChainJobStatus::Submitted).all().await? {
       let Some(tx_hash) = tx.tx_hash().as_ref().and_then(|x| H256::decode_hex(x).ok()) else { 
         continue
       };
@@ -265,7 +201,7 @@ impl OnChainTxHub {
         continue;
       };
       let (status, message) = if receipt.status.unwrap_or(U64::zero()) == U64::one() {
-        (OnChainTxStatus::Success, None)
+        (OnChainJobStatus::Success, None)
       } else {
         let typed: ethers::types::transaction::eip2718::TypedTransaction = (&original_tx).into();
         let msg = match client.call(&typed, None).await {
@@ -275,7 +211,7 @@ impl OnChainTxHub {
           },
           _ => "no_failure_reason_wtf".to_string()
         };
-        (OnChainTxStatus::Failure, Some(msg))
+        (OnChainJobStatus::Failure, Some(msg))
       };
 
       //let id = tx.attrs.id;
@@ -299,163 +235,86 @@ impl OnChainTxHub {
     }
     Ok(())
   }
+  */
 }
 
-impl OnChainTx {
-  pub fn success(&self) -> bool {
-    self.attrs.status == OnChainTxStatus::Success
-  }
-
-  pub fn reverted(&self) -> bool {
-    self.attrs.status == OnChainTxStatus::Reverted
-  }
-
-  pub fn submitted(&self) -> bool {
-    self.attrs.status == OnChainTxStatus::Submitted
-  }
-
-  pub fn created(&self) -> bool {
-    self.attrs.status == OnChainTxStatus::Created
+model! {
+  state: App,
+  table: on_chain_job_accounts,
+  struct OnChainJobAccount {
+    #[sqlx_model_hints(int4, default)]
+    id: i32,
+    #[sqlx_model_hints(int4)]
+    job_id: i32,
+    #[sqlx_model_hints(varchar)]
+    account_id: String,
   }
 }
 
-pub type AsamiSigner = SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>;
-pub type AsamiFunctionCall = FunctionCall<Arc<AsamiSigner>, AsamiSigner, ()>;
-pub type AsamiCoreContractError = ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>;
-
-#[rocket::async_trait]
-pub trait OnChainTxRequest: SqlxModelHub<Self::Model> + std::marker::Send + std::marker::Sync {
-  type Model: SqlxModel<State = App> + std::marker::Send + std::marker::Sync;
-  type Update: std::marker::Send + std::marker::Sync;
-  type Status: std::marker::Send + std::marker::Sync;
-  type Param: std::marker::Send + std::marker::Sync + serde::Serialize;
-
-  async fn as_param(&self, model: &Self::Model) -> sqlx::Result<Self::Param>;
-
-  fn fn_call(&self, params: Vec<Self::Param>) -> AsamiFunctionCall;
-
-  fn app(&self) -> &App;
-
-  fn update(model: Self::Model) -> Self::Update;
-
-  fn set_update_tx_id(update: Self::Update, txid: i32) -> Self::Update;
-
-  fn set_update_status(update: Self::Update, status: Self::Status) -> Self::Update;
-
-  async fn save_update(update: Self::Update) -> sqlx::Result<Self::Model>;
-
-  fn set_select_status(
-    select: <Self::Model as SqlxModel>::SelectModelHub,
-    status: Self::Status,
-  ) -> <Self::Model as SqlxModel>::SelectModelHub;
-
-  fn set_select_tx_id(
-    select: <Self::Model as SqlxModel>::SelectModelHub,
-    tx_id: i32,
-  ) -> <Self::Model as SqlxModel>::SelectModelHub;
-
-  fn submitted_status() -> Self::Status;
-  fn pending_status() -> Self::Status;
-  fn done_status() -> Self::Status;
-  fn log_kind(&self) -> &str;
-
-  async fn validate_before_submit_all(&self) -> sqlx::Result<()> {
-    Ok(())
-  }
-
-  async fn info<S: serde::Serialize + Send>(&self, subkind: &str, context: S) {
-    self.app().info(self.log_kind(), subkind, context).await;
-  }
-
-  async fn submit_all(&self) -> sqlx::Result<Vec<Self::Model>> {
-    self.info("submit_all_starting", "").await;
-
-    self.validate_before_submit_all().await?;
-    let mut submitted = vec![];
-    let reqs = Self::set_select_status(self.select(), Self::pending_status()).all().await?;
-
-    if reqs.is_empty() {
-      return Ok(submitted);
-    }
-
-    let mut params = vec![];
-    for p in &reqs {
-      params.push(self.as_param(p).await?);
-    }
-    self.info("submit_all_params", &params).await;
-
-    let on_chain_tx = self.app().on_chain_tx().send_tx(self.fn_call(params)).await?;
-    self.info("submit_all_on_chain_tx", on_chain_tx.id()).await;
-
-    if on_chain_tx.reverted() {
-      self.info("submit_all_tx_reverted", on_chain_tx.id()).await;
-      return Ok(vec![]);
-    }
-
-    for req in reqs {
-      let mut update = Self::update(req);
-      update = Self::set_update_tx_id(update, on_chain_tx.attrs.id);
-      update = Self::set_update_status(update, Self::submitted_status());
-      let updated = Self::save_update(update).await?;
-      submitted.push(updated);
-    }
-
-    self.info("submit_all_is_done", "").await;
-    Ok(submitted)
-  }
-
-  async fn set_done(&self, tx_id: i32) -> sqlx::Result<()> {
-    for r in Self::set_select_tx_id(self.select(), tx_id).all().await? {
-      let mut update = Self::update(r);
-      update = Self::set_update_status(update, Self::done_status());
-      Self::save_update(update).await?;
-    }
-    Ok(())
+model! {
+  state: App,
+  table: on_chain_job_campaigns,
+  struct OnChainJobCampaign {
+    #[sqlx_model_hints(int4, default)]
+    id: i32,
+    #[sqlx_model_hints(int4)]
+    job_id: i32,
+    #[sqlx_model_hints(int4)]
+    campaign_id: i32,
   }
 }
 
-#[macro_export]
-macro_rules! impl_on_chain_tx_request {
-  ($struct:ident { $($items:tt)* }) => {
-    #[rocket::async_trait]
-    impl OnChainTxRequest for $struct {
-      $($items)*
+model! {
+  state: App,
+  table: on_chain_job_collabs,
+  struct OnChainJobCollab {
+    #[sqlx_model_hints(int4, default)]
+    id: i32,
+    #[sqlx_model_hints(int4)]
+    job_id: i32,
+    #[sqlx_model_hints(int4)]
+    collab_id: i32,
+  }
+}
 
-      fn app(&self) -> &App { &self.state }
-      fn update(model: Self::Model) -> Self::Update { model.update() }
-      fn set_update_tx_id(update: Self::Update, txid: i32) -> Self::Update { update.on_chain_tx_id(Some(txid)) }
-      fn set_update_status(update: Self::Update, status: Self::Status) -> Self::Update { update.status(status) }
-      async fn save_update(update: Self::Update) -> sqlx::Result<Self::Model> { update.save().await }
-      fn log_kind(&self) -> &str { stringify!($struct) }
-
-      fn set_select_status(
-        select: <Self::Model as sqlx_models_orm::SqlxModel>::SelectModelHub,
-        status: Self::Status
-      )
-        -> <Self::Model as sqlx_models_orm::SqlxModel>::SelectModelHub
-      {
-        select.status_eq(status)
-      }
-
-      fn set_select_tx_id(
-        select: <Self::Model as sqlx_models_orm::SqlxModel>::SelectModelHub,
-        tx_id: i32
-      )
-        -> <Self::Model as sqlx_models_orm::SqlxModel>::SelectModelHub
-      {
-        select.on_chain_tx_id_eq(tx_id)
-      }
-    }
-  };
+model! {
+  state: App,
+  table: on_chain_job_holders,
+  struct OnChainJobHolder {
+    #[sqlx_model_hints(int4, default)]
+    id: i32,
+    #[sqlx_model_hints(int4)]
+    job_id: i32,
+    #[sqlx_model_hints(int4)]
+    holder_id: i32,
+  }
 }
 
 make_sql_enum![
-  "on_chain_tx_status",
-  pub enum OnChainTxStatus {
-    Created,
+  "on_chain_job_status",
+  pub enum OnChainJobStatus {
+    Scheduled,
+    Skipped,
     Reverted,
     Submitted,
-    Failure,
-    Success,
+    Failed,
+    Confirmed,
+    Settled,
+  }
+];
+
+make_sql_enum![
+  "on_chain_job_kind",
+  pub enum OnChainJobKind {
+    PromoteSubAccounts, // Admin promotes the sub accounts that requested it.
+    AdminLegacyClaimAccount, // The admin claims accounts in the old contract.
+    AdminClaimOwnBalances, // The admin claims its own balances, once in a while.
+    AdminClaimGaslessBalances, // The admin does gasless claims for its known users.
+    ReimburseCampaigns, // As a convenience for users, but the admin is not obliged to reimburse.
+    SubmitReports, // Submit collab report for campaigns that have ended.
+    MakeCollabs, // Register collabs done by full accounts.
+    MakeSubAccountCollabs, // Register collabs done by this admin sub-accounts.
+    ClaimFeePoolShare, // We claim and send their shares to holders automatically.
+    ApplyVotedFeeRate, // The admin does this once per cycle.
   }
 ];

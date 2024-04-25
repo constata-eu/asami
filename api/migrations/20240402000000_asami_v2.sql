@@ -24,11 +24,6 @@ ALTER INDEX idx_handle_requests_status RENAME TO idx_handle_status;
 ALTER INDEX idx_handle_requests_username RENAME TO idx_handle_username;
 ALTER INDEX idx_handle_requests_user_id RENAME TO idx_handle_user_id;
 
-ALTER TABLE handle_request_topics RENAME TO handle_topics;
-ALTER INDEX idx_handle_request_topics_handle_id RENAME TO idx_handle_topics_handle_id;
-ALTER INDEX idx_handle_request_topics_topic_id RENAME TO idx_handle_topics_topic_id;
-ALTER TABLE handle_topics RENAME COLUMN handle_request_id TO handle_id;
-
 ALTER TABLE handles RENAME COLUMN on_chain_tx_id TO old_on_chain_tx_id;
 ALTER TABLE handles RENAME COLUMN price TO old_price;
 ALTER TABLE handles RENAME COLUMN status TO old_status;
@@ -39,6 +34,19 @@ CREATE TYPE handle_status AS ENUM (
   'verified',
   'active',
   'inactive'
+);
+
+CREATE TYPE on_chain_job_kind AS ENUM (
+	'promote_sub_accounts',
+	'admin_legacy_claim_account',
+	'admin_claim_own_balances',
+	'admin_claim_gasless_balances',
+	'reimburse_campaigns',
+	'submit_reports',
+	'make_collabs',
+	'make_sub_account_collabs',
+	'claim_fee_pool_share',
+	'apply_voted_fee_rate'
 );
 
 ALTER TABLE handles ADD COLUMN status handle_status;
@@ -72,7 +80,7 @@ CREATE TABLE campaigns (
   briefing_json TEXT NOT NULL,
   briefing_hash VARCHAR NOT NULL,
   budget VARCHAR NOT NULL,
-  valid_until timestamp NOT NULL,
+  valid_until timestamp,
   report_hash VARCHAR,
   created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
@@ -106,33 +114,75 @@ CREATE TABLE collabs (
   status collab_status NOT NULL,
   dispute_reason VARCHAR NOT NULL,
   reward VARCHAR NOT NULL,
+  fee VARCHAR,
   created_at TIMESTAMPTZ NOT NULL
 );
 CREATE INDEX idx_collabs_campaign_id ON collabs(campaign_id);
 CREATE INDEX idx_collabs_handle_id ON collabs(handle_id);
 
+CREATE TYPE on_chain_job_status AS ENUM (
+  'scheduled',
+	'skipped',
+  'reverted',
+  'submitted',
+  'failed',
+  'confirmed',
+	'settled'
+);
+
 CREATE TABLE on_chain_jobs (
   id SERIAL PRIMARY KEY NOT NULL,
-  success boolean NOT NULL default false,
-  function_name VARCHAR NOT NULL,
+	status on_chain_job_status NOT NULL,
+  kind on_chain_job_kind NOT NULL,
   tx_hash VARCHAR,
+	gas_used VARCHAR,
+	nonce VARCHAR,
+	status_line TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX idx_on_chain_jobs_function_name ON on_chain_jobs(function_name);
-CREATE INDEX idx_on_chain_jobs_success ON on_chain_jobs(success);
+CREATE INDEX idx_on_chain_jobs_kind ON on_chain_jobs(kind);
+CREATE INDEX idx_on_chain_jobs_status ON on_chain_jobs(status);
 CREATE INDEX idx_on_chain_jobs_tx_hash ON on_chain_jobs(tx_hash);
+CREATE INDEX idx_on_chain_jobs_nonce ON on_chain_jobs(nonce);
 
-CREATE TABLE on_chain_jobs_campaigns (
+CREATE TABLE on_chain_job_accounts (
+  id SERIAL PRIMARY KEY NOT NULL,
+  job_id INTEGER REFERENCES on_chain_jobs(id) NOT NULL,
+  account_id VARCHAR REFERENCES accounts(id) NOT NULL
+);
+CREATE INDEX idx_on_chain_job_accounts_job_id ON on_chain_job_accounts(job_id);
+CREATE INDEX idx_on_chain_job_accounts_account_id ON on_chain_job_accounts(account_id);
+
+CREATE TABLE on_chain_job_campaigns (
   id SERIAL PRIMARY KEY NOT NULL,
   job_id INTEGER REFERENCES on_chain_jobs(id) NOT NULL,
   campaign_id INTEGER REFERENCES campaigns(id) NOT NULL
 );
+CREATE INDEX idx_on_chain_job_campaigns_job_id ON on_chain_job_campaigns(job_id);
+CREATE INDEX idx_on_chain_job_campaigns_campaign_id ON on_chain_job_campaigns(campaign_id);
 
-CREATE TABLE on_chain_jobs_collabs (
+CREATE TABLE on_chain_job_collabs (
   id SERIAL PRIMARY KEY NOT NULL,
   job_id INTEGER REFERENCES on_chain_jobs(id) NOT NULL,
   collab_id INTEGER REFERENCES collabs(id) NOT NULL
 );
+CREATE INDEX idx_on_chain_job_collabs_job_id ON on_chain_job_collabs(job_id);
+CREATE INDEX idx_on_chain_job_collabs_collab_id ON on_chain_job_collabs(collab_id);
+
+CREATE TABLE holders (
+  id SERIAL PRIMARY KEY NOT NULL,
+  balance VARCHAR NOT NULL,
+  address VARCHAR NOT NULL,
+  last_fee_pool_share VARCHAR
+);
+
+CREATE TABLE on_chain_job_holders (
+  id SERIAL PRIMARY KEY NOT NULL,
+  job_id INTEGER REFERENCES on_chain_jobs(id) NOT NULL,
+  holder_id INTEGER REFERENCES holders(id) NOT NULL
+);
+CREATE INDEX idx_on_chain_job_holders_job_id ON on_chain_job_holders(job_id);
+CREATE INDEX idx_on_chain_job_holders_holder_id ON on_chain_job_holders(holder_id);
 
 CREATE TABLE topics (
   id SERIAL PRIMARY KEY NOT NULL,
@@ -149,4 +199,42 @@ CREATE TABLE campaign_topics (
 );
 CREATE INDEX idx_campaign_topics_campaign_id ON campaign_topics(campaign_id);
 CREATE INDEX idx_campaign_topics_topic_id ON campaign_topics(topic_id);
+
+ALTER TABLE campaign_preferences RENAME TO old_campaign_preferences;
+
+ALTER INDEX idx_campaign_preferences_account_id RENAME TO old_campaign_preferences_account_id;
+ALTER INDEX idx_campaign_preferences_campaign_id RENAME TO cold_ampaign_preferences_campaign_id;
+
+CREATE TABLE campaign_preferences (
+  id SERIAL PRIMARY KEY NOT NULL,
+  account_id VARCHAR REFERENCES accounts(id) NOT NULL,
+  campaign_id INTEGER REFERENCES campaigns(id) NOT NULL,
+  not_interested_on TIMESTAMPTZ,
+  attempted_on TIMESTAMPTZ
+);
+CREATE INDEX idx_campaign_preferences_account_id ON campaign_preferences(account_id);
+CREATE INDEX idx_campaign_preferences_campaign_id ON campaign_preferences(campaign_id);
+
+CREATE TABLE handle_topics (
+  id SERIAL PRIMARY KEY NOT NULL,
+  handle_id integer REFERENCES handles(id) NOT NULL,
+  topic_id integer REFERENCES topics(id) NOT NULL,
+  created_at timestamp DEFAULT now() NOT NULL,
+  updated_at timestamp
+);
+CREATE INDEX idx_handle_topics_handle_id ON handle_topics(handle_id);
+CREATE INDEX idx_handle_topics_topic_id ON handle_topics(topic_id);
+
+ALTER TABLE ig_campaign_rules RENAME TO old_ig_campaign_rules;
+ALTER INDEX idx_ig_campaign_rules_campaign_id RENAME TO old_ig_campaign_rules_campaign_id;
+
+CREATE TABLE ig_campaign_rules (
+  id SERIAL PRIMARY KEY NOT NULL,
+  campaign_id INTEGER REFERENCES campaigns(id) NOT NULL,
+  image BYTEA NOT NULL,
+  display_url TEXT NOT NULL,
+  image_hash TEXT NOT NULL,
+  caption TEXT NOT NULL
+);
+CREATE INDEX idx_ig_campaign_rules_campaign_id ON ig_campaign_rules(campaign_id);
 

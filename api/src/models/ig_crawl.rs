@@ -64,31 +64,19 @@ impl IgCrawlHub {
     direct_urls.extend(
       self
         .state
-        .handle_request()
-        .select()
-        .site_eq(Site::Instagram)
-        .status_eq(HandleRequestStatus::Unverified)
-        .all()
-        .await?
-        .into_iter()
-        .map(|h| format!("https://www.instagram.com/{}", h.attrs.username)),
-    );
-
-    direct_urls.extend(
-      self
-        .state
         .handle()
         .select()
         .site_eq(Site::Instagram)
+        .status_in(vec![HandleStatus::Unverified, HandleStatus::Active])
         .all()
         .await?
         .into_iter()
         .map(|h| format!("https://www.instagram.com/{}", h.attrs.username)),
     );
 
-    for c in self.state.campaign().select().site_eq(Site::Instagram).finished_eq(false).all().await? {
+    for c in self.state.campaign().select().campaign_kind_eq(CampaignKind::IgClonePost).budget_gt(weihex("0")).all().await? {
       if c.is_missing_ig_rules().await? {
-        direct_urls.insert(format!("https://www.instagram.com/p/{}", c.attrs.content_id));
+        direct_urls.insert(format!("https://www.instagram.com/p/{}", c.attrs.briefing_json));
       }
     }
 
@@ -251,7 +239,7 @@ impl IgCrawlHub {
   pub async fn process_for_collabs(&self) -> AsamiResult<()> {
     let mut campaigns = vec![];
 
-    for campaign in self.state.campaign().select().site_eq(Site::Instagram).finished_eq(false).all().await? {
+    for campaign in self.state.campaign().select().campaign_kind_eq(CampaignKind::IgClonePost).budget_gt(weihex("0")).all().await? {
       if let Some(rule) = self.state.ig_campaign_rule().select().campaign_id_eq(campaign.id()).optional().await? {
         campaigns.push((campaign, rule));
       }
@@ -307,8 +295,8 @@ impl IgCrawlResult {
       .state
       .campaign()
       .select()
-      .site_eq(Site::Instagram)
-      .content_id_eq(post.short_code)
+      .campaign_kind_eq(CampaignKind::IgClonePost)
+      .briefing_json_eq(post.short_code)
       .optional()
       .await?
     else {
@@ -349,21 +337,21 @@ impl IgCrawlResult {
       return Ok(());
     };
 
-    let maybe_request = self
+    let maybe_handle = self
       .state
-      .handle_request()
+      .handle()
       .select()
       .username_ilike(profile.username)
       .site_eq(Site::Instagram)
-      .status_eq(HandleRequestStatus::Unverified)
+      .status_eq(HandleStatus::Unverified)
       .optional()
       .await?;
 
-    match maybe_request {
+    match maybe_handle {
       None => {
         self.log("Skipped. No pending handle request").await?;
       }
-      Some(handle_request) => {
+      Some(handle) => {
         for post in &profile.latest_posts {
           if let Some(capture) = caption_regex.captures(post.caption.trim()) {
             let Ok(account_id) = capture[1].parse::<String>().map(weihex) else {
@@ -371,7 +359,7 @@ impl IgCrawlResult {
               continue;
             };
 
-            if &account_id != handle_request.account_id() {
+            if &account_id != handle.account_id() {
               self.log_post(post, "account id in caption did not match request account").await?;
               continue;
             }
@@ -395,9 +383,7 @@ impl IgCrawlResult {
           }
 
           let score = U256::from(profile.followers_count) * wei("85") / wei("100");
-          let suggested_ppp = self.state.indexer_state().get().await?.attrs.suggested_price_per_point;
-          let price = u256(suggested_ppp) * score;
-          handle_request.verify(profile.id).await?.appraise(price, score).await?;
+          handle.verify(profile.id).await?.set_score(score).await?;
 
           self.log_post(post, "verified and appraised").await?;
           break;
@@ -422,7 +408,7 @@ impl IgCrawlResult {
       .state
       .handle()
       .select()
-      .username_eq(profile.username)
+      .username_eq(profile.username.clone())
       .site_eq(Site::Instagram)
       .optional()
       .await?;
@@ -457,7 +443,7 @@ impl IgCrawlResult {
               continue;
             }
 
-            match campaign.make_collab(&handle).await {
+            match campaign.make_collab(&handle, &profile.username).await {
               Err(Error::Validation(field, value)) => {
                 self.log_post(post, &format!("could be a collab, but was invalid {} {}", field, value)).await?;
               }
@@ -497,8 +483,8 @@ model! {
   struct IgCampaignRule {
     #[sqlx_model_hints(int4, default)]
     id: i32,
-    #[sqlx_model_hints(varchar)]
-    campaign_id: String,
+    #[sqlx_model_hints(int4)]
+    campaign_id: i32,
     #[sqlx_model_hints(text)]
     display_url: String,
     #[sqlx_model_hints(bytea)]
