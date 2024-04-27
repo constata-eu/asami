@@ -424,6 +424,8 @@ impl IgCrawlResult {
       .select()
       .username_eq(profile.username)
       .site_eq(Site::Instagram)
+      .order_by(HandleOrderBy::Id)
+      .desc(true)
       .optional()
       .await?;
 
