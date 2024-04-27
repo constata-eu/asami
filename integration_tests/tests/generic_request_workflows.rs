@@ -4,7 +4,7 @@ use api::models::*;
 
 app_test!{ runs_on_chain_jobs (a) 
   assert_eq!(a.app.on_chain_job().select().count().await?, 0);
-  a.app.on_chain_job().run_scheduler().await?;
+  a.app.on_chain_job().run_scheduler().await.context("first scheduler run")?;
 
   let all = a.app.on_chain_job().select().all().await?;
   assert_eq!(all.len(), 10);

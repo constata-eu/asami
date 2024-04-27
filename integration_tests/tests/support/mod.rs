@@ -78,6 +78,7 @@ macro_rules! test {
     fn $i() {
       #![allow(unused_imports)]
       use crate::support::*;
+      use anyhow::*;
 
       async fn run_test() -> std::result::Result<(), anyhow::Error> {
         {$($e)*}

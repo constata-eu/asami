@@ -1,6 +1,11 @@
-ALTER TABLE on_chain_txs ADD COLUMN gas_used VARCHAR;
-ALTER TABLE on_chain_txs ADD COLUMN nonce VARCHAR;
-ALTER TABLE on_chain_txs ADD COLUMN message VARCHAR;
+CREATE TYPE account_status AS ENUM (
+	'managed',
+	'claiming',
+	'claimed',
+	'banned',
+);
+ALTER TABLE accounts ADD COLUMN status account_status NOT NULL DEFAULT 'managed';
+UPDATE accounts SET account_status = 'claimed' WHERE addr IS NOT NULL;
 
 ALTER TABLE handles RENAME TO old_handles;
 ALTER INDEX idx_handles_account_id RENAME TO old_handles_account_id;
@@ -132,7 +137,7 @@ CREATE TYPE on_chain_job_status AS ENUM (
 
 CREATE TABLE on_chain_jobs (
   id SERIAL PRIMARY KEY NOT NULL,
-	status on_chain_job_status NOT NULL,
+	status on_chain_job_status NOT NULL DEFAULT 'scheduled',
   kind on_chain_job_kind NOT NULL,
   tx_hash VARCHAR,
 	gas_used VARCHAR,

@@ -14,8 +14,6 @@ pub type AsamiSigner = SignerMiddleware<Provider<Http>, Wallet<ethers::core::k25
 pub type AsamiFunctionCall = FunctionCall<Arc<AsamiSigner>, AsamiSigner, ()>;
 pub type AsamiContractError = ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>;
 
-/* Claim account requests don't exist, they're part of the account workflow and state */
-
 model! {
   state: App,
   table: on_chain_jobs,
@@ -52,6 +50,8 @@ impl_loggable!(OnChainJob);
 
 impl OnChainJobHub {
   pub async fn run_scheduler(&self) -> anyhow::Result<()> {
+    use OnChainJobKind::*;
+
     let Some(job) = self.current().optional().await? else {
       for kind in OnChainJobKind::iter() {
         self.insert(InsertOnChainJob{ kind }).save().await?;
@@ -59,32 +59,41 @@ impl OnChainJobHub {
       return Ok(());
     };
 
-    return Ok(());
+    match job.status {
+      Scheduled => {
+        // Attempt run, goes to either: Skipped, Reverted, or Submitted.
+      },
+      Submitted => {
+        // Check if submission worked: Goes to Failed, or Confirmed.
+      },
+      Confirmed => {
+        // Check confirmation count to prevent reorgs, goes to Settled.
+        // If a reorg was to actually happen we could detect it by the last tx being confirmed but
+        // not settled.
+      }
+    }
 
-    // Finds last non-ended job:
-    //  all ended? schedule new and run again.
-    //
-    // Is scheduled;
-    //  -> Run transaction, associate data.
-    //  -> If reverted, mark as reverted and store message.
-    //      -> also store logs, make this loggable.
-    //
-    // Is submitted:
-    //  -> Check if Confirmed.
-    //    -> Success?
-      //    -> Set status to Confirmed.
-      //    -> Store status message.
-      //    -> Execute callback code for 'on_confirm'
-    //    -> Failed?
-    //      -> Set status to Failed
-    //      -> Store receipt in log.
-    //      -> Store error message in msg.
-    //
-    //
-    //
-    //
-    // Start from there.
+    return Ok(());
   }
+
+  /// Scheduled => Submitted | Skipped | Reverted
+  fn execute(self) -> anyhow::Result<Self> {
+    self.info("executing", "").await?;
+
+    let fn_call = match self.kind {
+      PromoteSubAccounts => // Admin promotes the sub accounts that requested it.
+      AdminLegacyClaimAccount, // The admin claims accounts in the old contract.
+      AdminClaimOwnBalances, // The admin claims its own balances, once in a while.
+      AdminClaimGaslessBalances, // The admin does gasless claims for its known users.
+      ReimburseCampaigns, // As a convenience for users, but the admin is not obliged to reimburse.
+      SubmitReports, // Submit collab report for campaigns that have ended.
+      MakeCollabs, // Register collabs done by full accounts.
+      MakeSubAccountCollabs, // Register collabs done by this admin sub-accounts.
+      ClaimFeePoolShare, // We claim and send their shares to holders automatically.
+      ApplyVotedFeeRate, // The admin does this once per cycle.
+    }
+  }
+
 
   /*
   pub async fn send_tx<B, M, D>(&self, fn_call: FunctionCall<B, M, D>) -> sqlx::Result<OnChainJob>

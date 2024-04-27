@@ -12,12 +12,10 @@ model! {
     id: String,
     #[sqlx_model_hints(varchar)]
     name: Option<String>,
+    #[sqlx_model_hints(account_status)]
+    status: AccountStatus,
     #[sqlx_model_hints(varchar)]
     addr: Option<String>,
-    #[sqlx_model_hints(varchar)]
-    unclaimed_asami_tokens: String,
-    #[sqlx_model_hints(varchar)]
-    unclaimed_doc_rewards: String,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
     #[sqlx_model_hints(timestamptz, default)]
@@ -32,7 +30,7 @@ model! {
 
 impl Account {
   pub async fn is_claimed_or_claiming(&self) -> sqlx::Result<bool> {
-    Ok(self.addr().is_some() || !self.claim_account_request_vec().await?.is_empty())
+    matches!(self.status, AccountStatus::Claiming | AccountStatus::Claimed)
   }
 
   pub fn decoded_addr(&self) -> AsamiResult<Option<Address>> {
@@ -132,5 +130,14 @@ impl Account {
         .await?,
     )
   }
-
 }
+
+make_sql_enum![
+  "account_status",
+  pub enum AccountStatus {
+    Managed,
+    Claiming,
+    Claimed,
+    Banned,
+  }
+];
