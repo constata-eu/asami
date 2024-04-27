@@ -64,11 +64,15 @@ impl Handle {
       return Err(Error::validation("topics", "handle_is_missing_topics"));
     }
 
+    let similar_handles: Vec<String> = self.state.handle().select()
+        .user_id_eq(self.attrs.user_id.clone()).all().await?
+        .into_iter().map(|x| x.attrs.id ).collect();
+
     let request_exists = self
       .state
       .collab_request()
       .select()
-      .handle_id_eq(self.attrs.id.clone())
+      .handle_id_in(similar_handles.clone())
       .campaign_id_eq(campaign.attrs.id.clone())
       .count()
       .await?
@@ -82,7 +86,7 @@ impl Handle {
       .state
       .collab()
       .select()
-      .handle_id_eq(self.attrs.id.clone())
+      .handle_id_in(similar_handles)
       .campaign_id_eq(campaign.attrs.id.clone())
       .count()
       .await?

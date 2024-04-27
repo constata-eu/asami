@@ -123,6 +123,11 @@ app_test!{ registers_collab_for_last_accepted_handle(a)
   new_bob.create_x_handle("bob_on_x", u("1")).await;
   a.app.campaign().try_x_collab_for_newest_handle(&campaign, &user_id).await?;
   a.run_idempotent_background_tasks_a_few_times().await;
-  assert_eq!(new_bob.x_handle().await.collab_vec().await?.len(), 1);
+  assert_eq!(new_bob.x_handle().await.collab_vec().await?.len(), 0);
   assert_eq!(old_bob.x_handle().await.collab_vec().await?.len(), 1);
+
+  let new_campaign = advertiser.create_x_campaign(u("10"), u("1")).await;
+  a.app.campaign().try_x_collab_for_newest_handle(&new_campaign, &user_id).await?;
+  a.run_idempotent_background_tasks_a_few_times().await;
+  assert_eq!(new_bob.x_handle().await.collab_vec().await?.len(), 1);
 }
