@@ -2,10 +2,17 @@ CREATE TYPE account_status AS ENUM (
 	'managed',
 	'claiming',
 	'claimed',
-	'banned',
+	'banned'
 );
 ALTER TABLE accounts ADD COLUMN status account_status NOT NULL DEFAULT 'managed';
-UPDATE accounts SET account_status = 'claimed' WHERE addr IS NOT NULL;
+UPDATE accounts SET status = 'claimed' WHERE addr IS NOT NULL;
+ALTER TABLE accounts ADD COLUMN processed_for_legacy_claim boolean NOT NULL DEFAULT false;
+UPDATE accounts SET processed_for_legacy_claim = true WHERE addr IS NOT NULL;
+
+ALTER TABLE accounts ADD COLUMN claim_signature VARCHAR;
+ALTER TABLE accounts ADD COLUMN claim_session_id VARCHAR REFERENCES sessions(id);
+ALTER TABLE accounts DROP COLUMN unclaimed_asami_tokens;
+ALTER TABLE accounts DROP COLUMN unclaimed_doc_rewards;
 
 ALTER TABLE handles RENAME TO old_handles;
 ALTER INDEX idx_handles_account_id RENAME TO old_handles_account_id;
@@ -143,6 +150,7 @@ CREATE TABLE on_chain_jobs (
 	gas_used VARCHAR,
 	nonce VARCHAR,
 	status_line TEXT,
+	sleep_until TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_on_chain_jobs_kind ON on_chain_jobs(kind);

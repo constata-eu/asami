@@ -27,7 +27,9 @@ async fn main() {
     )
   }
 
-  every![settings.rsk.blockchain_sync_cooldown, |s| {
+  // The on chain jobs scheduler has its own internal cooldown and backoff.
+  // We just make sure to wake it up once a second here so that it decides what to do.
+  every![1000, |s| {
     run!("blockchain_sync_tasks" { s.run_background_tasks().await });
   }];
 

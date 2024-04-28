@@ -3,7 +3,6 @@ use super::{
   *,
 };
 use base64::{engine::general_purpose, Engine as _};
-use ethers::abi::AbiEncode;
 use jwt_simple::prelude::*;
 use serde::de::DeserializeOwned;
 use validators::traits::ValidateString;
@@ -117,8 +116,6 @@ impl CurrentSession {
             .insert(InsertAccount {
               name: Some("account".to_string()),
               addr: None,
-              unclaimed_asami_tokens: u("0").encode_hex(),
-              unclaimed_doc_rewards: u("0").encode_hex(),
             })
             .save()
             .await,

@@ -39,9 +39,12 @@ mutation CreateHandle($input: CreateHandleInput!) {
 mutation CreateClaimAccountRequest($input: CreateClaimAccountRequestInput!) {
   createClaimAccountRequest(input: $input) {
     id
-    accountId
-    addr
     status
+    addr
+    unclaimedAsamiBalance
+    unclaimedDocBalance
+    asamiBalance
+    docBalance
     __typename
   }
 }
@@ -57,10 +60,10 @@ mutation CreateCampaignPreference($input: CreateCampaignPreferenceInput!) {
 query Account($id: String!) {
   Account(id: $id) {
     id
-    unclaimedAsamiTokens
-    unclaimedDocRewards
     status
     addr
+    unclaimedAsamiBalance
+    unclaimedDocBalance
     asamiBalance
     docBalance
     __typename
@@ -69,10 +72,10 @@ query Account($id: String!) {
 query AllAccounts($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: AccountFilter) {
   allAccounts(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
     id
-    unclaimedAsamiTokens
-    unclaimedDocRewards
     status
     addr
+    unclaimedAsamiBalance
+    unclaimedDocBalance
     asamiBalance
     docBalance
     __typename
@@ -174,30 +177,6 @@ query AllCollabs($page: Int, $perPage: Int, $sortField: String, $sortOrder: Stri
 }
 query AllCollabsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CollabFilter) {
   _allCollabsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
-    count
-    __typename
-  }
-}
-query ClaimAccountRequest($id: Int!) {
-  ClaimAccountRequest(id: $id) {
-    id
-    accountId
-    addr
-    status
-    __typename
-  }
-}
-query AllClaimAccountRequests($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: ClaimAccountRequestFilter) {
-  allClaimAccountRequests(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
-    id
-    accountId
-    addr
-    status
-    __typename
-  }
-}
-query AllClaimAccountRequestsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: ClaimAccountRequestFilter) {
-  _allClaimAccountRequestsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
     count
     __typename
   }

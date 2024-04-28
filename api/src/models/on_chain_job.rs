@@ -1,14 +1,15 @@
 use super::*;
 use strum::IntoEnumIterator;
 use ethers::{
-  abi::{Address, Detokenize},
   middleware::{contract::FunctionCall, Middleware},
   prelude::{SignerMiddleware, Wallet, ContractError},
   signers::LocalWallet,
   providers::{Http, Provider},
 };
-use sqlx_models_orm::{SqlxModelHub, SqlxSelectModelHub};
-use std::{borrow::Borrow, sync::Arc};
+use std::sync::Arc;
+
+mod promote_sub_accounts;
+mod admin_legacy_claim_account;
 
 pub type AsamiSigner = SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>;
 pub type AsamiFunctionCall = FunctionCall<Arc<AsamiSigner>, AsamiSigner, ()>;
@@ -33,6 +34,8 @@ model! {
     #[sqlx_model_hints(varchar, default)]
     status_line: Option<String>,
     #[sqlx_model_hints(timestamptz, default)]
+    sleep_until: UtcDateTime,
+    #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
   },
   queries {
@@ -50,7 +53,7 @@ impl_loggable!(OnChainJob);
 
 impl OnChainJobHub {
   pub async fn run_scheduler(&self) -> anyhow::Result<()> {
-    use OnChainJobKind::*;
+    use OnChainJobStatus::*;
 
     let Some(job) = self.current().optional().await? else {
       for kind in OnChainJobKind::iter() {
@@ -59,39 +62,28 @@ impl OnChainJobHub {
       return Ok(());
     };
 
-    match job.status {
-      Scheduled => {
-        // Attempt run, goes to either: Skipped, Reverted, or Submitted.
-      },
-      Submitted => {
-        // Check if submission worked: Goes to Failed, or Confirmed.
-      },
-      Confirmed => {
-        // Check confirmation count to prevent reorgs, goes to Settled.
-        // If a reorg was to actually happen we could detect it by the last tx being confirmed but
-        // not settled.
-      }
+    if job.sleep_until() > &Utc::now() {
+      return Ok(());
     }
+
+    match job.status() {
+      Scheduled => { job.execute().await?; },
+      Submitted => { job.check_confirmation().await?; },
+      Confirmed => { job.check_settlement().await?; },
+      _ => {}
+    }
+
+    // For now we just schedule all jobs to sleep a fixed period after every action.
+    // This could be smarter so we make a job sleep less for an almost immediate retry
+    // Or make them sleep longer if we see an issue that may take longer to resolve.
+    if let Some(next) = self.current().optional().await? {
+      let cooldown = chrono::Duration::milliseconds(
+        self.state.settings.rsk.blockchain_sync_cooldown.try_into().unwrap_or(10000)
+      );
+      next.update().sleep_until(Utc::now() + cooldown).save().await?;
+    };
 
     return Ok(());
-  }
-
-  /// Scheduled => Submitted | Skipped | Reverted
-  fn execute(self) -> anyhow::Result<Self> {
-    self.info("executing", "").await?;
-
-    let fn_call = match self.kind {
-      PromoteSubAccounts => // Admin promotes the sub accounts that requested it.
-      AdminLegacyClaimAccount, // The admin claims accounts in the old contract.
-      AdminClaimOwnBalances, // The admin claims its own balances, once in a while.
-      AdminClaimGaslessBalances, // The admin does gasless claims for its known users.
-      ReimburseCampaigns, // As a convenience for users, but the admin is not obliged to reimburse.
-      SubmitReports, // Submit collab report for campaigns that have ended.
-      MakeCollabs, // Register collabs done by full accounts.
-      MakeSubAccountCollabs, // Register collabs done by this admin sub-accounts.
-      ClaimFeePoolShare, // We claim and send their shares to holders automatically.
-      ApplyVotedFeeRate, // The admin does this once per cycle.
-    }
   }
 
 
@@ -247,6 +239,158 @@ impl OnChainJobHub {
   */
 }
 
+impl OnChainJob {
+  pub async fn execute(self) -> anyhow::Result<Self> {
+    use OnChainJobKind::*;
+    use OnChainJobStatus::*;
+
+    let maybe_fn_call = match self.kind() {
+      PromoteSubAccounts => self.promote_sub_accounts_make_call().await?,
+      AdminLegacyClaimAccount => self.admin_legacy_claim_account_make_call().await?,
+      /*
+      AdminClaimOwnBalances, // The admin claims its own balances, once in a while.
+      AdminClaimGaslessBalances, // The admin does gasless claims for its known users.
+      ReimburseCampaigns, // As a convenience for users, but the admin is not obliged to reimburse.
+      SubmitReports, // Submit collab report for campaigns that have ended.
+      MakeCollabs, // Register collabs done by full accounts.
+      MakeSubAccountCollabs, // Register collabs done by this admin sub-accounts.
+      ClaimFeePoolShare, // We claim and send their shares to holders automatically.
+      ApplyVotedFeeRate, // The admin does this once per cycle.
+      */
+      _ => None
+    };
+    
+    let Some(fn_call) = maybe_fn_call else {
+        return Ok(self.update().status(Skipped).save().await?);
+    };
+
+    self.info("typed_transaction", &fn_call.tx).await?;
+
+    let executed = match fn_call.send().await {
+      Err(e) => {
+        let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error") );
+        self.fail("early_revert_message", format!("{e:?}")).await?;
+        self.update().status(Reverted).status_line(Some(desc)).save().await?
+      }
+      Ok(pending_tx) => {
+        let tx_hash = pending_tx.tx_hash().encode_hex();
+        self.update().status(Submitted).tx_hash(Some(tx_hash)).save().await?
+      }
+    };
+
+    Ok(executed)
+  }
+
+  pub async fn check_confirmation(self) -> anyhow::Result<Self> {
+    use OnChainJobStatus::*;
+
+    let Some((original_tx, receipt, error_msg)) = self.get_mined_tx_data().await? else {
+      return Ok(self);
+    };
+
+    let status = if receipt.status.unwrap_or(U64::zero()) == U64::one() {
+      Confirmed
+    } else {
+      Failed
+    };
+
+    Ok(self.update().status(status)
+      .gas_used(receipt.gas_used.map(|x| x.encode_hex() ))
+      .nonce(Some(original_tx.nonce.encode_hex()))
+      .status_line(error_msg)
+      .save().await?
+      .dispatch_state_change()
+      .await?
+    )
+  }
+
+  pub async fn check_settlement(self) -> anyhow::Result<Self> {
+    use OnChainJobStatus::*;
+
+    let Some((_original_tx, receipt, _error_msg)) = self.get_mined_tx_data().await? else {
+      return Ok(self);
+    };
+
+    let client = self.state.on_chain.asami_contract.client();
+
+    let Some(block_number) = receipt.block_number else { return Ok(self); };
+
+    let confs = client.get_block_number().await? - block_number;
+
+    if confs < self.state.settings.rsk.reorg_protection_padding {
+      return Ok(self);
+    }
+
+    Ok(
+      self.update().status(Settled)
+        .save().await?
+        .dispatch_state_change()
+        .await?
+    )
+  }
+
+  async fn get_mined_tx_data(&self) -> anyhow::Result<
+    Option<(
+      ethers::core::types::Transaction,
+      ethers::core::types::TransactionReceipt,
+      Option<String>
+    )>
+  > {
+    let client = self.state.on_chain.asami_contract.client();
+
+    let Some(tx_hash) = self.tx_hash().as_ref().and_then(|x| H256::decode_hex(x).ok()) else { 
+      self.fail("invaild_tx_hash_in_db", self.tx_hash()).await?;
+      anyhow::bail!("invalid_tx_hash_in_db");
+    };
+
+    let Some(original_tx) = client.get_transaction(tx_hash).await? else {
+      self.fail("tx_not_found_on_explorer", self.tx_hash()).await?;
+      anyhow::bail!("tx_not_found_on_explorer");
+    };
+
+    let Some(receipt) = client.get_transaction_receipt(tx_hash).await? else {
+      self.fail("receipt_not_found_on_explorer", tx_hash).await?;
+      return Ok(None);
+    };
+
+    let error_message = if receipt.status.unwrap_or(U64::zero()) == U64::one() {
+      None
+    } else {
+      let typed: ethers::types::transaction::eip2718::TypedTransaction = (&original_tx).into();
+      let msg = match client.call(&typed, None).await {
+        Err(e) => {
+          self.fail("full_failure_message", format!("{e:?}")).await?;
+          AsamiContractError::from_middleware_error(e).decode_revert::<String>().unwrap_or_else(|| format!("non_revert_error"))
+        },
+        _ => "no_failure_reason_wtf".to_string()
+      };
+      Some(msg)
+    };
+
+    Ok(Some((original_tx, receipt, error_message)))
+  }
+
+  pub async fn dispatch_state_change(self) -> anyhow::Result<Self> {
+    use OnChainJobKind::*;
+
+    match self.kind() {
+      PromoteSubAccounts => self.promote_sub_accounts_on_state_change().await,
+      AdminLegacyClaimAccount => self.admin_legacy_claim_account_on_state_change().await,
+      /*
+      AdminClaimOwnBalances, // The admin claims its own balances, once in a while.
+      AdminClaimGaslessBalances, // The admin does gasless claims for its known users.
+      ReimburseCampaigns, // As a convenience for users, but the admin is not obliged to reimburse.
+      SubmitReports, // Submit collab report for campaigns that have ended.
+      MakeCollabs, // Register collabs done by full accounts.
+      MakeSubAccountCollabs, // Register collabs done by this admin sub-accounts.
+      ClaimFeePoolShare, // We claim and send their shares to holders automatically.
+      ApplyVotedFeeRate, // The admin does this once per cycle.
+      */
+      _ => todo!("Not implemented yet"),
+    }
+  }
+}
+
 model! {
   state: App,
   table: on_chain_job_accounts,
@@ -257,6 +401,10 @@ model! {
     job_id: i32,
     #[sqlx_model_hints(varchar)]
     account_id: String,
+  },
+  belongs_to {
+    OnChainJob(job_id),
+    Account(account_id),
   }
 }
 
@@ -270,6 +418,10 @@ model! {
     job_id: i32,
     #[sqlx_model_hints(int4)]
     campaign_id: i32,
+  },
+  belongs_to {
+    OnChainJob(job_id),
+    Campaign(campaign_id),
   }
 }
 
@@ -283,6 +435,10 @@ model! {
     job_id: i32,
     #[sqlx_model_hints(int4)]
     collab_id: i32,
+  },
+  belongs_to {
+    OnChainJob(job_id),
+    Collab(collab_id),
   }
 }
 
@@ -296,6 +452,10 @@ model! {
     job_id: i32,
     #[sqlx_model_hints(int4)]
     holder_id: i32,
+  },
+  belongs_to {
+    OnChainJob(job_id),
+    Holder(holder_id),
   }
 }
 

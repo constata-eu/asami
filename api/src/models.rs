@@ -15,8 +15,6 @@ use std::str::FromStr;
 pub mod hasher;
 pub mod user;
 pub use user::*;
-pub mod claim_account_request;
-pub use claim_account_request::*;
 pub mod synced_event;
 pub use synced_event::*;
 pub mod campaign;

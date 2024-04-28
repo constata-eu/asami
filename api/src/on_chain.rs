@@ -82,6 +82,7 @@ impl OnChain {
       .doc_contract_address
       .parse()
       .map_err(|_| Error::Init("Invalid doc contract address in config".to_string()))?;
+    
 
     Ok(Self {
       legacy_contract: LegacyContract::new(legacy_address, client.clone()),

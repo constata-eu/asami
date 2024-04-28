@@ -12,6 +12,6 @@ module.exports = async function(deployer, network) {
       const MockDoc = artifacts.require("MockDoc");
       await deployer.deploy(MockDoc);
       await deployer.deploy(Asami, MockDoc.address, "0x0000000000000000000000000000000000000000");
-      return (await deployer.deploy(AsamiCore, MockDoc.address, "0x0000000000000000000000000000000000000000"));
+      return (await deployer.deploy(AsamiCore, MockDoc.address));
   }
 };

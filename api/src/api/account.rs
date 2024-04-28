@@ -9,18 +9,18 @@ use super::{
 pub struct Account {
   #[graphql(description = "Account ID as stored in the ASAMI contract.")]
   id: String,
-  #[graphql(description = "Tokens awarded, which will be minted when the account is first claimed.")]
-  unclaimed_asami_tokens: String,
-  #[graphql(description = "Rewards awarded to the user, which will be transferred when the account is claimed.")]
-  unclaimed_doc_rewards: String,
   #[graphql(description = "Status of this account claim request, if any.")]
-  status: Option<GenericRequestStatus>,
+  status: AccountStatus,
   #[graphql(description = "The address of a claimed account.")]
   addr: Option<String>,
+  #[graphql(description = "Tokens awarded, which will be minted when the account is first claimed.")]
+  unclaimed_asami_balance: String,
+  #[graphql(description = "Rewards awarded to the user, which will be transferred when the account is claimed.")]
+  unclaimed_doc_balance: String,
   #[graphql(description = "Asami Tokens in a claimed account's address.")]
-  asami_balance: Option<String>,
+  asami_balance: String,
   #[graphql(description = "Doc Balance in a claimed account's address.")]
-  doc_balance: Option<String>,
+  doc_balance: String,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -61,28 +61,42 @@ impl Showable<models::Account, AccountFilter> for Account {
   }
 
   async fn db_to_graphql(d: models::Account) -> AsamiResult<Self> {
-    let status = d
-      .claim_account_request_scope()
-      .status_ne(&GenericRequestStatus::Failed)
-      .optional()
-      .await?
-      .map(|x| x.attrs.status);
+    let asami = &d.state.on_chain.asami_contract;
     let address = d.decoded_addr()?;
-    let (doc_balance, asami_balance) = match address {
-      Some(address) => (
-        Some(d.state.on_chain.doc_contract.balance_of(address).call().await?.encode_hex()),
-        Some(d.state.on_chain.asami_contract.balance_of(address).call().await?.encode_hex()),
-      ),
-      None => (None, None),
+
+    let (doc_balance, asami_balance, unclaimed_doc_balance, unclaimed_asami_balance,) = match address {
+      Some(address) => {
+        let account = asami.accounts(address).call().await?;
+        (
+          d.state.on_chain.doc_contract.balance_of(address).call().await?.encode_hex(),
+          asami.balance_of(address).call().await?.encode_hex(),
+          account.4.encode_hex(),
+          account.3.encode_hex()
+        )
+      },
+      None => {
+        let admin = d.state.settings.rsk.decoded_admin_address()?;
+        let (unclaimed_doc, unclaimed_asami) = asami.get_sub_account(admin, u256(d.id())).call().await
+          .map(|s| (s.unclaimed_doc_balance.encode_hex(), s.unclaimed_asami_balance.encode_hex()) )
+          .unwrap_or_else(|_| (weihex("0"), weihex("0")));
+
+        (
+          weihex("0"),
+          weihex("0"),
+          unclaimed_doc,
+          unclaimed_asami,
+        )
+      },
     };
+
     Ok(Account {
       id: d.attrs.id,
-      unclaimed_asami_tokens: d.attrs.unclaimed_asami_tokens,
-      unclaimed_doc_rewards: d.attrs.unclaimed_doc_rewards,
-      status,
+      status: d.attrs.status,
       addr: address.map(|x| format!("{x:?}")),
       asami_balance,
       doc_balance,
+      unclaimed_asami_balance,
+      unclaimed_doc_balance,
     })
   }
 }

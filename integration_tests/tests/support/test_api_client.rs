@@ -236,7 +236,7 @@ impl<'b> ApiClient<'b> {
     let payload = models::make_login_to_asami_typed_data(rsk.chain_id).unwrap();
     let signature = wallet.sign_typed_data(&payload).await.unwrap().to_string();
 
-    self.gql_response(
+    self.gql(
       &gql::CreateClaimAccountRequest::build_query(gql::create_claim_account_request::Variables{
         input: gql::create_claim_account_request::CreateClaimAccountRequestInput{signature}
       }),
@@ -327,7 +327,7 @@ impl<'b> ApiClient<'b> {
     self.gql_claim_account_request(&self.local_wallet()).await;
   }
 
-  pub async fn claim_account(&mut self) { // Rsk address as string.
+  pub async fn claim_account(&mut self) {
     self.submit_claim_account_request().await;
     self.test_app.run_idempotent_background_tasks_a_few_times().await;
   }

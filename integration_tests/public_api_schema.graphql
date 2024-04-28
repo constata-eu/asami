@@ -3,16 +3,16 @@ schema {
   mutation: Mutation
 }
 
+enum AccountStatus {
+  MANAGED
+  CLAIMING
+  CLAIMED
+  BANNED
+}
+
 enum CampaignKind {
   XREPOST
   IG_CLONE_POST
-}
-
-enum GenericRequestStatus {
-  RECEIVED
-  SUBMITTED
-  FAILED
-  DONE
 }
 
 enum HandleStatus {
@@ -55,13 +55,6 @@ input CampaignPreferenceFilter {
   ids: [Int!]
   idEq: Int
   campaignIdEq: Int
-}
-
-input ClaimAccountRequestFilter {
-  ids: [Int!]
-  idEq: Int
-  addrEq: String
-  statusIn: [GenericRequestStatus!]
 }
 
 input CollabFilter {
@@ -137,18 +130,18 @@ scalar DateTime
 type Account {
   "Account ID as stored in the ASAMI contract."
   id: String!
-  "Tokens awarded, which will be minted when the account is first claimed."
-  unclaimedAsamiTokens: String!
-  "Rewards awarded to the user, which will be transferred when the account is claimed."
-  unclaimedDocRewards: String!
   "Status of this account claim request, if any."
-  status: GenericRequestStatus
+  status: AccountStatus!
   "The address of a claimed account."
   addr: String
+  "Tokens awarded, which will be minted when the account is first claimed."
+  unclaimedAsamiBalance: String!
+  "Rewards awarded to the user, which will be transferred when the account is claimed."
+  unclaimedDocBalance: String!
   "Asami Tokens in a claimed account's address."
-  asamiBalance: String
+  asamiBalance: String!
   "Doc Balance in a claimed account's address."
-  docBalance: String
+  docBalance: String!
 }
 
 "A campaign"
@@ -183,18 +176,6 @@ type CampaignPreference {
   notInterestedOn: DateTime
   "Date in which the user attempted to retweet this campaign."
   attemptedOn: DateTime
-}
-
-"A user claim to manage their own account"
-type ClaimAccountRequest {
-  "Unique numeric identifier of this resource"
-  id: Int!
-  "The id of the account that created this."
-  accountId: String!
-  "The address taking ownership."
-  addr: String!
-  "Status of this request."
-  status: GenericRequestStatus!
 }
 
 "A collab is created when a member reposts a campaign's content."
@@ -253,7 +234,7 @@ type Mutation {
   createSession: Session!
   createCampaignFromLink(input: CreateCampaignFromLinkInput!): Campaign!
   createHandle(input: CreateHandleInput!): Handle!
-  createClaimAccountRequest(input: CreateClaimAccountRequestInput!): ClaimAccountRequest!
+  createClaimAccountRequest(input: CreateClaimAccountRequestInput!): Account!
   createCampaignPreference(input: CreateCampaignPreferenceInput!): CampaignPreference!
 }
 
@@ -271,9 +252,6 @@ type Query {
   Collab(id: Int!): Collab!
   allCollabs(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CollabFilter): [Collab!]!
   _allCollabsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CollabFilter): ListMetadata!
-  ClaimAccountRequest(id: Int!): ClaimAccountRequest!
-  allClaimAccountRequests(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: ClaimAccountRequestFilter): [ClaimAccountRequest!]!
-  _allClaimAccountRequestsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: ClaimAccountRequestFilter): ListMetadata!
   CampaignPreference(id: Int!): CampaignPreference!
   allCampaignPreferences(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignPreferenceFilter): [CampaignPreference!]!
   _allCampaignPreferencesMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignPreferenceFilter): ListMetadata!

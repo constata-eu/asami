@@ -288,7 +288,6 @@ make_graphql_query! {
     [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, i32],
     [Handle, allHandles, allHandlesMeta, "_allHandlesMeta", HandleFilter, i32],
     [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, i32],
-    [ClaimAccountRequest, allClaimAccountRequests, allClaimAccountRequestsMeta, "_allClaimAccountRequestsMeta", ClaimAccountRequestFilter, i32],
     [CampaignPreference, allCampaignPreferences, allCampaignPreferencesMeta, "_allCampaignPreferencesMeta", CampaignPreferenceFilter, i32],
     [IgCampaignRule, allIgCampaignRules, allIgCampaignRulesMeta, "_allIgCampaignRulesMeta", IgCampaignRuleFilter, i32],
   }
@@ -316,7 +315,7 @@ impl Mutation {
   pub async fn create_claim_account_request(
     context: &Context,
     input: CreateClaimAccountRequestInput,
-  ) -> FieldResult<ClaimAccountRequest> {
+  ) -> FieldResult<Account> {
     input.process(context).await
   }
 

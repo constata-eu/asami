@@ -59,7 +59,10 @@ fn main() {
   }
 
   println!("migrating");
-  Command::new("truffle").current_dir(&dir).args(["migrate", "--network", "local"]).output().unwrap();
+  let migration = Command::new("truffle").current_dir(&dir).args(["migrate", "--network", "local"]).output().unwrap();
+  if !migration.status.success() {
+      panic!("{}", String::from_utf8_lossy(&migration.stdout));
+  }
 
   println!("setting up blockchain data and balances");
   let output = Command::new("truffle")
@@ -69,6 +72,10 @@ fn main() {
     .args(["exec", "scripts/local_blockchain_state.js", "--network", "local"])
     .output()
     .unwrap();
+
+  if !output.status.success() {
+    panic!("{}", String::from_utf8_lossy(&output.stdout));
+  }
 
   let out_str = String::from_utf8(output.stdout).unwrap();
   let json = out_str.lines().last().unwrap();

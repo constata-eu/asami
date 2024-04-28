@@ -10,6 +10,7 @@ use std::{
   io::{stdin, Read},
   str::FromStr,
 };
+use ethers::abi::Address;
 
 #[derive(Clone)]
 pub struct App {
@@ -133,4 +134,11 @@ pub struct Rsk {
   pub admin_address: String,
   pub reorg_protection_padding: ethers::types::U64,
   pub blockchain_sync_cooldown: u64,
+}
+
+impl Rsk {
+  pub fn decoded_admin_address(&self) -> AsamiResult<Address> {
+    Address::decode_hex(&self.admin_address)
+        .map_err(|_| Error::validation("invalid_admin_address", &self.admin_address))
+  }
 }

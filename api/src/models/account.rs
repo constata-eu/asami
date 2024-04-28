@@ -12,7 +12,7 @@ model! {
     id: String,
     #[sqlx_model_hints(varchar)]
     name: Option<String>,
-    #[sqlx_model_hints(account_status)]
+    #[sqlx_model_hints(account_status, default)]
     status: AccountStatus,
     #[sqlx_model_hints(varchar)]
     addr: Option<String>,
@@ -20,17 +20,22 @@ model! {
     created_at: UtcDateTime,
     #[sqlx_model_hints(timestamptz, default)]
     updated_at: Option<UtcDateTime>,
+    #[sqlx_model_hints(varchar, default)]
+    claim_signature: Option<String>,
+    #[sqlx_model_hints(varchar, default)]
+    claim_session_id: Option<String>,
+    #[sqlx_model_hints(boolean, default)]
+    processed_for_legacy_claim: bool,
   },
   has_many {
     Handle(account_id),
     CampaignPreference(account_id),
-    ClaimAccountRequest(account_id),
   }
 }
 
 impl Account {
-  pub async fn is_claimed_or_claiming(&self) -> sqlx::Result<bool> {
-    matches!(self.status, AccountStatus::Claiming | AccountStatus::Claimed)
+  pub fn is_claimed_or_claiming(&self) -> bool {
+    matches!(self.status(), AccountStatus::Claiming | AccountStatus::Claimed)
   }
 
   pub fn decoded_addr(&self) -> AsamiResult<Option<Address>> {
@@ -111,23 +116,17 @@ impl Account {
     addr: String,
     signature: String,
     session_id: String,
-  ) -> AsamiResult<ClaimAccountRequest> {
-    if self.is_claimed_or_claiming().await? {
+  ) -> AsamiResult<Self> {
+    if self.is_claimed_or_claiming() {
       return Err(Error::validation("account", "cannot_call_on_claimed_account"));
     }
 
-    Ok(
-      self
-        .state
-        .claim_account_request()
-        .insert(InsertClaimAccountRequest {
-          account_id: self.attrs.id.clone(),
-          addr,
-          signature,
-          session_id,
-        })
-        .save()
-        .await?,
+    Ok(self.clone().update()
+       .addr(Some(addr))
+       .status(AccountStatus::Claiming)
+       .claim_signature(Some(signature))
+       .claim_session_id(Some(session_id))
+       .save().await?
     )
   }
 }
