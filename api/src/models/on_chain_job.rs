@@ -1,7 +1,7 @@
 use super::*;
 use strum::IntoEnumIterator;
 use ethers::{
-  middleware::{contract::FunctionCall, Middleware},
+  middleware::{contract::FunctionCall, Middleware, MiddlewareError},
   prelude::{SignerMiddleware, Wallet, ContractError},
   signers::LocalWallet,
   providers::{Http, Provider},
@@ -86,157 +86,6 @@ impl OnChainJobHub {
     return Ok(());
   }
 
-
-  /*
-  pub async fn send_tx<B, M, D>(&self, fn_call: FunctionCall<B, M, D>) -> sqlx::Result<OnChainJob>
-  where
-    B: Borrow<M>,
-    M: Middleware,
-    D: Detokenize,
-  {
-    let unsent = self
-      .insert(InsertOnChainJob {
-        function_name: fn_call.function.name.clone(),
-      })
-      .save()
-      .await?;
-    unsent.info("typed_transaction", &fn_call.tx).await?;
-
-    match fn_call.send().await {
-      Err(e) => {
-        let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error") );
-        unsent.fail("early_revert_message", format!("{e:?}")).await?;
-        let reverted = unsent.update().status(OnChainJobStatus::Reverted).message(Some(desc)).save().await?;
-        Ok(reverted)
-      }
-      Ok(pending_tx) => {
-        let tx_hash = pending_tx.tx_hash().encode_hex();
-        let submitted = unsent.update().status(OnChainJobStatus::Submitted).tx_hash(Some(tx_hash)).save().await?;
-        Ok(submitted)
-      }
-    }
-  }
-  */
-
-  /*
-  pub async fn apply_voted_fee_rate(&self) -> anyhow::Result<Option<OnChainJob>> {
-    let c = &self.state.on_chain.asami_contract;
-    let this_cycle = c.get_current_cycle().call().await?;
-    let last_applied = c.last_voted_fee_rate_applied_on().await?;
-
-    if this_cycle == last_applied {
-      return Ok(None);
-    }
-
-    Ok(Some(self.send_tx(c.apply_voted_fee_rate()).await?))
-  }
-
-  pub async fn reimburse_due_campaigns(&self) -> anyhow::Result<Option<OnChainJob>> {
-    let c = &self.state.on_chain.asami_contract;
-    let block_number = c.client().get_block_number().await?;
-    let Some(now) = c.client().get_block(block_number).await?.map(|b| b.timestamp) else {
-      return Ok(None);
-    };
-
-    let candidates: Vec<Campaign> = self.state.campaign()
-      .select()
-      .budget_gt(weihex("0"))
-      .limit(50)
-      .all().await?;
-
-    let mut past_due = vec![];
-
-    for c in &candidates {
-      if c.valid_until() > &i_to_utc(now) {
-          continue;
-      }
-      let Some(addr) = c.account().await?.decoded_addr()? else { continue };
-      past_due.push(on_chain::ReimburseCampaignsParam{ addr, briefing_hash: u256(c.briefing_hash())});
-    }
-
-    if past_due.is_empty() {
-      return Ok(None);
-    }
-
-    Ok(Some(self.send_tx(c.reimburse_campaigns(past_due)).await?))
-  }
-
-  pub async fn distribute_fee_pool(&self) -> anyhow::Result<Option<OnChainJob>> {
-    let c = &self.state.on_chain.asami_contract;
-    let this_cycle = c.get_current_cycle().call().await?;
-
-    let total_supply = c.total_supply().call().await?;
-    let recent_tokens = c.recent_tokens(this_cycle).call().await?;
-    let pool = c.get_fee_pool_before_recent_changes().call().await?;
-
-    if (total_supply - recent_tokens) <= u("0") || pool <= u("0") {
-      return Ok(None);
-    }
-
-    let holders: Vec<Address> = self.state.holder().select()
-        .last_fee_pool_share_ne(this_cycle.encode_hex())
-        .balance_ne(weihex("0"))
-        .limit(50)
-        .all().await?
-        .into_iter()
-        .filter_map(|h| Address::decode_hex(h.attrs.address).ok() )
-        .collect();
-
-    if holders.is_empty() {
-      return Ok(None);
-    }
-
-    Ok(Some(self.send_tx(c.claim_fee_pool_share(holders)).await?))
-  }
-
-  pub async fn sync_tx_result(&self) -> anyhow::Result<()> {
-    let client = self.state.on_chain.asami_contract.client();
-    for tx in self.select().status_eq(OnChainJobStatus::Submitted).all().await? {
-      let Some(tx_hash) = tx.tx_hash().as_ref().and_then(|x| H256::decode_hex(x).ok()) else { 
-        continue
-      };
-      let Some(original_tx) = client.get_transaction(tx_hash).await? else {
-        continue;
-      };
-      let Some(receipt) = client.get_transaction_receipt(tx_hash).await? else {
-        continue;
-      };
-      let (status, message) = if receipt.status.unwrap_or(U64::zero()) == U64::one() {
-        (OnChainJobStatus::Success, None)
-      } else {
-        let typed: ethers::types::transaction::eip2718::TypedTransaction = (&original_tx).into();
-        let msg = match client.call(&typed, None).await {
-          Err(e) => {
-            tx.fail("full_failure_message", format!("{e:?}")).await?;
-            AsamiCoreContractError::from_middleware_error(e).decode_revert::<String>().unwrap_or_else(|| format!("non_revert_error"))
-          },
-          _ => "no_failure_reason_wtf".to_string()
-        };
-        (OnChainJobStatus::Failure, Some(msg))
-      };
-
-      //let id = tx.attrs.id;
-
-      /*
-      self.state.claim_account_request().set_done(id).await?;
-      self.state.handle_request().set_done(id).await?;
-      self.state.set_score_and_topics_request().set_done(id).await?;
-      self.state.set_price_request().set_done(id).await?;
-      self.state.campaign_request().set_approved(id).await?;
-      self.state.campaign_request().set_done(id).await?;
-      self.state.collab_request().set_done(id).await?;
-      self.state.topic_request().set_done(id).await?;
-      */
-
-      tx.update().status(status)
-        .gas_used(receipt.gas_used.map(|x| x.encode_hex() ))
-        .nonce(Some(original_tx.nonce.encode_hex()))
-        .message(message)
-        .save().await?;
-    }
-    Ok(())
-  }
-  */
 }
 
 impl OnChainJob {
@@ -268,9 +117,20 @@ impl OnChainJob {
 
     let executed = match fn_call.send().await {
       Err(e) => {
-        let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error") );
-        self.fail("early_revert_message", format!("{e:?}")).await?;
-        self.update().status(Reverted).status_line(Some(desc)).save().await?
+        let maybe_funds = e.as_middleware_error()
+            .and_then(|m| m.as_error_response())
+            .map(|x| x.message.clone() )
+            .unwrap_or_else(|| String::new());
+
+        if maybe_funds.starts_with("insufficient funds") {
+            self.fail("rpc_error_waiting_more", format!("{e:?}")).await?;
+            self.update().status_line(Some(maybe_funds)).save().await?
+
+        } else {
+            let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error") );
+            self.fail("early_revert_message", format!("{e:?}")).await?;
+            self.update().status(Reverted).status_line(Some(desc)).save().await?
+        }
       }
       Ok(pending_tx) => {
         let tx_hash = pending_tx.tx_hash().encode_hex();
@@ -487,3 +347,154 @@ make_sql_enum![
     ApplyVotedFeeRate, // The admin does this once per cycle.
   }
 ];
+
+  /*
+  pub async fn send_tx<B, M, D>(&self, fn_call: FunctionCall<B, M, D>) -> sqlx::Result<OnChainJob>
+  where
+    B: Borrow<M>,
+    M: Middleware,
+    D: Detokenize,
+  {
+    let unsent = self
+      .insert(InsertOnChainJob {
+        function_name: fn_call.function.name.clone(),
+      })
+      .save()
+      .await?;
+    unsent.info("typed_transaction", &fn_call.tx).await?;
+
+    match fn_call.send().await {
+      Err(e) => {
+        let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error") );
+        unsent.fail("early_revert_message", format!("{e:?}")).await?;
+        let reverted = unsent.update().status(OnChainJobStatus::Reverted).message(Some(desc)).save().await?;
+        Ok(reverted)
+      }
+      Ok(pending_tx) => {
+        let tx_hash = pending_tx.tx_hash().encode_hex();
+        let submitted = unsent.update().status(OnChainJobStatus::Submitted).tx_hash(Some(tx_hash)).save().await?;
+        Ok(submitted)
+      }
+    }
+  }
+  */
+
+  /*
+  pub async fn apply_voted_fee_rate(&self) -> anyhow::Result<Option<OnChainJob>> {
+    let c = &self.state.on_chain.asami_contract;
+    let this_cycle = c.get_current_cycle().call().await?;
+    let last_applied = c.last_voted_fee_rate_applied_on().await?;
+
+    if this_cycle == last_applied {
+      return Ok(None);
+    }
+
+    Ok(Some(self.send_tx(c.apply_voted_fee_rate()).await?))
+  }
+
+  pub async fn reimburse_due_campaigns(&self) -> anyhow::Result<Option<OnChainJob>> {
+    let c = &self.state.on_chain.asami_contract;
+    let block_number = c.client().get_block_number().await?;
+    let Some(now) = c.client().get_block(block_number).await?.map(|b| b.timestamp) else {
+      return Ok(None);
+    };
+
+    let candidates: Vec<Campaign> = self.state.campaign()
+      .select()
+      .budget_gt(weihex("0"))
+      .limit(50)
+      .all().await?;
+
+    let mut past_due = vec![];
+
+    for c in &candidates {
+      if c.valid_until() > &i_to_utc(now) {
+          continue;
+      }
+      let Some(addr) = c.account().await?.decoded_addr()? else { continue };
+      past_due.push(on_chain::ReimburseCampaignsParam{ addr, briefing_hash: u256(c.briefing_hash())});
+    }
+
+    if past_due.is_empty() {
+      return Ok(None);
+    }
+
+    Ok(Some(self.send_tx(c.reimburse_campaigns(past_due)).await?))
+  }
+
+  pub async fn distribute_fee_pool(&self) -> anyhow::Result<Option<OnChainJob>> {
+    let c = &self.state.on_chain.asami_contract;
+    let this_cycle = c.get_current_cycle().call().await?;
+
+    let total_supply = c.total_supply().call().await?;
+    let recent_tokens = c.recent_tokens(this_cycle).call().await?;
+    let pool = c.get_fee_pool_before_recent_changes().call().await?;
+
+    if (total_supply - recent_tokens) <= u("0") || pool <= u("0") {
+      return Ok(None);
+    }
+
+    let holders: Vec<Address> = self.state.holder().select()
+        .last_fee_pool_share_ne(this_cycle.encode_hex())
+        .balance_ne(weihex("0"))
+        .limit(50)
+        .all().await?
+        .into_iter()
+        .filter_map(|h| Address::decode_hex(h.attrs.address).ok() )
+        .collect();
+
+    if holders.is_empty() {
+      return Ok(None);
+    }
+
+    Ok(Some(self.send_tx(c.claim_fee_pool_share(holders)).await?))
+  }
+
+  pub async fn sync_tx_result(&self) -> anyhow::Result<()> {
+    let client = self.state.on_chain.asami_contract.client();
+    for tx in self.select().status_eq(OnChainJobStatus::Submitted).all().await? {
+      let Some(tx_hash) = tx.tx_hash().as_ref().and_then(|x| H256::decode_hex(x).ok()) else { 
+        continue
+      };
+      let Some(original_tx) = client.get_transaction(tx_hash).await? else {
+        continue;
+      };
+      let Some(receipt) = client.get_transaction_receipt(tx_hash).await? else {
+        continue;
+      };
+      let (status, message) = if receipt.status.unwrap_or(U64::zero()) == U64::one() {
+        (OnChainJobStatus::Success, None)
+      } else {
+        let typed: ethers::types::transaction::eip2718::TypedTransaction = (&original_tx).into();
+        let msg = match client.call(&typed, None).await {
+          Err(e) => {
+            tx.fail("full_failure_message", format!("{e:?}")).await?;
+            AsamiCoreContractError::from_middleware_error(e).decode_revert::<String>().unwrap_or_else(|| format!("non_revert_error"))
+          },
+          _ => "no_failure_reason_wtf".to_string()
+        };
+        (OnChainJobStatus::Failure, Some(msg))
+      };
+
+      //let id = tx.attrs.id;
+
+      /*
+      self.state.claim_account_request().set_done(id).await?;
+      self.state.handle_request().set_done(id).await?;
+      self.state.set_score_and_topics_request().set_done(id).await?;
+      self.state.set_price_request().set_done(id).await?;
+      self.state.campaign_request().set_approved(id).await?;
+      self.state.campaign_request().set_done(id).await?;
+      self.state.collab_request().set_done(id).await?;
+      self.state.topic_request().set_done(id).await?;
+      */
+
+      tx.update().status(status)
+        .gas_used(receipt.gas_used.map(|x| x.encode_hex() ))
+        .nonce(Some(original_tx.nonce.encode_hex()))
+        .message(message)
+        .save().await?;
+    }
+    Ok(())
+  }
+  */

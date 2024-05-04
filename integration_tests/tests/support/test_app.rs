@@ -91,6 +91,7 @@ impl TestApp {
   pub async fn make_wallet(&self) -> LocalWallet {
     let wallet = self.make_random_local_wallet();
     let tx = TransactionRequest::new().to(wallet.address()).value(u("10"));
+
     self.start_mining().await;
     self.app.on_chain.asami_contract.client()
       .send_transaction(tx, None)
@@ -226,6 +227,19 @@ impl TestApp {
     self.doc_balance_of(&self.asami_contract().address()).await
   }
 
+  pub async fn send_rbtc_to(&self, addr: Address, amount: U256) {
+    let tx = TransactionRequest::new().to(addr).value(amount);
+    self.start_mining().await;
+    self.app.on_chain.asami_contract.client()
+      .send_transaction(tx, None)
+      .await.expect("sending tx")
+      .interval(std::time::Duration::from_millis(10))
+      .await.expect("waiting tx confirmation")
+      .expect("tx result");
+    self.stop_mining().await;
+  }
+
+
   pub async fn send_doc_to(&self, addr: Address, amount: U256) {
     self.start_mining().await;
     self.doc_contract().transfer(addr, amount).send()
@@ -258,41 +272,44 @@ impl TestApp {
     ).await;
   }
 
-  /*
-  pub async fn mock_admin_setting_campaign_requests_as_paid(&self) {
-    let all = self.app.campaign_request().select().status_eq(models::CampaignStatus::Received).all().await.unwrap();
-    for r in all {
-      r.pay().await.unwrap();
-    }
-  }
-  */
-
-  /*
-  pub async fn mock_all_handles_being_verified_and_appraised(&self) {
-    let all = self.app.handle_request().select().status_eq(models::HandleStatus::Unverified).all().await.unwrap();
-    for r in all.into_iter() {
-      r.verify("179383862".into()).await.unwrap().appraise(models::u("1"), models::wei("10000")).await.unwrap();
-    }
-  }
-  */
-
-  /*
-  pub async fn mock_collab_on_all_campaigns_with_all_handles(&self) {
-    for site in &[models::Site::X, models::Site::Instagram] {
-      for c in self.app.campaign().select().site_eq(site).all().await.unwrap() {
-        for h in self.app.handle().select().site_eq(site).all().await.unwrap() {
-          c.make_collab(&h).await.unwrap();
-        }
-      }
-    }
-  }
-  */
-
   pub async fn run_idempotent_background_tasks_a_few_times(&self) {
     for _ in 0..5 {
       self.app.run_background_tasks().await.expect("error in test background tasks");
     }
   }
+
+  pub async fn wait_for_job(
+    &self,
+    context: &str,
+    kind: models::OnChainJobKind,
+    status: models::OnChainJobStatus
+  ) -> models::OnChainJob {
+    try_until(100, 10, &format!("Could not find job '{context}'"), || async {
+      self.evm_mine().await;
+      self.app.on_chain_job().run_scheduler().await.unwrap();
+      let Some(job) = self.app.on_chain_job().current().optional().await.unwrap() else { return false };
+      job.attrs.status == status && job.attrs.kind == kind
+    }).await;
+
+    self.app.on_chain_job().current().one().await.unwrap()
+  }
+
+  pub async fn wait_for_job_status(
+    &self,
+    context: &str,
+    job: &models::OnChainJob,
+    status: models::OnChainJobStatus
+  ) -> models::OnChainJob {
+    try_until(100, 10, &format!("Job never got to status in '{context}'"), || async {
+      self.evm_mine().await;
+      self.app.on_chain_job().run_scheduler().await.unwrap();
+      let reloaded = job.reloaded().await.unwrap();
+      reloaded.attrs.status == status
+    }).await;
+
+    job.reloaded().await.unwrap()
+  }
+
 
   pub fn private_key(&self) -> ES256KeyPair {
     let key = ES256KeyPair::from_pem(
@@ -344,7 +361,7 @@ impl TestApp {
         let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error") );
         assert_eq!(&desc, expected_message, "Wrong revert message on '{reference}'");
       },
-      Ok(pending_tx) => {
+      Ok(_pending_tx) => {
         panic!("Transaction should have been reverted '{reference}'");
       }
     }
@@ -383,9 +400,6 @@ impl TestApp {
     let original_tx = client.get_transaction(tx_hash).await
       .expect("Error getting original tx for '{reference}'")
       .expect("No original tx for '{reference}'");
-    let receipt = client.get_transaction_receipt(tx_hash).await
-      .expect("Error getting original receipt for '{reference}'")
-      .expect("No receipt for '{reference}'");
     let typed: ethers::types::transaction::eip2718::TypedTransaction = (&original_tx).into();
 
     match client.call(&typed, None).await {

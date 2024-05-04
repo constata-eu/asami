@@ -40,6 +40,7 @@ impl Truffle {
         &format!("--logging.file={path_to_log}"),
         "--miner.instamine", "strict",
         "--miner.blockTime", "0",
+        "--gasPrice=2000000000",
         "--db", "./ganache_data_copy",
         "-i", "12345",
         "--mnemonic", "correct battery horse staple"

@@ -8,7 +8,7 @@ pub use galvanic_assert::{
 pub use api::models::{self, u, U256, u256, milli, hasher, Utc, wei};
 use api::{
   models::on_chain_job::AsamiFunctionCall,
-  on_chain::{self, AsamiContract, LegacyContract, DocContract, AsamiContractCode, LegacyContractCode, IERC20, Provider, SignerMiddleware, Address, Http}
+  on_chain::{self, AsamiContract, LegacyContract, DocContract, IERC20, Provider, SignerMiddleware, Address, Http}
 };
 use rocket::{ http::Header, local::asynchronous::LocalResponse };
 use jwt_simple::{ algorithms::*, prelude::*, };
