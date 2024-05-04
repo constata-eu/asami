@@ -586,10 +586,10 @@ pub struct IgPost {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IgError {
-  input_url: String,
+  input_url: Option<String>,
   error: String,
-  username: String,
-  url: String,
+  username: Option<String>,
+  url: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]

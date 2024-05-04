@@ -75,7 +75,7 @@ api_test! { can_deserialize_a_response (mut c)
   hub.schedule_new().await?;
   let mut crawl = hub.find(1).await?;
 
-  let apify_id = "fxJVEIkPpS4JdYZCJ";
+  let apify_id = "98w0ZOk9tKsdEQjUO";
   crawl = crawl.update()
     .status(models::IgCrawlStatus::Submitted)
     .apify_id(Some(apify_id.to_string()))
@@ -85,6 +85,9 @@ api_test! { can_deserialize_a_response (mut c)
     hub.collect_all_responses().await.unwrap();
     crawl.reloaded().await.unwrap().attrs.status == models::IgCrawlStatus::Responded
   }).await;
+  hub.process_for_handle_requests().await?;
+  hub.process_for_campaign_rules().await?;
+  hub.process_for_collabs().await?;
 }
 
 api_test! { supports_instagram_collaboration (mut c)
