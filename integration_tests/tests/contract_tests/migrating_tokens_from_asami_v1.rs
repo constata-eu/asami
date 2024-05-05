@@ -133,7 +133,7 @@ app_test!{ recreates_old_contract_and_performs_migration (a)
     .expect(&format!("could not fetch advertiser's account"));
   assert_eq!( advertiser_account, (
       a.client_admin_address(), 
-      u("5"),
+      u("1"),
       wei("6000000000000"),
       u("0"),
       u("0"),
@@ -146,7 +146,7 @@ app_test!{ recreates_old_contract_and_performs_migration (a)
 
   assert_eq!( alice_account, (
       a.client_admin_address(), 
-      u("5"),
+      u("1"),
       wei("6000000000000"),
       u("0"),
       u("0"),

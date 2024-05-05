@@ -12,7 +12,7 @@ pub use ethers::{
   abi::{Address, AbiEncode, Detokenize},
   providers::{Http, Provider},
   middleware::{contract::FunctionCall, Middleware},
-  types::{TransactionRequest, TransactionReceipt, H256, transaction::eip2718::TypedTransaction},
+  types::{TransactionRequest, TransactionReceipt, H256, U64, transaction::eip2718::TypedTransaction},
   signers::{LocalWallet, Signer}
 };
 use rand::thread_rng;
@@ -351,15 +351,30 @@ impl TestApp {
     match fn_call.send().await {
       Err(e) => {
         let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error: {e:?}") );
-
         panic!("Sending tx with reference '{reference}' failed with: {desc}");
       },
       Ok(pending_tx) => {
         self.start_mining().await;
+        let tx_hash = pending_tx.tx_hash();
         let receipt = pending_tx
             .interval(std::time::Duration::from_millis(10))
             .await.expect("Error waiting on tx '{reference}'").expect("No receipt for tx '{reference'}");
         self.stop_mining().await;
+
+        if receipt.status.unwrap_or(U64::zero()) == U64::zero() {
+          let original_tx = self.asami_contract().client().get_transaction(tx_hash).await.unwrap().unwrap();
+          let typed: ethers::types::transaction::eip2718::TypedTransaction = (&original_tx).into();
+          let msg = match self.asami_contract().client().call(&typed, None).await {
+            Err(e) => {
+              let default_error = format!("non_revert_error {e:?}");
+              models::on_chain_job::AsamiContractError::from_middleware_error(e).decode_revert::<String>().unwrap_or(default_error)
+            },
+            _ => "no_failure_reason_wtf".to_string()
+          };
+
+          panic!("Error in receipt status for '{reference}' : {msg}");
+        };
+
         let gas = receipt.gas_used.expect("No gas used in '{reference}'");
         assert!( gas <= wei(max_gas), "Sending tx with reference '{reference}' max gas was {max_gas} but used {gas}");
         receipt
@@ -406,26 +421,63 @@ impl TestApp {
     txs
   }
 
-  pub async fn wait_tx_failure(&self, reference: &str, tx_hash: H256, expected_message: &str) {
+  pub async fn wait_tx_failure(&self, reference: &str, tx_hash: &H256, expected_message: &str) {
     let client = self.asami_contract().client();
-    self.start_mining().await;
-    try_until(100, 10, &format!("Transaction '{reference}' never had a receipt"), || async {
-      client.get_transaction_receipt(tx_hash).await.unwrap().is_some()
+    try_until(100, 10, &format!("Transaction '{reference}' was not found"), || async {
+      self.evm_mine().await;
+      client.get_transaction_receipt(*tx_hash).await.unwrap().is_some()
     }).await;
-    self.stop_mining().await;
 
-    let original_tx = client.get_transaction(tx_hash).await
-      .expect("Error getting original tx for '{reference}'")
-      .expect("No original tx for '{reference}'");
-    let typed: ethers::types::transaction::eip2718::TypedTransaction = (&original_tx).into();
+    let receipt = client.get_transaction_receipt(*tx_hash).await
+        .expect(&format!("Receipt query failed when found before in '{reference}'"))
+        .expect(&format!("Receipt query returned None in '{reference}'"));
 
-    match client.call(&typed, None).await {
-      Ok(_) => panic!("Transaction '{reference}' did not fail es expected"),
-      Err(e) => {
-        let desc = api::models::AsamiContractError::from_middleware_error(e).decode_revert::<String>().unwrap_or_else(|| format!("non_revert_error"));
-        assert_eq!(&desc, expected_message, "Wrong revert message on '{reference}'");
-      }
+    let original_tx = client.get_transaction(*tx_hash).await
+        .expect(&format!("Original tx query failed on '{reference}'"))
+        .expect(&format!("Original query was None in '{reference}'"));
+
+    if receipt.status.unwrap_or(U64::zero()) == U64::one() {
+        panic!("Transaction succeeded '{reference}' but we expected error {expected_message}");
     }
+
+    let typed: ethers::types::transaction::eip2718::TypedTransaction = (&original_tx).into();
+    let msg = match client.call(&typed, None).await {
+      Err(e) => {
+        api::models::AsamiContractError::from_middleware_error(e).decode_revert::<String>().unwrap_or_else(|| format!("non_revert_error"))
+      },
+      _ => "no_failure_reason_wtf".to_string()
+    };
+    assert_eq!(&msg, expected_message, "Wrong revert message on '{reference}'");
+  }
+
+  pub async fn wait_tx_success(&self, reference: &str, tx_hash: &H256, max_gas: &str) -> TransactionReceipt {
+    let client = self.asami_contract().client();
+    try_until(100, 10, &format!("Transaction '{reference}' never had a receipt"), || async {
+      self.evm_mine().await;
+      client.get_transaction_receipt(*tx_hash).await.unwrap().is_some()
+    }).await;
+
+    let receipt = client.get_transaction_receipt(*tx_hash).await
+        .expect(&format!("Receipt query failed when found before in '{reference}'"))
+        .expect(&format!("Receipt query returned None in '{reference}'"));
+
+    let original_tx = client.get_transaction(*tx_hash).await
+        .expect(&format!("Original tx query failed on '{reference}'"))
+        .expect(&format!("Original query was None in '{reference}'"));
+
+    if receipt.status.unwrap_or(U64::zero()) == U64::zero() {
+      let typed: ethers::types::transaction::eip2718::TypedTransaction = (&original_tx).into();
+      let msg = match client.call(&typed, None).await {
+        Err(e) => {
+          api::models::AsamiContractError::from_middleware_error(e).decode_revert::<String>().unwrap_or_else(|| format!("non_revert_error"))
+        },
+        _ => "no_failure_reason_wtf".to_string()
+      };
+      panic!("Tx failed but expected success on '{reference}'. Error was: {msg}");
+    };
+    let gas = receipt.gas_used.expect("No gas used in '{reference}'");
+    assert!( gas <= wei(max_gas), "Sending tx with reference '{reference}' max gas was {max_gas} but used {gas}");
+    receipt
   }
 
   pub fn future_date(&self, days: i64) -> U256 {

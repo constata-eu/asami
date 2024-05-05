@@ -118,17 +118,21 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     }
 
 		// Anyone acting as an Admin can onboard web2 users as sub-accounts.
-		// If an admin tries to censor or cheat people out of their sub accounts,
-		// both advertisers and new members won't trust anymore and look for another admin.
-		// (if no suitable admin pops up, then this whole asami idea should be abandoned).
+		// The admin still has full control of the subaccount funds until giving them away.
+		// This function is only for convenience, it could easily be replaced by a custom admin
+		// process that uses this function to send sub-account funds to the admin's own address,
+		// and then decides how much to forward to the claiming user.
     function promoteSubAccounts(PromoteSubAccountsParam[] calldata _params) external nonReentrant {
       for(uint256 i = 0; i < _params.length; i++) {
         PromoteSubAccountsParam calldata param = _params[i];
         SubAccount storage sub = accounts[msg.sender].subAccounts[param.id];
         Account storage account = accounts[param.addr];
         require(account.trustedAdmin == msg.sender || account.trustedAdmin == address(0), "psa0");
+
         account.unclaimedAsamiBalance += sub.unclaimedAsamiBalance;
         sub.unclaimedAsamiBalance = 0;
+
+				uint256 promotedDocAmount = sub.unclaimedDocBalance;
         account.unclaimedDocBalance += sub.unclaimedDocBalance;
         sub.unclaimedDocBalance = 0;
 
@@ -139,13 +143,13 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
 					account.trustedAdmin = msg.sender;
 					// The amount left in the sub account is the highest amount we know the 
 					// user is comfortable leaving to the admin's best judgement.
-					account.maxGaslessDocToSpend = account.unclaimedDocBalance;
+					account.maxGaslessDocToSpend = promotedDocAmount;
 
 					// The admin must send at least enough RBTC for 100.000 gas.
 					// 100.000 gas is more than enough for the user to reconfigure their account
 					// selecting another admin and reducing these numbers.
 					// Also to send their DOC and spend them somewhere.
-					account.minGaslessRbtcToReceive = 100000 * block.basefee;
+					account.minGaslessRbtcToReceive = 6e12;
 				}
       }
     }
@@ -325,7 +329,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
             require(campaign.validUntil < block.timestamp, "rc1");
 
             campaign.budget = 0;
-            require(doc.transfer(input.addr, campaign.budget), "rdc2");
+            require(doc.transfer(input.addr, campaign.budget), "rc2");
             emit CampaignReimbursed(input.addr, input.briefingHash);
         }
     }

@@ -295,18 +295,12 @@ impl<'b> ApiClient<'b> {
     self.test_app.send_tx(
       &format!("Making campaign: {message}"),
       "118000",
-      self.asami_contract().make_campaigns( vec![
-        on_chain::MakeCampaignsParam{
-          budget,
-          briefing_hash,
-          valid_until: models::utc_to_i(Utc::now() + chrono::Duration::days(duration_days)),
-        },
-      ])
+      self.pay_campaign_contract_call(budget, briefing_hash, duration_days)
     ).await;
   }
 
 
-  pub fn make_campaign_contract_call( &self, budget: U256, briefing_hash: U256, duration_days: i64) -> AsamiFunctionCall {
+  pub fn pay_campaign_contract_call( &self, budget: U256, briefing_hash: U256, duration_days: i64) -> AsamiFunctionCall {
     self.asami_contract().make_campaigns( vec![
       on_chain::MakeCampaignsParam{
         budget,
