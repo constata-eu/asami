@@ -114,32 +114,64 @@ app_test!{ recreates_old_contract_and_performs_migration (a)
   a.send_tx(
     "Migrating 2 accounst and 2 holders",
     "478045",
-    a.asami_core().migrate_tokens_from_old_contract(a.legacy_contract().address(), wei("2"))
+    a.asami_contract().migrate_tokens_from_old_contract(a.legacy_contract().address(), a.client_admin_address(), wei("2"))
   ).await;
 
   a.send_tx(
     "Migrating all the rest",
     "307984",
-    a.asami_core().migrate_tokens_from_old_contract(a.legacy_contract().address(), wei("10"))
+    a.asami_contract().migrate_tokens_from_old_contract(a.legacy_contract().address(), a.client_admin_address(), wei("10"))
   ).await;
 
   a.send_revert_tx(
     "All done, no more migration allowed.",
     "mig0",
-    a.asami_core().migrate_tokens_from_old_contract(a.legacy_contract().address(), wei("20"))
+    a.asami_contract().migrate_tokens_from_old_contract(a.legacy_contract().address(), a.client_admin_address(), wei("20"))
   ).await;
 
-  assert_account(&a, advertiser.account_id(), advertiser.address(), u("5"), u("0")).await;
-  assert_account(&a, alice.account_id(), alice.address(), u("5"), u("0")).await;
-  assert_account(&a, bob.account_id(), Address::zero(), u("0"), milli("300")).await;
-  
-  a.assert_balances_of("new advertiser", advertiser.account_id(), u("10"), u("0"), u("0"), u("0"), milli("300")).await;
-  a.assert_balances_of("new alice", alice.account_id(), wei("9999698360000000000"), u("0"), u("9"), u("0"), milli("100")).await;
-  a.assert_balances_of("new bob", bob.account_id(), u("0"), u("0"), u("0"), milli("300"), milli("0")).await;
-  assert_eq!(a.asami_balance_of(&a.admin_treasury_address().await).await, milli("2250"));
-  assert_eq!(a.asami_balance_of(&stranger.address()).await, milli("50"));
+  let advertiser_account = a.asami_contract().accounts(advertiser.address()).call().await
+    .expect(&format!("could not fetch advertiser's account"));
+  assert_eq!( advertiser_account, (
+      a.client_admin_address(), 
+      u("5"),
+      wei("6000000000000"),
+      u("0"),
+      u("0"),
+      u("0"),
+      FeeRateVote{ votes: u("0"), rate: u("0") }
+   ));
 
-  assert_eq!(a.asami_core().total_supply().call().await.unwrap(), milli("2700"));
+  let alice_account = a.asami_contract().accounts(alice.address()).call().await
+    .expect(&format!("could not fetch alice's account"));
+
+  assert_eq!( alice_account, (
+      a.client_admin_address(), 
+      u("5"),
+      wei("6000000000000"),
+      u("0"),
+      u("0"),
+      u("0"),
+      FeeRateVote{ votes: u("0"), rate: u("0") }
+   ));
+
+  // Bob's account is still a sub-account.
+  let bob_sub_account = a.asami_contract()
+    .get_sub_account(a.client_admin_address(), bob.account_id())
+    .call().await
+    .expect(&format!("could not fetch alice's account"));
+
+  assert_eq!( bob_sub_account, SubAccount{ 
+      unclaimed_asami_balance: u("1200"), // The equivalent of those 300 tokens in new tokens.
+      unclaimed_doc_balance: u("0"),  // No tokens get migrated.
+  });
+
+  a.assert_balances_of("new advertiser", advertiser.address(), u("10"), u("0"), u("0"), u("0"), u("1200")).await;
+  a.assert_balances_of("new alice", alice.address(), wei("9999698360000000000"), u("0"), u("9"), u("0"), u("400")).await;
+
+  assert_eq!(a.asami_balance_of(&a.admin_treasury_address().await).await, u("9000"));
+  assert_eq!(a.asami_balance_of(&stranger.address()).await, u("200"));
+
+  assert_eq!(a.asami_contract().total_supply().call().await.unwrap(), u("10800"));
 }
 
 async fn assert_legacy_account(a: &TestApp, account_id: U256, addr: Address, unclaimed_asami: U256, unclaimed_doc: U256) {
@@ -148,11 +180,6 @@ async fn assert_legacy_account(a: &TestApp, account_id: U256, addr: Address, unc
   assert_eq!( account, (account_id, addr, unclaimed_asami, unclaimed_doc) );
 }
 
-async fn assert_account(a: &TestApp, account_id: U256, addr: Address, allowance: U256, unclaimed_asami: U256) {
-  let account = a.asami_core().accounts(account_id).call().await
-    .expect(&format!("could not fetch account {account_id}"));
-  assert_eq!( account, (addr, allowance, unclaimed_asami, ::api::models::u("0")) );
-}
 async fn assert_legacy_balance(a: &TestApp, msg: &str, addr: Address, expected: U256) {
   assert_eq!( a.legacy_contract().balance_of(addr).call().await.unwrap(), expected, "on {msg}");
 }

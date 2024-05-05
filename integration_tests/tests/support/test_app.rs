@@ -272,6 +272,20 @@ impl TestApp {
     ).await;
   }
 
+  pub async fn send_make_sub_account_collab_tx(&self, reference: &str, max_gas: &str, advertiser: &ApiClient<'_>, briefing_hash: U256, member: &ApiClient<'_>, doc_reward: U256){
+    self.send_tx(
+      reference,
+      max_gas,
+      self.asami_contract().admin_make_sub_account_collabs(
+        vec![on_chain::MakeSubAccountCollabsParam{
+          advertiser_addr: advertiser.address(),
+          briefing_hash,
+          collabs: vec![ on_chain::MakeSubAccountCollabsParamItem{ sub_account_id: member.account_id(), doc_reward}]
+        }]
+      )
+    ).await;
+  }
+
   pub async fn run_idempotent_background_tasks_a_few_times(&self) {
     for _ in 0..5 {
       self.app.run_background_tasks().await.expect("error in test background tasks");
@@ -336,12 +350,15 @@ impl TestApp {
     
     match fn_call.send().await {
       Err(e) => {
-        let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error") );
+        let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error: {e:?}") );
+
         panic!("Sending tx with reference '{reference}' failed with: {desc}");
       },
       Ok(pending_tx) => {
         self.start_mining().await;
-        let receipt = pending_tx.await.expect("Error waiting on tx '{reference}'").expect("No receipt for tx '{reference'}");
+        let receipt = pending_tx
+            .interval(std::time::Duration::from_millis(10))
+            .await.expect("Error waiting on tx '{reference}'").expect("No receipt for tx '{reference'}");
         self.stop_mining().await;
         let gas = receipt.gas_used.expect("No gas used in '{reference}'");
         assert!( gas <= wei(max_gas), "Sending tx with reference '{reference}' max gas was {max_gas} but used {gas}");

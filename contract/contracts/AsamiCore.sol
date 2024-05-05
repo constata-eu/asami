@@ -61,7 +61,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
       return accounts[_account].campaigns[_briefingHash];
     }
 
-    /* To make the protocol more predictable, changes are applied only once every period */
+    /* To make the protocol more predictable, changes are applied only once every cycle */
     uint256 public defaultFeeRate = 10 * 1e18;
     uint256 public feeRate = defaultFeeRate;
     uint256 public votedFeeRate = defaultFeeRate;
@@ -117,16 +117,36 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
         address addr;
     }
 
-    /* Admin that had some sub-accounts can now promote those */
+		// Anyone acting as an Admin can onboard web2 users as sub-accounts.
+		// If an admin tries to censor or cheat people out of their sub accounts,
+		// both advertisers and new members won't trust anymore and look for another admin.
+		// (if no suitable admin pops up, then this whole asami idea should be abandoned).
     function promoteSubAccounts(PromoteSubAccountsParam[] calldata _params) external nonReentrant {
       for(uint256 i = 0; i < _params.length; i++) {
         PromoteSubAccountsParam calldata param = _params[i];
         SubAccount storage sub = accounts[msg.sender].subAccounts[param.id];
         Account storage account = accounts[param.addr];
+        require(account.trustedAdmin == msg.sender || account.trustedAdmin == address(0), "psa0");
         account.unclaimedAsamiBalance += sub.unclaimedAsamiBalance;
         sub.unclaimedAsamiBalance = 0;
         account.unclaimedDocBalance += sub.unclaimedDocBalance;
         sub.unclaimedDocBalance = 0;
+
+				// Accounts not claimed by anyone yet can be claimed by any admin.
+				// The TrustedAdmin has no permissions other than for funding the account payouts.
+				// The account holder can always configure this at will after getting some RBTC.
+				if (account.trustedAdmin == address(0)) {
+					account.trustedAdmin = msg.sender;
+					// The amount left in the sub account is the highest amount we know the 
+					// user is comfortable leaving to the admin's best judgement.
+					account.maxGaslessDocToSpend = account.unclaimedDocBalance;
+
+					// The admin must send at least enough RBTC for 100.000 gas.
+					// 100.000 gas is more than enough for the user to reconfigure their account
+					// selecting another admin and reducing these numbers.
+					// Also to send their DOC and spend them somewhere.
+					account.minGaslessRbtcToReceive = 100000 * block.basefee;
+				}
       }
     }
 
@@ -157,7 +177,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     function adminClaimBalancesFree(address[] calldata _addresses) external nonReentrant {
       for (uint256 i = 0; i < _addresses.length; i++){
         Account storage account = accounts[_addresses[i]];
-        require(account.trustedAdmin != msg.sender || account.trustedAdmin == address(0), "acb0");
+        require(account.trustedAdmin == msg.sender, "acb0");
 
         if (account.unclaimedAsamiBalance > 0) {
           uint256 balance = account.unclaimedAsamiBalance;
@@ -393,7 +413,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
             issuance rate on next cycle, therefore, no point in storing this value
           */
           if(assignedAsamiTokens < cap()) {
-            feesCollectedPerPeriodDuringTokenIssuance[getCurrentCycle()] += newFees;
+            feesCollectedPerCycleDuringTokenIssuance[getCurrentCycle()] += newFees;
           }
       }
     }
@@ -456,7 +476,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
             issuance rate on next cycle, therefore, no point in storing this value
           */
           if(assignedAsamiTokens < cap()) {
-            feesCollectedPerPeriodDuringTokenIssuance[getCurrentCycle()] += newFees;
+            feesCollectedPerCycleDuringTokenIssuance[getCurrentCycle()] += newFees;
           }
       }
     }
@@ -469,7 +489,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
       uint256 remainingToCap = cap() - assignedAsamiTokens;
 
       if (remainingToCap > 0) {
-        uint256 tokensAtRate = _fee * getIssuanceRate();
+        uint256 tokensAtRate = getIssuanceFor(_fee);
         uint256 newTokens = (tokensAtRate > remainingToCap) ? remainingToCap : tokensAtRate;
         uint256 advertiserTokens = (newTokens * 30 * 1e18) / 100e18;
         uint256 memberTokens = (newTokens * 30 * 1e18) / 100e18;
@@ -619,22 +639,29 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
       For every cycle we calculate the previous 10 cycles average fees, and come up with an equivalence of DoC paid vs tokens awarded.
       This equivalence is stored and updated for every cycle, and should adjust issuance to target 100.000 tokens every cycle.
     */
-    uint256 public tokensTargetPerPeriod = 100000;
-    uint256 public tokensToIssuePerDoc = 4000;
-    mapping(uint256 => uint256) feesCollectedPerPeriodDuringTokenIssuance;
+    uint256 public tokensTargetPerCycle = 100000e18;
+    mapping(uint256 => uint256) public feesCollectedPerCycleDuringTokenIssuance;
 
-    /* 
-       The amount of tokens to issue for a given number of DOC collected as fee.
-       According to last period's collected fees and the tokens target per period.
-    */
-    function getIssuanceRate() public view returns (uint256) {
-      uint256 current = getCurrentCycle();
+    // The amount of tokens to issue for a given number of DOC collected as fee.
+    //  According to last cycle's collected fees and the tokens target per cycle.
+    function getIssuanceFor(uint256 _docAmount) public view returns (uint256) {
+			uint256 current = getCurrentCycle();
+
       /* The initial value is roughly based on the fees collected by V1 during it's lifetime */
       if (current == 0) {
-        return 4000;
+        return _docAmount * 4000;
       }
-      return tokensTargetPerPeriod / feesCollectedPerPeriodDuringTokenIssuance[current - 1];
+
+			// If for whatever reason we have a cycle in which we didn't collect fees,
+			// we issue tokens like we had collected 100 DOC in fees for that period.
+			// This is an intentionally low amount mostly to avoid dividing by zero.
+			uint256 prev = feesCollectedPerCycleDuringTokenIssuance[current - 1];
+      return (_docAmount * tokensTargetPerCycle) / (prev == 0 ? 100e18 : prev );
     }
+
+    function getFeesCollected(uint256 _cycle) public view returns (uint256) {
+			return feesCollectedPerCycleDuringTokenIssuance[_cycle];
+		}
 
     /* The adminTreasury address is the deployer address which can only be used to retrieve accidentally sent RBTC into the contract. */
     address public adminTreasury;
@@ -662,7 +689,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
       if (!migrationHoldersDone) {
         for (uint256 i = 0; i < _items; i++) {
           try oldContract.holders(migrationCursor+i) returns (address holder) {
-            uint256 balance = oldContract.balanceOf(holder) * getIssuanceRate();
+            uint256 balance = getIssuanceFor(oldContract.balanceOf(holder));
             if(balance > 0){
               _safeMint(holder, balance);
             }
@@ -678,8 +705,17 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
           try oldContract.accountIds(migrationCursor + i) returns (uint256 oldAccountId) {
             ( , address addr, uint256 oldUnclaimedAsami,) = oldContract.accounts(oldAccountId);
             if(addr == address(0) && oldUnclaimedAsami > 0) {
-              admin.subAccounts[oldAccountId].unclaimedAsamiBalance = oldUnclaimedAsami * getIssuanceRate();
+              admin.subAccounts[oldAccountId].unclaimedAsamiBalance = getIssuanceFor(oldUnclaimedAsami);
             }
+						if(addr != address(0)){
+							// These values are set only once during the migration, for accounts
+							// that existed in the previous contract.
+							// This ensures a smooth migration and that the admin is immediately able
+							// to manage these accounts, provinding gasless claims at reasonable prices.
+							accounts[addr].trustedAdmin = _adminAddr;
+							accounts[addr].maxGaslessDocToSpend = 1e18;
+							accounts[addr].minGaslessRbtcToReceive = 6e12;
+						}
           } catch {
             migrationAccountsDone = true;
             break;

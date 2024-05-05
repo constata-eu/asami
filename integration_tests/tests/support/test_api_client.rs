@@ -248,10 +248,20 @@ impl<'b> ApiClient<'b> {
     self.setup_as_advertiser_with_amount(message, u("2000")).await;
   }
 
+  pub async fn setup_trusted_admin(&mut self, message: &str) {
+    self.test_app.send_tx(
+      &format!("Configuring trusted admin: {message}"),
+      "71200",
+      self.asami_contract().config_account(self.test_app.client_admin_address(), u("5"), u("0"), u("0"))
+    ).await;
+  }
+
   pub async fn setup_as_advertiser_with_amount(&mut self, message: &str, amount: U256) {
     self.make_client_wallet().await;
 
     self.test_app.send_doc_to(self.address(), amount.clone()).await;
+
+    self.setup_trusted_admin(message).await;
 
     self.test_app.send_tx(
       &format!("Approving spending for setting up as advertiser: {message}"),

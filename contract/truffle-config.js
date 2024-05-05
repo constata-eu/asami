@@ -128,7 +128,7 @@ module.exports = {
           runs: 200,
         }
       },
-      evmVersion: "istanbul"
+      evmVersion: "london"
     }
   },
   "plugins": [

@@ -1,20 +1,24 @@
+/// This module tests how the scheduler interacts with fees distribution.
+/// The inner workings and amounts distributed by the smart contract are tested elsewhere.
 #[macro_use]
 pub mod support;
 use ethers::signers::Signer;
 
-/* Make assertions about fee cycles and fees at */
-/* Try to have someone collect twice */
-
+app_test!{ distributes_fees_to_holders (a) 
+    todo!("Make assertions about fee cycles and fees at");
+    todo!("Try to have someone collect twice");
+}
+/*
 app_test!{ distributes_fees_to_holders (a) 
   a.run_idempotent_background_tasks_a_few_times().await;
-  /* No asami tokens, so nothing to share */
+  // No asami tokens, so nothing to share 
   let err = a.contract().claim_fee_pool_share(vec![a.contract().client().address()]).send().await.unwrap_err();
   assert_eq!(err.decode_revert::<String>().unwrap(), "cfps0");
 
-  /* Cycle 1:
-   * Issues tokens to admin only. Pending tokens do not get paid.
-   * Only admin gets paid as nobody else claimed their account.
-   */
+  //Cycle 1:
+  //Issues tokens to admin only. Pending tokens do not get paid.
+  //Only admin gets paid as nobody else claimed their account.
+  
   assert_eq!(a.contract_doc_balance().await,   wei("0"));
   assert_eq!(a.admin_doc_balance().await,      u("420000000"));
 
@@ -38,12 +42,12 @@ app_test!{ distributes_fees_to_holders (a)
   assert_eq!(a.contract_doc_balance().await,    u("100000"));
   assert_eq!(a.admin_doc_balance().await,    u("419900000"));
 
-  /* Cycle 2:
-   *  - Campaign leftover funds get reimbursed to admin.
-   *  - No feePool to distribute. Nothing will be distributed until next cycle.
-   *  - A new campaign is created funded by the admin.
-   *  - Users claim their accounts so they get their pending docs and asami tokens.
-   */
+  // Cycle 2:
+  //  - Campaign leftover funds get reimbursed to admin.
+  //  - No feePool to distribute. Nothing will be distributed until next cycle.
+  //  - A new campaign is created funded by the admin.
+  //  - Users claim their accounts so they get their pending docs and asami tokens.
+  // 
   a.run_idempotent_background_tasks_a_few_times().await;
   a.evm_forward_to_next_cycle().await;
   a.run_idempotent_background_tasks_a_few_times().await;
@@ -87,11 +91,11 @@ app_test!{ distributes_fees_to_holders (a)
   let err = a.contract().claim_fee_pool_share(vec![bob.local_wallet().address()]).send().await.unwrap_err();
   assert_eq!(err.decode_revert::<String>().unwrap(), "cfps3");
 
-  /* Cycle 3: 
-   * Everyone gets paid from collabs on the previous period.
-   * The admin sends tokens to other addresses to hold.
-   * The previous campaign should have been reimbursed.
-   */
+  // Cycle 3: 
+  // Everyone gets paid from collabs on the previous period.
+  // The admin sends tokens to other addresses to hold.
+  // The previous campaign should have been reimbursed.
+  // 
   a.run_idempotent_background_tasks_a_few_times().await;
   a.evm_forward_to_next_cycle().await;
   a.run_idempotent_background_tasks_a_few_times().await;
@@ -116,11 +120,11 @@ app_test!{ distributes_fees_to_holders (a)
 
   assert_eq!(a.contract().get_fee_pool_before_recent_changes().call().await?, u("20"));
 
-  /* Advertiser cannot try to claim again */
+  // Advertiser cannot try to claim again 
   let err = a.contract().claim_fee_pool_share(vec![advertiser.local_wallet().address()]).send().await.unwrap_err();
   assert_eq!(err.decode_revert::<String>().unwrap(), "cfps2");
 
-  /* These people who just received a transfer cannot claim yet */
+  // These people who just received a transfer cannot claim yet
   a.run_idempotent_background_tasks_a_few_times().await;
   let err = a.contract().claim_fee_pool_share(holders.clone()).send().await.unwrap_err();
   assert_eq!(err.decode_revert::<String>().unwrap(), "cfps3");
@@ -130,10 +134,10 @@ app_test!{ distributes_fees_to_holders (a)
     assert_eq!(a.doc_balance_of(h).await,   wei(                  "0"));
   }
 
-  /* Cycle 4:
-   * New participants join and collaborate. 
-   * No fee pool is shared, as there were no collabs on previous period.
-   */
+  // Cycle 4:
+  // New participants join and collaborate. 
+  // No fee pool is shared, as there were no collabs on previous period.
+  
   a.run_idempotent_background_tasks_a_few_times().await;
   a.evm_forward_to_next_cycle().await;
   a.run_idempotent_background_tasks_a_few_times().await;
@@ -149,11 +153,11 @@ app_test!{ distributes_fees_to_holders (a)
   a.run_idempotent_background_tasks_a_few_times().await;
   assert_eq!(a.contract().get_fee_pool_before_recent_changes().call().await?, u("0"));
 
-  /* Advertiser cannot try to claim again */
+  // Advertiser cannot try to claim again 
   let err = a.contract().claim_fee_pool_share(vec![advertiser.local_wallet().address()]).send().await.unwrap_err();
   assert_eq!(err.decode_revert::<String>().unwrap(), "cfps1");
 
-  /* These people who just received a transfer cannot claim yet */
+  // These people who just received a transfer cannot claim yet 
   let err = a.contract().claim_fee_pool_share(holders.clone()).send().await.unwrap_err();
   assert_eq!(err.decode_revert::<String>().unwrap(), "cfps1");
 
@@ -162,9 +166,9 @@ app_test!{ distributes_fees_to_holders (a)
     assert_eq!(a.doc_balance_of(h).await,   wei(                  "0"));
   }
 
-  /* Cycle 5:
-   * All hodlers got paid from the previous cycle collab.
-   */
+  // Cycle 5:
+  // All hodlers got paid from the previous cycle collab.
+  
   a.run_idempotent_background_tasks_a_few_times().await;
   a.evm_forward_to_next_cycle().await;
   a.run_idempotent_background_tasks_a_few_times().await;
@@ -195,3 +199,4 @@ app_test!{ distributes_fees_to_holders (a)
   a.evm_forward_to_next_cycle().await;
   a.run_idempotent_background_tasks_a_few_times().await;
 }
+*/

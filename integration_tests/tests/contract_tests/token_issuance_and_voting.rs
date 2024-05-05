@@ -3,6 +3,10 @@ use crate::support::TestApp;
 use ::api::models::{U256};
 
 app_test!{ has_a_cap_on_token_supply (a) 
+    todo!("Rewrite this too");
+}
+/*
+app_test!{ has_a_cap_on_token_supply (a) 
   /*
    * A single very large campaign and collaboration issues all tokens, and no further tokens are issued
    * Unclaimed tokens are honored by the cap as if they had been issued
@@ -263,3 +267,4 @@ async fn vested_admin_votes_total(a: &TestApp) -> U256 {
 async fn latest_admin_elections(a: &TestApp) -> [Address; 3] {
   a.asami_core().get_latest_admin_elections().call().await.unwrap()
 }
+*/
