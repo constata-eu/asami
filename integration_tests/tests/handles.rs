@@ -2,7 +2,7 @@
 pub mod support;
 use ::api::models::*;
 
-api_test!{ verifies_twitter_handle (mut c)
+api_test! { verifies_twitter_handle (mut c)
   c.create_x_handle("nubis_bruno", wei("10000000000000000")).await;
   let account = c.account().await;
   let handle = c.x_handle().await;

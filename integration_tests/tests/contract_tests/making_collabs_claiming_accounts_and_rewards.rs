@@ -1,6 +1,6 @@
 use ::api::on_chain::*;
 
-app_test!{ full_contract_workflow_from_collabs_to_balance_claims(a)
+app_test! { full_contract_workflow_from_collabs_to_balance_claims(a)
   let mut advertiser = a.client().await;
   advertiser.setup_as_advertiser("global advertiser for test").await;
   advertiser.pay_campaign("campaign that will be drained", u("2000"), u("deadbeef"), 2).await;
@@ -73,11 +73,11 @@ app_test!{ full_contract_workflow_from_collabs_to_balance_claims(a)
   ).await;
 
   a.assert_admin_balances("Before its own claim.",
-    u("6"), u("419998000"), u("99160000000"), // 6 unclaimed doc from gasless 
+    u("6"), u("419998000"), u("99160000000"), // 6 unclaimed doc from gasless
     u("128000"), u("0"), u("0")
   ).await;
   a.send_tx(
-    "Admin claims their unclaimed balances", 
+    "Admin claims their unclaimed balances",
     "151402",
     a.asami_contract().claim_balances()
   ).await;
@@ -87,7 +87,7 @@ app_test!{ full_contract_workflow_from_collabs_to_balance_claims(a)
   ).await;
 }
 
-app_test!{ rejects_collabs_when_too_large_or_campaign_is_finished(a)
+app_test! { rejects_collabs_when_too_large_or_campaign_is_finished(a)
   let mut advertiser = a.client().await;
   advertiser.setup_as_advertiser("an advertiser for the whole test").await;
   let briefing_hash = u("deadbeef");
@@ -129,7 +129,7 @@ app_test!{ rejects_collabs_when_too_large_or_campaign_is_finished(a)
   a.send_revert_tx( "Further attempts get reverted", "amc2", make_collabs_call("50")).await;
 }
 
-app_test!{ gasless_claim_common_error_cases(a)
+app_test! { gasless_claim_common_error_cases(a)
   let mut advertiser = a.client().await;
   advertiser.setup_as_advertiser("global advertiser for test").await;
   advertiser.pay_campaign("global campaign for test", u("2000"), u("deadbeef"), 2).await;
@@ -140,7 +140,7 @@ app_test!{ gasless_claim_common_error_cases(a)
   a.send_make_collab_tx("A very small collab is registered", "230000", &advertiser, u("deadbeef"), &alice, u("1")).await;
 
   a.assert_balances_of(
-    "Alice's account has pending balances.", 
+    "Alice's account has pending balances.",
     alice.address(),
     u("10"),
     milli("900"), u("0"),
@@ -180,7 +180,7 @@ app_test!{ gasless_claim_common_error_cases(a)
   ).await;
 
   a.assert_balances_of(
-    "Alice balances after gasless claim", 
+    "Alice balances after gasless claim",
     alice.address(),
     wei("10999857770000000000"),
     u("0"), wei("899999999990000000"),
@@ -188,7 +188,7 @@ app_test!{ gasless_claim_common_error_cases(a)
   ).await;
 }
 
-app_test!{ user_can_manage_a_gasless_amount_approval(a)
+app_test! { user_can_manage_a_gasless_amount_approval(a)
   let mut advertiser = a.client().await;
   advertiser.setup_as_advertiser("global advertiser for test").await;
   advertiser.pay_campaign("global campaign for test", u("2000"), u("deadbeef"), 2).await;
@@ -211,14 +211,14 @@ app_test!{ user_can_manage_a_gasless_amount_approval(a)
 
   a.send_make_collab_tx("A collab is registered generating rewards", "230000", &advertiser, u("deadbeef"), &alice, u("100")).await;
   a.assert_balances_of(
-    "Alice pending balances after collab", 
+    "Alice pending balances after collab",
     alice.address(),
     u("10"),
     u("90"), u("0"),
     u("12000"), u("0")
   ).await;
 
-  let expensive_gasless_claim = 
+  let expensive_gasless_claim =
     a.asami_contract().gasless_claim_balances(u("10"), u("1"), vec![alice.address()]).value(u("1"));
 
   a.send_revert_tx( "The admin cannot charge more than the default gasless approval", "gcb4", expensive_gasless_claim.clone()).await;
@@ -232,7 +232,7 @@ app_test!{ user_can_manage_a_gasless_amount_approval(a)
   a.send_tx( "The admin can now do an expensive gasless claim.", "257650", expensive_gasless_claim.clone()).await;
 
   a.assert_balances_of(
-    "Alice balances after gasless claim", 
+    "Alice balances after gasless claim",
     alice.address(),
     wei("10999901546000000000"),
     u("0"), u("80"),
@@ -242,7 +242,7 @@ app_test!{ user_can_manage_a_gasless_amount_approval(a)
   // Alice can claim her own account and have pending balances that cannot be gasless claimed.
   a.send_make_collab_tx("A second collab for alice", "196000", &advertiser, u("deadbeef"), &alice, u("100")).await;
   a.assert_balances_of(
-    "Alice balances after second collab", 
+    "Alice balances after second collab",
     alice.address(),
     wei("10999901546000000000"),
     u("90"), u("80"),
@@ -258,7 +258,7 @@ app_test!{ user_can_manage_a_gasless_amount_approval(a)
   a.send_revert_tx("The admin cannot do gasless claims", "gcb2", expensive_gasless_claim.clone()).await;
 }
 
-app_test!{ simultaneous_gasless_and_regular_claims_fail(a)
+app_test! { simultaneous_gasless_and_regular_claims_fail(a)
   let mut advertiser = a.client().await;
   advertiser.setup_as_advertiser("global advertiser for test").await;
   advertiser.pay_campaign("global campaign for test", u("2000"), u("deadbeef"), 2).await;
@@ -268,7 +268,7 @@ app_test!{ simultaneous_gasless_and_regular_claims_fail(a)
   alice.setup_trusted_admin("Alice setting up gasless claims").await;
   a.send_make_collab_tx("A collab is registered generating rewards", "230000", &advertiser, u("deadbeef"), &alice, u("100")).await;
   a.assert_balances_of(
-    "Alice has balances to claim", 
+    "Alice has balances to claim",
     alice.address(),
     wei("9999857770000000000"),
     u("90"), u("0"),
@@ -288,7 +288,7 @@ app_test!{ simultaneous_gasless_and_regular_claims_fail(a)
   a.wait_tx_failure("gasless claim fails", &txs[1], "gcb3").await;
 
   a.assert_balances_of(
-    "Alice balances after one claim", 
+    "Alice balances after one claim",
     alice.address(),
     wei("9999857770000000000"),
     u("0"), u("90"),
@@ -296,7 +296,7 @@ app_test!{ simultaneous_gasless_and_regular_claims_fail(a)
   ).await;
 }
 
-app_test!{ admin_can_maintain_sub_accounts_for_users(a) 
+app_test! { admin_can_maintain_sub_accounts_for_users(a)
   let briefing_hash = u("deadbeef");
   let mut advertiser = a.client().await;
   advertiser.setup_as_advertiser("global advertiser for test").await;
@@ -326,17 +326,17 @@ app_test!{ admin_can_maintain_sub_accounts_for_users(a)
   ).await;
 
   a.assert_balances_of(
-    "Alice balances after promote", 
+    "Alice balances after promote",
     alice.address(),
     u("10"),
     u("9"), u("0"),
     u("1200"), u("0")
   ).await;
-  
+
   a.send_tx( "Admin registers more sub account collabs for alice", "391798", alice_sub_account_collab).await;
 
   a.assert_balances_of(
-    "Alice balance is unchanged when collabs where to a sub account", 
+    "Alice balance is unchanged when collabs where to a sub account",
     alice.address(),
     u("10"),
     u("9"), u("0"),
@@ -350,7 +350,7 @@ app_test!{ admin_can_maintain_sub_accounts_for_users(a)
   ).await;
 
   a.assert_balances_of(
-    "Alice now received the sub account amounts", 
+    "Alice now received the sub account amounts",
     alice.address(),
     u("10"),
     u("18"), u("0"),
@@ -358,8 +358,7 @@ app_test!{ admin_can_maintain_sub_accounts_for_users(a)
   ).await;
 }
 
-
-app_test!{ can_change_admin_for_registering_collabs(a) 
+app_test! { can_change_admin_for_registering_collabs(a)
   let briefing_hash = u("deadbeef");
   let mut advertiser = a.client().await;
   advertiser.setup_as_advertiser("global advertiser for test").await;

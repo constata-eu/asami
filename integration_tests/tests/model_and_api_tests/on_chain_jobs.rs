@@ -1,9 +1,7 @@
-#[macro_use]
-pub mod support;
+use ::api::on_chain::{self, *};
 use api::models::*;
-use ::api::on_chain::{ self, *};
 
-app_test!{ basic_workflow_with_claim_account_example (a) 
+app_test! { basic_workflow_with_claim_account_example (a)
   assert_eq!(a.app.on_chain_job().select().count().await?, 0);
   a.app.on_chain_job().run_scheduler().await.context("first scheduler run")?;
 
@@ -33,7 +31,7 @@ app_test!{ basic_workflow_with_claim_account_example (a)
   assert_eq!(alice.account().await.attrs.status, AccountStatus::Claimed);
 }
 
-app_test!{ stops_scheduling_when_admin_cant_pay_gas (a)
+app_test! { stops_scheduling_when_admin_cant_pay_gas (a)
   let mut alice = a.client().await;
   alice.submit_claim_account_request().await;
 
@@ -44,7 +42,7 @@ app_test!{ stops_scheduling_when_admin_cant_pay_gas (a)
     assert_eq!(a.rbtc_balance_of(admin).await, wei("0"));
   }
 
-  let job = a.wait_for_job(
+  a.wait_for_job(
     "A job promoting sub accounts",
     OnChainJobKind::PromoteSubAccounts,
     OnChainJobStatus::Scheduled
@@ -58,7 +56,7 @@ app_test!{ stops_scheduling_when_admin_cant_pay_gas (a)
   assert_eq!(job.reloaded().await?.attrs.status_line.unwrap(), "insufficient funds for gas * price + value");
 }
 
-app_test!{ admin_legacy_claim_account (a)
+app_test! { admin_legacy_claim_account (a)
   let mut advertiser = a.client().await;
   advertiser.make_client_wallet().await;
   let mut alice = a.client().await;

@@ -76,14 +76,10 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     IERC20 internal doc;
     uint256 public assignedAsamiTokens;
 
-    event AccountUpdated(address account);
     event CampaignCreated(address account, uint256 campaignId);
-    event CampaignSaved(address account, uint256 campaignId);
     event CampaignExtended(address account, uint256 campaignId);
     event CampaignToppedUp(address account, uint256 campaignId);
     event CampaignReimbursed(address account, uint256 campaignId);
-    event ReportSubmitted(address account, uint256 campaignId);
-    event CollabSaved(address advertiser, uint256 briefingHash, address account, uint256 gross, uint256 fee);
 
     constructor(
         address _dollarOnChainAddress
@@ -355,7 +351,6 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
             require(campaign.validUntil < block.timestamp, "sr3");
             require(campaign.reportHash == 0, "sr4");
             campaign.reportHash = input.reportHash;
-            emit ReportSubmitted(input.account, input.briefingHash);
         }
     }
 

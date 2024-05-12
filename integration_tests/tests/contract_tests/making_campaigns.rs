@@ -1,7 +1,10 @@
-use ::api::{models::{U256, AsamiFunctionCall}, on_chain::*};
-use crate::support::{TestApp, ApiClient};
+use crate::support::{ApiClient, TestApp};
+use ::api::{
+    models::{AsamiFunctionCall, U256},
+    on_chain::*,
+};
 
-app_test!{ full_campaign_workflow_until_reimbursed (a) 
+app_test! { full_campaign_workflow_until_reimbursed (a)
   let mut advertiser = a.client().await;
   let campaign = u("deadbeef");
   advertiser.setup_as_advertiser_with_amount("global advertiser for test", u("10000")).await;
@@ -16,7 +19,7 @@ app_test!{ full_campaign_workflow_until_reimbursed (a)
   assert_eq!(attrs.budget, u("0"));
   assert_eq!(attrs.report_hash, u("0"));
 
-  a.send_tx("campaign is topped up", "78582", make_top_up_campaign_call(&advertiser, account, campaign, u("100"))).await;
+  a.send_tx("campaign is topped up", "78582", advertiser.top_up_campaign_contract_call(account, campaign, u("100"))).await;
 
   assert_eq!(a.get_campaign(account, campaign).await.budget, u("100"));
 
@@ -26,8 +29,8 @@ app_test!{ full_campaign_workflow_until_reimbursed (a)
 
   a.evm_forward_to_next_cycle().await;
 
-  a.send_tx("Campaign is reimbursed", "50923", 
-    make_reimburse_campaign_call(&advertiser, account, campaign)
+  a.send_tx("Campaign is reimbursed", "50923",
+    advertiser.reimburse_campaign_contract_call(account, campaign)
   ).await;
 
   let attrs = a.get_campaign(account, campaign).await;
@@ -46,22 +49,22 @@ app_test!{ full_campaign_workflow_until_reimbursed (a)
     }
   ])).await;
 
-  a.send_tx("campaign is extended", "36314", make_extend_campaign_call(&advertiser, campaign, 20)).await;
+  a.send_tx("campaign is extended", "36314", advertiser.extend_campaign_contract_call(campaign, 20)).await;
 
-  a.send_tx("campaign is topped up again", "78582", 
-    make_top_up_campaign_call(&advertiser, account, campaign, u("100"))
+  a.send_tx("campaign is topped up again", "78582",
+    advertiser.top_up_campaign_contract_call(account, campaign, u("100"))
   ).await;
 
   a.send_make_collab_tx("a new smaller collab", "132000", &advertiser, campaign, &alice, u("20")).await;
 
   a.evm_forward_to_next_cycle().await;
-  a.send_tx("Campaign is reimbursed again", "43326", make_reimburse_campaign_call(&advertiser, account, campaign)).await;
+  a.send_tx("Campaign is reimbursed again", "43326", advertiser.reimburse_campaign_contract_call(account, campaign)).await;
 
   let attrs = a.get_campaign(account, campaign).await;
   assert_eq!(attrs.budget, u("0"));
 }
 
-app_test!{ campaign_creation_validations (a) 
+app_test! { campaign_creation_validations (a)
   let campaign = u("deadbeef");
 
   let mut advertiser = a.client().await;
@@ -88,8 +91,7 @@ app_test!{ campaign_creation_validations (a)
   a.send_tx("finally it's ok", "117846", valid_pay_campaign_call.clone()).await;
 }
 
-
-app_test!{ campaign_extension_validations (a)
+app_test! { campaign_extension_validations (a)
   let mut advertiser = a.client().await;
   let campaign = u("deadbeef");
   advertiser.setup_as_advertiser_with_amount("global advertiser for test", u("10000")).await;
@@ -102,28 +104,28 @@ app_test!{ campaign_extension_validations (a)
   stranger.make_client_wallet().await;
 
   a.send_revert_tx("can't extend unknown campaign", "ec1",
-    make_extend_campaign_call(&advertiser, u("333"), 20)
+    advertiser.extend_campaign_contract_call(u("333"), 20)
   ).await;
 
   a.send_revert_tx("only owner can extend", "ec1",
-    make_extend_campaign_call(&other, campaign, 20)
+    other.extend_campaign_contract_call(campaign, 20)
   ).await;
 
   a.send_revert_tx("can't propose 0 expiration", "ec2",
-    make_extend_campaign_call(&advertiser, campaign, 0)
+    advertiser.extend_campaign_contract_call(campaign, 0)
   ).await;
 
   a.send_revert_tx("can't make campaign end sooner", "ec2",
-    make_extend_campaign_call(&advertiser, campaign, 1)
+    advertiser.extend_campaign_contract_call(campaign, 1)
   ).await;
 
-  a.send_tx("can extend before due date", "38314", 
-    make_extend_campaign_call(&advertiser, campaign, 20)
+  a.send_tx("can extend before due date", "38314",
+    advertiser.extend_campaign_contract_call(campaign, 20)
   ).await;
   assert!(a.get_campaign(advertiser.address(), campaign).await.valid_until > a.future_date(19));
 }
 
-app_test!{ campaign_top_up_tests (a)
+app_test! { campaign_top_up_tests (a)
   let mut advertiser = a.client().await;
   let campaign = u("deadbeef");
   advertiser.setup_as_advertiser_with_amount("global advertiser for test", u("10000")).await;
@@ -137,28 +139,28 @@ app_test!{ campaign_top_up_tests (a)
   stranger.make_client_wallet().await;
 
   a.send_revert_tx("can't top-up a non existing campaign", "tc2",
-    make_top_up_campaign_call(&advertiser, account, u("111"), u("10"))
+    advertiser.top_up_campaign_contract_call(account, u("111"), u("10"))
   ).await;
 
   a.send_revert_tx("can't top-up with cero", "tc0",
-    make_top_up_campaign_call(&advertiser, account, campaign, u("0"))
+    advertiser.top_up_campaign_contract_call(account, campaign, u("0"))
   ).await;
 
   a.send_tx("can top-up someone else's campaign", "61500",
-    make_top_up_campaign_call(&other, account, campaign, u("10"))
+    other.top_up_campaign_contract_call(account, campaign, u("10"))
   ).await;
   assert_eq!(a.get_campaign(account, campaign).await.budget, u("2010"));
 
   a.evm_forward_to_next_cycle().await;
 
   a.send_revert_tx("can top-up after done", "tc2",
-    make_top_up_campaign_call(&other, account, campaign, u("10"))
+    other.top_up_campaign_contract_call(account, campaign, u("10"))
   ).await;
 
   assert_eq!(a.get_campaign(account, campaign).await.budget, u("2010"));
 }
 
-app_test!{ campaign_submit_report_tests (a)
+app_test! { campaign_submit_report_tests (a)
   let mut advertiser = a.client().await;
   let campaign = u("deadbeef");
   advertiser.setup_as_advertiser_with_amount("global advertiser for test", u("10000")).await;
@@ -205,7 +207,7 @@ app_test!{ campaign_submit_report_tests (a)
   assert_eq!(a.get_campaign(account, campaign).await.report_hash, u("1000"));
 }
 
-app_test!{ campaign_reimbursement_tests (a)
+app_test! { campaign_reimbursement_tests (a)
   let mut advertiser = a.client().await;
   let campaign = u("deadbeef");
   advertiser.setup_as_advertiser_with_amount("global advertiser for test", u("10000")).await;
@@ -219,53 +221,47 @@ app_test!{ campaign_reimbursement_tests (a)
   stranger.make_client_wallet().await;
 
   a.send_revert_tx("cannot reimburse before campaign finishes", "rc1",
-    make_reimburse_campaign_call(&stranger, account, campaign)
+    stranger.reimburse_campaign_contract_call(account, campaign)
   ).await;
 
   a.evm_forward_to_next_cycle().await;
 
   a.send_revert_tx("cannot reimburse for unknown account", "rc0",
-    make_reimburse_campaign_call(&stranger, other.address(), campaign)
+    stranger.reimburse_campaign_contract_call(other.address(), campaign)
   ).await;
   assert_eq!(a.get_campaign(account, campaign).await.budget, u("2000"));
 
   a.send_tx("anyone can reimburse", "43326",
-    make_reimburse_campaign_call(&stranger, account, campaign)
+    stranger.reimburse_campaign_contract_call(account, campaign)
   ).await;
   assert_eq!(a.get_campaign(account, campaign).await.budget, u("0"));
 
   a.send_revert_tx("cannot reimburse again", "rc0",
-    make_reimburse_campaign_call(&stranger, account, campaign)
+    stranger.reimburse_campaign_contract_call(account, campaign)
   ).await;
   assert_eq!(a.get_campaign(account, campaign).await.budget, u("0"));
 }
 
 fn make_extend_campaign_call(a: &ApiClient, campaign: U256, valid_until: i64) -> AsamiFunctionCall {
-  a.asami_contract().extend_campaigns(vec![
-    ExtendCampaignsParam{
-      briefing_hash: campaign,
-      valid_until: a.test_app.future_date(valid_until),
-    },
-  ])
-}
-
-fn make_top_up_campaign_call(a: &ApiClient, account: Address, campaign: U256, budget: U256) -> AsamiFunctionCall {
-  a.asami_contract().top_up_campaigns(vec![
-    TopUpCampaignsParam{ account, briefing_hash: campaign, budget, },
-  ])
+    a.asami_contract().extend_campaigns(vec![ExtendCampaignsParam {
+        briefing_hash: campaign,
+        valid_until: a.test_app.future_date(valid_until),
+    }])
 }
 
 fn make_submit_report_call(a: &TestApp, account: Address, campaign: U256, report_hash: U256) -> AsamiFunctionCall {
-  a.asami_contract().submit_reports( vec![ SubmitReportsParam{ account, briefing_hash: campaign, report_hash} ])
+    a.asami_contract().submit_reports(vec![SubmitReportsParam {
+        account,
+        briefing_hash: campaign,
+        report_hash,
+    }])
 }
 
 fn make_reimburse_campaign_call(a: &ApiClient, addr: Address, briefing_hash: U256) -> AsamiFunctionCall {
-  a.asami_contract().reimburse_campaigns( vec![ ReimburseCampaignsParam{ addr, briefing_hash} ])
+    a.asami_contract().reimburse_campaigns(vec![ReimburseCampaignsParam { addr, briefing_hash }])
 }
 
-// Only trusted admin can make collabs 
+// Only trusted admin can make collabs
 // Only trusted admin can make subaccount collabs.
 // mc0 error now is campaigns are too high.
 //   a.send_revert_tx("advertiser has not claimed their account yet", "mc0", valid_pay_campaign_call.clone()).await;
-
-

@@ -6,7 +6,7 @@
 /// hitting the contract with invalid data.
 use ::api::on_chain::*;
 
-app_test!{ distributes_fees_to_holders (a) 
+app_test! { distributes_fees_to_holders (a)
   a.send_revert_tx(
     "no tokens, so nothing to share",
     "cfp0",
@@ -16,7 +16,7 @@ app_test!{ distributes_fees_to_holders (a)
   //Cycle 1:
   //Issues tokens to admin only. Pending tokens do not get paid.
   //Only admin gets paid as nobody else claimed their account.
-  
+
   assert_eq!(a.contract_doc_balance().await,   wei("0"));
   assert_eq!(a.admin_doc_balance().await,      u("420000000"));
 
@@ -34,7 +34,7 @@ app_test!{ distributes_fees_to_holders (a)
   a.send_make_sub_account_collab_tx("Bob collabs and gets tokens", "229400", &advertiser, u("1"), &bob, u("100")).await;
 
   a.send_tx(
-    "Admin claims their ASAMI tokens too issuing all tokens", 
+    "Admin claims their ASAMI tokens too issuing all tokens",
     "151402",
     a.asami_contract().claim_balances()
   ).await;
@@ -53,7 +53,7 @@ app_test!{ distributes_fees_to_holders (a)
   assert_eq!(a.contract_doc_balance().await,                       u("1000"));
   assert_eq!(a.admin_doc_balance().await,                     u("419900000"));
   assert_eq!(a.admin_treasury_doc_balance().await,          u("99160000000"));
-  assert_eq!(a.asami_contract().fee_pool().call().await?,                u("10")); 
+  assert_eq!(a.asami_contract().fee_pool().call().await?,                u("10"));
 
   // Cycle 2:
   //  - Campaign leftover funds get reimbursed to admin.
@@ -69,7 +69,7 @@ app_test!{ distributes_fees_to_holders (a)
   ).await;
   assert_eq!(a.admin_doc_balance().await,                     u("419900010"));
   assert_eq!(a.admin_treasury_doc_balance().await,          u("99160000000"));
-  assert_eq!(a.asami_contract().fee_pool().call().await?,                 u("0")); 
+  assert_eq!(a.asami_contract().fee_pool().call().await?,                 u("0"));
 
   advertiser.pay_campaign("second campaign", u("1000"), u("2"), 15 + 2).await;
   assert_eq!(a.contract_doc_balance().await,                       u("1990"));
@@ -97,7 +97,7 @@ app_test!{ distributes_fees_to_holders (a)
     "Balance claims for all accounts result in token issuances",
     "318768",
     a.asami_contract().admin_claim_balances_free( vec![alice.address(), bob.address(), advertiser.address()]),
-  ).await; 
+  ).await;
   a.send_tx("Admin claims a second time", "151402", a.asami_contract().claim_balances()).await;
 
   // Contract paid 180 to alice for this collab. 90 to bob for the previous one when he claimed his account.
@@ -106,7 +106,7 @@ app_test!{ distributes_fees_to_holders (a)
   assert_eq!(bob.doc_balance().await,          u(       "90"));
   assert_eq!(alice.doc_balance().await,        u(      "180"));
   assert_eq!(advertiser.doc_balance().await,   u(    "98000"));
-  assert_eq!(a.asami_contract().fee_pool().call().await?,       u("20")); 
+  assert_eq!(a.asami_contract().fee_pool().call().await?,       u("20"));
 
   // Asami tokens are now distributed as such:
   assert_eq!(a.asami_contract().assigned_asami_tokens().call().await?,  u("240000"));
@@ -122,23 +122,23 @@ app_test!{ distributes_fees_to_holders (a)
     a.asami_contract().claim_fee_pool_share(vec![alice.address(), bob.address() ])
   ).await;
 
-  // Cycle 3: 
+  // Cycle 3:
   // Everyone gets paid from collabs on the previous period.
   // The admin sends tokens to other addresses to hold.
   // The previous campaign should have been reimbursed.
-  
+
   a.evm_forward_to_next_cycle().await;
 
-  assert_eq!(a.asami_contract().fee_pool().call().await?,        u("20")); 
+  assert_eq!(a.asami_contract().fee_pool().call().await?,        u("20"));
 
   a.send_tx(
     "Claiming pool fees for everyone else",
     "213300",
     a.asami_contract().claim_fee_pool_share(vec![a.client_admin_address(), alice.address(), advertiser.address(),  bob.address() ])
   ).await;
-  assert_eq!(a.asami_contract().fee_pool().call().await?,       u("0")); 
+  assert_eq!(a.asami_contract().fee_pool().call().await?,       u("0"));
 
-  assert_eq!(a.admin_doc_balance().await,      wei("419900018000000000000000000")); 
+  assert_eq!(a.admin_doc_balance().await,      wei("419900018000000000000000000"));
   assert_eq!(a.contract_doc_balance().await,   wei(     "1700000000000000000000"));
   assert_eq!(bob.doc_balance().await,          wei(       "91000000000000000000"));
   assert_eq!(alice.doc_balance().await,        wei(      "185000000000000000000"));
@@ -170,9 +170,9 @@ app_test!{ distributes_fees_to_holders (a)
   }
 
   // Cycle 4:
-  // New participants join and collaborate. 
+  // New participants join and collaborate.
   // No fee pool is shared, as there were no collabs on previous period.
-  
+
   a.evm_forward_to_next_cycle().await;
 
   advertiser.pay_campaign("third campaign", u("1000"), u("3"), 45 + 2).await;
@@ -193,15 +193,15 @@ app_test!{ distributes_fees_to_holders (a)
     "Also claim susan's and advertiser balance",
     "179982",
     a.asami_contract().admin_claim_balances_free( vec![advertiser.address(), susan.address()])
-  ).await; 
+  ).await;
 
   a.send_tx(
-    "Admin claims their ASAMI tokens too issuing all tokens", 
+    "Admin claims their ASAMI tokens too issuing all tokens",
     "151402",
     a.asami_contract().claim_balances()
   ).await;
 
-  assert_eq!(a.asami_contract().fee_pool().call().await?,        u("30")); 
+  assert_eq!(a.asami_contract().fee_pool().call().await?,        u("30"));
   assert_eq!(a.asami_contract().get_fee_pool_before_recent_changes().call().await?, u("0"));
 
   let mut holders = unknown_holders.clone();
@@ -215,7 +215,7 @@ app_test!{ distributes_fees_to_holders (a)
 
   // Cycle 5:
   // All hodlers got paid from the previous cycle collab.
-  
+
   a.evm_forward_to_next_cycle().await;
   a.send_tx("everyone gets paid the 30 doc from last period", "6039459", a.asami_contract().claim_fee_pool_share(holders.clone())).await;
 
@@ -226,17 +226,17 @@ app_test!{ distributes_fees_to_holders (a)
   assert_eq!(alice.asami_balance().await,                               u( "60000"));
   assert_eq!(susan.asami_balance().await,                               u(  "9000"));
   assert_eq!(advertiser.asami_balance().await,                          u( "81000"));
-  
+
   for h in &unknown_holders { //                                                                     17.0000000000008~%
     assert_eq!(a.asami_balance_of(h).await, wei( "100000000000005227"));
     assert_eq!(a.doc_balance_of(h).await,   wei(     "11111111111111"));
   }
 
   // Fee pool should have been 30 DOC now distributed here.
-  assert_eq!(a.admin_doc_balance().await,                wei("419900029998866666666666607")); 
+  assert_eq!(a.admin_doc_balance().await,                wei("419900029998866666666666607"));
   assert_eq!(bob.doc_balance().await,                    wei(       "92333333333333333333"));
   assert_eq!(alice.doc_balance().await,                  wei(      "191666666666666666666"));
-  assert_eq!(advertiser.doc_balance().await,             wei(    "97015000000000000000000")); 
+  assert_eq!(advertiser.doc_balance().await,             wei(    "97015000000000000000000"));
   assert_eq!(susan.doc_balance().await,                  wei(      "271000000000000000000"));
   assert_eq!(a.contract_doc_balance().await,             wei(     "2400000000000000000072"));
   assert_eq!(a.asami_contract().fee_pool().call().await?,    wei(                     "72"));

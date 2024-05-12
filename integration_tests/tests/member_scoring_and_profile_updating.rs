@@ -1,9 +1,9 @@
 #[macro_use]
 pub mod support;
-use support::TestApp;
 use api::models::*;
+use support::TestApp;
 
-app_test!{ handles_can_be_updated_once_per_cycle (a) 
+app_test! { handles_can_be_updated_once_per_cycle (a)
   for i in &["sports", "crypto", "beauty"] {
     a.app.topic_request().create(i).await?;
     a.run_idempotent_background_tasks_a_few_times().await;
@@ -92,7 +92,7 @@ app_test!{ handles_can_be_updated_once_per_cycle (a)
   assert_handle(&a, 0, bob.id(), u("6"), wei("6000"), &[&crypto, &sports], false, "bob updated his price").await;
 }
 
-app_test!{ does_not_allow_more_than_one_claim_account_request (a)
+app_test! { does_not_allow_more_than_one_claim_account_request (a)
   let mut alice = a.client().await;
   alice.submit_claim_account_request().await;
   assert_eq!(
@@ -101,7 +101,7 @@ app_test!{ does_not_allow_more_than_one_claim_account_request (a)
   );
 }
 
-app_test!{ can_have_a_zero_score_handle (a) 
+app_test! { can_have_a_zero_score_handle (a)
   let advertiser = a.client().await;
   let campaign = advertiser.create_x_campaign(u("10"), u("5")).await;
 
@@ -118,38 +118,44 @@ app_test!{ can_have_a_zero_score_handle (a)
 }
 
 async fn assert_non_updateable(a: &TestApp, msg: &str) {
-  assert!(a.app.on_chain_tx().apply_handle_updates().await.expect(msg).is_none(), "{msg} on_chain_tx");
-  assert!(matches!(
-    a.contract().apply_handle_updates(vec![wei("0"), wei("1")]).send().await.unwrap_err(),
-    ethers::contract::ContractError::Revert(_)
-  ), "{msg} on contract");
+    assert!(
+        a.app.on_chain_tx().apply_handle_updates().await.expect(msg).is_none(),
+        "{msg} on_chain_tx"
+    );
+    assert!(
+        matches!(
+            a.contract().apply_handle_updates(vec![wei("0"), wei("1")]).send().await.unwrap_err(),
+            ethers::contract::ContractError::Revert(_)
+        ),
+        "{msg} on contract"
+    );
 }
 
 async fn assert_handle(
-  a: &TestApp,
-  pos: usize,
-  id: &str,
-  price: U256,
-  score: U256,
-  topics: &[&Topic],
-  needs_update: bool,
-  msg: &str
+    a: &TestApp,
+    pos: usize,
+    id: &str,
+    price: U256,
+    score: U256,
+    topics: &[&Topic],
+    needs_update: bool,
+    msg: &str,
 ) {
-  let topic_ids: Vec<U256> = topics.iter().map(|t| u256(t.id()) ).collect();
+    let topic_ids: Vec<U256> = topics.iter().map(|t| u256(t.id())).collect();
 
-  let values = a.contract().get_handles().call().await.expect(msg).remove(pos);
-  assert_eq!(values.id, u256(id), "{msg} id");
-  assert_eq!(values.price, price, "{} price", msg);
-  assert_eq!(values.score, score, "{} score", msg);
-  assert_eq!(values.topics, topic_ids, "{} topics", msg);
-  assert_eq!(values.needs_update, needs_update, "{} needs_update", msg);
+    let values = a.contract().get_handles().call().await.expect(msg).remove(pos);
+    assert_eq!(values.id, u256(id), "{msg} id");
+    assert_eq!(values.price, price, "{} price", msg);
+    assert_eq!(values.score, score, "{} score", msg);
+    assert_eq!(values.topics, topic_ids, "{} topics", msg);
+    assert_eq!(values.needs_update, needs_update, "{} needs_update", msg);
 
-  let db = a.app.handle().find(&id.to_string()).await.expect(msg);
-  assert_eq!(u256(db.price()), price, "{} db price", msg);
-  assert_eq!(u256(db.score()), score, "{} db score", msg);
-  assert_eq!(
-    db.handle_topic_vec().await.unwrap().iter().map(|t| u256(t.topic_id())).collect::<Vec<U256>>(),
-    topic_ids,
-    "{msg} db topics"
-  );
+    let db = a.app.handle().find(&id.to_string()).await.expect(msg);
+    assert_eq!(u256(db.price()), price, "{} db price", msg);
+    assert_eq!(u256(db.score()), score, "{} db score", msg);
+    assert_eq!(
+        db.handle_topic_vec().await.unwrap().iter().map(|t| u256(t.topic_id())).collect::<Vec<U256>>(),
+        topic_ids,
+        "{msg} db topics"
+    );
 }

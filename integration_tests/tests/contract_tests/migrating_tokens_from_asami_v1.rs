@@ -1,7 +1,10 @@
-use ::api::{ models::U256, on_chain::{ self, *}};
 use crate::support::TestApp;
+use ::api::{
+    models::U256,
+    on_chain::{self, *},
+};
 
-app_test!{ recreates_old_contract_and_performs_migration (a)
+app_test! { recreates_old_contract_and_performs_migration (a)
   let mut advertiser = a.client().await;
   advertiser.make_client_wallet().await;
   let mut alice = a.client().await;
@@ -132,7 +135,7 @@ app_test!{ recreates_old_contract_and_performs_migration (a)
   let advertiser_account = a.asami_contract().accounts(advertiser.address()).call().await
     .expect(&format!("could not fetch advertiser's account"));
   assert_eq!( advertiser_account, (
-      a.client_admin_address(), 
+      a.client_admin_address(),
       u("1"),
       wei("6000000000000"),
       u("0"),
@@ -145,7 +148,7 @@ app_test!{ recreates_old_contract_and_performs_migration (a)
     .expect(&format!("could not fetch alice's account"));
 
   assert_eq!( alice_account, (
-      a.client_admin_address(), 
+      a.client_admin_address(),
       u("1"),
       wei("6000000000000"),
       u("0"),
@@ -160,7 +163,7 @@ app_test!{ recreates_old_contract_and_performs_migration (a)
     .call().await
     .expect(&format!("could not fetch alice's account"));
 
-  assert_eq!( bob_sub_account, SubAccount{ 
+  assert_eq!( bob_sub_account, SubAccount{
       unclaimed_asami_balance: u("1200"), // The equivalent of those 300 tokens in new tokens.
       unclaimed_doc_balance: u("0"),  // No tokens get migrated.
   });
@@ -174,12 +177,26 @@ app_test!{ recreates_old_contract_and_performs_migration (a)
   assert_eq!(a.asami_contract().total_supply().call().await.unwrap(), u("10800"));
 }
 
-async fn assert_legacy_account(a: &TestApp, account_id: U256, addr: Address, unclaimed_asami: U256, unclaimed_doc: U256) {
-  let account = a.legacy_contract().accounts(account_id).call().await
-    .expect(&format!("could not fetch account {account_id}"));
-  assert_eq!( account, (account_id, addr, unclaimed_asami, unclaimed_doc) );
+async fn assert_legacy_account(
+    a: &TestApp,
+    account_id: U256,
+    addr: Address,
+    unclaimed_asami: U256,
+    unclaimed_doc: U256,
+) {
+    let account = a
+        .legacy_contract()
+        .accounts(account_id)
+        .call()
+        .await
+        .expect(&format!("could not fetch account {account_id}"));
+    assert_eq!(account, (account_id, addr, unclaimed_asami, unclaimed_doc));
 }
 
 async fn assert_legacy_balance(a: &TestApp, msg: &str, addr: Address, expected: U256) {
-  assert_eq!( a.legacy_contract().balance_of(addr).call().await.unwrap(), expected, "on {msg}");
+    assert_eq!(
+        a.legacy_contract().balance_of(addr).call().await.unwrap(),
+        expected,
+        "on {msg}"
+    );
 }

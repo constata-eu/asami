@@ -1,7 +1,7 @@
 use crate::support;
 use ::api::models::*;
 
-app_test!{ makes_collab_consumes_remaining (a)
+app_test! { makes_collab_consumes_remaining (a)
   let advertiser = a.client().await;
   let campaign = advertiser.create_x_campaign(u("10"), u("1")).await;
 
@@ -15,7 +15,7 @@ app_test!{ makes_collab_consumes_remaining (a)
   }]);
 }
 
-app_test!{ fails_when_collab_would_be_over_budget (a)
+app_test! { fails_when_collab_would_be_over_budget (a)
   let advertiser = a.client().await;
   let campaign = advertiser.create_x_campaign(u("10"), u("5")).await;
 
@@ -27,18 +27,18 @@ app_test!{ fails_when_collab_would_be_over_budget (a)
   assert_that!(&campaign.make_collab(&handle).await.unwrap_err(),
     structure!{api::Error::Validation[eq("price".to_string()), eq("campaign_funds_too_low".to_string())]}
   );
-  
+
   let err = a.app.on_chain.contract
     .admin_make_collabs(vec![on_chain::AdminMakeCollabsInput{
       campaign_id: u256(&campaign.attrs.id),
       handle_id: u256(&handle.attrs.id),
     }])
     .send().await.unwrap_err();
-  
+
   assert_eq!(err.decode_revert::<String>().unwrap(), "amc5");
 }
 
-app_test!{ fails_when_campaign_sparkle_price_is_too_low (a)
+app_test! { fails_when_campaign_sparkle_price_is_too_low (a)
   let advertiser = a.client().await;
   let campaign = advertiser.create_x_campaign(u("20"), u("1")).await;
 
@@ -50,18 +50,18 @@ app_test!{ fails_when_campaign_sparkle_price_is_too_low (a)
   assert_that!(&campaign.make_collab(&handle).await.unwrap_err(),
     structure!{api::Error::Validation[eq("price_score_ratio".to_string()), eq("campaign_pays_too_little".to_string())]}
   );
-  
+
   let err = a.app.on_chain.contract
     .admin_make_collabs(vec![on_chain::AdminMakeCollabsInput{
       campaign_id: u256(&campaign.attrs.id),
       handle_id: u256(&handle.attrs.id),
     }])
     .send().await.unwrap_err();
-  
+
   assert_eq!(err.decode_revert::<String>().unwrap(), "amc7");
 }
 
-app_test!{ fails_when_handle_is_missing_topics (a)
+app_test! { fails_when_handle_is_missing_topics (a)
   for i in &["sports", "crypto", "beauty"] {
     a.app.topic_request().create(i).await?;
   }
@@ -91,20 +91,20 @@ app_test!{ fails_when_handle_is_missing_topics (a)
   assert_that!(&unmet_topics.make_collab(&handle).await.unwrap_err(),
     structure!{api::Error::Validation[eq("topics".to_string()), eq("handle_is_missing_topics".to_string())]}
   );
-  
+
   let err = a.app.on_chain.contract
     .admin_make_collabs(vec![on_chain::AdminMakeCollabsInput{
       campaign_id: u256(&unmet_topics.attrs.id),
       handle_id: u256(&handle.attrs.id),
     }])
     .send().await.unwrap_err();
-  
+
   assert_eq!(err.decode_revert::<String>().unwrap(), "amc4");
 
   assert!(a.app.collab_request().select().count().await? == 2);
 }
 
-app_test!{ registers_collab_for_last_accepted_handle(a) 
+app_test! { registers_collab_for_last_accepted_handle(a)
   // If someone loses their account, they can create a new one and re-bind their handles.
   // So collabs should always register to the most recently linked handle.
   let advertiser = a.client().await;
@@ -126,9 +126,16 @@ app_test!{ registers_collab_for_last_accepted_handle(a)
   assert_eq!(old_bob.x_handle().await.collab_vec().await?.len(), 1);
 }
 
-app_test!{ test(a)
+app_test! { test(a)
   todo!("Make collaborations track the handle used, not only the account. Do not allow handle re-claims participating in campaigns again.");
   // A user can collab, get paid, register a new account, re-link the handle, and have a new collaboration paid to them.
 }
 
+app_test! { test_b(a)
+    todo!("When registering collabs, store more information about the process.");
 
+}
+
+app_test! { test_c(a)
+    todo!("Prevent collabs from being registered twice?");
+}

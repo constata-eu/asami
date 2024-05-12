@@ -1,74 +1,69 @@
 pub mod selenium;
 pub mod test_api_server;
-pub mod vite_preview;
 pub mod test_app;
 pub mod truffle;
+pub mod vite_preview;
 
 pub use selenium::Selenium;
+pub use test_api_server::*;
 pub use test_app::*;
 pub use truffle::*;
-pub use test_api_server::*;
 pub use vite_preview::*;
 
 pub mod test_api_client;
 pub use test_api_client::*;
 
-pub use thirtyfour::{
-  error::WebDriverResult,
-  WebDriver,
-  WebElement,
-  prelude::*
-};
 #[allow(unused_imports)]
 pub use galvanic_assert::{
-  self,
-  matchers::{collection::*, variant::*, *},
-  *,
+    self,
+    matchers::{collection::*, variant::*, *},
+    *,
 };
+pub use thirtyfour::{error::WebDriverResult, prelude::*, WebDriver, WebElement};
 
 #[allow(dead_code)]
 pub fn wait_here() {
-  use std::{thread, time};
-  println!("Waiting here as instructed. ctrl+c to quit.");
-  let ten_millis = time::Duration::from_millis(10);
-  loop {
-    thread::sleep(ten_millis);
-  }
+    use std::{thread, time};
+    println!("Waiting here as instructed. ctrl+c to quit.");
+    let ten_millis = time::Duration::from_millis(10);
+    loop {
+        thread::sleep(ten_millis);
+    }
 }
 
-pub async fn try_until<T: std::future::Future<Output = bool>>(times: i32, sleep: u64, err: &str,  call: impl Fn() -> T) {
-  assert!(wait_for(times, sleep, call).await, "{err}");
+pub async fn try_until<T: std::future::Future<Output = bool>>(times: i32, sleep: u64, err: &str, call: impl Fn() -> T) {
+    assert!(wait_for(times, sleep, call).await, "{err}");
 }
 
 pub async fn wait_for<T: std::future::Future<Output = bool>>(times: i32, sleep: u64, call: impl Fn() -> T) -> bool {
-  use std::{thread, time};
-  let millis = time::Duration::from_millis(sleep);
-  for _i in 0..times {
-    if call().await {
-      return true;
+    use std::{thread, time};
+    let millis = time::Duration::from_millis(sleep);
+    for _i in 0..times {
+        if call().await {
+            return true;
+        }
+        thread::sleep(millis);
     }
-    thread::sleep(millis);
-  }
-  return false;
+    return false;
 }
 
 #[allow(dead_code)]
 pub fn pause_a_bit() {
-  use std::{thread, time};
-  thread::sleep(time::Duration::from_millis(2000));
+    use std::{thread, time};
+    thread::sleep(time::Duration::from_millis(2000));
 }
 
 #[allow(dead_code)]
 pub fn rematch<'a>(expr: &'a str) -> Box<dyn Matcher<'a, String> + 'a> {
-  Box::new(move |actual: &String| {
-    let re = regex::Regex::new(expr).unwrap();
-    let builder = MatchResultBuilder::for_("rematch");
-    if re.is_match(actual) {
-      builder.matched()
-    } else {
-      builder.failed_because(&format!("{:?} does not match {:?}", expr, actual))
-    }
-  })
+    Box::new(move |actual: &String| {
+        let re = regex::Regex::new(expr).unwrap();
+        let builder = MatchResultBuilder::for_("rematch");
+        if re.is_match(actual) {
+            builder.matched()
+        } else {
+            builder.failed_because(&format!("{:?} does not match {:?}", expr, actual))
+        }
+    })
 }
 
 #[macro_export]

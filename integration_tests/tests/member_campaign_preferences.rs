@@ -1,9 +1,12 @@
 #[macro_use]
 pub mod support;
 use graphql_client::GraphQLQuery;
-use support::{*, gql::{*, create_campaign_preference::*}};
+use support::{
+    gql::{create_campaign_preference::*, *},
+    *,
+};
 
-browser_test!{ hides_ignored_and_shows_attempted_repost (mut d)
+browser_test! { hides_ignored_and_shows_attempted_repost (mut d)
   let scenario = d.api.build_baseline_scenario().await;
   d.api.create_x_handle("nubis_bruno", wei("10000000000000000")).await;
   d.goto_member_dashboard().await;
@@ -17,8 +20,7 @@ browser_test!{ hides_ignored_and_shows_attempted_repost (mut d)
   d.wait_for(&format!("#alert-repost-attempted-{}", &scenario.high_rate_campaign.attrs.id)).await;
 }
 
-
-api_test!{ filters_campaigns_for_account (mut c)
+api_test! { filters_campaigns_for_account (mut c)
   let scenario = c.build_baseline_scenario().await;
   c.create_x_handle("nubis_bruno", wei("10000000000000000")).await;
 
@@ -57,4 +59,3 @@ api_test!{ filters_campaigns_for_account (mut c)
 
   assert_eq!(c.get_campaign_offers().await.all_campaigns.len(), 1);
 }
-

@@ -88,6 +88,7 @@ CREATE TYPE campaign_kind AS ENUM (
 CREATE TABLE campaigns (
   id SERIAL PRIMARY KEY NOT NULL,
   account_id VARCHAR REFERENCES accounts(id) NOT NULL,
+  advertiser_addr VARCHAR NOT NULL,
   campaign_kind campaign_kind NOT NULL,
   briefing_json TEXT NOT NULL,
   briefing_hash VARCHAR NOT NULL,
@@ -123,11 +124,11 @@ CREATE TABLE collabs (
   campaign_id INTEGER REFERENCES campaigns(id) NOT NULL,
   collab_trigger_unique_id VARCHAR NOT NULL,
   handle_id INTEGER REFERENCES handles(id) NOT NULL,
-  status collab_status NOT NULL,
-  dispute_reason VARCHAR NOT NULL,
+  status collab_status NOT NULL DEFAULT 'registered',
+  dispute_reason VARCHAR,
   reward VARCHAR NOT NULL,
   fee VARCHAR,
-  created_at TIMESTAMPTZ NOT NULL
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_collabs_campaign_id ON collabs(campaign_id);
 CREATE INDEX idx_collabs_handle_id ON collabs(handle_id);
@@ -149,6 +150,7 @@ CREATE TABLE on_chain_jobs (
   tx_hash VARCHAR,
 	gas_used VARCHAR,
 	nonce VARCHAR,
+	block NUMERIC,
 	status_line TEXT,
 	sleep_until TIMESTAMPTZ NOT NULL DEFAULT now(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()

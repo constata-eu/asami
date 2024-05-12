@@ -18,25 +18,25 @@ model! {
 }
 
 make_sql_enum![
-  "auth_method_kind",
-  pub enum AuthMethodKind {
-    X,
-    Facebook,
-    Nostr,
-    Eip712,
-    OneTimeToken,
-  }
+    "auth_method_kind",
+    pub enum AuthMethodKind {
+        X,
+        Facebook,
+        Nostr,
+        Eip712,
+        OneTimeToken,
+    }
 ];
 
 impl AuthMethodKind {
-  pub fn from_text(s: &str) -> Option<AuthMethodKind> {
-    match s {
-      "X" => Some(AuthMethodKind::X),
-      "Facebook" => Some(AuthMethodKind::Facebook),
-      "Nostr" => Some(AuthMethodKind::Nostr),
-      "Eip712" => Some(AuthMethodKind::Eip712),
-      "OneTimeToken" => Some(AuthMethodKind::OneTimeToken),
-      _ => None,
+    pub fn from_text(s: &str) -> Option<AuthMethodKind> {
+        match s {
+            "X" => Some(AuthMethodKind::X),
+            "Facebook" => Some(AuthMethodKind::Facebook),
+            "Nostr" => Some(AuthMethodKind::Nostr),
+            "Eip712" => Some(AuthMethodKind::Eip712),
+            "OneTimeToken" => Some(AuthMethodKind::OneTimeToken),
+            _ => None,
+        }
     }
-  }
 }

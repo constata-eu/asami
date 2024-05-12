@@ -1,9 +1,9 @@
 /// This module tests the token issuance algorithm and targetting,
 /// and also the way tokens can be used to vote the base fee rate.
 use crate::support::TestApp;
-use ::api::models::{U256, u};
+use ::api::models::{u, U256};
 
-app_test!{ has_an_adaptable_schedule_with_a_target_per_cycle (a) 
+app_test! { has_an_adaptable_schedule_with_a_target_per_cycle (a)
   let budget = u("42000000");
   let campaign = u("deadbeef");
   let mut advertiser = a.client().await;
@@ -51,11 +51,14 @@ app_test!{ has_an_adaptable_schedule_with_a_target_per_cycle (a)
 }
 
 async fn assert_assigned_and_rate(a: &TestApp, assigned: &str, rate: U256) {
-  assert_eq!(a.asami_contract().assigned_asami_tokens().call().await.unwrap(), u(assigned)); 
-  assert_eq!(a.asami_contract().get_issuance_for(u("1")).call().await.unwrap(), rate);
+    assert_eq!(
+        a.asami_contract().assigned_asami_tokens().call().await.unwrap(),
+        u(assigned)
+    );
+    assert_eq!(a.asami_contract().get_issuance_for(u("1")).call().await.unwrap(), rate);
 }
 
-app_test!{ rate_can_be_voted (a) 
+app_test! { rate_can_be_voted (a)
   assert_eq!(fee_rate(&a).await, u("10"));
   a.send_revert_tx("Cannot apply at cycle 0", "afr0", a.asami_contract().apply_voted_fee_rate()).await;
 
@@ -72,7 +75,7 @@ app_test!{ rate_can_be_voted (a)
     "Claiming balances issues tokens",
     "318768",
     a.asami_contract().admin_claim_balances_free( vec![alice.address(), advertiser.address()]),
-  ).await; 
+  ).await;
 
   a.send_revert_tx("re-apply in initial cycle", "afr0", a.asami_contract().apply_voted_fee_rate()).await;
 
@@ -124,11 +127,11 @@ app_test!{ rate_can_be_voted (a)
 }
 
 async fn fee_rate(a: &TestApp) -> U256 {
-  a.asami_contract().fee_rate().call().await.unwrap()
+    a.asami_contract().fee_rate().call().await.unwrap()
 }
 async fn voted_fee_rate(a: &TestApp) -> U256 {
-  a.asami_contract().voted_fee_rate().call().await.unwrap()
+    a.asami_contract().voted_fee_rate().call().await.unwrap()
 }
 async fn voted_fee_rate_vote_count(a: &TestApp) -> U256 {
-  a.asami_contract().voted_fee_rate_vote_count().call().await.unwrap()
+    a.asami_contract().voted_fee_rate_vote_count().call().await.unwrap()
 }

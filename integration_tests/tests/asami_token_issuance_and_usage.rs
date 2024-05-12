@@ -2,7 +2,7 @@
 pub mod support;
 use ethers::signers::Signer;
 
-app_test!{ has_a_cap_on_token_supply (a) 
+app_test! { has_a_cap_on_token_supply (a)
   /*
    * A single very large campaign and collaboration issues all tokens, and no further tokens are issued
    * Unclaimed tokens are honored by the cap as if they had been issued
@@ -37,7 +37,7 @@ app_test!{ has_a_cap_on_token_supply (a)
   assert_eq!(a.contract().total_supply().call().await?, u("21000000"));
 }
 
-app_test!{ rate_can_be_voted (a) 
+app_test! { rate_can_be_voted (a)
   assert_eq!(a.contract().fee_rate().call().await?, u("10"));
 
   let mut advertiser = a.client().await;
@@ -97,7 +97,7 @@ app_test!{ rate_can_be_voted (a)
   assert_eq!(a.contract().voted_fee_rate().call().await?, u("10"));
 }
 
-app_test!{ admin_can_be_voted_via_vested_votes (a)
+app_test! { admin_can_be_voted_via_vested_votes (a)
   let admin_addr = a.app.on_chain.contract.client().address();
   let admin_treasury = &a.truffle.addresses.deployer;
 
@@ -156,7 +156,7 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
     [advertiser_addr, advertiser_addr, Address::zero()]
   );
 
-  // Starting the next cycle, advertiser cannot claim the win anymore. 
+  // Starting the next cycle, advertiser cannot claim the win anymore.
   a.evm_forward_to_next_cycle().await;
   proclaim_winner(&a).await;
 
@@ -198,7 +198,7 @@ app_test!{ admin_can_be_voted_via_vested_votes (a)
   assert!(a.app.on_chain_tx().proclaim_cycle_admin_winner().await?.is_none());
 }
 
-app_test!{ contract_cannot_set_cycle_winner_with_no_votes (a)
+app_test! { contract_cannot_set_cycle_winner_with_no_votes (a)
   let mut bob = a.client().await;
   bob.create_x_handle("bob_on_x", u("40")).await;
   bob.claim_account().await;
@@ -209,7 +209,7 @@ app_test!{ contract_cannot_set_cycle_winner_with_no_votes (a)
   );
 }
 
-app_test!{ admin_vote_vesting_validations (a)
+app_test! { admin_vote_vesting_validations (a)
   let mut advertiser = a.client().await;
   let budget = u("3000");
   let campaign = advertiser.create_x_campaign(budget, budget).await;
@@ -240,9 +240,16 @@ app_test!{ admin_vote_vesting_validations (a)
 }
 
 async fn proclaim_winner(a: &crate::support::TestApp) {
-  let tx = a.app.on_chain_tx().proclaim_cycle_admin_winner().await.expect("proclaim is ok").expect("on_chain_tx");
-  crate::support::try_until(100, 100, "tx_not_mined", || async {
-    a.app.on_chain_tx().sync_tx_result().await.unwrap();
-    tx.reloaded().await.unwrap().success()
-  }).await;
+    let tx = a
+        .app
+        .on_chain_tx()
+        .proclaim_cycle_admin_winner()
+        .await
+        .expect("proclaim is ok")
+        .expect("on_chain_tx");
+    crate::support::try_until(100, 100, "tx_not_mined", || async {
+        a.app.on_chain_tx().sync_tx_result().await.unwrap();
+        tx.reloaded().await.unwrap().success()
+    })
+    .await;
 }

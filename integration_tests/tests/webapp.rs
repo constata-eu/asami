@@ -2,7 +2,7 @@
 pub mod support;
 use ::api::models::*;
 
-browser_test!{ screenshot_capturer (mut d)
+browser_test! { screenshot_capturer (mut d)
   let a = d.test_app();
   let app = &a.app;
   let advertiser = a.client().await;
@@ -195,7 +195,7 @@ browser_test!{ screenshot_capturer (mut d)
   d.driver.screenshot(std::path::Path::new("dashboard_claimed.png")).await.unwrap();
 }
 
-browser_test!{ shows_campaigns_in_dashboard (mut d)
+browser_test! { shows_campaigns_in_dashboard (mut d)
   let a = d.test_app();
   let advertiser = a.client().await;
   let account = advertiser.account().await;
@@ -246,7 +246,7 @@ browser_test!{ shows_campaigns_in_dashboard (mut d)
   d.wait_for("#button-login-as-member").await;
 }
 
-browser_test!{ full_flow_to_reward_in_browser (mut d)
+browser_test! { full_flow_to_reward_in_browser (mut d)
   d.signup_with_one_time_token().await;
 
   d.click("#open-start-campaign-request-dialog").await;
@@ -281,7 +281,7 @@ browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.wait_for("#campaign-list").await;
   d.click("#button-logout").await;
   d.wait_for("#login-form-and-landing").await;
-  
+
   d.api.test_app.app.one_time_token().insert(InsertOneTimeToken{value: "member-token".to_string() }).save().await?;
   d.goto("http://127.0.0.1:5173/#/one_time_token_login?token=member-token").await;
   d.wait_for("#advertiser-dashboard").await;
@@ -331,7 +331,7 @@ browser_test!{ full_flow_to_reward_in_browser (mut d)
   d.wait_for("#member-dashboard").await;
 }
 
-api_test!{ full_flow_to_reward_from_api (mut c)
+api_test! { full_flow_to_reward_from_api (mut c)
   c.create_x_handle("nubis_bruno", wei("10000000000000000")).await;
   let account = c.account().await;
   let handle = c.x_handle().await;
@@ -379,7 +379,7 @@ api_test!{ full_flow_to_reward_from_api (mut c)
   }]);
 }
 
-browser_test!{ advertiser_claims_account (mut d)
+browser_test! { advertiser_claims_account (mut d)
   d.signup_with_one_time_token().await;
   d.click("#advertiser-claim-account-button").await;
   d.link_wallet_and_sign_login().await?;
@@ -390,7 +390,7 @@ browser_test!{ advertiser_claims_account (mut d)
   d.wait_until_gone("#advertiser-claim-account-pending").await;
 }
 
-browser_test!{ account_is_web3_from_the_start (mut d)
+browser_test! { account_is_web3_from_the_start (mut d)
   d.goto("http://127.0.0.1:5173").await;
   d.click("#button-login-as-member").await;
   d.click("#wallet-login-button").await;
@@ -401,7 +401,7 @@ browser_test!{ account_is_web3_from_the_start (mut d)
 
   d.wait_for("#advertiser-claim-account-pending").await;
   d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
-  
+
   d.goto("http://127.0.0.1:5173/#/?role=member").await;
   d.wait_for("#member-dashboard").await;
   d.goto("http://127.0.0.1:5173/#/?role=advertiser").await;
@@ -443,7 +443,7 @@ browser_test!{ account_is_web3_from_the_start (mut d)
   d.wait_for("#campaign-list").await;
 }
 
-browser_test!{ can_add_tokens_to_wallet (mut d)
+browser_test! { can_add_tokens_to_wallet (mut d)
   d.goto("http://127.0.0.1:5173").await;
   d.click("#button-login-as-member").await;
   d.click("#wallet-login-button").await;
