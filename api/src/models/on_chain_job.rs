@@ -15,6 +15,8 @@ mod promote_sub_accounts;
 mod reimburse_campaigns;
 mod submit_reports;
 mod admin_claim_balances_free;
+mod claim_fee_pool_share;
+mod apply_voted_fee_rate;
 
 pub type AsamiSigner = SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>;
 pub type AsamiFunctionCall = FunctionCall<Arc<AsamiSigner>, AsamiSigner, ()>;
@@ -118,11 +120,8 @@ impl OnChainJob {
             ReimburseCampaigns => self.reimburse_campaigns_make_call().await?,
             GaslessClaimBalances => self.gasless_claim_balances_make_call().await?,
             AdminClaimBalancesFree => self.admin_claim_balances_free_make_call().await?,
-            /*
-            ClaimFeePoolShare, // We claim and send their shares to holders automatically.
-            ApplyVotedFeeRate, // The admin does this once per cycle.
-            */
-            _ => None,
+            ClaimFeePoolShare => self.claim_fee_pool_share_make_call().await?,
+            ApplyVotedFeeRate => self.apply_voted_fee_rate_make_call().await?,
         };
 
         let Some(fn_call) = maybe_fn_call else {
@@ -259,14 +258,12 @@ impl OnChainJob {
             MakeCollabs => self.admin_make_collabs_on_state_change().await,
             MakeSubAccountCollabs => self.admin_make_collabs_on_state_change().await,
             SubmitReports => self.submit_reports_on_state_change().await,
-            /*
-            AdminClaimOwnBalances, // The admin claims its own balances, once in a while.
-            AdminClaimGaslessBalances, // The admin does gasless claims for its known users.
-            ClaimFeePoolShare, // We claim and send their shares to holders automatically.
-            ApplyVotedFeeRate, // The admin does this once per cycle.
-            */
             _ => Ok(self),
         }
+    }
+
+    pub fn contract(&self) -> &on_chain::AsamiContract {
+        &self.state.on_chain.asami_contract
     }
 
     pub async fn link_account(&self, account: &Account) -> sqlx::Result<OnChainJobAccount> {

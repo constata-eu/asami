@@ -63,9 +63,7 @@ impl OnChainJob {
         let total_rbtc = U256::from(addresses.len()) * rbtc_per_user;
 
         return Ok(Some(
-            self.state
-                .on_chain
-                .asami_contract
+            self.contract()
                 .gasless_claim_balances(doc_fee, rbtc_per_user, addresses)
                 .value(total_rbtc),
         ));

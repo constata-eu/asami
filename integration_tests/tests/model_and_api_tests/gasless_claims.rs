@@ -119,13 +119,3 @@ app_test! { makes_admin_claim(a)
     assert_eq!(a.admin_treasury_asami_balance().await, u("0"));
     assert_eq!(a.admin_asami_balance().await, u("3200000"));
 }
-
-
-/*
-app_test! { test_claim_account_in_its_own_test(a)
-    todo!("fail here");
-}
-
-app_test! { avoid_race_condition_detecting_problems_with_claiming_an_account 
-}
-*/

@@ -1,4 +1,3 @@
-/// This module shows how we invoke free balance
 use super::*;
 
 impl OnChainJob {
