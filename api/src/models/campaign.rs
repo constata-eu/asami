@@ -12,6 +12,8 @@ model! {
     id: i32,
     #[sqlx_model_hints(varchar)]
     account_id: String,
+    // We may allow an asami account to change their address
+    // this should not affect any existing campaigns.
     #[sqlx_model_hints(varchar)]
     advertiser_addr: String,
     #[sqlx_model_hints(campaign_kind)]
@@ -29,9 +31,14 @@ model! {
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
   },
+  queries {
+      needing_report("valid_until IS NOT NULL AND valid_until < now() AND report_hash IS NULL"),
+      needing_reimburse("valid_until IS NOT NULL AND valid_until < now() AND budget > to_u256(0)")
+  },
   has_many {
     CampaignTopic(campaign_id),
-    IgCampaignRule(campaign_id)
+    IgCampaignRule(campaign_id),
+    Collab(campaign_id),
   },
   belongs_to {
     Account(account_id),
@@ -94,7 +101,7 @@ impl CampaignHub {
             return Err(Error::validation("link", "invalid_domain_or_route"));
         };
 
-        let Ok(briefing_hash) = U256::from_str_radix(&models::hasher::hexdigest(briefing.as_bytes()), 16) else {
+        let Ok(briefing_hash) = models::hasher::u256digest(briefing.as_bytes()) else {
             return Err(Error::precondition(
                 "conversion_from_briefing_hash_to_u256_should_never_fail",
             ));
@@ -157,7 +164,7 @@ impl CampaignHub {
                 };
 
                 for user in data {
-                    if let Some(req) = self.try_x_collab_for_newest_handle(&campaign, &user.id.to_string()).await? {
+                    if let Some(req) = campaign.make_x_collab_with_user_id(&user.id.to_string()).await? {
                         reqs.push(req);
                     };
                 }
@@ -178,12 +185,61 @@ impl CampaignHub {
     async fn x_cooldown(&self) {
         tokio::time::sleep(tokio::time::Duration::from_millis(3 * 60 * 1000)).await;
     }
+}
 
-    pub async fn try_x_collab_for_newest_handle(
-        &self,
-        campaign: &Campaign,
-        user_id: &str,
-    ) -> AsamiResult<Option<Collab>> {
+impl Campaign {
+    pub async fn build_report(&self) -> anyhow::Result<serde_json::Value> {
+        let collabs = self.collab_vec().await?;
+        Ok(serde_json::json![{
+            "collabs": collabs
+        }])
+    }
+
+    pub async fn build_report_hash(&self) -> anyhow::Result<U256> {
+        models::hasher::u256digest(&serde_json::to_vec(&self.build_report().await?)?)
+    }
+
+    pub async fn topic_ids(&self) -> sqlx::Result<Vec<i32>> {
+        Ok(self.campaign_topic_vec().await?.into_iter().map(|t| t.attrs.topic_id).collect())
+    }
+
+    pub fn budget_u256(&self) -> U256 {
+        u256(self.budget())
+    }
+
+    pub async fn available_budget(&self) -> anyhow::Result<U256> {
+        let from_registered = self
+            .state
+            .collab()
+            .registered()
+            .all()
+            .await?
+            .iter()
+            .map(|x| u256(x.reward()))
+            .fold(U256::zero(), |acc, x| acc + x);
+        Ok(self.budget_u256() - from_registered)
+    }
+
+    pub async fn make_collab(&self, handle: &Handle, reward: U256, trigger: &str) -> AsamiResult<Collab> {
+        handle.validate_collaboration(self, reward, trigger).await?;
+
+        Ok(self
+            .state
+            .collab()
+            .insert(InsertCollab {
+                campaign_id: self.attrs.id.clone(),
+                handle_id: handle.attrs.id.clone(),
+                advertiser_id: self.attrs.account_id.clone(),
+                member_id: handle.account_id().clone(),
+                collab_trigger_unique_id: trigger.to_string(),
+                reward: reward.encode_hex(),
+                fee: None,
+            })
+            .save()
+            .await?)
+    }
+
+    pub async fn make_x_collab_with_user_id(&self, user_id: &str) -> AsamiResult<Option<Collab>> {
         let Some(handle) = self
             .state
             .handle()
@@ -207,57 +263,15 @@ impl CampaignHub {
             return Ok(None);
         };
 
-        let Some(reward) = handle.reward_for(&campaign) else {
+        let Some(reward) = handle.reward_for(self) else {
             return Ok(None);
         };
 
-        match campaign.make_collab(&handle, reward, trigger).await {
+        match self.make_collab(&handle, reward, trigger).await {
             Ok(req) => Ok(Some(req)),
             Err(Error::Validation(_, _)) => Ok(None),
             Err(e) => Err(e),
         }
-    }
-}
-
-impl Campaign {
-    pub async fn topic_ids(&self) -> sqlx::Result<Vec<i32>> {
-        Ok(self.campaign_topic_vec().await?.into_iter().map(|t| t.attrs.topic_id).collect())
-    }
-
-    pub fn budget_u256(&self) -> U256 {
-        u256(self.budget())
-    }
-
-    pub async fn available_budget(&self) -> anyhow::Result<U256> {
-        let from_registered = self
-            .state
-            .collab()
-            .registered()
-            .all()
-            .await?
-            .iter()
-            .map(|x| u256(x.reward()))
-            .fold(U256::zero(), |acc, x| acc + x);
-        Ok(self.budget_u256() - from_registered)
-    }
-
-    pub async fn make_collab(&self, handle: &Handle, reward: U256, trigger: &str) -> AsamiResult<Collab> {
-        handle.validate_collaboration(self, trigger).await?;
-
-        Ok(self
-            .state
-            .collab()
-            .insert(InsertCollab {
-                campaign_id: self.attrs.id.clone(),
-                handle_id: handle.attrs.id.clone(),
-                advertiser_id: self.attrs.account_id.clone(),
-                member_id: handle.account_id().clone(),
-                collab_trigger_unique_id: trigger.to_string(),
-                reward: reward.encode_hex(),
-                fee: None,
-            })
-            .save()
-            .await?)
     }
 
     pub async fn is_missing_ig_rules(&self) -> AsamiResult<bool> {
@@ -269,7 +283,27 @@ impl Campaign {
             .map_err(|_| Error::validation("invalid_address", self.advertiser_addr()))
     }
 
+    pub async fn trusted_admin_addr(&self) -> AsamiResult<Address> {
+        let address = self.decoded_advertiser_addr()?;
+        Ok(self.state.on_chain.asami_contract.accounts(address).call().await?.0)
+        // 0 is trusted admin
+    }
+
+    pub async fn we_are_trusted_admin(&self) -> AsamiResult<bool> {
+        Ok(self.trusted_admin_addr().await? == self.state.settings.rsk.admin_address)
+    }
+
     pub fn decoded_briefing_hash(&self) -> U256 {
         u256(self.briefing_hash())
+    }
+
+    pub async fn find_on_chain(&self) -> anyhow::Result<crate::on_chain::asami_contract_code::Campaign> {
+        Ok(self
+            .state
+            .on_chain
+            .asami_contract
+            .get_campaign(self.decoded_advertiser_addr()?, self.decoded_briefing_hash())
+            .call()
+            .await?)
     }
 }

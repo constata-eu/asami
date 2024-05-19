@@ -1,67 +1,71 @@
-use crate::support::{ApiClient, TestApp};
+use crate::support::TestApp;
 use ::api::{
     models::{AsamiFunctionCall, U256},
     on_chain::*,
 };
 
 app_test! { full_campaign_workflow_until_reimbursed (a)
-  let mut advertiser = a.client().await;
-  let campaign = u("deadbeef");
-  advertiser.setup_as_advertiser_with_amount("global advertiser for test", u("10000")).await;
-  let account = advertiser.address();
-  advertiser.pay_campaign("global campaign for test", u("2000"), campaign, 10).await;
+    let mut advertiser = a.client().await;
+    let campaign = u("deadbeef");
+    advertiser.setup_as_advertiser_with_amount("global advertiser for test", u("10000")).await;
+    let account = advertiser.address();
+    advertiser.pay_campaign("global campaign for test", u("2000"), campaign, 10).await;
 
-  let mut alice = a.client().await;
-  alice.make_client_wallet().await;
-  a.send_make_collab_tx("a large collab drains all the funds", "226000", &advertiser, campaign, &alice, u("2000")).await;
+    let mut alice = a.client().await;
+    alice.make_client_wallet().await;
+    a.send_make_collab_tx("a large collab drains all the funds", "226000", &advertiser, campaign, &alice, u("2000")).await;
 
-  let attrs = a.get_campaign(account, campaign).await;
-  assert_eq!(attrs.budget, u("0"));
-  assert_eq!(attrs.report_hash, u("0"));
+    let attrs = a.get_campaign(account, campaign).await;
+    assert_eq!(attrs.budget, u("0"));
+    assert_eq!(attrs.report_hash, u("0"));
 
-  a.send_tx("campaign is topped up", "78582", advertiser.top_up_campaign_contract_call(account, campaign, u("100"))).await;
+    a.send_tx("campaign is topped up", "78582", advertiser.top_up_campaign_contract_call(account, campaign, u("100"))).await;
 
-  assert_eq!(a.get_campaign(account, campaign).await.budget, u("100"));
+    assert_eq!(a.get_campaign(account, campaign).await.budget, u("100"));
 
-  a.send_make_collab_tx("a new smaller collab", "93198", &advertiser, campaign, &alice, u("50")).await;
-  let attrs = a.get_campaign(account, campaign).await;
-  assert_eq!(attrs.budget, u("50"));
+    a.send_make_collab_tx("a new smaller collab", "93198", &advertiser, campaign, &alice, u("50")).await;
+    let attrs = a.get_campaign(account, campaign).await;
+    assert_eq!(attrs.budget, u("50"));
 
-  a.evm_forward_to_next_cycle().await;
+    a.evm_forward_to_next_cycle().await;
 
-  a.send_tx("Campaign is reimbursed", "50923",
-    advertiser.reimburse_campaign_contract_call(account, campaign)
-  ).await;
+    a.send_tx("Campaign is reimbursed", "50923",
+        advertiser.reimburse_campaign_contract_call(account, campaign)
+    ).await;
 
-  let attrs = a.get_campaign(account, campaign).await;
-  assert_eq!(attrs.budget, u("0"));
+    let attrs = a.get_campaign(account, campaign).await;
+    assert_eq!(attrs.budget, u("0"));
 
-  a.send_tx("admin submits report", "53200", make_submit_report_call(&a, account, campaign, u("1"))).await;
+    a.send_tx("admin submits report", "53200", a.submit_report_contract_call(account, campaign, u("1"))).await;
 
-  let attrs = a.get_campaign(account, campaign).await;
-  assert_eq!(attrs.report_hash, u("1"));
+    let attrs = a.get_campaign(account, campaign).await;
+    assert_eq!(attrs.report_hash, u("1"));
 
-  a.send_revert_tx("no collab allowed", "amc2", a.asami_contract().admin_make_collabs(vec![
+    a.send_revert_tx("no collab allowed", "amc2", a.asami_contract().admin_make_collabs(vec![
     MakeCollabsParam{
       advertiser_addr: advertiser.address(),
       briefing_hash: campaign,
       collabs: vec![ MakeCollabsParamItem{ account_addr: alice.address(), doc_reward: u("20")}]
     }
-  ])).await;
+    ])).await;
 
-  a.send_tx("campaign is extended", "36314", advertiser.extend_campaign_contract_call(campaign, 20)).await;
+    a.send_tx("campaign is extended", "36314", advertiser.extend_campaign_contract_call(campaign, 20)).await;
 
-  a.send_tx("campaign is topped up again", "78582",
-    advertiser.top_up_campaign_contract_call(account, campaign, u("100"))
-  ).await;
+    a.send_tx("campaign is topped up again", "78582",
+        advertiser.top_up_campaign_contract_call(account, campaign, u("100"))
+    ).await;
 
-  a.send_make_collab_tx("a new smaller collab", "132000", &advertiser, campaign, &alice, u("20")).await;
+    a.send_make_collab_tx("a new smaller collab", "132000", &advertiser, campaign, &alice, u("20")).await;
 
-  a.evm_forward_to_next_cycle().await;
-  a.send_tx("Campaign is reimbursed again", "43326", advertiser.reimburse_campaign_contract_call(account, campaign)).await;
+    assert_eq!(a.doc_balance_of(&account).await, u("7850"));
 
-  let attrs = a.get_campaign(account, campaign).await;
-  assert_eq!(attrs.budget, u("0"));
+    a.evm_forward_to_next_cycle().await;
+    a.send_tx("Campaign is reimbursed again", "47200", advertiser.reimburse_campaign_contract_call(account, campaign)).await;
+
+    assert_eq!(a.doc_balance_of(&account).await, u("7930"));
+
+    let attrs = a.get_campaign(account, campaign).await;
+    assert_eq!(attrs.budget, u("0"));
 }
 
 app_test! { campaign_creation_validations (a)
@@ -171,21 +175,21 @@ app_test! { campaign_submit_report_tests (a)
   stranger.make_client_wallet().await;
 
   a.send_revert_tx("can't submit report before campaign finishes", "sr3",
-    make_submit_report_call(&a, account, campaign, u("1000"))
+    a.submit_report_contract_call(account, campaign, u("1000"))
   ).await;
 
   a.evm_forward_to_next_cycle().await;
 
   a.send_revert_tx("can't submit empty report", "sr0",
-    make_submit_report_call(&a, account, campaign, u("0"))
+    a.submit_report_contract_call(account, campaign, u("0"))
   ).await;
 
   a.send_revert_tx("can't submit report for unknown user", "sr1",
-    make_submit_report_call(&a, stranger.address(), campaign, u("1000"))
+    a.submit_report_contract_call(stranger.address(), campaign, u("1000"))
   ).await;
 
   a.send_revert_tx("can't submit report for unknown campaign", "sr2",
-    make_submit_report_call(&a, account, u("123"), u("1000"))
+    a.submit_report_contract_call(account, u("123"), u("1000"))
   ).await;
 
   a.send_revert_tx("only admin can submit report", "sr1",
@@ -195,13 +199,13 @@ app_test! { campaign_submit_report_tests (a)
   ).await;
 
   a.send_tx("can submit correct report", "53200",
-    make_submit_report_call(&a, account, campaign, u("1000"))
+    a.submit_report_contract_call(account, campaign, u("1000"))
   ).await;
 
   assert_eq!(a.get_campaign(account, campaign).await.report_hash, u("1000"));
 
   a.send_revert_tx("can't submit report if already present", "sr4",
-    make_submit_report_call(&a, account, campaign, u("2000"))
+    a.submit_report_contract_call(account, campaign, u("2000"))
   ).await;
 
   assert_eq!(a.get_campaign(account, campaign).await.report_hash, u("1000"));
@@ -229,24 +233,21 @@ app_test! { campaign_reimbursement_tests (a)
   a.send_revert_tx("cannot reimburse for unknown account", "rc0",
     stranger.reimburse_campaign_contract_call(other.address(), campaign)
   ).await;
+
+
   assert_eq!(a.get_campaign(account, campaign).await.budget, u("2000"));
 
-  a.send_tx("anyone can reimburse", "43326",
+  assert_eq!(a.doc_balance_of(&account).await, u("8000"));
+  a.send_tx("anyone can reimburse", "43800",
     stranger.reimburse_campaign_contract_call(account, campaign)
   ).await;
   assert_eq!(a.get_campaign(account, campaign).await.budget, u("0"));
+  assert_eq!(a.doc_balance_of(&account).await, u("10000"));
 
   a.send_revert_tx("cannot reimburse again", "rc0",
     stranger.reimburse_campaign_contract_call(account, campaign)
   ).await;
   assert_eq!(a.get_campaign(account, campaign).await.budget, u("0"));
-}
-
-fn make_extend_campaign_call(a: &ApiClient, campaign: U256, valid_until: i64) -> AsamiFunctionCall {
-    a.asami_contract().extend_campaigns(vec![ExtendCampaignsParam {
-        briefing_hash: campaign,
-        valid_until: a.test_app.future_date(valid_until),
-    }])
 }
 
 fn make_submit_report_call(a: &TestApp, account: Address, campaign: U256, report_hash: U256) -> AsamiFunctionCall {
@@ -256,12 +257,3 @@ fn make_submit_report_call(a: &TestApp, account: Address, campaign: U256, report
         report_hash,
     }])
 }
-
-fn make_reimburse_campaign_call(a: &ApiClient, addr: Address, briefing_hash: U256) -> AsamiFunctionCall {
-    a.asami_contract().reimburse_campaigns(vec![ReimburseCampaignsParam { addr, briefing_hash }])
-}
-
-// Only trusted admin can make collabs
-// Only trusted admin can make subaccount collabs.
-// mc0 error now is campaigns are too high.
-//   a.send_revert_tx("advertiser has not claimed their account yet", "mc0", valid_pay_campaign_call.clone()).await;

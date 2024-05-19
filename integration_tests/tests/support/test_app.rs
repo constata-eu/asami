@@ -1,7 +1,7 @@
 use super::*;
 use crate::support::{ApiClient, Truffle};
 use api::{
-    models::{self, u, U256},
+    models::{self, on_chain_job::AsamiFunctionCall, u, U256},
     on_chain, App, AppConfig,
 };
 pub use ethers::{
@@ -87,6 +87,18 @@ impl TestApp {
         client
     }
 
+    pub async fn quick_campaign(&self, budget: U256, duration: i64, topic_ids: &[i32]) -> models::Campaign {
+        let mut client = self.client().await;
+        client.setup_as_advertiser("test main advertiser").await;
+        client.start_and_pay_campaign( "https://x.com/somebody/status/1716421161867710954", budget, duration, topic_ids).await
+    }
+
+    pub async fn quick_handle(&self, username: &str, user_id: &str, site: models::Site, score: U256) -> models::Handle {
+        let mut client = self.client().await;
+        client.claim_account().await;
+        client.create_handle(username, user_id, site, score).await
+    }
+
     pub fn make_random_local_wallet(&self) -> LocalWallet {
         LocalWallet::new(&mut thread_rng()).with_chain_id(self.app.settings.rsk.chain_id)
     }
@@ -162,12 +174,12 @@ impl TestApp {
             .expect(&format!("Cannot find sub account balances for {sub_account}"));
 
         assert_eq!(
-            sub.unclaimed_asami_balance, expected_unclaimed_asami,
-            "unclaimed asami mismatch on '{reference}'"
-        );
-        assert_eq!(
             sub.unclaimed_doc_balance, expected_unclaimed_doc,
             "unclaimed doc mismatch on '{reference}'"
+        );
+        assert_eq!(
+            sub.unclaimed_asami_balance, expected_unclaimed_asami,
+            "unclaimed asami mismatch on '{reference}'"
         );
     }
 
@@ -428,29 +440,35 @@ impl TestApp {
         cleared
     }
 
-    pub async fn run_idempotent_background_tasks_a_few_times(&self) {
-        for _ in 0..5 {
-            self.app.run_background_tasks().await.expect("error in test background tasks");
-        }
-    }
-
     pub async fn wait_for_job(
         &self,
         context: &str,
         kind: models::OnChainJobKind,
         status: models::OnChainJobStatus,
     ) -> models::OnChainJob {
-        try_until(100, 10, &format!("Could not find job '{context}'"), || async {
+        let found = wait_for(150, 50, || async {
             self.evm_mine().await;
-            self.app.on_chain_job().run_scheduler().await.unwrap();
-            let Some(job) = self.app.on_chain_job().current().optional().await.unwrap() else {
-                return false;
-            };
-            job.attrs.status == status && job.attrs.kind == kind
+            let new_jobs = self.app.on_chain_job().run_scheduler().await.unwrap();
+            new_jobs.into_iter().find(|job| job.attrs.status == status && job.attrs.kind == kind).is_some()
         })
         .await;
 
-        self.app.on_chain_job().current().one().await.unwrap()
+        let jobs_query = self.app
+            .on_chain_job()
+            .select()
+            .kind_eq(kind)
+            .order_by(models::OnChainJobOrderBy::Id)
+            .desc(true);
+
+        if !found {
+            panic!("Could not find job '{context}'. Jobs where {:#?}", jobs_query.all().await.unwrap());
+        }
+
+        jobs_query
+            .status_eq(status)
+            .one()
+            .await
+            .unwrap()
     }
 
     pub async fn wait_for_job_status(
@@ -666,10 +684,29 @@ impl TestApp {
     }
 
     pub async fn sync_events_until<T: std::future::Future<Output = bool>>(&self, context: &str, call: impl Fn() -> T) {
-        try_until(100, 20, &format!("Syncing events did not have the expected effect for '{context}'"), || async {
-            self.app.synced_event().sync_on_chain_events().await.unwrap();
-            call().await
-        }).await;
+        try_until(
+            100,
+            20,
+            &format!("Syncing events did not have the expected effect for '{context}'"),
+            || async {
+                self.app.synced_event().sync_on_chain_events().await.unwrap();
+                call().await
+            },
+        )
+        .await;
+    }
+
+    pub fn submit_report_contract_call(
+        &self,
+        account: Address,
+        briefing_hash: U256,
+        report_hash: U256,
+    ) -> AsamiFunctionCall {
+        self.asami_contract().submit_reports(vec![on_chain::SubmitReportsParam {
+            account,
+            briefing_hash,
+            report_hash,
+        }])
     }
 
     pub fn future_date(&self, days: i64) -> U256 {

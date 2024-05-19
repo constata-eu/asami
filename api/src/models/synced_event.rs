@@ -2,12 +2,8 @@ use super::*;
 use crate::{
     models::on_chain_job::AsamiSigner,
     on_chain::{
-        AsamiContract, 
-        CampaignCreatedFilter,
-        CampaignToppedUpFilter,
-        CampaignExtendedFilter,
-        CampaignReimbursedFilter,
-    }
+        AsamiContract, CampaignCreatedFilter, CampaignExtendedFilter, CampaignReimbursedFilter, CampaignToppedUpFilter,
+    },
 };
 use ethers::prelude::{EthLogDecode, Event};
 use std::sync::Arc;
@@ -79,7 +75,8 @@ impl SyncedEventHub {
                 continue;
             };
 
-            let Some(creator) = self.state.account().select().addr_eq(e.account_addr().encode_hex()).optional().await? else {
+            let Some(creator) = self.state.account().select().addr_eq(e.account_addr().encode_hex()).optional().await?
+            else {
                 synced_event.info("syncing_campaign_event", "Creator has no account in this node.").await?;
                 continue;
             };
@@ -104,10 +101,16 @@ impl SyncedEventHub {
                 .await
                 .context("Looking up campaign on sync creation")?;
 
+            let report_hash = if onchain.report_hash == u("0") {
+                None
+            } else {
+                Some(onchain.report_hash.encode_hex())
+            };
             campaign
                 .update()
                 .budget(onchain.budget.encode_hex())
                 .valid_until(Some(models::i_to_utc(onchain.valid_until)))
+                .report_hash(report_hash)
                 .save()
                 .await
                 .context("Saving budget and valid until")?;
@@ -165,13 +168,19 @@ pub trait CampaignEventFilter: Sized + Sync + EthLogDecode + serde::Serialize + 
 }
 
 macro_rules! impl_campaign_event {
-    ($struct:ident, $method:ident) => (
+    ($struct:ident, $method:ident) => {
         impl CampaignEventFilter for $struct {
-            fn filter(contract: &AsamiContract) -> AsamiEvent<Self> { contract.$method() }
-            fn account_addr(&self) -> Address { self.account }
-            fn campaign_id(&self) -> U256 { self.campaign_id }
+            fn filter(contract: &AsamiContract) -> AsamiEvent<Self> {
+                contract.$method()
+            }
+            fn account_addr(&self) -> Address {
+                self.account
+            }
+            fn campaign_id(&self) -> U256 {
+                self.campaign_id
+            }
         }
-    )
+    };
 }
 
 impl_campaign_event!(CampaignCreatedFilter, campaign_created_filter);

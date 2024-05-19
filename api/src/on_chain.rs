@@ -95,4 +95,13 @@ impl OnChain {
             .map(|b| b.timestamp)
             .ok_or_else(|| anyhow::anyhow!("could_not_find_block_with_timestamp"))
     }
+
+    pub async fn admin_rbtc_balance(&self) -> anyhow::Result<U256> {
+        let client = self.asami_contract.client();
+        Ok(client.get_balance(client.address(), None).await?)
+    }
+
+    pub async fn admin_unclaimed_asami_balance(&self) -> anyhow::Result<U256> {
+        Ok(self.asami_contract.accounts(self.asami_contract.client().address()).await?.3)
+    }
 }

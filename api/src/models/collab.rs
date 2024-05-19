@@ -46,6 +46,8 @@ impl Collab {
     }
 }
 
+impl_loggable!(Collab);
+
 make_sql_enum![
     "collab_status",
     pub enum CollabStatus {

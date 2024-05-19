@@ -10,7 +10,11 @@ use strum::IntoEnumIterator;
 
 mod admin_legacy_claim_account;
 mod admin_make_collabs;
+mod gasless_claim_balances;
 mod promote_sub_accounts;
+mod reimburse_campaigns;
+mod submit_reports;
+mod admin_claim_balances_free;
 
 pub type AsamiSigner = SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>;
 pub type AsamiFunctionCall = FunctionCall<Arc<AsamiSigner>, AsamiSigner, ()>;
@@ -55,19 +59,23 @@ model! {
 impl_loggable!(OnChainJob);
 
 impl OnChainJobHub {
-    pub async fn run_scheduler(&self) -> anyhow::Result<()> {
+    pub async fn run_scheduler(&self) -> anyhow::Result<Vec<OnChainJob>> {
         use OnChainJobStatus::*;
+
+        let mut jobs = vec![];
 
         let Some(job) = self.current().optional().await? else {
             for kind in OnChainJobKind::iter() {
-                self.insert(InsertOnChainJob { kind }).save().await?;
+                jobs.push(self.insert(InsertOnChainJob { kind }).save().await?);
             }
-            return Ok(());
+            return Ok(jobs);
         };
 
         if job.sleep_until() > &Utc::now() {
-            return Ok(());
+            return Ok(vec![job]);
         }
+
+        let cloned = job.clone();
 
         match job.status() {
             Scheduled => {
@@ -92,7 +100,7 @@ impl OnChainJobHub {
             next.update().sleep_until(Utc::now() + cooldown).save().await?;
         };
 
-        return Ok(());
+        return Ok(vec![cloned.reloaded().await?]);
     }
 }
 
@@ -106,11 +114,11 @@ impl OnChainJob {
             AdminLegacyClaimAccount => self.admin_legacy_claim_account_make_call().await?,
             MakeCollabs => self.admin_make_collabs_make_call().await?,
             MakeSubAccountCollabs => self.admin_make_sub_account_collabs_make_call().await?,
+            SubmitReports => self.submit_reports_make_call().await?,
+            ReimburseCampaigns => self.reimburse_campaigns_make_call().await?,
+            GaslessClaimBalances => self.gasless_claim_balances_make_call().await?,
+            AdminClaimBalancesFree => self.admin_claim_balances_free_make_call().await?,
             /*
-            AdminClaimOwnBalances, // The admin claims its own balances, once in a while.
-            AdminClaimGaslessBalances, // The admin does gasless claims for its known users.
-            ReimburseCampaigns, // As a convenience for users, but the admin is not obliged to reimburse.
-            SubmitReports, // Submit collab report for campaigns that have ended.
             ClaimFeePoolShare, // We claim and send their shares to holders automatically.
             ApplyVotedFeeRate, // The admin does this once per cycle.
             */
@@ -250,16 +258,26 @@ impl OnChainJob {
             AdminLegacyClaimAccount => self.admin_legacy_claim_account_on_state_change().await,
             MakeCollabs => self.admin_make_collabs_on_state_change().await,
             MakeSubAccountCollabs => self.admin_make_collabs_on_state_change().await,
+            SubmitReports => self.submit_reports_on_state_change().await,
             /*
             AdminClaimOwnBalances, // The admin claims its own balances, once in a while.
             AdminClaimGaslessBalances, // The admin does gasless claims for its known users.
-            ReimburseCampaigns, // As a convenience for users, but the admin is not obliged to reimburse.
-            SubmitReports, // Submit collab report for campaigns that have ended.
             ClaimFeePoolShare, // We claim and send their shares to holders automatically.
             ApplyVotedFeeRate, // The admin does this once per cycle.
             */
-            _ => todo!("Not implemented yet"),
+            _ => Ok(self),
         }
+    }
+
+    pub async fn link_account(&self, account: &Account) -> sqlx::Result<OnChainJobAccount> {
+        self.state
+            .on_chain_job_account()
+            .insert(InsertOnChainJobAccount {
+                job_id: self.attrs.id,
+                account_id: account.attrs.id.clone(),
+            })
+            .save()
+            .await
     }
 }
 
@@ -347,49 +365,18 @@ make_sql_enum![
 make_sql_enum![
     "on_chain_job_kind",
     pub enum OnChainJobKind {
-        PromoteSubAccounts,        // Admin promotes the sub accounts that requested it.
-        AdminLegacyClaimAccount,   // The admin claims accounts in the old contract.
-        AdminClaimOwnBalances,     // The admin claims its own balances, once in a while.
-        AdminClaimGaslessBalances, // The admin does gasless claims for its known users.
-        ReimburseCampaigns,        // As a convenience for users, but the admin is not obliged to reimburse.
-        SubmitReports,             // Submit collab report for campaigns that have ended.
-        MakeCollabs,               // Register collabs done by full accounts.
-        MakeSubAccountCollabs,     // Register collabs done by this admin sub-accounts.
-        ClaimFeePoolShare,         // We claim and send their shares to holders automatically.
-        ApplyVotedFeeRate,         // The admin does this once per cycle.
+        PromoteSubAccounts,      // Admin promotes the sub accounts that requested it.
+        AdminLegacyClaimAccount, // The admin claims accounts in the old contract.
+        AdminClaimBalancesFree,  // The admin claims its own balances, once in a while.
+        GaslessClaimBalances,    // The admin does gasless claims for its known users.
+        ReimburseCampaigns,      // As a convenience for users, but they can do it themselves.
+        SubmitReports,           // Submit collab report for campaigns that have ended.
+        MakeCollabs,             // Register collabs done by full accounts.
+        MakeSubAccountCollabs,   // Register collabs done by this admin sub-accounts.
+        ClaimFeePoolShare,       // We claim and send their shares to holders automatically.
+        ApplyVotedFeeRate,       // The admin does this once per cycle.
     }
 ];
-
-/*
-pub async fn send_tx<B, M, D>(&self, fn_call: FunctionCall<B, M, D>) -> sqlx::Result<OnChainJob>
-where
-  B: Borrow<M>,
-  M: Middleware,
-  D: Detokenize,
-{
-  let unsent = self
-    .insert(InsertOnChainJob {
-      function_name: fn_call.function.name.clone(),
-    })
-    .save()
-    .await?;
-  unsent.info("typed_transaction", &fn_call.tx).await?;
-
-  match fn_call.send().await {
-    Err(e) => {
-      let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error") );
-      unsent.fail("early_revert_message", format!("{e:?}")).await?;
-      let reverted = unsent.update().status(OnChainJobStatus::Reverted).message(Some(desc)).save().await?;
-      Ok(reverted)
-    }
-    Ok(pending_tx) => {
-      let tx_hash = pending_tx.tx_hash().encode_hex();
-      let submitted = unsent.update().status(OnChainJobStatus::Submitted).tx_hash(Some(tx_hash)).save().await?;
-      Ok(submitted)
-    }
-  }
-}
-*/
 
 /*
 pub async fn apply_voted_fee_rate(&self) -> anyhow::Result<Option<OnChainJob>> {
@@ -402,36 +389,6 @@ pub async fn apply_voted_fee_rate(&self) -> anyhow::Result<Option<OnChainJob>> {
   }
 
   Ok(Some(self.send_tx(c.apply_voted_fee_rate()).await?))
-}
-
-pub async fn reimburse_due_campaigns(&self) -> anyhow::Result<Option<OnChainJob>> {
-  let c = &self.state.on_chain.asami_contract;
-  let block_number = c.client().get_block_number().await?;
-  let Some(now) = c.client().get_block(block_number).await?.map(|b| b.timestamp) else {
-    return Ok(None);
-  };
-
-  let candidates: Vec<Campaign> = self.state.campaign()
-    .select()
-    .budget_gt(weihex("0"))
-    .limit(50)
-    .all().await?;
-
-  let mut past_due = vec![];
-
-  for c in &candidates {
-    if c.valid_until() > &i_to_utc(now) {
-        continue;
-    }
-    let Some(addr) = c.account().await?.decoded_addr()? else { continue };
-    past_due.push(on_chain::ReimburseCampaignsParam{ addr, briefing_hash: u256(c.briefing_hash())});
-  }
-
-  if past_due.is_empty() {
-    return Ok(None);
-  }
-
-  Ok(Some(self.send_tx(c.reimburse_campaigns(past_due)).await?))
 }
 
 pub async fn distribute_fee_pool(&self) -> anyhow::Result<Option<OnChainJob>> {
@@ -460,53 +417,5 @@ pub async fn distribute_fee_pool(&self) -> anyhow::Result<Option<OnChainJob>> {
   }
 
   Ok(Some(self.send_tx(c.claim_fee_pool_share(holders)).await?))
-}
-
-pub async fn sync_tx_result(&self) -> anyhow::Result<()> {
-  let client = self.state.on_chain.asami_contract.client();
-  for tx in self.select().status_eq(OnChainJobStatus::Submitted).all().await? {
-    let Some(tx_hash) = tx.tx_hash().as_ref().and_then(|x| H256::decode_hex(x).ok()) else {
-      continue
-    };
-    let Some(original_tx) = client.get_transaction(tx_hash).await? else {
-      continue;
-    };
-    let Some(receipt) = client.get_transaction_receipt(tx_hash).await? else {
-      continue;
-    };
-    let (status, message) = if receipt.status.unwrap_or(U64::zero()) == U64::one() {
-      (OnChainJobStatus::Success, None)
-    } else {
-      let typed: ethers::types::transaction::eip2718::TypedTransaction = (&original_tx).into();
-      let msg = match client.call(&typed, None).await {
-        Err(e) => {
-          tx.fail("full_failure_message", format!("{e:?}")).await?;
-          AsamiCoreContractError::from_middleware_error(e).decode_revert::<String>().unwrap_or_else(|| format!("non_revert_error"))
-        },
-        _ => "no_failure_reason_wtf".to_string()
-      };
-      (OnChainJobStatus::Failure, Some(msg))
-    };
-
-    //let id = tx.attrs.id;
-
-    /*
-    self.state.claim_account_request().set_done(id).await?;
-    self.state.handle_request().set_done(id).await?;
-    self.state.set_score_and_topics_request().set_done(id).await?;
-    self.state.set_price_request().set_done(id).await?;
-    self.state.campaign_request().set_approved(id).await?;
-    self.state.campaign_request().set_done(id).await?;
-    self.state.collab_request().set_done(id).await?;
-    self.state.topic_request().set_done(id).await?;
-    */
-
-    tx.update().status(status)
-      .gas_used(receipt.gas_used.map(|x| x.encode_hex() ))
-      .nonce(Some(original_tx.nonce.encode_hex()))
-      .message(message)
-      .save().await?;
-  }
-  Ok(())
 }
 */

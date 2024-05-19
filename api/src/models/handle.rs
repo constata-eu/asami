@@ -21,6 +21,7 @@ model! {
   },
   has_many {
     HandleTopic(handle_id),
+    Collab(handle_id),
   },
   belongs_to {
     Account(account_id),
@@ -155,18 +156,14 @@ impl Handle {
         self.update().score(Some(score.encode_hex())).status(HandleStatus::Active).save().await
     }
 
-    pub async fn topic_ids(&self) -> sqlx::Result<Vec<i32>> {
-        Ok(self.handle_topic_vec().await?.into_iter().map(|t| t.attrs.topic_id).collect())
-    }
-
-    pub async fn validate_collaboration(&self, campaign: &Campaign, trigger: &str) -> AsamiResult<()> {
+    pub async fn validate_collaboration(&self, campaign: &Campaign, reward: U256, trigger: &str) -> AsamiResult<()> {
         let available_funds = campaign
             .available_budget()
             .await
             .map_err(|e| Error::runtime(&format!("campaign available funds calculation: {e:?}")))?;
 
-        if available_funds <= wei("0") {
-            return Err(Error::validation("site", "campaign_has_no_funds"));
+        if available_funds < reward {
+            return Err(Error::validation("site", "campaign_has_not_enough_funds"));
         }
 
         if campaign.valid_until().map(|end| end <= Utc::now()).unwrap_or(true) {
@@ -204,6 +201,22 @@ impl Handle {
     pub fn reward_for(&self, _campaign: &Campaign) -> Option<U256> {
         let score = u256(self.score().as_ref()?);
         Some(milli("9999").min(milli("1") * score))
+    }
+
+    pub async fn add_topic(&self, topic: &Topic) -> anyhow::Result<HandleTopic> {
+        Ok(self
+            .state
+            .handle_topic()
+            .insert(InsertHandleTopic {
+                handle_id: *self.id(),
+                topic_id: *topic.id(),
+            })
+            .save()
+            .await?)
+    }
+
+    pub async fn topic_ids(&self) -> sqlx::Result<Vec<i32>> {
+        Ok(self.handle_topic_vec().await?.into_iter().map(|t| t.attrs.topic_id).collect())
     }
 }
 

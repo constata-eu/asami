@@ -14,14 +14,7 @@ impl OnChainJob {
         }
 
         for a in &accounts {
-            self.state
-                .on_chain_job_account()
-                .insert(InsertOnChainJobAccount {
-                    job_id: self.attrs.id,
-                    account_id: a.attrs.id.clone(),
-                })
-                .save()
-                .await?;
+            self.link_account(a).await?;
         }
 
         let params = accounts

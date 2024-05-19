@@ -1,50 +1,32 @@
 use super::*;
+use crate::on_chain::{
+    MakeCollabsParam, MakeCollabsParamItem, MakeSubAccountCollabsParam, MakeSubAccountCollabsParamItem,
+};
 use std::collections::HashMap;
 
 impl OnChainJob {
-    pub async fn admin_make_collabs_make_call(&self) -> AsamiResult<Option<AsamiFunctionCall>> {
-        let all_collabs = self.state.collab().select().status_eq(CollabStatus::Registered).all().await?;
-
-        let mut by_campaign: HashMap<(Address, U256), Vec<_>> = HashMap::new();
-        for collab in &all_collabs {
-            let Some(member_addr) = collab.account().await?.decoded_addr()? else {
-                continue;
-            };
-
-            let campaign = collab.campaign().await?;
-            let key = (campaign.decoded_advertiser_addr()?, u256(campaign.attrs.briefing_hash));
-            by_campaign
-                .entry(key)
-                .and_modify(|v| v.push((collab, member_addr)))
-                .or_insert(vec![(collab, member_addr)]);
-        }
+    pub async fn admin_make_collabs_make_call(&self) -> anyhow::Result<Option<AsamiFunctionCall>> {
+        let by_campaign = self
+            .group_and_filter_collabs(|collab| async move {
+                let item = if let Some(account_addr) = collab.account().await?.decoded_addr()? {
+                    Some(MakeCollabsParamItem {
+                        account_addr,
+                        doc_reward: collab.reward_u256(),
+                    })
+                } else {
+                    None
+                };
+                Ok(item)
+            })
+            .await?;
 
         if by_campaign.is_empty() {
             return Ok(None);
         }
 
         let mut params = vec![];
-
-        for ((advertiser_addr, briefing_hash), db_collabs) in by_campaign {
-            let mut collabs = vec![];
-
-            for (collab, account_addr) in db_collabs {
-                self.state
-                    .on_chain_job_collab()
-                    .insert(InsertOnChainJobCollab {
-                        job_id: self.attrs.id,
-                        collab_id: collab.attrs.id.clone(),
-                    })
-                    .save()
-                    .await?;
-
-                collabs.push(on_chain::MakeCollabsParamItem {
-                    account_addr,
-                    doc_reward: u256(&collab.attrs.reward),
-                });
-            }
-
-            params.push(on_chain::MakeCollabsParam {
+        for ((advertiser_addr, briefing_hash), collabs) in by_campaign {
+            params.push(MakeCollabsParam {
                 advertiser_addr,
                 briefing_hash,
                 collabs,
@@ -54,45 +36,28 @@ impl OnChainJob {
         return Ok(Some(self.state.on_chain.asami_contract.admin_make_collabs(params)));
     }
 
-    pub async fn admin_make_sub_account_collabs_make_call(&self) -> AsamiResult<Option<AsamiFunctionCall>> {
-        let all_collabs = self.state.collab().select().status_eq(CollabStatus::Registered).all().await?;
-
-        let mut by_campaign: HashMap<(Address, U256), Vec<_>> = HashMap::new();
-        for collab in &all_collabs {
-            if collab.account().await?.addr().is_some() {
-                continue;
-            }
-            let campaign = collab.campaign().await?;
-            let key = (campaign.decoded_advertiser_addr()?, u256(campaign.attrs.briefing_hash));
-            by_campaign.entry(key).and_modify(|v| v.push(collab.clone())).or_insert(vec![collab.clone()]);
-        }
+    pub async fn admin_make_sub_account_collabs_make_call(&self) -> anyhow::Result<Option<AsamiFunctionCall>> {
+        let by_campaign = self
+            .group_and_filter_collabs(|collab| async move {
+                let item = if collab.account().await?.addr().is_some() {
+                    None
+                } else {
+                    Some(MakeSubAccountCollabsParamItem {
+                        sub_account_id: u256(&collab.attrs.member_id),
+                        doc_reward: collab.reward_u256(),
+                    })
+                };
+                Ok(item)
+            })
+            .await?;
 
         if by_campaign.is_empty() {
             return Ok(None);
         }
 
         let mut params = vec![];
-
-        for ((advertiser_addr, briefing_hash), db_collabs) in by_campaign {
-            let mut collabs = vec![];
-
-            for collab in db_collabs {
-                self.state
-                    .on_chain_job_collab()
-                    .insert(InsertOnChainJobCollab {
-                        job_id: self.attrs.id,
-                        collab_id: collab.attrs.id.clone(),
-                    })
-                    .save()
-                    .await?;
-
-                collabs.push(on_chain::MakeSubAccountCollabsParamItem {
-                    sub_account_id: u256(collab.attrs.member_id),
-                    doc_reward: u256(collab.attrs.reward),
-                });
-            }
-
-            params.push(on_chain::MakeSubAccountCollabsParam {
+        for ((advertiser_addr, briefing_hash), collabs) in by_campaign {
+            params.push(MakeSubAccountCollabsParam {
                 advertiser_addr,
                 briefing_hash,
                 collabs,
@@ -150,5 +115,72 @@ impl OnChainJob {
         }
 
         return Ok(self);
+    }
+
+    // The params to make sub account collabs and regular account collabs are similar.
+    // And the collabs to be used for each should follow roughly the same base criteria,
+    // The only difference is that collabs by accounts that have an address are
+    // to be registered as account collabs, and the others as sub account collabs.
+    pub async fn group_and_filter_collabs<F, Fut, T>(
+        &self,
+        collab_to_item: F,
+    ) -> anyhow::Result<HashMap<(Address, U256), Vec<T>>>
+    where
+        F: Fn(Collab) -> Fut,
+        Fut: std::future::Future<Output = anyhow::Result<Option<T>>>,
+        T: Clone,
+    {
+        let all_collabs = self.state.collab().select().status_eq(CollabStatus::Registered).all().await?;
+
+        // Getting a campaign and asserting if we're still the admin is costly.
+        // So we cache that here, by campaign_id.
+        let mut campaign_cache: HashMap<i32, Option<Campaign>> = HashMap::new();
+        let mut params: HashMap<_, Vec<_>> = HashMap::new();
+
+        for collab in all_collabs {
+            let cached_campaign = match campaign_cache.get(collab.campaign_id()) {
+                Some(x) => x,
+                None => {
+                    let campaign = collab.campaign().await?;
+                    let value = if campaign.we_are_trusted_admin().await? {
+                        Some(campaign)
+                    } else {
+                        None
+                    };
+                    campaign_cache.entry(*collab.campaign_id()).or_insert(value)
+                }
+            };
+
+            match cached_campaign {
+                Some(campaign) => {
+                    let insert = InsertOnChainJobCollab {
+                        job_id: self.attrs.id,
+                        collab_id: collab.attrs.id,
+                    };
+
+                    let Some(item) = collab_to_item(collab).await? else {
+                        continue;
+                    };
+
+                    self.state.on_chain_job_collab().insert(insert).save().await?;
+
+                    let key = (campaign.decoded_advertiser_addr()?, campaign.decoded_briefing_hash());
+
+                    params.entry(key).and_modify(|v| v.push(item.clone())).or_insert_with(|| vec![item.clone()]);
+                }
+                None => {
+                    self.info(
+                        "making_collabs",
+                        &format!("we are not campaign trusted admin for collab {}", collab.id()),
+                    )
+                    .await?;
+                    collab.info("making_collabs", "we_are_not_campaign_trusted_admin").await?;
+                    collab.update().status(CollabStatus::Failed).save().await?;
+                    continue;
+                }
+            }
+        }
+
+        Ok(params)
     }
 }

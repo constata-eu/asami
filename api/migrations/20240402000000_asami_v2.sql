@@ -51,8 +51,8 @@ CREATE TYPE handle_status AS ENUM (
 CREATE TYPE on_chain_job_kind AS ENUM (
 	'promote_sub_accounts',
 	'admin_legacy_claim_account',
-	'admin_claim_own_balances',
-	'admin_claim_gasless_balances',
+	'admin_claim_balances_free',
+	'gasless_claim_balances',
 	'reimburse_campaigns',
 	'submit_reports',
 	'make_collabs',

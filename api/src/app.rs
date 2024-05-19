@@ -40,30 +40,6 @@ impl App {
         })
     }
 
-    pub async fn run_background_tasks(&self) -> anyhow::Result<()> {
-        /*
-        self.on_chain_tx().proclaim_cycle_admin_winner().await?;
-        self.on_chain_tx().apply_handle_updates().await?;
-        self.on_chain_tx().apply_voted_fee_rate().await?;
-        self.on_chain_tx().reimburse_due_campaigns().await?;
-        self.on_chain_tx().vest_admin_votes().await?;
-        self.on_chain_tx().distribute_fee_pool().await?;
-
-        self.collab_request().submit_all().await?;
-        self.handle_request().submit_all().await?;
-        self.set_price_request().submit_all().await?;
-        self.set_score_and_topics_request().submit_all().await?;
-        self.topic_request().submit_all().await?;
-        self.claim_account_request().submit_all().await?;
-        self.campaign_request().submit_approvals().await?;
-        self.campaign_request().submit_all().await?;
-        */
-
-        self.synced_event().sync_on_chain_events().await?;
-        //self.on_chain_job().sync_tx_result().await?;
-        Ok(())
-    }
-
     pub async fn info<S: serde::Serialize>(&self, kind: &str, subkind: &str, context: S) {
         let _ = self.audit_log_entry().info(kind, subkind, context).await;
     }
@@ -134,4 +110,7 @@ pub struct Rsk {
     pub admin_address: Address,
     pub reorg_protection_padding: ethers::types::U64,
     pub blockchain_sync_cooldown: u64,
+    pub gasless_rbtc_per_user: U256,
+    pub gasless_fee: U256,
+    pub admin_claim_trigger: U256
 }

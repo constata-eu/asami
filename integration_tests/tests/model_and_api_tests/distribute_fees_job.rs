@@ -1,10 +1,9 @@
 /// This module tests how the scheduler interacts with fees distribution.
 /// The inner workings and amounts distributed by the smart contract are tested elsewhere.
 #[macro_use]
-pub mod support;
 use ethers::signers::Signer;
 
-app_test! { distributes_fees_to_holders (a)
+app_test! { distributes_fees_to_holders (_a)
     todo!("Make assertions about fee cycles and fees at");
     todo!("Try to have someone collect twice");
 }

@@ -350,10 +350,11 @@ impl<'b> ApiClient<'b> {
 
         let campaign = self.app().campaign().find(i32::try_from(gql_campaign.id).unwrap()).await.unwrap();
 
-        self.test_app.sync_events_until(&format!("Campaign should be paid '{link}'"), || async {
-            campaign.reloaded().await.unwrap().budget_u256() > u("0")
-        })
-        .await;
+        self.test_app
+            .sync_events_until(&format!("Campaign should be paid '{link}'"), || async {
+                campaign.reloaded().await.unwrap().budget_u256() > u("0")
+            })
+            .await;
 
         campaign.reloaded().await.unwrap()
     }
@@ -381,7 +382,12 @@ impl<'b> ApiClient<'b> {
         }])
     }
 
-    pub fn top_up_campaign_contract_call(&self, account: Address, briefing_hash: U256, budget: U256) -> AsamiFunctionCall {
+    pub fn top_up_campaign_contract_call(
+        &self,
+        account: Address,
+        briefing_hash: U256,
+        budget: U256,
+    ) -> AsamiFunctionCall {
         self.asami_contract().top_up_campaigns(vec![on_chain::TopUpCampaignsParam {
             account,
             briefing_hash,
@@ -390,16 +396,15 @@ impl<'b> ApiClient<'b> {
     }
 
     pub fn extend_campaign_contract_call(&self, briefing_hash: U256, valid_until: i64) -> AsamiFunctionCall {
-        self.asami_contract().extend_campaigns(vec![
-            on_chain::ExtendCampaignsParam{
-                valid_until: self.test_app.future_date(valid_until),
-                briefing_hash,
-            }
-        ])
+        self.asami_contract().extend_campaigns(vec![on_chain::ExtendCampaignsParam {
+            valid_until: self.test_app.future_date(valid_until),
+            briefing_hash,
+        }])
     }
 
     pub fn reimburse_campaign_contract_call(&self, addr: Address, briefing_hash: U256) -> AsamiFunctionCall {
-        self.asami_contract().reimburse_campaigns( vec![ on_chain::ReimburseCampaignsParam{ addr, briefing_hash} ])
+        self.asami_contract()
+            .reimburse_campaigns(vec![on_chain::ReimburseCampaignsParam { addr, briefing_hash }])
     }
 
     pub async fn make_client_wallet(&mut self) {
@@ -425,7 +430,11 @@ impl<'b> ApiClient<'b> {
 
     pub async fn claim_account(&mut self) {
         self.submit_claim_account_request().await;
-        self.test_app.run_idempotent_background_tasks_a_few_times().await;
+        self.test_app.wait_for_job(
+            &format!("Claming account {:?}", self.account_id()),
+            models::OnChainJobKind::PromoteSubAccounts,
+            models::OnChainJobStatus::Settled
+        ).await;
     }
 
     pub async fn gql<'a, T: core::fmt::Debug, Q>(&'a self, query: Q, extra_headers: Vec<Header<'static>>) -> T

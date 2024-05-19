@@ -139,7 +139,9 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
 					account.trustedAdmin = msg.sender;
 					// The amount left in the sub account is the highest amount we know the 
 					// user is comfortable leaving to the admin's best judgement.
-					account.maxGaslessDocToSpend = promotedDocAmount;
+					// It should be at least 1 DOC, otherwise users who claim too early would
+					// accidentally lock themselves out.
+					account.maxGaslessDocToSpend = promotedDocAmount > 1e18 ? promotedDocAmount : 1e18;
 
 					// The admin must send at least enough RBTC for 100.000 gas.
 					// 100.000 gas is more than enough for the user to reconfigure their account
@@ -177,7 +179,7 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
     function adminClaimBalancesFree(address[] calldata _addresses) external nonReentrant {
       for (uint256 i = 0; i < _addresses.length; i++){
         Account storage account = accounts[_addresses[i]];
-        require(account.trustedAdmin == msg.sender, "acb0");
+        require(account.trustedAdmin == msg.sender || _addresses[i] == msg.sender, "acb0");
 
         if (account.unclaimedAsamiBalance > 0) {
           uint256 balance = account.unclaimedAsamiBalance;
@@ -324,8 +326,9 @@ contract AsamiCore is ERC20Capped, ReentrancyGuard {
             require(campaign.budget > 0, "rc0");
             require(campaign.validUntil < block.timestamp, "rc1");
 
-            campaign.budget = 0;
             require(doc.transfer(input.addr, campaign.budget), "rc2");
+            campaign.budget = 0;
+
             emit CampaignReimbursed(input.addr, input.briefingHash);
         }
     }

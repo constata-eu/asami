@@ -45,8 +45,17 @@ impl Account {
         Ok(Some(decoded))
     }
 
+    pub async fn find_on_chain(
+        &self,
+    ) -> anyhow::Result<Option<(Address, U256, U256, U256, U256, U256, on_chain::FeeRateVote)>> {
+        let Some(addr) = self.decoded_addr()? else {
+            return Ok(None);
+        };
+        Ok(Some(self.state.on_chain.asami_contract.accounts(addr).call().await?))
+    }
+
     pub async fn campaign_offers(&self) -> AsamiResult<Vec<Campaign>> {
-        let handles = self.handle_vec().await?;
+        let handles = self.handle_scope().status_eq(HandleStatus::Active).all().await?;
         if handles.is_empty() {
             return Ok(vec![]);
         }
@@ -91,7 +100,7 @@ impl Account {
                 let Some(trigger) = h.user_id() else {
                     continue;
                 };
-                if h.validate_collaboration(&c, trigger).await.is_ok() {
+                if h.validate_collaboration(&c, h.reward_for(&c).unwrap_or_default(), trigger).await.is_ok() {
                     campaigns.push(c);
                     break;
                 }

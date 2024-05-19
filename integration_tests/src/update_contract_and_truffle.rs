@@ -15,7 +15,7 @@ fn main() {
 
     println!("Killing existing ganaches");
     Command::new("bash")
-        .args(&["-c", r#"pgrep -f "bin/ganache" | xargs -r kill -9"#])
+        .args(["-c", r#"pgrep -f "bin/ganache" | xargs -r kill -9"#])
         .output()
         .expect("Could not kill previous server");
 
@@ -24,11 +24,11 @@ fn main() {
 
     println!("Removing old ganache data");
     Command::new("rm")
-        .args(&["-rf", "../contract/ganache_data"])
+        .args(["-rf", "../contract/ganache_data"])
         .output()
         .expect("Could not remove previous ganache_data dir");
     Command::new("mkdir")
-        .args(&["../contract/ganache_data"])
+        .args(["../contract/ganache_data"])
         .output()
         .expect("Could not remove previous ganache_data dir");
 
@@ -77,7 +77,7 @@ fn main() {
     println!("setting up blockchain data and balances");
     let output = Command::new("truffle")
         .current_dir(&dir)
-        .env("ADMIN_ADDRESS", &config.rsk.admin_address.to_string())
+        .env("ADMIN_ADDRESS", ethers::utils::hex::encode(&config.rsk.admin_address))
         .env("MEMBER_ADDRESS", "0x6868db995fdEEf093320A8Ee64b01F450b044f2C")
         .args(["exec", "scripts/local_blockchain_state.js", "--network", "local"])
         .output()
@@ -89,15 +89,16 @@ fn main() {
 
     let out_str = String::from_utf8(output.stdout).unwrap();
     let json = out_str.lines().last().unwrap();
-    serde_json::from_str::<Addresses>(json).expect("Local blockchain init script may have exited with an error.");
-    std::fs::write("../contract/ganache_data/addresses.json", &json)
+    serde_json::from_str::<Addresses>(json)
+        .unwrap_or_else(|_| panic!( "Local blockchain init script may have exited with an error.\n{out_str}"));
+    std::fs::write("../contract/ganache_data/addresses.json", json)
         .expect("cannot write to ganache_data/addresses.json");
     println!("Done creating env, addresses were {json}");
 
     Command::new("ganache").current_dir(&dir).args(["instances", "stop", &child]).output().unwrap();
 
     Command::new("bash")
-        .args(&["-c", r#"pgrep -f "bin/ganache" | xargs -r kill -9"#])
+        .args(["-c", r#"pgrep -f "bin/ganache" | xargs -r kill -9"#])
         .output()
         .expect("Could not kill previous server");
 
