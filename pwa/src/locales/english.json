@@ -1,6 +1,10 @@
 {
   "resources": {
   },
+	"campaign_kinds": {
+		"XREPOST": "Repost in X",
+		"IG_CLONE_POST": "Make Instagram Post"
+	},
 	"footer": {
     "built_with": "Built with"
   },
@@ -8,11 +12,15 @@
     "title": "Active campaigns",
     "text": "Club members will be reposting your content until the budget is fully spent. Unspent amounts will be returned after campaign ends.",
     "see_post": "See Post",
-    "site": "Site",
+    "kind": "Campaign Kind",
     "post": "Post",
     "budget": "Budget",
-    "remaining": "Remaining",
-    "ends_on": "Ends on"
+    "status": "Current status",
+		"statuses": {
+			"publishing": "Publishing soon.",
+			"running": "Has %{budget} DOC. Runs until: %{validUntil}.",
+			"stopped": "Not running."
+		}
   },
   "claim_account": {
     "success": "The admin will hand over control of your account to you soon.",
@@ -20,9 +28,10 @@
   },
   "advertiser_help": {
     "title": "Little help:",
-    "DONE": "You can create a campaign in X or Instagram by providing a link to any post, and members will amplify it. Remember they have the last word, so make your post friendly!",
+    "CLAIMED": "You can create a campaign in X or Instagram by providing a link to any post, and members will amplify it. Remember they have the last word, so make your post friendly!",
     "CLAIMING": "You'll be able to start new campaigns once the admin processes your account claim",
-    "NO_CLAIM": "Since you haven't connected your WEB3 wallet, your campaigns will be funded privately by the club's admin, subject to how much funds are available. Connect your wallet to claim your account and fund campaigns with your own budget."
+    "MANAGED": "You should connect your WEB3 wallet to be able to create campaigns.",
+		"BANNED": "Your account has been deactivated 😭. Your funds are still in the smart contract, and you can find them there, but you cannot longer use this website."
   },
   "campaign_request_list": {
     "title": "Requested campaigns",
@@ -39,7 +48,21 @@
     "text": "These are your collaborations so far",
     "see_post": "See post",
     "reward": "Reward",
-    "fee": "Asami fee"
+    "fee": "Asami fee",
+		"statuses": {
+			"REGISTERED": {
+				"title": "Registered",
+				"text": "We saw your collab, we're validating it."
+			},
+			"CLEARED": {
+				"title": "Cleared",
+				"text": "Paid to your unclaimed balance."
+			},
+			"FAILED": {
+				"title": "Failed",
+				"text": "This collab could not be paid. You can undo it or contact us."
+			}
+		}
   },
   "campaign_request": {
     "title": "Suggest a campaign",
@@ -160,9 +183,6 @@
         "guidelines": "Make it a post, not a story. Do not use filters. Leave the text as-is. Make sure your account is public.",
         "get_image": "Get image",
         "copy_text": "Get text"
-      },
-      "in_progress": {
-        "text": "We've verified %{username}, and we're in process of publishing it to the blockchain. Once we're done you can start participating in campaigns."
       }
     },
     "x": {
@@ -179,9 +199,6 @@
         "post_text": "Starting today, some of my reposts will be paid for, as I joined @asami_club [%{accountId}]",
         "button": "Post message",
         "done": "Thank you! It may take up to an hour for us to pick up your post."
-      },
-      "in_progress": {
-        "text": "We've verified %{username}, and we're in process of publishing it to the blockchain. Once we're done you can start participating in campaigns."
       }
     }
   },
@@ -189,22 +206,29 @@
     "title": "Your account",
     "account_id_label":"Account ID",
     "unclaimed": {
-      "doc_label": "Unclaimed DOC Rewards",
-      "asami_label": "Unclaimed ASAMI Tokens",
-      "not_requested": "You must create and connect a WEB3 wallet to claim these rewards. Once claimed, all your rewards will be paid directly to your wallet.",
+      "doc_label": "Unclaimed DOC",
+      "asami_label": "Unclaimed ASAMI",
+      "not_requested": "You must create and connect a WEB3 wallet to gain full control of your account. Then, you can claim your rewards whenever you like.",
       "not_requested_button": "Connect wallet and claim",
-      "pending": "You've started the process to claim your account, which will complete soon.  After that, you'll have to connect your wallet to perform some actions."
+      "pending": "You've started the process to claim your account, which will complete soon."
     },
     "claimed": {
-      "doc_label": "DOC Balance",
-      "asami_label": "ASAMI Balance",
+      "doc_label": "DOC in wallet",
+      "asami_label": "ASAMI in wallet",
       "added": "%{symbol} added to your wallet.",
       "not_added": "%{symbol} could not be added to your wallet.",
       "address": "RSK Address",
       "last_payout_amount_label": "Last fee share received",
       "last_payout_date_label":"Last fee share date",
       "next_payout_date_label":"Next fee share date",
-      "participate_in_governance": "You claimed your account, your rewards will be paid directly to your wallet, and you will get a share of protocol fees too. Make sure to add the DOC and ASAMI tokens to your wallet using the buttons above."
+			"cant_withdraw": "You don't have enough RBTC in your wallet to claim your balance.",
+			"claim_button_label": "Claim to wallet",
+			"gasless_claim_button_label": "Claim without RBTC",
+			"suggest_gasless": "We deduct 1 DOC, you get your unclaimed balances and 0.000006 RBTC in your wallet.",
+			"no_pending_balance": "Your rewards will go to your unclaimed balance, then you can claim them here.",
+			"cant_withdraw": "You're low on RBTC for this claim. We can process your claim ind send you some extra RBTC for 1 DOC of your unclaimed balance. Keep stacking rewards!",
+			"gasless_allowance_success": "We'll process your claim soon.",
+			"claim_success": "Your tokens are on their way."
     }
   },
   "logged_in_nav_card": {

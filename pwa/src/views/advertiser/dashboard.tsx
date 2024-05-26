@@ -8,24 +8,31 @@ import { viewPostUrl } from '../../lib/campaign';
 import { Pagination, Datagrid, TextField, FunctionField} from 'react-admin';
 import { useListController, ListContextProvider, useTranslate } from 'react-admin';
 import { getAuthKeys } from '../../lib/auth_provider';
-import { CampaignRequestCard } from './campaign_request_card';
 import { MakeCampaignCard } from './make_campaign_card';
 import BalanceCard from "../balance_card";
 
 const Dashboard = () => {
   useAuthenticated();
 
-  /*
   const {data, isLoading} = useGetOne(
     "Account",
     { id: getAuthKeys().session.accountId },
-    { refetchInterval: (d) => d?.status == "DONE" ? false : 5000 }
+    { refetchInterval: (d) => d?.status == "CLAIMED" ? false : 5000 }
   );
-*/
-  const data = { status: "DONE" };
-  const isLoading = false;
 
-  const [needsRefresh, setNeedsRefresh] = useSafeSetState(false);
+  const listContext = useListController({
+    debounce: 500,
+    disableSyncWithLocation: true,
+    filter: {
+			accountIdEq: getAuthKeys().session.accountId,
+			statusNe: "DRAFT"
+		},
+    perPage: 20,
+    queryOptions: {
+      refetchInterval: 10000,
+    },
+    resource: "Campaign",
+  });
 
   if(isLoading || !data) {
     return <Container maxWidth="md">
@@ -33,101 +40,37 @@ const Dashboard = () => {
     </Container>;
   }
 
-  let claim;
-  if (!data.status) {
-    claim = "NO_CLAIM";
-  } else if (data.status == "DONE") {
-    claim = "DONE";
-  } else {
-    claim = "CLAIMING";
-  }
-
   return (<Box p="1em" id="advertiser-dashboard">
     <ColumnsContainer>
       <LoggedInNavCard />
-      { claim == "DONE" && <MakeCampaignCard account={data} /> }
+			<AdvertiserHelpCard account={data} />
+      { data.status == "CLAIMED" && <MakeCampaignCard account={data} onCreate={() => listContext.refetch() } /> }
 
     </ColumnsContainer>
 
-    <CampaignRequestList {...{needsRefresh, setNeedsRefresh}} />
-    <CampaignList/>
+    <CampaignList listContext={listContext}/>
   </Box>);
 }
 
-const AdvertiserHelpCard = ({claim}) => {
+const AdvertiserHelpCard = ({account}) => {
   const translate = useTranslate();
   const id = {
-    "NO_CLAIM": "advertiser-claim-account-none",
+    "MANAGED": "advertiser-claim-account-none",
     "CLAIMING": "advertiser-claim-account-pending",
-    "DONE": "advertiser-claim-account-done",
-  }[claim];
+    "CLAIMED": "advertiser-claim-account-done",
+    "BANNED": "advertiser-banned",
+  }[account.status];
 
   return <DeckCard id="advertiser-help-card" borderColor={green}>
     <CardContent>
       <Head2 sx={{ color: green}} >{ translate('advertiser_help.title') }</Head2>
-      <Typography id={id} mt="1em">{ translate(`advertiser_help.${claim}`) }</Typography>
+      <Typography id={id} mt="1em">{ translate(`advertiser_help.${account.status}`) }</Typography>
     </CardContent>
   </DeckCard>;
 }
 
-const CampaignRequestList = ({needsRefresh, setNeedsRefresh}) => {
+const CampaignList = ({listContext}) => {
   const translate = useTranslate();
-  const listContext = useListController({
-    debounce: 500,
-    disableSyncWithLocation: true,
-    filter: {statusIn: ["RECEIVED", "PAID", "SUBMITTED"]},
-    queryOptions: {
-      refetchInterval: 5000,
-    },
-    perPage: 20,
-    resource: "CampaignRequest",
-  });
-
-  useEffect(() => {
-    if(needsRefresh) {
-      listContext.refetch();
-      setNeedsRefresh(false);
-    }
-  }, [needsRefresh, setNeedsRefresh]);
-
-  if (listContext.total < 1 ){
-    return <></>;
-  }
-
-  return (
-    <ListContextProvider value={listContext}>
-      <Card id="campaign-request-list" sx={{my:"3em"}}>
-        <CardTitle text="campaign_request_list.title" >
-          <Typography mt="1em">{ translate("campaign_request_list.admin_will_review") }</Typography>
-          <Typography>{ translate("campaign_request_list.claim_to_create") }</Typography>
-        </CardTitle>
-        <Datagrid bulkActionButtons={false}>
-          <FunctionField label={ translate("campaign_request_list.post") } render={record =>
-            <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">{ translate("campaign_request_list.see_post") }</a>
-          } />
-          <TextField source="status" label={ translate("campaign_request_list.status") } />
-          <TextField source="site" label={ translate("campaign_request_list.site") }/>
-          <FunctionField label={ translate("campaign_request_list.budget") }
-            render={record => `${formatEther(record.budget)} DOC` } />
-        </Datagrid>
-        <Pagination rowsPerPageOptions={[]} />
-      </Card>
-    </ListContextProvider>
-  );
-}
-
-const CampaignList = () => {
-  const translate = useTranslate();
-  const listContext = useListController({
-    debounce: 500,
-    disableSyncWithLocation: true,
-    filter: {accountIdEq: getAuthKeys().session.accountId },
-    perPage: 20,
-    queryOptions: {
-      refetchInterval: 5000,
-    },
-    resource: "Campaign",
-  });
 
   if (listContext.total < 1 ){
     return <></>;
@@ -145,10 +88,19 @@ const CampaignList = () => {
               { translate("campaign_list.see_post") }
             </a>
           } />
-          <TextField source="site" label={ translate("campaign_list.site") } />
-          <FunctionField label={ translate("campaign_list.budget") } render={record => `${formatEther(record.budget)} DOC` } />
-          <FunctionField render={record => `${formatEther(record.remaining)} DOC` } />
-          <TextField source="validUntil" label={ translate("campaign_list.ends_on") } />
+          <FunctionField label={ translate("campaign_list.kind") } render={record =>
+						translate(`campaign_kinds.${record.campaignKind}`)
+          } />
+          <FunctionField source="status" label={ translate("campaign_list.status") } render={record => {
+						if (record.status == "SUBMITTED") {
+							return translate("campaign_list.statuses.publishing");
+						} else if (record.budget > BigInt(0)) {
+							return translate("campaign_list.statuses.running", {budget: formatEther(record.budget), validUntil: new Date(record.validUntil).toDateString()});
+						} else {
+							return translate("campaign_list.statuses.stopped")
+						}
+
+					}} />
         </Datagrid>
         <Pagination rowsPerPageOptions={[]} />
       </Card>

@@ -21,6 +21,10 @@ pub struct Account {
     asami_balance: String,
     #[graphql(description = "Doc Balance in a claimed account's address.")]
     doc_balance: String,
+    #[graphql(description = "RBTC balance in a claimed account's address.")]
+    rbtc_balance: String,
+    #[graphql(description = "Is the account happy with receiving gasless claims if they are allowed in the smart contract?")]
+    allows_gasless: bool,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -60,16 +64,17 @@ impl Showable<models::Account, AccountFilter> for Account {
         })
     }
 
-    async fn db_to_graphql(d: models::Account) -> AsamiResult<Self> {
+    async fn db_to_graphql(_context: &Context, d: models::Account) -> AsamiResult<Self> {
         let asami = &d.state.on_chain.asami_contract;
         let address = d.decoded_addr()?;
 
-        let (doc_balance, asami_balance, unclaimed_doc_balance, unclaimed_asami_balance) = match address {
+        let (doc_balance, asami_balance, rbtc_balance, unclaimed_doc_balance, unclaimed_asami_balance) = match address {
             Some(address) => {
                 let account = asami.accounts(address).call().await?;
                 (
                     d.state.on_chain.doc_contract.balance_of(address).call().await?.encode_hex(),
                     asami.balance_of(address).call().await?.encode_hex(),
+                    asami.client().get_balance(address, None).await?.encode_hex(),
                     account.4.encode_hex(),
                     account.3.encode_hex(),
                 )
@@ -88,7 +93,7 @@ impl Showable<models::Account, AccountFilter> for Account {
                     })
                     .unwrap_or_else(|_| (weihex("0"), weihex("0")));
 
-                (weihex("0"), weihex("0"), unclaimed_doc, unclaimed_asami)
+                (weihex("0"), weihex("0"), weihex("0"), unclaimed_doc, unclaimed_asami)
             }
         };
 
@@ -98,8 +103,10 @@ impl Showable<models::Account, AccountFilter> for Account {
             addr: address.map(|x| format!("{x:?}")),
             asami_balance,
             doc_balance,
+            rbtc_balance,
             unclaimed_asami_balance,
             unclaimed_doc_balance,
+            allows_gasless: d.attrs.allows_gasless
         })
     }
 }

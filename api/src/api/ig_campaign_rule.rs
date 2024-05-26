@@ -57,7 +57,7 @@ impl Showable<models::IgCampaignRule, IgCampaignRuleFilter> for IgCampaignRule {
         })
     }
 
-    async fn db_to_graphql(d: models::IgCampaignRule) -> AsamiResult<Self> {
+    async fn db_to_graphql(_context: &Context, d: models::IgCampaignRule) -> AsamiResult<Self> {
         use base64::{engine::general_purpose, Engine as _};
 
         Ok(IgCampaignRule {

@@ -29,8 +29,17 @@ app_test! { makes_gasless_claims_as_soon_as_possible(a)
     let susan = a.client().await;
     let susan_x = susan.create_handle("susan_on_x", "44444", Site::X, wei("10000")).await;
 
-    for user in [&alice_x, &bob_x, &carl_x, &stranger_x, &susan_x] {
+    // Eve has not allowed gasless claims so we honour it.
+    let mut eve = a.client().await;
+    eve.claim_account().await;
+    let eve_x = eve.create_handle("eve_on_x", "88888", Site::X, wei("10000")).await;
+
+    for user in [&alice_x, &bob_x, &carl_x, &stranger_x, &susan_x, &eve_x] {
         campaign.make_x_collab_with_user_id(user.user_id().as_ref().unwrap()).await?;
+    }
+
+    for client in [&alice, &bob, &carl, &stranger, &susan] {
+        client.account().await.allow_gasless().await?;
     }
 
     a.send_tx(
@@ -39,8 +48,8 @@ app_test! { makes_gasless_claims_as_soon_as_possible(a)
         stranger.asami_contract().config_account(stranger.address(), u("6"), u("0"), u("0"))
     ).await;
 
-    assert!(a.admin_rbtc_balance().await < wei("49999000000000000000"));
-    assert!(a.admin_rbtc_balance().await > wei("49998000000000000000"));
+    assert!(a.admin_rbtc_balance().await < wei("39999000000000000000"));
+    assert!(a.admin_rbtc_balance().await > wei("39998000000000000000"));
 
     // This will run all other required jobs to get to the gasless claims part.
     let job = a.wait_for_job(
@@ -78,6 +87,12 @@ app_test! { makes_gasless_claims_as_soon_as_possible(a)
         wei("8999100000000000000"), wei("1199880000000000000000"),
     ).await;
 
+    a.assert_balances_of("Eve should have not claimed", eve.address(),
+        u("10"),
+        wei("8999100000000000000"), u("0"),
+        wei("1199880000000000000000"), u("0"),
+    ).await;
+
     assert_eq!(job.on_chain_job_account_vec().await?.len(), 2);
 
     a.wait_for_job(
@@ -86,10 +101,9 @@ app_test! { makes_gasless_claims_as_soon_as_possible(a)
         OnChainJobStatus::Skipped
     ).await;
 
-    assert!(a.admin_rbtc_balance().await < wei("49998000000000000000"));
-    assert!(a.admin_rbtc_balance().await > wei("49997000000000000000"));
+    assert!(a.admin_rbtc_balance().await < wei("39997500000000000000"));
+    assert!(a.admin_rbtc_balance().await > wei("39996500000000000000"));
 }
-
 
 app_test! { makes_admin_claim(a)
     assert_eq!(a.admin_asami_balance().await, u("0"));

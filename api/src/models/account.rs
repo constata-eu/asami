@@ -26,6 +26,8 @@ model! {
     claim_session_id: Option<String>,
     #[sqlx_model_hints(boolean, default)]
     processed_for_legacy_claim: bool,
+    #[sqlx_model_hints(boolean, default)]
+    allows_gasless: bool,
   },
   has_many {
     Handle(account_id),
@@ -141,6 +143,14 @@ impl Account {
             .claim_session_id(Some(session_id))
             .save()
             .await?)
+    }
+
+    pub async fn allow_gasless(self) -> AsamiResult<Self> {
+        Ok(self.update().allows_gasless(true).save().await?)
+    }
+
+    pub async fn disallow_gasless(self) -> AsamiResult<Self> {
+        Ok(self.update().allows_gasless(false).save().await?)
     }
 }
 

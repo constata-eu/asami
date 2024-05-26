@@ -54,6 +54,5 @@ make_sql_enum![
         Registered, // The collab is registered and will be paid out.
         Cleared,    // The collab was paid correctly.
         Failed,     // The collab was registered but will not be paid.
-        Disputed,   // An incomplete intention to collab was observed.
     }
 ];

@@ -111,19 +111,19 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn current_session(&self) -> FieldResult<CurrentSession> {
-        self.current_session.clone().ok_or(field_error("authentication", "authentication_needed"))
+    pub fn current_session(&self) -> AsamiResult<CurrentSession> {
+        self.current_session.clone().ok_or(Error::service("authentication", "authentication_needed"))
     }
 
-    pub fn user_id(&self) -> FieldResult<i32> {
+    pub fn user_id(&self) -> AsamiResult<i32> {
         Ok(*self.current_session()?.0.user_id())
     }
 
-    pub fn account_id(&self) -> FieldResult<String> {
+    pub fn account_id(&self) -> AsamiResult<String> {
         Ok(self.current_session()?.0.attrs.account_id.clone())
     }
 
-    pub async fn account(&self) -> FieldResult<models::Account> {
+    pub async fn account(&self) -> AsamiResult<models::Account> {
         Ok(self.app.account().find(self.account_id()?).await?)
     }
 }
@@ -138,7 +138,7 @@ trait Showable<Model: SqlxModel<State = App>, Filter: Send>: Sized {
     fn sort_field_to_order_by(field: &str) -> Option<<Model as SqlxModel>::ModelOrderBy>;
     fn filter_to_select(context: &Context, f: Option<Filter>) -> FieldResult<<Model as SqlxModel>::SelectModel>;
     fn select_by_id(context: &Context, id: <Model as SqlxModel>::Id) -> FieldResult<<Model as SqlxModel>::SelectModel>;
-    async fn db_to_graphql(d: Model) -> AsamiResult<Self>;
+    async fn db_to_graphql(context: &Context, d: Model) -> AsamiResult<Self>;
 
     async fn resource(context: &Context, id: <Model as SqlxModel>::Id) -> FieldResult<Self>
     where
@@ -149,7 +149,7 @@ trait Showable<Model: SqlxModel<State = App>, Filter: Send>: Sized {
             .use_struct(Self::select_by_id(context, id)?)
             .one()
             .await?;
-        Ok(Self::db_to_graphql(resource).await?)
+        Ok(Self::db_to_graphql(context, resource).await?)
     }
 
     async fn collection(
@@ -211,7 +211,7 @@ trait Showable<Model: SqlxModel<State = App>, Filter: Send>: Sized {
 
         let mut all = vec![];
         for p in selected.into_iter() {
-            all.push(Self::db_to_graphql(p).await?);
+            all.push(Self::db_to_graphql(context, p).await?);
         }
         Ok(all)
     }
@@ -298,7 +298,7 @@ pub struct Mutation;
 #[graphql_object(context=Context)]
 impl Mutation {
     pub async fn create_session(context: &Context) -> FieldResult<Session> {
-        Ok(Session::db_to_graphql(context.current_session()?.0.clone()).await?)
+        Ok(Session::db_to_graphql(context, context.current_session()?.0.clone()).await?)
     }
 
     pub async fn create_campaign_from_link(
@@ -308,8 +308,17 @@ impl Mutation {
         input.process(context).await
     }
 
+    pub async fn update_campaign(context: &Context, id: i32) -> FieldResult<Campaign> {
+        let campaign = context.account().await?.campaign_scope().id_eq(id).one().await?.mark_submitted().await?;
+        Ok(Campaign::db_to_graphql(context, campaign).await?)
+    }
+
     pub async fn create_handle(context: &Context, input: CreateHandleInput) -> FieldResult<Handle> {
         input.process(context).await
+    }
+
+    pub async fn create_gasless_allowance(context: &Context) -> FieldResult<Account> {
+        Ok(Account::db_to_graphql(context, context.account().await?.allow_gasless().await?).await?)
     }
 
     pub async fn create_claim_account_request(

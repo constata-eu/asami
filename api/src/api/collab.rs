@@ -17,12 +17,15 @@ pub struct Collab {
     handle_id: i32,
     #[graphql(description = "The member who owns the handle.")]
     member_id: String,
+    #[graphql(description = "Status of this collab.")]
+    status: CollabStatus,
+    #[graphql(description = "Reason to dispute this collab, if any.")]
+    dispute_reason: Option<String>,
     #[graphql(description = "The gross amount paid by the advertiser (campaign creator) for this collab.")]
     reward: String,
-    #[graphql(
-        description = "The fee deducted by asami from the gross amount, field only available when reward cleared."
-    )]
+    #[graphql( description = "The fee deducted by asami from the gross amount, field only available when reward cleared.")]
     fee: Option<String>,
+
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -76,13 +79,15 @@ impl Showable<models::Collab, CollabFilter> for Collab {
         })
     }
 
-    async fn db_to_graphql(d: models::Collab) -> AsamiResult<Self> {
+    async fn db_to_graphql(_context: &Context, d: models::Collab) -> AsamiResult<Self> {
         Ok(Collab {
             id: d.attrs.id,
             campaign_id: d.attrs.campaign_id,
             advertiser_id: d.attrs.advertiser_id,
             handle_id: d.attrs.handle_id,
             member_id: d.attrs.member_id,
+            status: d.attrs.status,
+            dispute_reason: d.attrs.dispute_reason,
             reward: d.attrs.reward,
             fee: d.attrs.fee,
         })

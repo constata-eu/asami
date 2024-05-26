@@ -74,7 +74,7 @@ impl Showable<models::Handle, HandleFilter> for Handle {
         })
     }
 
-    async fn db_to_graphql(d: models::Handle) -> AsamiResult<Self> {
+    async fn db_to_graphql(_context: &Context, d: models::Handle) -> AsamiResult<Self> {
         Ok(Handle {
             id: d.attrs.id,
             account_id: d.attrs.account_id,
@@ -99,6 +99,6 @@ impl CreateHandleInput {
     pub async fn process(self, context: &Context) -> FieldResult<Handle> {
         let req = context.account().await?.create_handle(self.site, &self.username).await?;
 
-        Ok(Handle::db_to_graphql(req).await?)
+        Ok(Handle::db_to_graphql(context,req).await?)
     }
 }

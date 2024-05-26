@@ -15,6 +15,19 @@ enum CampaignKind {
   IG_CLONE_POST
 }
 
+enum CampaignStatus {
+  DRAFT
+  SUBMITTED
+  PUBLISHED
+}
+
+enum CollabStatus {
+  REGISTERED
+  CLEARED
+  FAILED
+  DISPUTED
+}
+
 enum HandleStatus {
   UNVERIFIED
   VERIFIED
@@ -48,6 +61,7 @@ input CampaignFilter {
   budgetEq: String
   briefingHashEq: String
   briefingJsonLike: String
+  statusNe: CampaignStatus
   availableToAccountId: String
 }
 
@@ -160,10 +174,14 @@ type Campaign {
   briefingHash: String!
   "The campaign expiration date, after which funds may be returned"
   validUntil: DateTime
+  "The on-chain publication status of this campaign."
+  status: CampaignStatus!
   "The date in which this campaign was created."
   createdAt: DateTime!
   "The topic ids this campaign is restricted to."
   topicIds: [Int!]!
+  "The reward you would receive. None means it does not apply."
+  youWouldReceive: String
 }
 
 "Internal UX preferences for specific campaigns"
@@ -190,6 +208,10 @@ type Collab {
   handleId: Int!
   "The member who owns the handle."
   memberId: String!
+  "Status of this collab."
+  status: CollabStatus!
+  "Reason to dispute this collab, if any."
+  disputeReason: String
   "The gross amount paid by the advertiser (campaign creator) for this collab."
   reward: String!
   "The fee deducted by asami from the gross amount, field only available when reward cleared."
@@ -233,6 +255,7 @@ type ListMetadata {
 type Mutation {
   createSession: Session!
   createCampaignFromLink(input: CreateCampaignFromLinkInput!): Campaign!
+  updateCampaign(id: Int!): Campaign!
   createHandle(input: CreateHandleInput!): Handle!
   createClaimAccountRequest(input: CreateClaimAccountRequestInput!): Account!
   createCampaignPreference(input: CreateCampaignPreferenceInput!): CampaignPreference!

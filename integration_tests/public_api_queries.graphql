@@ -19,8 +19,26 @@ mutation CreateCampaignFromLink($input: CreateCampaignFromLinkInput!) {
     briefingJson
     briefingHash
     validUntil
+    status
     createdAt
     topicIds
+    youWouldReceive
+    __typename
+  }
+}
+mutation UpdateCampaign($id: Int!) {
+  updateCampaign(id: $id) {
+    id
+    accountId
+    budget
+    campaignKind
+    briefingJson
+    briefingHash
+    validUntil
+    status
+    createdAt
+    topicIds
+    youWouldReceive
     __typename
   }
 }
@@ -96,8 +114,10 @@ query Campaign($id: Int!) {
     briefingJson
     briefingHash
     validUntil
+    status
     createdAt
     topicIds
+    youWouldReceive
     __typename
   }
 }
@@ -110,8 +130,10 @@ query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: St
     briefingJson
     briefingHash
     validUntil
+    status
     createdAt
     topicIds
+    youWouldReceive
     __typename
   }
 }
@@ -158,6 +180,8 @@ query Collab($id: Int!) {
     advertiserId
     handleId
     memberId
+    status
+    disputeReason
     reward
     fee
     __typename
@@ -170,6 +194,8 @@ query AllCollabs($page: Int, $perPage: Int, $sortField: String, $sortOrder: Stri
     advertiserId
     handleId
     memberId
+    status
+    disputeReason
     reward
     fee
     __typename

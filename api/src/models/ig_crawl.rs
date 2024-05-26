@@ -38,7 +38,7 @@ model! {
 }
 
 impl IgCrawlHub {
-    pub async fn do_everything(&self) -> AsamiResult<()> {
+    pub async fn do_everything(&self) -> anyhow::Result<()> {
         self.schedule_new().await?;
         self.submit_scheduled().await?;
         self.collect_all_responses().await?;
@@ -52,7 +52,7 @@ impl IgCrawlHub {
         &self.state.settings.instagram
     }
 
-    pub async fn schedule_new(&self) -> AsamiResult<()> {
+    pub async fn schedule_new(&self) -> anyhow::Result<()> {
         let cooldown = Duration::minutes(self.settings().crawl_cooldown_minutes);
 
         if self.recent_ig_crawls(cooldown).optional().await?.is_some() {
@@ -83,7 +83,7 @@ impl IgCrawlHub {
             .await?
         {
             if c.is_missing_ig_rules().await? {
-                direct_urls.insert(format!("https://www.instagram.com/p/{}", c.attrs.briefing_json));
+                direct_urls.insert(format!("https://www.instagram.com/p/{}", c.content_id()?));
             }
         }
 
@@ -104,7 +104,7 @@ impl IgCrawlHub {
         Ok(())
     }
 
-    pub async fn submit_scheduled(&self) -> AsamiResult<()> {
+    pub async fn submit_scheduled(&self) -> anyhow::Result<()> {
         let api_url = "https://api.apify.com/v2/acts/apify~instagram-scraper/runs";
         let token = &self.state.settings.instagram.apify_key;
 
@@ -133,7 +133,7 @@ impl IgCrawlHub {
         Ok(())
     }
 
-    pub async fn collect_all_responses(&self) -> AsamiResult<()> {
+    pub async fn collect_all_responses(&self) -> anyhow::Result<()> {
         let api_runs_url = "https://api.apify.com/v2/actor-runs";
         let api_datasets_url = "https://api.apify.com/v2/datasets";
         let token = &self.state.settings.instagram.apify_key;
@@ -202,7 +202,7 @@ impl IgCrawlHub {
         Ok(())
     }
 
-    pub async fn process_for_campaign_rules(&self) -> AsamiResult<()> {
+    pub async fn process_for_campaign_rules(&self) -> anyhow::Result<()> {
         for crawl in self
             .select()
             .processed_for_campaign_rules_eq(false)
@@ -219,7 +219,7 @@ impl IgCrawlHub {
         Ok(())
     }
 
-    pub async fn process_for_handle_requests(&self) -> AsamiResult<()> {
+    pub async fn process_for_handle_requests(&self) -> anyhow::Result<()> {
         let (_, verification_image_hash) = get_url_image_hash(&self.state.settings.instagram.verification_image_url)?;
 
         let verification_caption_regex = regex::Regex::new(&format!(
@@ -243,7 +243,7 @@ impl IgCrawlHub {
         Ok(())
     }
 
-    pub async fn process_for_collabs(&self) -> AsamiResult<()> {
+    pub async fn process_for_collabs(&self) -> anyhow::Result<()> {
         let mut campaigns = vec![];
 
         for campaign in self
@@ -298,7 +298,7 @@ model! {
 }
 
 impl IgCrawlResult {
-    pub async fn process_for_campaign_rules(self) -> AsamiResult<()> {
+    pub async fn process_for_campaign_rules(self) -> anyhow::Result<()> {
         let ig_result = serde_json::from_str(self.json_string())
             .map_err(|_| Error::Runtime("stored invalid IgResult in DB".into()))?;
 
@@ -311,7 +311,7 @@ impl IgCrawlResult {
             .campaign()
             .select()
             .campaign_kind_eq(CampaignKind::IgClonePost)
-            .briefing_json_eq(post.short_code)
+            .briefing_json_eq(&serde_json::to_string(&post.short_code)?)
             .optional()
             .await?
         else {
@@ -343,7 +343,7 @@ impl IgCrawlResult {
         mut self,
         verification_hash: &ImageHash,
         caption_regex: &regex::Regex,
-    ) -> AsamiResult<()> {
+    ) -> anyhow::Result<()> {
         let ig_result = serde_json::from_str(self.json_string())
             .map_err(|_| Error::Runtime("stored invalid IgResult in DB".into()))?;
 
@@ -410,7 +410,7 @@ impl IgCrawlResult {
         Ok(())
     }
 
-    pub async fn process_for_collabs(mut self, campaigns: &[(Campaign, IgCampaignRule)]) -> AsamiResult<()> {
+    pub async fn process_for_collabs(mut self, campaigns: &[(Campaign, IgCampaignRule)]) -> anyhow::Result<()> {
         let ig_result = serde_json::from_str(self.json_string())
             .map_err(|_| Error::Runtime("stored invalid IgResult in DB".into()))?;
 
@@ -424,13 +424,14 @@ impl IgCrawlResult {
             .select()
             .username_eq(profile.username.clone())
             .site_eq(Site::Instagram)
+            .order_by(HandleOrderBy::Id)
+            .desc(true)
             .optional()
             .await?;
 
         match maybe_handle {
             None => {
-                self.log("Skipped. Handle not created yet in Asami. We'll keep trying until they create it.")
-                    .await?;
+                self.log("Skipped. Handle not synced yet. If it exists, we'll get it next time.").await?;
             }
             Some(handle) => {
                 if *handle.status() != HandleStatus::Active {
@@ -475,7 +476,7 @@ impl IgCrawlResult {
                                 self.log_post(post, &format!("could be a collab, but was invalid {} {}", field, value))
                                     .await?;
                             }
-                            Err(e) => return Err(e),
+                            Err(e) => return Err(e.into()),
                             Ok(collab) => {
                                 self.log_post(post, &format!("Made collab request {}", collab.attrs.id)).await?;
                             }
@@ -490,13 +491,13 @@ impl IgCrawlResult {
         Ok(())
     }
 
-    pub async fn log(&mut self, line: &str) -> AsamiResult<()> {
+    pub async fn log(&mut self, line: &str) -> anyhow::Result<()> {
         self.reload().await?;
         self.clone().update().log_text(format!("{}{}\n", self.log_text(), line)).save().await?;
         Ok(())
     }
 
-    pub async fn log_post(&mut self, post: &IgPost, line: &str) -> AsamiResult<()> {
+    pub async fn log_post(&mut self, post: &IgPost, line: &str) -> anyhow::Result<()> {
         self.log(&format!("Post {}: {}", &post.id, line)).await
     }
 
@@ -528,13 +529,13 @@ model! {
 }
 
 impl IgCampaignRule {
-    pub fn get_image_hash(&self) -> AsamiResult<ImageHash> {
+    pub fn get_image_hash(&self) -> anyhow::Result<ImageHash> {
         ImageHash::from_base64(self.image_hash())
-            .map_err(|_| Error::service("db", "invalid_image_hash_on_campaign_rule_table"))
+            .map_err(|_| Error::service("db", "invalid_image_hash_on_campaign_rule_table").into())
     }
 }
 
-pub fn get_url_image_hash(url: &str) -> AsamiResult<(Vec<u8>, ImageHash)> {
+pub fn get_url_image_hash(url: &str) -> anyhow::Result<(Vec<u8>, ImageHash)> {
     use image::io::Reader as ImageReader;
     use std::io::Read;
 
@@ -598,10 +599,10 @@ pub struct IgPost {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IgError {
-    input_url: String,
+    input_url: Option<String>,
     error: String,
-    username: String,
-    url: String,
+    username: Option<String>,
+    url: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]

@@ -7,35 +7,30 @@ import { SimpleForm, CreateBase, TextInput, SaveButton, useNotify } from 'react-
 import { FunctionField, SimpleShowLayout} from 'react-admin';
 import { Stack } from '@mui/material';
 
-export const HandleSettings = ({handles, handleRequests, site, namespace, handleMinLength, handleMaxLength, icon, verificationPost}) => {
+export const HandleSettings = ({handles, site, namespace, handleMinLength, handleMaxLength, icon, verificationPost}) => {
   const translate = useTranslate();
   let content;
   const handle = handles.data?.filter((x) => x.site == site)[0];
-  const request = handleRequests.data?.filter((x) => x.site == site)[0];
 
-  if (handles.isLoading || handleRequests.isLoading ){
+  if (handles.isLoading){
     content = (<>
       <Skeleton />
       <Skeleton />
     </>);
-  } else if (handle) {
+  } else if (handle?.status == "ACTIVE") {
     content = <HandleStats handle={handle} id={`existing-${namespace}-handle-stats`} />;
+  } else if (handle?.status == "UNVERIFIED") {
+    content = verificationPost;
+  } else if (handle?.status == "VERIFIED") {
+    content = <HandleSubmissionInProgress handle={handle} namespace={namespace} />;
   } else {
-    if (request) {
-      if (request.status == "UNVERIFIED") {
-        content = verificationPost;
-      } else if (request.status != "DONE" ) {
-        content = <HandleSubmissionInProgress req={request} namespace={namespace} />;
-      }
-    } else {
-      content = <CreateHandleRequest
-        onSave={handleRequests.refetch}
-        namespace={namespace}
-        site={site}
-        handleMinLength={handleMinLength}
-        handleMaxLength={handleMaxLength}
-      />;
-    }
+		content = <CreateHandle
+			onSave={handles.refetch}
+			namespace={namespace}
+			site={site}
+			handleMinLength={handleMinLength}
+			handleMaxLength={handleMaxLength}
+		/>;
   }
 
   return (<Box>
@@ -53,25 +48,18 @@ export const HandleSettings = ({handles, handleRequests, site, namespace, handle
 
 export const HandleStats = ({handle, id}) => {
   const translate = useTranslate();
-  const cycleDuration = 60 * 60 * 24 * 15 * 1000;
-  const thisEpoch = Math.trunc(Date.now() / cycleDuration);
-  const nextCycle = new Date((thisEpoch + 1) * cycleDuration);
 
   return <Box id={id}>
     <SimpleShowLayout record={handle} sx={{ p: 0, mt: 1}}>
-      <FunctionField label={ translate("handle_settings.stats.price_per_repost") }
-        render={ h => `${formatEther(h.price)} DOC` } />
       <FunctionField label={ translate("handle_settings.stats.username")}
         render={ (x) => <>{x.username} <Typography variant="span" sx={{fontSize: "0.8em", lineHeight: "1em" }}>[{x.userId}]</Typography></> }
       />
       <FunctionField label={ translate("handle_settings.stats.score") } render={ h => `${BigInt(h.score)} 力` }  />
-      <FunctionField label={ translate("handle_settings.stats.locked_until") }
-        render={ () => nextCycle.toLocaleDateString(undefined, { month: 'long', day: 'numeric'}) } />
     </SimpleShowLayout>
   </Box>;
 }
 
-export const CreateHandleRequest = ({onSave, namespace, site, handleMinLength, handleMaxLength }) => {
+export const CreateHandle = ({onSave, namespace, site, handleMinLength, handleMaxLength }) => {
   const translate = useTranslate();
   const notify = useNotify();
 
@@ -98,7 +86,7 @@ export const CreateHandleRequest = ({onSave, namespace, site, handleMinLength, h
     return errors;
   }
 
-  return <CreateBase resource="HandleRequest" transform={transformIt} mutationOptions={{ onSuccess }} >
+  return <CreateBase resource="Handle" transform={transformIt} mutationOptions={{ onSuccess }} >
     <SimpleForm id={`${namespace}-handle-request-form`} sx={{ p: "0 !important", m: "0" }} sanitizeEmptyValues validate={validate} toolbar={false}>
       <Typography mb="1em" variant="body2">
         { translate(`handle_settings.${namespace}.create_request.text`) }
@@ -117,12 +105,12 @@ export const CreateHandleRequest = ({onSave, namespace, site, handleMinLength, h
   </CreateBase>;
 }
 
-const HandleSubmissionInProgress = ({req, namespace}) => {
+const HandleSubmissionInProgress = ({handle, namespace}) => {
   const translate = useTranslate();
   
   return <Box id={`handle-${namespace}-submission-in-progress-message`}>
     <Typography variant="body2">
-      { translate(`handle_settings.${namespace}.in_progress.text`, {username: req.username}) }
+      { translate(`handle_settings.${namespace}.in_progress.text`, {username: handle.username}) }
     </Typography>
   </Box>;
 }

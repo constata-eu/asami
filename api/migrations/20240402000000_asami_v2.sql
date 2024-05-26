@@ -5,6 +5,7 @@ CREATE TYPE account_status AS ENUM (
 	'banned'
 );
 ALTER TABLE accounts ADD COLUMN status account_status NOT NULL DEFAULT 'managed';
+ALTER TABLE accounts ADD COLUMN allows_gasless boolean NOT NULL DEFAULT FALSE;
 UPDATE accounts SET status = 'claimed' WHERE addr IS NOT NULL;
 ALTER TABLE accounts ADD COLUMN processed_for_legacy_claim boolean NOT NULL DEFAULT false;
 UPDATE accounts SET processed_for_legacy_claim = true WHERE addr IS NOT NULL;
@@ -85,9 +86,16 @@ CREATE TYPE campaign_kind AS ENUM (
   'ig_clone_post'
 );
 
+CREATE TYPE campaign_status AS ENUM (
+  'draft',
+  'submitted',
+	'published'
+);
+
 CREATE TABLE campaigns (
   id SERIAL PRIMARY KEY NOT NULL,
   account_id VARCHAR REFERENCES accounts(id) NOT NULL,
+	status campaign_status NOT NULL DEFAULT 'draft',
   advertiser_addr VARCHAR NOT NULL,
   campaign_kind campaign_kind NOT NULL,
   briefing_json TEXT NOT NULL,

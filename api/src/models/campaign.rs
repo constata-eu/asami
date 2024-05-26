@@ -18,6 +18,8 @@ model! {
     advertiser_addr: String,
     #[sqlx_model_hints(campaign_kind)]
     campaign_kind: CampaignKind,
+    #[sqlx_model_hints(campaign_status, default)]
+    status: CampaignStatus,
     #[sqlx_model_hints(varchar)]
     briefing_hash: String,
     #[sqlx_model_hints(varchar)]
@@ -63,6 +65,15 @@ make_sql_enum![
     pub enum CampaignKind {
         XRepost,     // Members will have to make a post on X.
         IgClonePost, // Members must clone a post on IG.
+    }
+];
+
+make_sql_enum![
+    "campaign_status",
+    pub enum CampaignStatus {
+        Draft,     // First step of creation, just to provide users with a briefing hash.
+        Submitted, // Campaign was apparently submitted on-chain by the user.
+        Published, // Campaign has been seen on-chain.
     }
 ];
 
@@ -285,8 +296,8 @@ impl Campaign {
 
     pub async fn trusted_admin_addr(&self) -> AsamiResult<Address> {
         let address = self.decoded_advertiser_addr()?;
+        // Position 0 is trusted admin
         Ok(self.state.on_chain.asami_contract.accounts(address).call().await?.0)
-        // 0 is trusted admin
     }
 
     pub async fn we_are_trusted_admin(&self) -> AsamiResult<bool> {
@@ -297,6 +308,13 @@ impl Campaign {
         u256(self.briefing_hash())
     }
 
+    pub fn content_id(&self) -> anyhow::Result<String> {
+        serde_json::from_str::<serde_json::Value>(self.briefing_json())?
+            .as_str()
+            .map(|x| x.to_string())
+            .ok_or_else(|| anyhow::anyhow!("no_content_id_in_briefing"))
+    }
+
     pub async fn find_on_chain(&self) -> anyhow::Result<crate::on_chain::asami_contract_code::Campaign> {
         Ok(self
             .state
@@ -305,5 +323,26 @@ impl Campaign {
             .get_campaign(self.decoded_advertiser_addr()?, self.decoded_briefing_hash())
             .call()
             .await?)
+    }
+
+    pub async fn mark_submitted(self) -> anyhow::Result<Self> {
+        if *self.status() != CampaignStatus::Draft {
+            return Ok(self);
+        }
+        Ok(self.update().status(CampaignStatus::Submitted).save().await?)
+    }
+
+    // Find out how much this campaign would pay an account.
+    pub async fn reward_for_account(&self, account: &Account) -> AsamiResult<Option<U256>> {
+        let site = match self.campaign_kind() {
+            CampaignKind::IgClonePost => Site::Instagram,
+            CampaignKind::XRepost => Site::X,
+        };
+
+        if let Some(handle) = account.handle_scope().site_eq(site).optional().await? {
+            Ok(handle.reward_for(self))
+        } else {
+            Ok(None)
+        }
     }
 }

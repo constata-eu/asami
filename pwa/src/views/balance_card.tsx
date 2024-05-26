@@ -1,4 +1,4 @@
-import { useTranslate, useGetOne, useNotify } from "react-admin";
+import { useTranslate, useGetOne, useNotify, useDataProvider} from "react-admin";
 import { formatAddress } from '../lib/formatters';
 import { Box, CardContent, Typography, Button, Divider } from "@mui/material";
 import { formatEther } from "ethers";
@@ -22,7 +22,7 @@ const BalanceCard = () => {
 
   if (isLoading || !data) {
     content = <></>;
-  } else if(data.status == "DONE") {
+  } else if(data.status == "CLAIMED") {
     content = <Done account={data} />;
   } else {
     content = <Unclaimed account={data} />;
@@ -37,18 +37,15 @@ const Unclaimed = ({account}) => {
     <CardContent>
       <Head2>{ translate("balance_card.title") }</Head2>
       <SimpleShowLayout record={account} sx={{ p: 0, my: 1}}>
-        <FunctionField label={ translate("balance_card.unclaimed.doc_label") }
-          render={ record => `${formatEther(record.unclaimedDocRewards)} DOC` } />
-        <FunctionField label={ translate("balance_card.unclaimed.asami_label") }
-          render={ record => `${formatEther(record.unclaimedAsamiTokens)} ASAMI` }  />
-        <FunctionField
-          label={ translate("balance_card.account_id_label")}
-          render={ record => `${BigInt(record.id)}` }
-        />
+        <FunctionField source="unclaimedDocBalance" label={ translate("balance_card.unclaimed.doc_label") }
+          render={ record => `${formatEther(record.unclaimedDocBalance)} DOC` } />
+        <FunctionField source="unclaimedAsamiBalance" label={ translate("balance_card.unclaimed.asami_label") }
+          render={ record => `${formatEther(record.unclaimedAsamiBalance)} ASAMI` }  />
       </SimpleShowLayout>
     </CardContent>
     <Divider />
-    { account.status == null ? <NotRequested/> : <ProcessingRequest/> }
+    { account.status == "MANAGED" && <NotRequested/> }
+    { account.status == "CLAIMING" && <ProcessingRequest/> }
   </>;
 }
 
@@ -76,10 +73,21 @@ const ProcessingRequest = () => {
 
 const Done = ({account}) => {
   const translate = useTranslate();
+
+	const unclaimedAsami = BigInt(account.unclaimedAsamiBalance);
+	const unclaimedDoc = BigInt(account.unclaimedDocBalance);
+	const hasEnoughRbtc = BigInt(account.rbtcBalance) > 0.00001;
+	const hasUnclaimed = unclaimedAsami > 0 && unclaimedDoc > 0;
+
+	const claimRegular = hasUnclaimed && hasEnoughRbtc;
+	const claimGasless = hasUnclaimed && unclaimedDoc >= 1;
+
   return <>
     <CardContent>
       <Head2>{ translate("balance_card.title") }</Head2>
       <SimpleShowLayout record={account} sx={{ p: 0, my: 1}}>
+        <FunctionField label={ translate("balance_card.claimed.address") }
+          render={ record => formatAddress(record.addr) } />
         <BalanceWithAddButton
           label={ translate("balance_card.claimed.doc_label") }
           symbol="DOC"
@@ -90,16 +98,34 @@ const Done = ({account}) => {
           symbol="ASAMI"
           account={account}
         />
-        <FunctionField label={ translate("balance_card.claimed.address") }
-          render={ record => formatAddress(record.addr) } />
-        <FunctionField label={ translate("balance_card.account_id_label")} render={ record => `${BigInt(record.id)}` }  />
+        <FunctionField source="unclaimedDocBalance" label={ translate("balance_card.unclaimed.doc_label") }
+          render={ record => `${formatEther(record.unclaimedDocBalance)} DOC` } />
+        <FunctionField source="unclaimedAsamiBalance" label={ translate("balance_card.unclaimed.asami_label") }
+          render={ record => `${formatEther(record.unclaimedAsamiBalance)} ASAMI` }  />
       </SimpleShowLayout>
-    </CardContent>
-    <Divider />
-    <CardContent>
-      <Typography id="account-summary-claim-done" variant="body2">
-        { translate("balance_card.claimed.participate_in_governance") }
-      </Typography>
+			{ hasUnclaimed && hasEnoughRbtc && <ClaimButton account={account} /> }
+			{ hasUnclaimed && unclaimedDoc > 1 && <Box mt="1em">
+				<GaslessClaimButton disabled={account.allowsGasless} />
+				<Typography mt="0.5em" mb="0" id="suggest-gasless" variant="caption" paragraph={true}>
+					{ translate("balance_card.claimed.suggest_gasless") }
+				</Typography>
+			</Box> }
+			{ hasUnclaimed && !hasEnoughRbtc && unclaimedDoc < 1 && <Box mt="1em">
+				<Button fullWidth id="disabled-claim-button" variant="contained" color="primary" disabled="true">
+					{ translate("balance_card.claimed.claim_button_label") }
+				</Button>
+				<Typography mt="1em" id="cant-withdraw-message" variant="caption" paragraph="true">
+					{ translate("balance_card.claimed.cant_withdraw") }
+				</Typography>
+			</Box> }
+			{ !hasUnclaimed && <Box mt="1em">
+				<Button fullWidth id="disabled-claim-button" variant="contained" color="primary" disabled="true">
+					{ translate("balance_card.claimed.claim_button_label") }
+				</Button>
+				<Typography mt="1em" id="no-pending-balance-messsage" variant="caption" paragraph="true">
+					{ translate("balance_card.claimed.no_pending_balance") }
+				</Typography>
+			</Box> }
     </CardContent>
   </>;
 }
@@ -145,5 +171,36 @@ const BalanceWithAddButton = ({symbol, account}) => {
     </Box>}
   />;
 }
+
+const ClaimButton = ({account}) => {
+  const translate = useTranslate();
+  const notify = useNotify();
+  const { contracts } = useContracts();
+
+  const onClick = async () => {
+      const { asami } = await contracts(account.addr);
+      await asami.claimBalances();
+			notify("balance_card.claimed.claim_success", { type: "success" })
+  }
+
+  return (<Button fullWidth id="claim-balances-button" variant="contained" color="primary" onClick={onClick}>
+    { translate("balance_card.claimed.claim_button_label") }
+  </Button>);
+};
+
+const GaslessClaimButton = ({disabled}) => {
+  const translate = useTranslate();
+  const dataProvider = useDataProvider();
+  const notify = useNotify();
+
+  const onClick = async () => {
+		await dataProvider.create("GaslessAllowance", { data: {}});
+    notify("balance_card.claimed.gasless_allowance_success", { type: "success" })
+  }
+
+  return (<Button fullWidth id="gasless-claim-button" variant="outlined" color="inverted" size="small" onClick={onClick} disabled={disabled}>
+    { translate("balance_card.claimed.gasless_claim_button_label") }
+  </Button>);
+};
 
 export default BalanceCard;

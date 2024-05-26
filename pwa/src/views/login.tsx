@@ -108,7 +108,7 @@ const PublicCampaignList = ({loginAs}) => {
   const listContext = useListController({
     debounce: 500,
     disableSyncWithLocation: true,
-    filter: { remainingGt: etherToHex("1") },
+    filter: { budgetGt: etherToHex("1") },
     sort: { field: 'createdAt', order: 'DESC'},
     perPage: 20,
     queryOptions: {
@@ -131,7 +131,7 @@ const PublicCampaignList = ({loginAs}) => {
     { items.map((item, index) => {
       if(item.yourPostHere) {
         return <YourPostHere key={`your-post-here-${index}`} loginAs={loginAs}/>
-      } else if (item.site == "X") {
+      } else if (item.campaignKind == "XREPOST") {
         return <PublicXCampaign key={item.id} item={item} loginAs={loginAs}/>;
       } else {
         return <PublicInstagramCampaign key={item.id} item={item} loginAs={loginAs}/>;
@@ -182,7 +182,7 @@ const PublicCardHeader = ({loginAs, item, buttonLabel, icon}) => {
     <CardHeader
       sx={{ mb: "0", pb: "0.5em" }}
       avatar={ <Avatar sx={{ bgcolor: light }} >{icon}</Avatar> }
-      title={ translate("public_card_header.title", {amount: formatEther(item.remaining)}) }
+      title={ translate("public_card_header.title", {amount: formatEther(item.budget)}) }
       subheader={
         <Button sx={{ mt:"0.2em" }} onClick={() => loginAs("member") } fullWidth color="inverted" size="small" variant="outlined" >
           { buttonLabel }
@@ -203,7 +203,7 @@ const PublicXCampaign = ({loginAs, item}) => {
       buttonLabel={ translate("public_x_campaign.main_button")}
     />
     <CardContent>
-      <TwitterTweetEmbed tweetId={item.contentId} options={{ theme: "dark", align: "center", width: "250px", conversation: "none"}} />
+      <TwitterTweetEmbed tweetId={JSON.parse(item.briefingJson)} options={{ theme: "dark", align: "center", width: "250px", conversation: "none"}} />
     </CardContent>
   </DeckCard>;
 }

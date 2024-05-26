@@ -109,5 +109,4 @@ const all = {
   "https://asami.club": production,
 }
 
-//export const Settings = all[window.origin];
-export const Settings = production;
+export const Settings = all[window.origin];

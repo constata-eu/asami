@@ -14,5 +14,9 @@ model! {
     not_interested_on: Option<UtcDateTime>,
     #[sqlx_model_hints(timestamptz)]
     attempted_on: Option<UtcDateTime>,
+  },
+  belongs_to {
+      Account(account_id),
+      Campaign(campaign_id),
   }
 }

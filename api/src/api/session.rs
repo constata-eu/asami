@@ -67,7 +67,7 @@ impl Showable<models::Session, SessionFilter> for Session {
         })
     }
 
-    async fn db_to_graphql(d: models::Session) -> AsamiResult<Self> {
+    async fn db_to_graphql(_context: &Context, d: models::Session) -> AsamiResult<Self> {
         Ok(Session {
             id: d.attrs.id,
             user_id: d.attrs.user_id,

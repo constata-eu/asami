@@ -96,9 +96,14 @@ impl OnChainJob {
                     let collab = link.collab().await?;
                     let campaign = collab.campaign().await?;
                     campaigns.insert(campaign.attrs.id.clone(), campaign);
-
-                    let fee = collab.reward_u256() * (fee_rate + admin_fee_rate);
-                    collab.update().status(CollabStatus::Cleared).fee(Some(fee.encode_hex())).save().await?;
+                    
+                    // We do this exactly as it's done in the contract to have the same
+                    // precision loss the contract may have.
+                    let gross = collab.reward_u256();
+                    let fee = (gross * fee_rate) / u("100");
+                    let admin_fee = (gross * admin_fee_rate) / u("100");
+                    let full_fee = fee + admin_fee;
+                    collab.update().status(CollabStatus::Cleared).fee(Some(full_fee.encode_hex())).save().await?;
                 }
 
                 for (_, campaign) in campaigns {

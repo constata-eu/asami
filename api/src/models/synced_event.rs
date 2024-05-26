@@ -106,14 +106,15 @@ impl SyncedEventHub {
             } else {
                 Some(onchain.report_hash.encode_hex())
             };
+
             campaign
                 .update()
                 .budget(onchain.budget.encode_hex())
                 .valid_until(Some(models::i_to_utc(onchain.valid_until)))
                 .report_hash(report_hash)
-                .save()
-                .await
-                .context("Saving budget and valid until")?;
+                .status(CampaignStatus::Published)
+                .save().await
+                .context(format!("Syncing event {}", synced_event.id()))?;
         }
 
         Ok(())

@@ -18,6 +18,11 @@ impl OnChainJob {
             let Some(found) = a.find_on_chain().await? else {
                 continue;
             };
+
+            if !a.allows_gasless() {
+                continue;
+            }
+
             let (
                 trusted_admin,
                 max_gasless_doc_to_spend,

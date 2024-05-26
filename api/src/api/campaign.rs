@@ -21,10 +21,14 @@ pub struct Campaign {
     briefing_hash: String,
     #[graphql(description = "The campaign expiration date, after which funds may be returned")]
     valid_until: Option<UtcDateTime>,
+    #[graphql(description = "The on-chain publication status of this campaign.")]
+    status: CampaignStatus,
     #[graphql(description = "The date in which this campaign was created.")]
     created_at: UtcDateTime,
     #[graphql(description = "The topic ids this campaign is restricted to.")]
     topic_ids: Vec<i32>,
+    #[graphql(description = "The reward you would receive. None means it does not apply.")]
+    you_would_receive: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -38,6 +42,7 @@ pub struct CampaignFilter {
     budget_eq: Option<String>,
     briefing_hash_eq: Option<String>,
     briefing_json_like: Option<String>,
+    status_ne: Option<CampaignStatus>,
     available_to_account_id: Option<String>,
 }
 
@@ -100,6 +105,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
                 account_id_eq: f.account_id_eq,
                 id_eq: f.id_eq,
                 budget_gt: f.budget_gt,
+                status_ne: f.status_ne,
                 briefing_json_like: into_like_search(f.briefing_json_like),
                 ..Default::default()
             })
@@ -114,9 +120,9 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
             ..Default::default()
         })
     }
-
-    async fn db_to_graphql(d: models::Campaign) -> AsamiResult<Self> {
+    async fn db_to_graphql(context: &Context, d: models::Campaign) -> AsamiResult<Self> {
         let topic_ids = d.topic_ids().await?;
+        let you_would_receive = d.reward_for_account(&context.account().await?).await?.map(|x| x.encode_hex());
         Ok(Campaign {
             id: d.attrs.id,
             account_id: d.attrs.account_id,
@@ -126,7 +132,9 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
             briefing_json: d.attrs.briefing_json,
             briefing_hash: d.attrs.briefing_hash,
             created_at: d.attrs.created_at,
+            status: d.attrs.status,
             topic_ids,
+            you_would_receive,
         })
     }
 }
@@ -144,6 +152,6 @@ impl CreateCampaignFromLinkInput {
         let topics = context.app.topic().select().id_in(&self.topic_ids).all().await?;
         let campaign = context.app.campaign().create_from_link(&context.account().await?, &self.link, &topics).await?;
 
-        Ok(Campaign::db_to_graphql(campaign).await?)
+        Ok(Campaign::db_to_graphql(context,campaign).await?)
     }
 }

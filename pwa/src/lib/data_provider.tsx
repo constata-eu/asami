@@ -33,8 +33,76 @@ export const defaultDataProvider = async () => {
   });
 
   const client = new ApolloClient({ link: from([ httpLink ]), cache: new InMemoryCache(), });
+  const myBuildQuery = introspection => (fetchType, resource, params) => {
+    if (resource === 'CreateCampaignFromLink') {
+      const parser = function(data){
+        return buildQuery(introspection)('GET_ONE', 'Campaign', params).parseResponse(data);
+      }
+      return {
+        parseResponse: parser,
+        variables: params.data,
+        query: gql`mutation createCampaignFromLink($input: CreateCampaignFromLinkInput!){
+          data: createCampaignFromLink(input: $input) {
+            id
+						accountId
+						budget
+						campaignKind
+						briefingJson
+						briefingHash
+						validUntil
+						createdAt
+						topicIds
+          }
+        }`
+      };
+    } else if (resource === 'ClaimAccountRequest') {
+      const parser = function(data){
+        return buildQuery(introspection)('GET_ONE', 'Account', params).parseResponse(data);
+      }
+      return {
+        parseResponse: parser,
+        variables: params.data,
+        query: gql`mutation createClaimAccountRequest($input: CreateClaimAccountRequestInput!){
+          data: createClaimAccountRequest(input: $input) {
+            id
+						status
+						addr
+						unclaimedAsamiBalance
+						unclaimedDocBalance
+						asamiBalance
+						docBalance
+						rbtcBalance
+						allowsGasless
+          }
+        }`
+      };
+    } else if (resource === 'GaslessAllowance') {
+      const parser = function(data){
+        return buildQuery(introspection)('GET_ONE', 'Account', params).parseResponse(data);
+      }
+      return {
+        parseResponse: parser,
+        variables: params.data,
+        query: gql`mutation {
+          data: createGaslessAllowance {
+            id
+						status
+						addr
+						unclaimedAsamiBalance
+						unclaimedDocBalance
+						asamiBalance
+						docBalance
+						rbtcBalance
+						allowsGasless
+          }
+        }`
+      };
+    } else {
+      return buildQuery(introspection)(fetchType, resource, params);
+    }
+  };
   const introspection = await schema();
-  return (await buildGraphQLProvider({ client, introspection }));
+  return (await buildGraphQLProvider({ client, buildQuery: myBuildQuery, introspection }));
 }
 
 export const createSessionDataProvider = async (keys, authMethodKind, authData, recaptchaToken) => {

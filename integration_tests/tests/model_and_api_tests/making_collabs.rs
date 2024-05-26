@@ -2,10 +2,10 @@
 use ::api::models::*;
 
 app_test! { sends_collabs_for_accounts_and_sub_accounts(a)
-    let campaign = a.quick_campaign(u("100"), 30, &[]).await;
+    let mut campaign = a.quick_campaign(u("100"), 30, &[]).await;
 
     let claimed = a.quick_handle("alice_on_x", "11111", Site::X, u("5000")).await;
-    campaign.make_x_collab_with_user_id(claimed.user_id().as_ref().unwrap()).await?;
+    let mut first_collab = campaign.make_x_collab_with_user_id(claimed.user_id().as_ref().unwrap()).await?.unwrap();
 
     a.wait_for_job("Account collab", OnChainJobKind::MakeCollabs, OnChainJobStatus::Settled).await;
     assert_eq!(claimed.collab_vec().await?.len(), 1);
@@ -13,7 +13,7 @@ app_test! { sends_collabs_for_accounts_and_sub_accounts(a)
 
     let unclaimed_client = a.client().await;
     let unclaimed = unclaimed_client.create_handle("bob_on_x", "12121", Site::X, u("5000")).await;
-    campaign.make_x_collab_with_user_id(unclaimed.user_id().as_ref().unwrap()).await?;
+    let mut second_collab = campaign.make_x_collab_with_user_id(unclaimed.user_id().as_ref().unwrap()).await?.unwrap();
 
     a.wait_for_job("Subaccount collabs", OnChainJobKind::MakeSubAccountCollabs, OnChainJobStatus::Settled).await;
     assert_eq!(unclaimed.collab_vec().await?.len(), 1);
@@ -24,6 +24,19 @@ app_test! { sends_collabs_for_accounts_and_sub_accounts(a)
 
     a.wait_for_job("No more accounts", OnChainJobKind::MakeCollabs, OnChainJobStatus::Skipped).await;
     a.wait_for_job("No more subaccount", OnChainJobKind::MakeSubAccountCollabs, OnChainJobStatus::Skipped).await;
+
+    campaign.reload().await?;
+    assert_eq!(campaign.available_budget().await?, milli("80002"));
+    assert_eq!(campaign.budget_u256(), milli("80002"));
+
+    first_collab.reload().await?;
+    assert_eq!(first_collab.reward_u256(), milli("9999"));
+    assert_eq!(first_collab.fee_u256().unwrap(), wei("999900000000000000"));
+
+    second_collab.reload().await?;
+    assert_eq!(second_collab.reward_u256(), milli("9999"));
+    assert_eq!(second_collab.fee_u256().unwrap(), wei("999900000000000000"));
+
 }
 
 app_test! { skips_if_we_are_no_longer_campaign_admins(a)
@@ -57,7 +70,6 @@ app_test! { skips_if_we_are_no_longer_campaign_admins(a)
         OnChainJobStatus::Skipped
     ).await;
 }
-
 
 app_test! { prevents_race_conditions_using_available_budget (a)
     let mut campaign = a.quick_campaign(u("100"), 30, &[]).await;

@@ -64,7 +64,7 @@ impl Showable<models::CampaignPreference, CampaignPreferenceFilter> for Campaign
         })
     }
 
-    async fn db_to_graphql(d: models::CampaignPreference) -> AsamiResult<Self> {
+    async fn db_to_graphql(_context: &Context, d: models::CampaignPreference) -> AsamiResult<Self> {
         Ok(CampaignPreference {
             id: d.attrs.id,
             campaign_id: d.attrs.campaign_id,
@@ -113,6 +113,6 @@ impl CreateCampaignPreferenceInput {
                 .await?
         };
 
-        Ok(CampaignPreference::db_to_graphql(preference).await?)
+        Ok(CampaignPreference::db_to_graphql(context,preference).await?)
     }
 }
