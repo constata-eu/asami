@@ -8,6 +8,7 @@ import { getAuthKeys } from '../../lib/auth_provider';
 import BalanceCard from "../balance_card";
 import CollabList from "./collab_list";
 import HelpCard from "./help_card";
+import VersionTwoCard from "../version_2";
 import { XCampaign, IgCampaign} from "./campaigns";
 
 const Dashboard = () => {
@@ -36,6 +37,7 @@ const Dashboard = () => {
     <ColumnsContainer>
       <LoggedInNavCard />
       <HelpCard handles={handles} campaigns={campaigns} />
+			<VersionTwoCard/>
       <BalanceCard />
       <XSettings handles={handles} />
       <IgSettings handles={handles} />

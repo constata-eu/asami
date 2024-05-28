@@ -3,6 +3,7 @@ use ::api::models::*;
 browser_test! { full_flow_to_reward_for_web2 (mut d)
     let mut advertiser = d.test_app().client().await;
     advertiser.setup_as_advertiser("test main advertiser").await;
+
     let x_campaign = advertiser.start_and_pay_campaign(
         "https://x.com/somebody/status/1758116416606163059",
         u("100"), 20, &[]
@@ -15,6 +16,9 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
 
     d.login().await;
     d.click("#button-post-to-earn").await;
+
+    wait_here();
+
     d.wait_for("#member-dashboard").await;
 
     d.fill_in("#x-handle-request-form #username", "nubis_bruno").await;
@@ -49,7 +53,7 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
 
     d.wait_for("#help-card-no-campaigns").await;
     d.click("#balance-card-claim-account-button").await;
-    d.link_wallet_and_sign_login().await;
+    d.link_wallet_and_sign_login().await?;
     d.wait_for(".MuiSnackbarContent-message").await;
     d.wait_until_gone(".MuiSnackbarContent-message").await;
     d.wait_for("#account-summary-claim-pending").await;

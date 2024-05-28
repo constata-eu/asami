@@ -44,6 +44,7 @@ const Dashboard = () => {
     <ColumnsContainer>
       <LoggedInNavCard />
 			<AdvertiserHelpCard account={data} />
+      <BalanceCard />
       { data.status == "CLAIMED" && <MakeCampaignCard account={data} onCreate={() => listContext.refetch() } /> }
 
     </ColumnsContainer>

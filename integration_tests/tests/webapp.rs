@@ -4,17 +4,6 @@ pub mod webapp_tests;
 
 /*
 
-browser_test! { advertiser_claims_account (mut d)
-  d.signup_with_one_time_token().await;
-  d.click("#advertiser-claim-account-button").await;
-  d.link_wallet_and_sign_login().await?;
-  d.wait_for(".MuiSnackbarContent-message").await;
-  d.wait_until_gone(".MuiSnackbarContent-message").await;
-  d.wait_for("#advertiser-claim-account-pending").await;
-  d.api.test_app.run_idempotent_background_tasks_a_few_times().await;
-  d.wait_until_gone("#advertiser-claim-account-pending").await;
-}
-
 browser_test! { account_is_web3_from_the_start (mut d)
   d.goto("http://127.0.0.1:5173").await;
   d.click("#button-login-as-member").await;

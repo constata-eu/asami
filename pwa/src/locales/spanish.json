@@ -329,5 +329,10 @@
       "page_rows_per_page": "Filas por página:",
       "skip_nav": "Saltar al contenido"
     }
-  }
+  },
+	"version_two": {
+		"title": "La versión 2 ya está aquí 🎉",
+		"text": "Batteries included! Now you can get some RBTC with your rewards, so your wallet is always ready to use your rewards in the rootstock ecosystem.",
+		"text": "Con baterías incluidas! Ahora puedes recibir RBTC con tus recompensas, para que tu billetera esté siempre lista para ser usada con otras aplicaciones de la red rootstock."
+	}
 }

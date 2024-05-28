@@ -94,4 +94,19 @@ browser_test! { makes_ig_and_x_campaigns (mut d)
     }).await;
 
     d.wait_for_text("#campaign-list td.column-status", "Has 40.0 DOC").await;
+    d.test_app().stop_mining().await;
+}
+
+browser_test! { advertiser_always_needs_a_wallet (mut d) 
+    d.signup_with_one_time_token().await;
+    d.click("#balance-card-claim-account-button").await;
+    d.link_wallet_and_sign_login().await?;
+    d.wait_for(".MuiSnackbarContent-message").await;
+    d.wait_for("#advertiser-claim-account-pending").await;
+    d.test_app().wait_for_job(
+        "Claiming account",
+        models::OnChainJobKind::PromoteSubAccounts,
+        models::OnChainJobStatus::Settled
+    ).await;
+    d.wait_for("#open-start-campaign-dialog").await;
 }

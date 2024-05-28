@@ -74,7 +74,7 @@ export const XCampaign = ({handle, campaign, prefsContext, setPreference}) => {
         </Alert>
         :
         <Button
-          id={`button-repost-${campaign.Id}`}
+          id={`button-repost-${campaign.id}`}
           sx={{mb: "0.5em" }}
           onClick={() => setPreference(campaign.id, false, true)}
           fullWidth

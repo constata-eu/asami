@@ -111,18 +111,18 @@ const Done = ({account}) => {
 				</Typography>
 			</Box> }
 			{ hasUnclaimed && !hasEnoughRbtc && unclaimedDoc < 1 && <Box mt="1em">
-				<Button fullWidth id="disabled-claim-button" variant="contained" color="primary" disabled="true">
+				<Button fullWidth id="disabled-claim-button" variant="contained" color="primary" disabled={true}>
 					{ translate("balance_card.claimed.claim_button_label") }
 				</Button>
-				<Typography mt="1em" id="cant-withdraw-message" variant="caption" paragraph="true">
+				<Typography mt="1em" id="cant-withdraw-message" variant="caption" paragraph={true}>
 					{ translate("balance_card.claimed.cant_withdraw") }
 				</Typography>
 			</Box> }
 			{ !hasUnclaimed && <Box mt="1em">
-				<Button fullWidth id="disabled-claim-button" variant="contained" color="primary" disabled="true">
+				<Button fullWidth id="disabled-claim-button" variant="contained" color="primary" disabled={true}>
 					{ translate("balance_card.claimed.claim_button_label") }
 				</Button>
-				<Typography mt="1em" id="no-pending-balance-messsage" variant="caption" paragraph="true">
+				<Typography mt="1em" id="no-pending-balance-messsage" variant="caption" paragraph={true}>
 					{ translate("balance_card.claimed.no_pending_balance") }
 				</Typography>
 			</Box> }

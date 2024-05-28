@@ -194,84 +194,6 @@ impl<'b> ApiClient<'b> {
             .unwrap()
     }
 
-    /*
-    pub async fn build_baseline_scenario(&mut self) -> BaseLineScenario {
-      self.login_with_key(ES256KeyPair::generate()).await;
-      let rate = u256(self.test_app.app.indexer_state().get().await.unwrap().suggested_price_per_point());
-      let budget = || { rate * wei("200") };
-
-      let regular_campaign = self.build_x_campaign(budget(), rate, 2, &[]).await;
-      let high_rate_campaign = self.build_instagram_campaign(budget(), rate * wei("2")).await;
-      let low_rate_campaign = self.build_x_campaign(budget(), rate / wei("2"), 2, &[]).await;
-      let low_budget_campaign = self.build_x_campaign(rate * wei("1"), rate, 2, &[]).await;
-
-      self.test_app.run_idempotent_background_tasks_a_few_times().await;
-
-      BaseLineScenario {
-        regular_campaign: regular_campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("regular"),
-        high_rate_campaign: high_rate_campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("high_rate"),
-        low_rate_campaign: low_rate_campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("low_rate"),
-        low_budget_campaign: low_budget_campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("low_budget"),
-      }
-    }
-
-    pub async fn build_instagram_campaign(&self, budget: U256, rate: U256) -> models::CampaignRequest {
-      let post = "C0T1wKQMS0v"; // This is the post shortcode.
-      let two_days = Utc::now() + chrono::Duration::days(2);
-
-      self.account().await.create_campaign_request(models::Site::Instagram, post, budget, rate, two_days, &[])
-        .await.unwrap().pay()
-        .await.unwrap()
-    }
-
-    pub async fn build_x_campaign(&self, budget: U256, rate: U256, days: i64, topics: &[models::Topic]) -> models::CampaignRequest {
-      let post = "1716421161867710954";
-      let valid_until = Utc::now() + chrono::Duration::days(days);
-
-      self.account().await.create_campaign_request(models::Site::X, post, budget, rate, valid_until, topics)
-        .await.unwrap().pay()
-        .await.unwrap()
-    }
-
-    pub async fn create_x_campaign(&self, budget: U256, rate: U256) -> models::Campaign {
-      self.create_x_campaign_extra(budget, rate, 2, &[]).await
-    }
-
-    pub async fn create_x_campaign_extra(&self, budget: U256, rate: U256, days: i64, topics: &[models::Topic]) -> models::Campaign {
-      let campaign = self.build_x_campaign(budget, rate, days, topics).await;
-      self.test_app.run_idempotent_background_tasks_a_few_times().await;
-      campaign.reloaded().await.unwrap().campaign().await.unwrap().expect("campaign to be created")
-    }
-
-    pub async fn create_self_managed_x_campaign(&self, budget: U256, rate: U256, days: i64) -> models::Campaign {
-      // TODO: This method can be removed.
-      let two_days = Utc::now() + chrono::Duration::days(days);
-
-      self.doc_contract()
-        .approve(self.legacy_contract().address(), budget)
-        .send().await.expect("sending approval")
-        .await.expect("getting approval receipt")
-        .expect("approval receipt");
-
-      let tx = self.app().on_chain_tx().send_tx(
-        self.legacy_contract().make_campaigns(vec![on_chain::CampaignInput{
-          site: models::Site::X as u8,
-          budget: budget,
-          content_id: "1716421161867710954".to_string(),
-          price_score_ratio: rate,
-          topics: vec![],
-          valid_until: models::utc_to_i(two_days),
-        }])
-      ).await.unwrap();
-
-      assert!(tx.submitted(), "not successful tx {}", tx.attrs.id);
-
-      self.test_app.run_idempotent_background_tasks_a_few_times().await;
-
-      self.test_app.app.campaign().select().order_by(models::CampaignOrderBy::Id).desc(true).one().await.unwrap()
-    }
-    */
-
     pub async fn gql_claim_account_request(
         &self,
         wallet: &LocalWallet,
@@ -529,7 +451,6 @@ impl<'b> ApiClient<'b> {
             .await
     }
 
-    /*
     pub async fn get_campaign_offers(&self) -> gql::all_campaigns::ResponseData {
       self.gql(
         &gql::AllCampaigns::build_query(gql::all_campaigns::Variables{
@@ -538,6 +459,12 @@ impl<'b> ApiClient<'b> {
             ids: None,
             id_eq: None,
             account_id_eq: None,
+            briefing_hash_eq: None,
+            briefing_json_like: None,
+            budget_eq: None,
+            budget_gt: None,
+            budget_lt: None,
+            status_ne: None,
           }),
           page: None,
           per_page: None,
@@ -547,7 +474,6 @@ impl<'b> ApiClient<'b> {
         vec![]
       ).await
     }
-    */
 }
 
 macro_rules! make_graphql_queries {

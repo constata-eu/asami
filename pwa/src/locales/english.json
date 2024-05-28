@@ -330,5 +330,9 @@
       "page_rows_per_page": "Rows per page:",
       "skip_nav": "Skip"
     }
-  }
+  },
+	"version_two": {
+		"title": "Version 2 is here 🎉",
+		"text": "Batteries included! Now you can get some RBTC with your rewards, so your wallet is always ready to be used with other apps in the rootstock ecosystem."
+	}
 }
