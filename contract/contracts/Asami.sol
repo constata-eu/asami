@@ -5,20 +5,20 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract Asami is ERC20Capped, ReentrancyGuard {
     enum Site {
-      X,
-      Instagram,
-      LinkedIn,
-      Facebook,
-      TikTok,
-      Youtube,
-      Nostr,
-      Bluesky,
-      Reserved1,
-      Reserved2,
-      Reserved3,
-      Reserved4,
-      Reserved5,
-      Reserved6
+        X,
+        Instagram,
+        LinkedIn,
+        Facebook,
+        TikTok,
+        Youtube,
+        Nostr,
+        Bluesky,
+        Reserved1,
+        Reserved2,
+        Reserved3,
+        Reserved4,
+        Reserved5,
+        Reserved6
     }
 
     struct Account {
@@ -173,23 +173,23 @@ contract Asami is ERC20Capped, ReentrancyGuard {
         super._beforeTokenTransfer(from, to, amount);
 
         if (from != address(0)) {
-          _registerRecentBalanceChange(from, amount, false);
+            _registerRecentBalanceChange(from, amount, false);
 
-          if (feeRateVotes[from].votes > 0) {
-              removeFeeRateVoteHelper(from);
-          }
-          if (submittedAdminVotes[from].votes > 0) {
-              removeAdminVoteHelper(from);
-          }
+            if (feeRateVotes[from].votes > 0) {
+                removeFeeRateVoteHelper(from);
+            }
+            if (submittedAdminVotes[from].votes > 0) {
+                removeAdminVoteHelper(from);
+            }
         }
 
         if (to != address(0)) {
-          _registerRecentBalanceChange(to, amount, true);
+            _registerRecentBalanceChange(to, amount, true);
 
-          if (!trackedHolders[to] && amount > 0) {
-              holders.push(to);
-              trackedHolders[to] = true;
-          }
+            if (!trackedHolders[to] && amount > 0) {
+                holders.push(to);
+                trackedHolders[to] = true;
+            }
         }
     }
 
@@ -440,7 +440,9 @@ contract Asami is ERC20Capped, ReentrancyGuard {
             Account storage advertiser = accounts[campaign.accountId];
             uint256 remaining = campaign.remaining;
             campaign.remaining = 0;
-            address fundedBy = campaign.fundedByAdmin ? adminTreasury : advertiser.addr;
+            address fundedBy = campaign.fundedByAdmin
+                ? adminTreasury
+                : advertiser.addr;
             require(doc.transfer(fundedBy, remaining), "rdc 3");
             emit CampaignSaved(campaign);
         }
@@ -519,49 +521,64 @@ contract Asami is ERC20Capped, ReentrancyGuard {
 
     uint256 public feePool;
     struct BalanceChange {
-      uint256 added;
-      uint256 substracted;
+        uint256 added;
+        uint256 substracted;
     }
-    mapping (uint256 => mapping(address => BalanceChange)) public recentBalanceChanges;
-    mapping (uint256 => BalanceChange) public recentFeePoolChanges;
-    mapping (uint256 => uint256) public recentTokens;
+    mapping(uint256 => mapping(address => BalanceChange))
+        public recentBalanceChanges;
+    mapping(uint256 => BalanceChange) public recentFeePoolChanges;
+    mapping(uint256 => uint256) public recentTokens;
     mapping(address => uint256) public lastFeePoolShareCycles;
 
-    function getRecentBalanceChange(address _holder) public view returns (BalanceChange memory) {
-      return recentBalanceChanges[getCurrentCycle()][_holder];
+    function getRecentBalanceChange(
+        address _holder
+    ) public view returns (BalanceChange memory) {
+        return recentBalanceChanges[getCurrentCycle()][_holder];
     }
 
-    function getBalanceBeforeRecentChanges(address _holder) public view returns (uint256) {
-      BalanceChange storage recent = recentBalanceChanges[getCurrentCycle()][_holder];
-      return (balanceOf(_holder) + recent.substracted) - recent.added;
+    function getBalanceBeforeRecentChanges(
+        address _holder
+    ) public view returns (uint256) {
+        BalanceChange storage recent = recentBalanceChanges[getCurrentCycle()][
+            _holder
+        ];
+        return (balanceOf(_holder) + recent.substracted) - recent.added;
     }
 
-    function _registerRecentBalanceChange(address _holder, uint256 _amount, bool _added) private {
-      BalanceChange storage recent = recentBalanceChanges[getCurrentCycle()][_holder];
-      if(_added){
-        recent.added += _amount;
-      } else {
-        recent.substracted += _amount;
-      }
+    function _registerRecentBalanceChange(
+        address _holder,
+        uint256 _amount,
+        bool _added
+    ) private {
+        BalanceChange storage recent = recentBalanceChanges[getCurrentCycle()][
+            _holder
+        ];
+        if (_added) {
+            recent.added += _amount;
+        } else {
+            recent.substracted += _amount;
+        }
     }
 
     function changeFeePool(uint256 _amount, bool _added) private {
-      BalanceChange storage recent = recentFeePoolChanges[getCurrentCycle()];
-      if(_added){
-        feePool += _amount;
-        recent.added += _amount;
-      } else {
-        feePool -= _amount;
-        recent.substracted += _amount;
-      }
+        BalanceChange storage recent = recentFeePoolChanges[getCurrentCycle()];
+        if (_added) {
+            feePool += _amount;
+            recent.added += _amount;
+        } else {
+            feePool -= _amount;
+            recent.substracted += _amount;
+        }
     }
 
     function getFeePoolBeforeRecentChanges() public view returns (uint256) {
-      BalanceChange storage recent = recentFeePoolChanges[getCurrentCycle()];
-      return (feePool + recent.substracted) - recent.added;
+        BalanceChange storage recent = recentFeePoolChanges[getCurrentCycle()];
+        return (feePool + recent.substracted) - recent.added;
     }
 
-    function claimFeePoolShare(address[] calldata _holders) external nonReentrant {
+    function claimFeePoolShare(
+        address[] calldata _holders
+    ) external nonReentrant {
         uint256 current = getCurrentCycle();
         uint256 supply = totalSupply() - recentTokens[current];
         uint256 pool = getFeePoolBeforeRecentChanges();
@@ -569,18 +586,18 @@ contract Asami is ERC20Capped, ReentrancyGuard {
         require(pool > 0, "cfps1");
 
         for (uint256 i = 0; i < _holders.length; i++) {
-          address holder = _holders[i];
+            address holder = _holders[i];
 
-          require(lastFeePoolShareCycles[holder] < current, "cfps2");
+            require(lastFeePoolShareCycles[holder] < current, "cfps2");
 
-          uint256 balance = getBalanceBeforeRecentChanges(holder);
-          require(balance > 0, "cfps3");
-          uint256 reward = (balance * pool) / supply;
+            uint256 balance = getBalanceBeforeRecentChanges(holder);
+            require(balance > 0, "cfps3");
+            uint256 reward = (balance * pool) / supply;
 
-          lastFeePoolShareCycles[holder] = current;
-          changeFeePool(reward, false);
+            lastFeePoolShareCycles[holder] = current;
+            changeFeePool(reward, false);
 
-          require(doc.transfer(holder, reward), "cfps4");
+            require(doc.transfer(holder, reward), "cfps4");
         }
     }
 

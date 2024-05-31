@@ -1,0 +1,19 @@
+#!/bin/bash
+trap "exit" INT
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD) 
+STAGING_IP=128.199.33.144
+PRODUCTION_IP=167.99.18.108
+
+if [[ $1 == "production" ]]
+then
+  IP=$PRODUCTION_IP
+else
+  IP=$STAGING_IP
+fi
+
+scp -r maintenance_page root@$IP:/home/asami/ &&
+ssh root@$IP '
+cd /home/asami &&
+rm -rf site &&
+ln -s maintenance_page site'

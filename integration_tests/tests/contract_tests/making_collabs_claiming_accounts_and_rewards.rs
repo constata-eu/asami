@@ -15,13 +15,13 @@ app_test! { full_contract_workflow_from_collabs_to_balance_claims(a)
 
   a.send_tx(
     "Collaborations are registered for 20 different new sub accounts.",
-    "1184200",
+    "1178091",
     a.asami_contract().admin_make_sub_account_collabs(collabs_params.clone())
   ).await;
 
   a.send_tx(
     "A second round of collaborations now that sub accounts have been registered.",
-    "391798",
+    "391491",
     a.asami_contract().admin_make_sub_account_collabs(collabs_params.clone())
   ).await;
 
@@ -67,7 +67,7 @@ app_test! { full_contract_workflow_from_collabs_to_balance_claims(a)
   ).await;
 
   a.assert_balances_of("carl after claim", carl.address(),
-    wei("9999757228000000000"),
+    wei("9999757324000000000"),
     u("0"), u("36"),
     u("0"), u("4800")
   ).await;
@@ -394,5 +394,5 @@ app_test! { can_change_admin_for_registering_collabs(a)
   ).await;
 
   a.send_tx("Sub account collab from new admin works", "230000", sub_account_collab).await;
-  a.send_tx("Regular collab from sub admin now works", "127386", regular_collab).await;
+  a.send_tx("Regular collab from admin now works", "127386", regular_collab).await;
 }

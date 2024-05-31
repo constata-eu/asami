@@ -12,8 +12,8 @@ UPDATE accounts SET processed_for_legacy_claim = true WHERE addr IS NOT NULL;
 
 ALTER TABLE accounts ADD COLUMN claim_signature VARCHAR;
 ALTER TABLE accounts ADD COLUMN claim_session_id VARCHAR REFERENCES sessions(id);
-ALTER TABLE accounts DROP COLUMN unclaimed_asami_tokens;
-ALTER TABLE accounts DROP COLUMN unclaimed_doc_rewards;
+--ALTER TABLE accounts DROP COLUMN unclaimed_asami_tokens;
+--ALTER TABLE accounts DROP COLUMN unclaimed_doc_rewards;
 
 ALTER TABLE handles RENAME TO old_handles;
 ALTER INDEX idx_handles_account_id RENAME TO old_handles_account_id;

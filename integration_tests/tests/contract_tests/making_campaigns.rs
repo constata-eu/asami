@@ -249,11 +249,3 @@ app_test! { campaign_reimbursement_tests (a)
   ).await;
   assert_eq!(a.get_campaign(account, campaign).await.budget, u("0"));
 }
-
-fn make_submit_report_call(a: &TestApp, account: Address, campaign: U256, report_hash: U256) -> AsamiFunctionCall {
-    a.asami_contract().submit_reports(vec![SubmitReportsParam {
-        account,
-        briefing_hash: campaign,
-        report_hash,
-    }])
-}

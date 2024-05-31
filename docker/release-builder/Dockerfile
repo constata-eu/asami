@@ -35,6 +35,7 @@ CMD /bin/bash -c "\
   && yarn cache clean \
   && yarn \
   && yarn build \
+	&& cp /work/pwa/dist /host_workspace/release/pwa \
   && cd /work/api && sqlx database reset -y \
   && cd /work/api && cargo build --release --bin migrator --bin api --bin worker \
   && mkdir -p /host_workspace/release \
