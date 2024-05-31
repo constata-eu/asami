@@ -9,13 +9,13 @@ import InstagramIcon from '@mui/icons-material/Instagram';
 import XIcon from '@mui/icons-material/X';
 import truncate from 'lodash/truncate';
 
-export const CampaignHeader = ({handle, icon, children}) => {
+export const CampaignHeader = ({campaign, icon, children}) => {
   const translate = useTranslate();
 
   return (<>
     <CardHeader
       avatar={ <Avatar sx={{ bgcolor: light }} >{icon}</Avatar> }
-      title={ <Typography variant="h6">{translate("member_campaigns.header.title", {amount: formatEther(handle.price)}) }</Typography>}
+      title={ <Typography variant="h6">{translate("member_campaigns.header.title", {amount: formatEther(campaign.youWouldReceive || 0)}) }</Typography>}
       subheader={ translate("member_campaigns.header.subheader") }
     />
     <Box px="10px">
@@ -55,8 +55,9 @@ const ConfirmHideCampaign = ({campaignId, setPreference }) => {
 
 export const XCampaign = ({handle, campaign, prefsContext, setPreference}) => {
   const translate = useTranslate();
-  const repostUrl = `https://twitter.com/intent/retweet?tweet_id=${campaign.contentId}&related=asami_club`;
-  const attemptedOn = prefsContext.data.find((x) => x.campaignId == campaign.id)?.attemptedOn;
+	const contentId = JSON.parse(campaign.briefingJson);
+  const repostUrl = `https://twitter.com/intent/retweet?tweet_id=${contentId}&related=asami_club`;
+	const attemptedOn = prefsContext.data.find((x) => x.campaignId == campaign.id)?.attemptedOn;
 
   return <DeckCard id={`campaign-container-${campaign.id}`} elevation={attemptedOn ? 1 : 10}>
     <CampaignHeader
@@ -73,7 +74,7 @@ export const XCampaign = ({handle, campaign, prefsContext, setPreference}) => {
         </Alert>
         :
         <Button
-          id={`button-repost-${campaign.Id}`}
+          id={`button-repost-${campaign.id}`}
           sx={{mb: "0.5em" }}
           onClick={() => setPreference(campaign.id, false, true)}
           fullWidth
@@ -87,7 +88,7 @@ export const XCampaign = ({handle, campaign, prefsContext, setPreference}) => {
       }
     </CampaignHeader>
     <Box minHeight="250px" mb="1em">
-      <TwitterTweetEmbed tweetId={campaign.contentId} options={{ theme: "dark", align: "center", width: "250px", conversation: "none"}} />
+      <TwitterTweetEmbed tweetId={contentId} options={{ theme: "dark", align: "center", width: "250px", conversation: "none"}} />
     </Box>
     { !attemptedOn &&
       <CardContent sx={{pt: 0, pb: "1em !important" }}>
@@ -103,7 +104,7 @@ export const IgCampaign = ({handle, campaign, prefsContext, setPreference}) => {
     "IgCampaignRule",
     { filter: {campaignIdEq: campaign.id}, perPage: 1,}
   );
-  const attemptedOn = prefsContext.data.find((x) => x.campaignId == campaign.id)?.attemptedOn;
+	const attemptedOn = prefsContext.data.find((x) => x.campaignId == campaign.id)?.attemptedOn;
 
   if (isLoading || !data[0]) {
     return null;

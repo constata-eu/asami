@@ -1,6 +1,10 @@
 {
   "resources": {
   },
+	"campaign_kinds": {
+		"XREPOST": "Repost en X",
+		"IG_CLONE_POST": "Publicar en Instagram"
+	},
 	"footer": {
     "built_with": "Hecho con"
   },
@@ -8,11 +12,15 @@
     "title": "Campañas activas",
     "text": "Los miembros del club amplificarán tu contenido hasta que el presupuesto se acabe. Si sobran fondos se devolverán luedo de la fecha de fin de campaña.",
     "see_post": "Ver Post",
-    "site": "Sitio",
+    "kind": "Tipo",
     "post": "Post",
     "budget": "Presupuesto",
-    "remaining": "Restante",
-    "ends_on": "Finaliza el"
+    "status": "Estado actual",
+		"statuses": {
+			"publishing": "Publicando pronto.",
+			"running": "Tiene %{budget} DOC. Sigue hasta: %{validUntil}.",
+			"stopped": "Detenida."
+		}
   },
   "claim_account": {
     "success": "El administrador the entregará el control de tu cuenta pronto.",
@@ -20,9 +28,10 @@
   },
   "advertiser_help": {
     "title": "Un tip:",
-    "DONE": "Puedes crear una campaña en X o en Instagram poniendo el enlace a algún posteo, y los miembros lo amplificarán. Recuerda que ellos tienen la última palabra, así que haz un posteo amigable!",
+    "CLAIMED": "Puedes crear una campaña en X o en Instagram poniendo el enlace a algún posteo, y los miembros lo amplificarán. Recuerda que ellos tienen la última palabra, así que haz un posteo amigable!",
     "CLAIMING": "Podrás crear campañas nuevas cuando el administrador te entregue el control de tu cuenta.",
-    "NO_CLAIM": "Como no has conectado tu billetera WEB3, solo puedes sugerir campañas, que serán revisadas y fondeadas por el administrador del club, sujeto a fondos disponibles. Conecta tu billetera WEB3 para recibir control de tu cuenta y crear campañas cuando quieras con tus propios fondos."
+    "MANAGED": "Debes conectar tu billetera WEB3, y así podrás crear campañas",
+    "BANNED": "Tu cuenta fue desactivada 😭. Tus fondos siguen en el contrato inteligente y puedes buscarlos ahí, pero ya no puedes usar esta web."
   },
   "campaign_request_list": {
     "title": "Pedidos de campañas",
@@ -39,7 +48,21 @@
     "text": "Estas son tus colaboraciones a la fecha",
     "see_post": "Ver post",
     "reward": "Recompensa",
-    "fee": "Comisión de Asami"
+    "fee": "Comisión de Asami",
+		"statuses": {
+			"REGISTERED": {
+				"title": "Registrada",
+				"text": "Vimos tu colaboración, la estamos validando."
+			},
+			"CLEARED": {
+				"title": "Pagada",
+				"text": "La pagamos a tu balance."
+			},
+			"FAILED": {
+				"title": "Fallida",
+				"text": "Esta colaboración no se pudo pagar. Contáctanos si crees que es un error."
+			}
+		}
   },
   "campaign_request": {
     "title": "Sugiere una campaña",
@@ -160,9 +183,6 @@
         "guidelines": "Hazlo una publicación, no una historia. No uses filtros. Deja el texto tal como está. Asegúrate de que tu cuenta sea pública.",
         "get_image": "Obtener imagen",
         "copy_text": "Obtener texto"
-      },
-      "in_progress": {
-        "text": "Hemos verificado a %{username}, y estamos en proceso de publicarlo en la blockchain. Una vez que terminemos, puedes empezar a participar en campañas."
       }
     },
     "x": {
@@ -179,9 +199,6 @@
         "post_text": "A partir de hoy, algunas de mis republicaciones serán pagadas, ya que me uní a @asami_club [%{accountId}]",
         "button": "Publicar mensaje",
         "done": "¡Gracias! Puede tomar hasta una hora para que detectemos tu publicación."
-      },
-      "in_progress": {
-        "text": "Hemos verificado a %{username}, y estamos en proceso de publicarlo en la blockchain. Una vez que terminemos, puedes empezar a participar en campañas."
       }
     }
   },
@@ -189,22 +206,28 @@
     "title": "Tu cuenta",
     "account_id_label": "ID de la Cuenta",
     "unclaimed": {
-      "doc_label": "DOC Rewards no reclamados",
-      "asami_label": "Tokens ASAMI no reclamados",
+      "doc_label": "DOC pendientes",
+      "asami_label": "ASAMI pendientes",
       "not_requested": "Debes crear y conectar una cartera WEB3 para reclamar estas recompensas. Una vez reclamadas, todas tus recompensas se pagarán directamente a tu cartera.",
       "not_requested_button": "Conectar cartera y reclamar",
       "pending": "Has iniciado el proceso para reclamar tu cuenta, el cual se completará pronto. Después de eso, tendrás que conectar tu cartera para realizar algunas acciones."
     },
     "claimed": {
-      "doc_label": "Saldo en DOC",
-      "asami_label": "Saldo en ASAMI",
+      "doc_label": "DOC en billetera",
+      "asami_label": "ASAMI en billetera",
       "added": "%{symbol} agregado a tu billetera.",
       "not_added": "%{symbol} no se pudo agregar a tu billetera.",
       "address": "Dirección RSK",
       "last_payout_amount_label": "Última distribución de comisiones",
       "last_payout_date_label": "Fecha de la última distribución",
       "next_payout_date_label": "Fecha de la próxima distribución",
-      "participate_in_governance": "Reclamaste tu cuenta, tus recompensas se pagarán directamente a tu cartera, y también obtendrás una parte de las comisiones del protocolo. Asegúrate de agregar los tokens ASAMI y DOC a tu wallet con los botones de arriba."
+			"claim_button_label": "Reclamar pendientes",
+			"gasless_claim_button_label": "Reclama sin RBTC",
+			"suggest_gasless": "Deducimos 1 DOC, te llegan tus pendientes y 0.000006 RBTC.",
+			"no_pending_balance": "Tus recompensas se acreditan en tu balance pendiente, podrás reclamarlos aquí.",
+			"cant_withdraw": "No tienes suficiente RBTC para la comisión de la red RSK. Podemos enviarte algunos a cambio de 1 DOC. Sigue acumulando!",
+			"gasless_allowance_success": "Pronto procesaremos tu pedido.",
+			"claim_success": "Tus tokens están en camino."
     }
   },
   "logged_in_nav_card": {
@@ -306,5 +329,10 @@
       "page_rows_per_page": "Filas por página:",
       "skip_nav": "Saltar al contenido"
     }
-  }
+  },
+	"version_two": {
+		"title": "La versión 2 ya está aquí 🎉",
+		"text": "Batteries included! Now you can get some RBTC with your rewards, so your wallet is always ready to use your rewards in the rootstock ecosystem.",
+		"text": "Con baterías incluidas! Ahora puedes recibir RBTC con tus recompensas, para que tu billetera esté siempre lista para ser usada con otras aplicaciones de la red rootstock."
+	}
 }

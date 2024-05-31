@@ -19,23 +19,23 @@ use ethers::prelude::Abigen;
 /// code takes in input a smart contract's Application Binary Interface (ABI) file.
 #[tokio::main]
 async fn main() {
-  rust_file_generation();
+    rust_file_generation();
 }
 
 fn rust_file_generation() {
-  let abi_source = "../contract/build/contracts/Asami.json";
-  let out_file = std::env::temp_dir().join("asami_contract.rs");
-  if out_file.exists() {
-    std::fs::remove_file(&out_file).unwrap();
-  }
-  Abigen::new("ASAMI", abi_source)
-    .expect("abigen")
-    .add_derive("serde::Deserialize")
-    .expect("add_derive")
-    .add_derive("serde::Serialize")
-    .expect("add_derive")
-    .generate()
-    .expect("generate")
-    .write_to_file(out_file)
-    .expect("write to file");
+    let abi_source = "../contract/build/contracts/Asami.json";
+    let out_file = std::env::temp_dir().join("asami_contract.rs");
+    if out_file.exists() {
+        std::fs::remove_file(&out_file).unwrap();
+    }
+    Abigen::new("ASAMI", abi_source)
+        .expect("abigen")
+        .add_derive("serde::Deserialize")
+        .expect("add_derive")
+        .add_derive("serde::Serialize")
+        .expect("add_derive")
+        .generate()
+        .expect("generate")
+        .write_to_file(out_file)
+        .expect("write to file");
 }

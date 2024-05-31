@@ -6,37 +6,24 @@ export const viewPostUrl = (campaign) => {
   }
 }
 
-export const parseCampaignSiteAndContentId = (url) => {
-  const result = {
-    error: null,
-    site: null,
-    contentId: null
-  };
+export const validateCampaignLink = (url) => {
+  let error = null;
 
   try {
     const u = new URL(url);
     const path = u.pathname.replace(/\/$/, '').split("/");
     const contentId = path[path.length - 1];
 
-    if ( (u.host.match(/\.?x\.com$/) || u.host.match(/\.?twitter\.com#/)) && contentId.match(/^\d+$/) ) {
-      result.site = "X";
-    } else if (u.host.match(/\.?instagram.com$/) && contentId.match(/^[\d\w\-_]+$/)) {
-      result.site = "INSTAGRAM";
-    } else {
-      result.error = "not_a_post_url";
-    }
-    result.contentId = contentId;
+    const is_x = (u.host.match(/\.?x\.com$/) || u.host.match(/\.?twitter\.com$/)) && contentId.match(/^\d+$/);
+		const is_ig = u.host.match(/\.?instagram.com$/) && contentId.match(/^[\d\w\-_]+$/);
+
+		if (!is_x && !is_ig) {
+			return "not_a_post_url";
+		}
 
   } catch {
-    result.error = "invalid_url";
-  }
-
-  return result;
+		return "invalid_url";
+	}
+	
+	return null;
 }
-
-export const defaultValidUntil = () => {
-  let currentDate = new Date();
-  currentDate.setTime(currentDate.getTime() + (30 * 24 * 60 * 60 * 1000));
-  return currentDate;
-}
-

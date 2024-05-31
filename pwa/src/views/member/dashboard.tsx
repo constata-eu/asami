@@ -8,6 +8,7 @@ import { getAuthKeys } from '../../lib/auth_provider';
 import BalanceCard from "../balance_card";
 import CollabList from "./collab_list";
 import HelpCard from "./help_card";
+import VersionTwoCard from "../version_2";
 import { XCampaign, IgCampaign} from "./campaigns";
 
 const Dashboard = () => {
@@ -32,21 +33,14 @@ const Dashboard = () => {
     resource: "Handle",
   });
 
-  const handleRequests = useListController({
-    disableSyncWithLocation: true,
-    queryOptions: {
-      refetchInterval: 20000,
-    },
-    resource: "HandleRequest",
-  });
-
   return (<Box p="1em" id="member-dashboard">
     <ColumnsContainer>
       <LoggedInNavCard />
       <HelpCard handles={handles} campaigns={campaigns} />
+			<VersionTwoCard/>
       <BalanceCard />
-      <XSettings handles={handles} handleRequests={handleRequests} />
-      <IgSettings handles={handles} handleRequests={handleRequests} />
+      <XSettings handles={handles} />
+      <IgSettings handles={handles} />
       <CampaignList handles={handles}/>
     </ColumnsContainer>
     <CollabList />
@@ -88,7 +82,7 @@ const CampaignList = ({handles}) => {
 
   return ( <>
     <Box id="campaign-list" display="flex" flexWrap="wrap">
-      { listContext.data.map((item) => item.site == "X" ?
+      { listContext.data.map((item) => item.campaignKind == "XREPOST" ?
         <XCampaign key={item.id} handle={xHandle} campaign={item} prefsContext={prefsContext} setPreference={setPreference} /> :
         <IgCampaign key={item.id} handle={igHandle} campaign={item} prefsContext={prefsContext} setPreference={setPreference} />
       )}

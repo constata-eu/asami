@@ -1,19 +1,14 @@
 #[macro_use]
 pub mod support;
 
+use api::models::*;
 use graphql_client::GraphQLQuery;
 use support::{
-  *,
-  gql::{
+    gql::{all_collabs as ac, all_handle_requests as ahr, create_handle_request as chr, *},
     *,
-    create_handle_request as chr,
-    all_handle_requests as ahr,
-    all_collabs as ac,
-  }
 };
-use api::models::*;
 
-browser_test!{ browser_flow_until_instagram_reward (mut d)
+browser_test! { browser_flow_until_instagram_reward (mut d)
   //todo!("Handles are also sent, not only unverified handle requests.");
 
   d.signup_with_one_time_token().await;
@@ -32,7 +27,7 @@ browser_test!{ browser_flow_until_instagram_reward (mut d)
   d.wait_for("#campaign-list").await;
   d.click("#logout-menu-item").await;
   d.wait_for("#button-login-as-advertiser").await;
-  
+
   d.api.test_app.app.one_time_token().insert(InsertOneTimeToken{value: "member-token".to_string() }).save().await?;
   d.goto("http://127.0.0.1:5173/#/one_time_token_login?token=member-token").await;
   d.wait_for("#advertiser-dashboard").await;
@@ -94,7 +89,7 @@ api_test! { supports_instagram_collaboration (mut c)
   let _scenario = c.build_baseline_scenario().await;
 
   c.login().await;
-  
+
   let handle_req = c.gql::<chr::ResponseData, _>(
     &CreateHandleRequest::build_query(chr::Variables{
       input: chr::CreateHandleRequestInput {
@@ -149,7 +144,7 @@ api_test! { supports_instagram_collaboration (mut c)
   crawl.reload().await?;
   assert!(crawl.attrs.processed_for_handle_requests);
 
-  let verified = get_handle_requests(&mut c, handle_req.id).await; 
+  let verified = get_handle_requests(&mut c, handle_req.id).await;
   assert_eq!(verified.status, ahr::HandleRequestStatus::APPRAISED);
   assert_eq!(verified.price.unwrap(), weihex("2920000000000000000"));
   assert_eq!(verified.score.unwrap(), weihex("292"));
@@ -171,33 +166,41 @@ api_test! { supports_instagram_collaboration (mut c)
 }
 
 async fn get_handle_requests(c: &mut ApiClient<'_>, id: i64) -> ahr::AllHandleRequestsAllHandleRequests {
-  c.gql::<ahr::ResponseData, _>(
-    &AllHandleRequests::build_query(ahr::Variables{
-      filter: Some(ahr::HandleRequestFilter {
-        ids: None,
-        id_eq: Some(id),
-        username_like: None,
-        status_in: None,
-        site_eq: Some(ahr::Site::INSTAGRAM),
-      }),
-      page: None,
-      per_page: None,
-      sort_field: None,
-      sort_order: None,
-    }),
-    vec![]
-  ).await.all_handle_requests.pop().unwrap()
+    c.gql::<ahr::ResponseData, _>(
+        &AllHandleRequests::build_query(ahr::Variables {
+            filter: Some(ahr::HandleRequestFilter {
+                ids: None,
+                id_eq: Some(id),
+                username_like: None,
+                status_in: None,
+                site_eq: Some(ahr::Site::INSTAGRAM),
+            }),
+            page: None,
+            per_page: None,
+            sort_field: None,
+            sort_order: None,
+        }),
+        vec![],
+    )
+    .await
+    .all_handle_requests
+    .pop()
+    .unwrap()
 }
 
 async fn get_collabs(c: &mut ApiClient<'_>) -> ac::AllCollabsAllCollabs {
-  c.gql::<ac::ResponseData, _>(
-    &AllCollabs::build_query(ac::Variables{
-      filter: None,
-      page: None,
-      per_page: None,
-      sort_field: None,
-      sort_order: None,
-    }),
-    vec![]
-  ).await.all_collabs.pop().unwrap()
+    c.gql::<ac::ResponseData, _>(
+        &AllCollabs::build_query(ac::Variables {
+            filter: None,
+            page: None,
+            per_page: None,
+            sort_field: None,
+            sort_order: None,
+        }),
+        vec![],
+    )
+    .await
+    .all_collabs
+    .pop()
+    .unwrap()
 }

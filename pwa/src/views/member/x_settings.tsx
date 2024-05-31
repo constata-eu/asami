@@ -5,10 +5,9 @@ import Paper from '@mui/material/Paper';
 import { getAuthKeys } from '../../lib/auth_provider';
 import { HandleSettings } from "./handle_settings";
 
-const XSettings = ({handles, handleRequests}) =>
+const XSettings = ({handles}) =>
   <HandleSettings
     handles={handles}
-    handleRequests={handleRequests}
     icon={<XIcon/>}
     site="X"
     namespace="x"

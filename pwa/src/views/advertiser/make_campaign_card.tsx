@@ -1,4 +1,4 @@
-import { useSafeSetState, useTranslate } from "react-admin";
+import { useSafeSetState, useDataProvider, useTranslate } from "react-admin";
 import { LinearProgress, Alert, Box, Button, CardContent, Typography } from "@mui/material";
 import { Dialog } from '@mui/material';
 import { formatAddress } from '../../lib/formatters';
@@ -6,7 +6,7 @@ import { toBeHex, zeroPadValue, parseEther } from "ethers";
 import { DeckCard } from '../layout';
 import { useContracts } from "../../components/contracts_context";
 import { Head2, light } from '../../components/theme';
-import { parseCampaignSiteAndContentId, defaultValidUntil } from '../../lib/campaign';
+import { validateCampaignLink, defaultValidUntil } from '../../lib/campaign';
 import Paper from '@mui/material/Paper';
 import { Form, TextInput, SaveButton, useNotify } from 'react-admin';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -14,7 +14,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import { Stack } from '@mui/material';
 import CampaignIcon from '@mui/icons-material/Campaign';
 
-export const MakeCampaignCard = ({account}) => {
+export const MakeCampaignCard = ({account, onCreate}) => {
   const translate = useTranslate();
   const [open, setOpen] = useSafeSetState(false);
   const [step, setStep] = useSafeSetState("FORM"); 
@@ -22,6 +22,7 @@ export const MakeCampaignCard = ({account}) => {
   const [creationTx, setCreationTx] = useSafeSetState();
   const [failure, setFailure] = useSafeSetState();
   const { contracts } = useContracts();
+  const dataProvider = useDataProvider();
 
   const handleClose = () => {
     setOpen(false);
@@ -40,15 +41,30 @@ export const MakeCampaignCard = ({account}) => {
       setOpen(true)
       const input = values.makeCampaignInput;
 
-      const approval = await doc.approve(asamiAddress, input.budget, signer);
-      setApprovalTx(approval);
-      await approval.wait();
+			let campaign = await dataProvider.create('CreateCampaignFromLink', { data: { input: {link: input.link, topicIds: [] }}});
+
+			const allowance = await doc.allowance(signer, asamiAddress);
+			if (allowance < input.budget ) {
+				const approval = await doc.approve(asamiAddress, input.budget, signer);
+				setApprovalTx(approval);
+				await approval.wait();
+			}
+
       setStep("CREATING");
 
-      const creation = await asami.makeCampaigns([input]);
+			let time = (new Date()).getTime() + (input.duration * 24 * 60 * 60 * 1000);
+
+      const creation = await asami.makeCampaigns([{
+				budget: input.budget,
+				briefingHash: campaign.data.briefingHash,
+				validUntil: BigInt(Math.floor( time / 1000 ))
+			}]);
+
       setCreationTx(creation);
       await creation.wait();
       setStep("DONE");
+			await dataProvider.update('Campaign', { id: campaign.data.id, data: {} });
+			onCreate();
     } catch (e) {
       setFailure(e);
       setOpen(true)
@@ -58,17 +74,14 @@ export const MakeCampaignCard = ({account}) => {
 
   const validate = (values) => {
     let input = {
-      priceScoreRatio: parseEther("0.001"),
-      validUntil: BigInt(Math.floor(defaultValidUntil().getTime() / 1000)),
-      topics: []
+      duration: 30,
     };
 
-    const {err, site, contentId} = parseCampaignSiteAndContentId(values.contentUrl);
-    if (err) {
-      return { contentUrl: translate(`make_campaign_card.errors.${err}`) };
+    const error = validateCampaignLink(values.contentUrl);
+    if (error) {
+      return { contentUrl: translate(`make_campaign_card.errors.${error}`) };
     }
-    input.site = { 'X': 0, 'INSTAGRAM': 1 }[site];
-    input.contentId = contentId;
+    input.link = values.contentUrl;
 
     try {
       const parsed = parseEther(values.budget);
@@ -194,7 +207,7 @@ const Failure = ({failure, handleClose}) => {
     msg = translate("make_campaign_card.failure_step.wrong_signer", {expected: formatAddress(failure.expected), actual: formatAddress(failure.actual)});
   } else {
     msg = translate("make_campaign_card.failure_step.unexpected_error");
-    info = failure.info && JSON.stringify(failure.info, null, 2);
+    info = failure.info ? JSON.stringify(failure.info, null, 2) : failure.toString();
   }
 
   const copyText = async () => {

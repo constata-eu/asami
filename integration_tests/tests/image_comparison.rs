@@ -1,9 +1,9 @@
 #[macro_use]
 pub mod support;
 
-use image_hasher::{HasherConfig, HashAlg};
+use image_hasher::{HashAlg, HasherConfig};
 
-test!{ compares_images
+test! { compares_images
   let one = image::open("fixtures/instagram_images/one.jpg").unwrap().into_rgb8();
   let two = image::open("fixtures/instagram_images/two.jpg").unwrap().into_rgb8();
   let three = image::open("fixtures/instagram_images/three.jpg").unwrap().into_rgb8();

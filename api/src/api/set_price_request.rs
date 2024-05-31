@@ -66,7 +66,7 @@ impl Showable<models::SetPriceRequest, SetPriceRequestFilter> for SetPriceReques
     })
   }
 
-  async fn db_to_graphql(d: models::SetPriceRequest) -> AsamiResult<Self> {
+  async fn db_to_graphql(context: &Context, d: models::SetPriceRequest) -> AsamiResult<Self> {
     Ok(SetPriceRequest {
       id: d.attrs.id,
       account_id: d.attrs.account_id,
@@ -100,6 +100,6 @@ impl CreateSetPriceRequestInput {
       .save()
       .await?;
 
-    Ok(SetPriceRequest::db_to_graphql(req).await?)
+    Ok(SetPriceRequest::db_to_graphql(context,req).await?)
   }
 }

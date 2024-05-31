@@ -31,13 +31,23 @@ const CollabList = () => {
           <Typography>{ translate("collab_list.text") }.</Typography>
         </CardTitle>
         <Datagrid bulkActionButtons={false}>
+					<FunctionField source="status" render={record => 
+						<>
+							<Typography>{translate(`collab_list.statuses.${record.status}.title`)}</Typography>
+							<Typography variant="caption">
+								{translate(`collab_list.statuses.${record.status}.text`)}
+							</Typography>
+						</>
+					} />
           <ReferenceField source="campaignId" reference="Campaign">
             <FunctionField label={false} render={record =>
               <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">{ translate("collab_list.see_post") }</a>
             }/>
           </ReferenceField>
-          <FunctionField label={ translate("collab_list.reward") } render={record => `${formatEther(record.gross)} DOC`} />
-          <FunctionField label={ translate("collab_list.fee") } render={record => `${formatEther(record.fee)} DOC`} />
+          <FunctionField label={ translate("collab_list.reward") } render={record => `${formatEther(record.reward)} DOC`} />
+          <FunctionField label={ translate("collab_list.fee") } render={record => 
+						record.fee ? `${formatEther(record.fee)} DOC` : "-"
+					} />
         </Datagrid>
         <Pagination rowsPerPageOptions={[]} />
       </Card>
