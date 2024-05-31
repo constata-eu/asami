@@ -1,0 +1,21 @@
+#!/bin/bash
+trap "exit" INT
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD) 
+STAGING_IP=128.199.33.144
+PRODUCTION_IP=167.99.18.108
+
+if [[ $1 == "production" ]]
+then
+  IP=$PRODUCTION_IP
+else
+  IP=$STAGING_IP
+fi
+
+scp -r release/pwa root@$IP:/home/asami/new_pwa &&
+ssh root@$IP '
+cd /home/asami &&
+mv pwa old_pwa
+mv new_pwa pwa
+rm -rf site &&
+ln -s pwa site'
