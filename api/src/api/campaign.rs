@@ -122,7 +122,10 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     }
     async fn db_to_graphql(context: &Context, d: models::Campaign) -> AsamiResult<Self> {
         let topic_ids = d.topic_ids().await?;
-        let you_would_receive = d.reward_for_account(&context.account().await?).await?.map(|x| x.encode_hex());
+        let you_would_receive = match context.current_session {
+            Some(_) => d.reward_for_account(&context.account().await?).await?.map(|x| x.encode_hex()),
+            None => None 
+        };
         Ok(Campaign {
             id: d.attrs.id,
             account_id: d.attrs.account_id,
