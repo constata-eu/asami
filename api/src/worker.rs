@@ -29,8 +29,10 @@ async fn main() {
 
     // The on chain jobs scheduler has its own internal cooldown and backoff.
     // We just make sure to wake it up once a second here so that it decides what to do.
-    every![1000, |s| {
+    every![10000, |s| {
         run!("On chain job scheduler" { s.on_chain_job().run_scheduler().await });
+    }];
+    every![60000, |s| {
         run!("Sync on-chain events" { s.synced_event().sync_on_chain_events().await });
     }];
 

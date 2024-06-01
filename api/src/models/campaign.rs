@@ -149,7 +149,7 @@ impl CampaignHub {
         Ok(campaign)
     }
 
-    pub async fn sync_x_collabs(&self) -> AsamiResult<Vec<Collab>> {
+    pub async fn sync_x_collabs(&self) -> anyhow::Result<Vec<Collab>> {
         use twitter_v2::{api_result::*, authorization::BearerToken, TwitterApi};
 
         let mut reqs = vec![];
@@ -158,9 +158,7 @@ impl CampaignHub {
         let api = TwitterApi::new(auth);
 
         for campaign in self.select().budget_gt(weihex("0")).campaign_kind_eq(CampaignKind::XRepost).all().await? {
-            let post_id = campaign
-                .attrs
-                .briefing_json
+            let post_id = campaign.content_id()?
                 .parse::<u64>()
                 .map_err(|_| Error::Validation("content_id".into(), "was stored in the db not as u64".into()))?;
 
