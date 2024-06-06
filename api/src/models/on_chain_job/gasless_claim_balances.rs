@@ -59,6 +59,8 @@ impl OnChainJob {
             if addresses.len() > 50 {
                 break;
             }
+
+            a.disallow_gasless().await?;
         }
 
         if addresses.is_empty() {
