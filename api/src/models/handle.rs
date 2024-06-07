@@ -34,6 +34,11 @@ impl HandleHub {
         use tokio::time::*;
         use twitter_v2::{api_result::*, authorization::BearerToken, query::*, TwitterApi};
 
+        if self.select().status_eq(HandleStatus::Unverified).count().await? == 0 {
+            self.state.info("verify_and_score_x", "no_unverified_handles_found_skipping", ()).await;
+            return Ok(vec![]);
+        }
+
         let mut handles = vec![];
 
         let msg_regex = regex::Regex::new(r#"\@asami_club \[(\d*)\]"#)?;

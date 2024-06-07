@@ -162,13 +162,16 @@ impl CampaignHub {
                 .parse::<u64>()
                 .map_err(|_| Error::Validation("content_id".into(), "was stored in the db not as u64".into()))?;
 
+            self.state.info("sync_x_collabs", "fetching_retweets", &post_id).await;
             let reposts = api.get_tweet_retweeted_by(post_id).send().await?;
+            self.state.info("sync_x_collabs", "got_reposts", ()).await;
 
             let mut page = Some(reposts);
 
             while let Some(reposts) = page {
                 let payload = reposts.payload();
                 let Some(data) = payload.data() else {
+                    self.state.info("sync_x_collabs", "no_payload_data", ()).await;
                     break;
                 };
 
@@ -181,11 +184,14 @@ impl CampaignHub {
                 if data.len() < 100 {
                     page = None;
                 } else {
+                    self.state.info("sync_x_collabs", "fetching_next_page", ()).await;
                     page = reposts.next_page().await?;
+                    self.state.info("sync_x_collabs", "got_next_page", ()).await;
                     self.x_cooldown().await; // After fetching a page.
                 }
             }
 
+            self.state.info("sync_x_collabs", "next_campaign", ()).await;
             self.x_cooldown().await; // Always between campaigns, even if reposts was None.
         }
         Ok(reqs)
@@ -261,25 +267,35 @@ impl Campaign {
             .optional()
             .await?
         else {
+            self.state.info("sync_x_collabs", "make_x_collab_no_handle", user_id).await;
             return Ok(None);
         };
 
         if *handle.status() != HandleStatus::Active {
+            self.state.info("sync_x_collabs", "make_x_collab_inactive_handle", user_id).await;
             return Ok(None);
         }
 
         let Some(trigger) = handle.user_id().as_ref() else {
+            self.state.info("sync_x_collabs", "make_x_collab_no_trigger", user_id).await;
             return Ok(None);
         };
 
         let Some(reward) = handle.reward_for(self) else {
+            self.state.info("sync_x_collabs", "make_x_collab_no_reward", user_id).await;
             return Ok(None);
         };
 
         match self.make_collab(&handle, reward, trigger).await {
             Ok(req) => Ok(Some(req)),
-            Err(Error::Validation(_, _)) => Ok(None),
-            Err(e) => Err(e),
+            Err(e @ Error::Validation(_, _)) => {
+                self.state.info("sync_x_collabs", "make_x_collab_invalid", &(user_id, e.to_string())).await;
+                Ok(None)
+            },
+            Err(e) => {
+                self.state.info("sync_x_collabs", "make_x_collab_error", &(user_id, e.to_string())).await;
+                Err(e)
+            }
         }
     }
 

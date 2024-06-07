@@ -7,25 +7,25 @@ async fn main() {
     let mut handles = vec![];
 
     macro_rules! every {
-    ($wait:expr, |$app:ident| {$($blk:tt)*}) => (
-      let $app = app.clone();
-      handles.push(tokio::spawn(async move {
-        loop {
-          { $($blk)* }
-          tokio::time::sleep(Duration::from_millis($wait)).await;
-        }
-      }));
-    )
-  }
+        ($wait:expr, |$app:ident| {$($blk:tt)*}) => (
+            let $app = app.clone();
+            handles.push(tokio::spawn(async move {
+                loop {
+                    { $($blk)* }
+                    tokio::time::sleep(Duration::from_millis($wait)).await;
+                }
+            }));
+        )
+    }
 
     macro_rules! run {
-    ($name:literal {$($blk:tt)*}) => (
-      println!("Running: {}", $name);
-      if let Err(err) = { $($blk)* } {
-        println!("Error in {}: {:?}", $name, err);
-      }
-    )
-  }
+        ($name:literal {$($blk:tt)*}) => (
+            println!("Running: {}", $name);
+            if let Err(err) = { $($blk)* } {
+                println!("Error in {}: {:?}", $name, err);
+            }
+        )
+    }
 
     // The on chain jobs scheduler has its own internal cooldown and backoff.
     // We just make sure to wake it up once a second here so that it decides what to do.
