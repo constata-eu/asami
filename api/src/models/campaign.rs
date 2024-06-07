@@ -169,13 +169,16 @@ impl CampaignHub {
             let mut page = Some(reposts);
 
             while let Some(reposts) = page {
+                self.state.info("sync_x_collabs", "getting_payload", ()).await;
                 let payload = reposts.payload();
+                self.state.info("sync_x_collabs", "got_payload", ()).await;
                 let Some(data) = payload.data() else {
                     self.state.info("sync_x_collabs", "no_payload_data", ()).await;
                     break;
                 };
 
                 for user in data {
+                    self.state.info("sync_x_collabs", "processing_user", &user.id).await;
                     if let Some(req) = campaign.make_x_collab_with_user_id(&user.id.to_string()).await? {
                         reqs.push(req);
                     };
