@@ -140,14 +140,16 @@ impl HandleHub {
             page = mentions.next_page().await?;
         }
 
-        indexer_state.update().x_handle_verification_checkpoint(checkpoint).save().await?;
-        self.state
-            .info(
-                "verify_and_score_x",
-                "done_processing_updating_indexer_state",
-                &checkpoint,
-            )
-            .await;
+        if *indexer_state.x_handle_verification_checkpoint() < checkpoint {
+            indexer_state.update().x_handle_verification_checkpoint(checkpoint).save().await?;
+            self.state
+                .info(
+                    "verify_and_score_x",
+                    "done_processing_updating_indexer_state",
+                    &checkpoint,
+                )
+                .await;
+        }
         Ok(handles)
     }
 }
