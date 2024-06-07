@@ -267,33 +267,35 @@ impl Campaign {
             .optional()
             .await?
         else {
-            self.state.info("sync_x_collabs", "make_x_collab_no_handle", user_id).await;
+            self.state.info("sync_x_collabs", "make_x_collab_no_handle", (self.id(), user_id)).await;
             return Ok(None);
         };
 
+        let log_pointer = (self.id(), handle.id());
+
         if *handle.status() != HandleStatus::Active {
-            self.state.info("sync_x_collabs", "make_x_collab_inactive_handle", user_id).await;
+            self.state.info("sync_x_collabs", "make_x_collab_inactive_handle", log_pointer).await;
             return Ok(None);
         }
 
         let Some(trigger) = handle.user_id().as_ref() else {
-            self.state.info("sync_x_collabs", "make_x_collab_no_trigger", user_id).await;
+            self.state.info("sync_x_collabs", "make_x_collab_no_trigger", log_pointer).await;
             return Ok(None);
         };
 
         let Some(reward) = handle.reward_for(self) else {
-            self.state.info("sync_x_collabs", "make_x_collab_no_reward", user_id).await;
+            self.state.info("sync_x_collabs", "make_x_collab_no_reward", log_pointer).await;
             return Ok(None);
         };
 
         match self.make_collab(&handle, reward, trigger).await {
             Ok(req) => Ok(Some(req)),
             Err(e @ Error::Validation(_, _)) => {
-                self.state.info("sync_x_collabs", "make_x_collab_invalid", &(user_id, e.to_string())).await;
+                self.state.info("sync_x_collabs", "make_x_collab_invalid", &(self.id(), handle.id(), e.to_string())).await;
                 Ok(None)
             },
             Err(e) => {
-                self.state.info("sync_x_collabs", "make_x_collab_error", &(user_id, e.to_string())).await;
+                self.state.info("sync_x_collabs", "make_x_collab_error", &(self.id(), handle.id(), e.to_string())).await;
                 Err(e)
             }
         }
