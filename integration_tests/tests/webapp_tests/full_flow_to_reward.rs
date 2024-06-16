@@ -13,11 +13,10 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
         "https://instagram.com/somebody/ABCDEFG",
         u("100"), 20, &[]
     ).await;
+    d.goto("http://127.0.0.1:5173").await;
 
     d.login().await;
     d.click("#button-post-to-earn").await;
-
-    wait_here();
 
     d.wait_for("#member-dashboard").await;
 

@@ -169,6 +169,20 @@ impl Handle {
             .await
             .map_err(|e| Error::runtime(&format!("campaign available funds calculation: {e:?}")))?;
 
+        let collab_exists = self
+            .state
+            .collab()
+            .select()
+            .collab_trigger_unique_id_eq(trigger.to_string())
+            .campaign_id_eq(campaign.attrs.id.clone())
+            .count()
+            .await?
+            > 0;
+
+        if collab_exists {
+            return Err(Error::validation("all", "collab_exists"));
+        }
+
         if available_funds < reward {
             return Err(Error::validation("site", "campaign_has_not_enough_funds"));
         }
@@ -184,20 +198,6 @@ impl Handle {
         let handle_topics = self.topic_ids().await?;
         if !campaign.topic_ids().await?.iter().all(|topic| handle_topics.contains(topic)) {
             return Err(Error::validation("topics", "handle_is_missing_topics"));
-        }
-
-        let collab_exists = self
-            .state
-            .collab()
-            .select()
-            .collab_trigger_unique_id_eq(trigger.to_string())
-            .campaign_id_eq(campaign.attrs.id.clone())
-            .count()
-            .await?
-            > 0;
-
-        if collab_exists {
-            return Err(Error::validation("all", "collab_exists"));
         }
 
         Ok(())

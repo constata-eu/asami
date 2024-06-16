@@ -10,7 +10,7 @@
   },
   "campaign_list": {
     "title": "Campañas activas",
-    "text": "Los miembros del club amplificarán tu contenido hasta que el presupuesto se acabe. Si sobran fondos se devolverán luedo de la fecha de fin de campaña.",
+    "text": "Los miembros del club amplificarán tu contenido hasta que el presupuesto se acabe. Si sobran fondos se devolverán luego de la fecha de fin de campaña.",
     "see_post": "Ver Post",
     "kind": "Tipo",
     "post": "Post",
@@ -60,7 +60,7 @@
 			},
 			"FAILED": {
 				"title": "Fallida",
-				"text": "Esta colaboración no se pudo pagar. Contáctanos si crees que es un error."
+				"text": "La campaña se quedó sin fondos. Puedes deshacer tu colaboración :("
 			}
 		}
   },

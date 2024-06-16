@@ -1,8 +1,11 @@
+
+export const contentId = (campaign) => JSON.parse(campaign.briefingJson)
+
 export const viewPostUrl = (campaign) => {
   if(campaign.site == "INSTAGRAM"){
-    return `https://instagram.com/p/${campaign.contentId}`;
+    return `https://instagram.com/p/${contentId(campaign)}`;
   } else {
-    return `https://x.com/user/status/${campaign.contentId}`;
+    return `https://x.com/user/status/${contentId(campaign)}`;
   }
 }
 

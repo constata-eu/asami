@@ -16,9 +16,9 @@ model! {
     collab_trigger_unique_id: String,
     #[sqlx_model_hints(int4)]
     handle_id: i32,
-    #[sqlx_model_hints(collab_status, default)]
+    #[sqlx_model_hints(collab_status)]
     status: CollabStatus,
-    #[sqlx_model_hints(varchar, default)]
+    #[sqlx_model_hints(varchar)]
     dispute_reason: Option<String>,
     #[sqlx_model_hints(varchar)]
     reward: String,
@@ -28,7 +28,7 @@ model! {
     created_at: UtcDateTime,
   },
   queries {
-      registered("status = 'registered'")
+      registered("status = 'registered' AND campaign_id = $1", campaign_id: i32)
   },
   belongs_to {
     Account(member_id),

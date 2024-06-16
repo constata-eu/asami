@@ -157,7 +157,14 @@ impl CampaignHub {
         let auth = BearerToken::new(&conf.bearer_token);
         let api = TwitterApi::new(auth);
 
-        for campaign in self.select().budget_gt(weihex("0")).campaign_kind_eq(CampaignKind::XRepost).all().await? {
+        let campaigns = self.select()
+            .budget_gt(weihex("0"))
+            .campaign_kind_eq(CampaignKind::XRepost)
+            .order_by(CampaignOrderBy::Id)
+            .all()
+            .await?;
+
+        for campaign in campaigns {
             let post_id = campaign.content_id()?
                 .parse::<u64>()
                 .map_err(|_| Error::Validation("content_id".into(), "was stored in the db not as u64".into()))?;
@@ -229,13 +236,14 @@ impl Campaign {
         let from_registered = self
             .state
             .collab()
-            .registered()
+            .registered(self.attrs.id)
             .all()
             .await?
             .iter()
             .map(|x| u256(x.reward()))
             .fold(U256::zero(), |acc, x| acc + x);
-        Ok(self.budget_u256() - from_registered)
+
+        Ok(self.budget_u256().checked_sub(from_registered).unwrap_or(U256::zero()))
     }
 
     pub async fn make_collab(&self, handle: &Handle, reward: U256, trigger: &str) -> AsamiResult<Collab> {
@@ -252,6 +260,27 @@ impl Campaign {
                 collab_trigger_unique_id: trigger.to_string(),
                 reward: reward.encode_hex(),
                 fee: None,
+                status: CollabStatus::Registered,
+                dispute_reason: None,
+            })
+            .save()
+            .await?)
+    }
+
+    pub async fn make_failed_collab(&self, handle: &Handle, reward: U256, trigger: &str, reason: &str) -> AsamiResult<Collab> {
+        Ok(self
+            .state
+            .collab()
+            .insert(InsertCollab {
+                campaign_id: self.attrs.id.clone(),
+                handle_id: handle.attrs.id.clone(),
+                advertiser_id: self.attrs.account_id.clone(),
+                member_id: handle.account_id().clone(),
+                collab_trigger_unique_id: trigger.to_string(),
+                reward: reward.encode_hex(),
+                fee: None,
+                status: CollabStatus::Failed,
+                dispute_reason: Some(reason.to_string()),
             })
             .save()
             .await?)
@@ -293,9 +322,15 @@ impl Campaign {
 
         match self.make_collab(&handle, reward, trigger).await {
             Ok(req) => Ok(Some(req)),
-            Err(e @ Error::Validation(_, _)) => {
-                self.state.info("sync_x_collabs", "make_x_collab_invalid", &(self.id(), handle.id(), e.to_string())).await;
-                Ok(None)
+            Err(Error::Validation(_, reason)) => {
+                self.state.info("sync_x_collabs", "make_x_collab_invalid", &(self.id(), handle.id(), &reason)).await;
+
+                if reason != "collab_exists" {
+                    let collab = self.make_failed_collab(&handle, reward, trigger, &reason).await?;
+                    Ok(Some(collab))
+                } else {
+                    Ok(None)
+                }
             },
             Err(e) => {
                 self.state.info("sync_x_collabs", "make_x_collab_error", &(self.id(), handle.id(), e.to_string())).await;

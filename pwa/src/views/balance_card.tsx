@@ -77,7 +77,7 @@ const Done = ({account}) => {
 	const unclaimedAsami = BigInt(account.unclaimedAsamiBalance);
 	const unclaimedDoc = BigInt(account.unclaimedDocBalance);
 	const hasEnoughRbtc = BigInt(account.rbtcBalance) > 0.00001;
-	const hasUnclaimed = unclaimedAsami > 0 && unclaimedDoc > 0;
+	const hasUnclaimed = unclaimedAsami > 0 || unclaimedDoc > 0;
 
 	const claimRegular = hasUnclaimed && hasEnoughRbtc;
 	const claimGasless = hasUnclaimed && unclaimedDoc >= 1;

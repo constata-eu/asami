@@ -38,6 +38,9 @@ async fn main() {
 
     every![settings.x.crawl_cooldown_minutes * 60 * 1000, |s| {
         run!("sync_x_collabs" { s.campaign().sync_x_collabs().await });
+    }];
+
+    every![settings.x.crawl_cooldown_minutes * 60 * 1000, |s| {
         run!("verify_and_appraise_x_handles" { s.handle().verify_and_score_x().await });
     }];
 

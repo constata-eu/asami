@@ -8,6 +8,7 @@ import { light } from '../../components/theme';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import XIcon from '@mui/icons-material/X';
 import truncate from 'lodash/truncate';
+import { contentId } from '../../lib/campaign';
 
 export const CampaignHeader = ({campaign, icon, children}) => {
   const translate = useTranslate();
@@ -55,8 +56,7 @@ const ConfirmHideCampaign = ({campaignId, setPreference }) => {
 
 export const XCampaign = ({handle, campaign, prefsContext, setPreference}) => {
   const translate = useTranslate();
-	const contentId = JSON.parse(campaign.briefingJson);
-  const repostUrl = `https://twitter.com/intent/retweet?tweet_id=${contentId}&related=asami_club`;
+  const repostUrl = `https://twitter.com/intent/retweet?tweet_id=${contentId(campaign)}&related=asami_club`;
 	const attemptedOn = prefsContext.data.find((x) => x.campaignId == campaign.id)?.attemptedOn;
 
   return <DeckCard id={`campaign-container-${campaign.id}`} elevation={attemptedOn ? 1 : 10}>
@@ -88,7 +88,7 @@ export const XCampaign = ({handle, campaign, prefsContext, setPreference}) => {
       }
     </CampaignHeader>
     <Box minHeight="250px" mb="1em">
-      <TwitterTweetEmbed tweetId={contentId} options={{ theme: "dark", align: "center", width: "250px", conversation: "none"}} />
+      <TwitterTweetEmbed tweetId={contentId(campaign)} options={{ theme: "dark", align: "center", width: "250px", conversation: "none"}} />
     </Box>
     { !attemptedOn &&
       <CardContent sx={{pt: 0, pb: "1em !important" }}>

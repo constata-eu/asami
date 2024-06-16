@@ -60,7 +60,7 @@
 			},
 			"FAILED": {
 				"title": "Failed",
-				"text": "This collab could not be paid. You can undo it or contact us."
+				"text": "The campaign ran out of budget. You can undo your collaboration :("
 			}
 		}
   },

@@ -126,10 +126,11 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
             Some(_) => d.reward_for_account(&context.account().await?).await?.map(|x| x.encode_hex()),
             None => None 
         };
+        let budget = d.available_budget().await.unwrap_or(d.budget_u256()).encode_hex();
         Ok(Campaign {
             id: d.attrs.id,
             account_id: d.attrs.account_id,
-            budget: d.attrs.budget,
+            budget,
             valid_until: d.attrs.valid_until,
             campaign_kind: d.attrs.campaign_kind,
             briefing_json: d.attrs.briefing_json,

@@ -85,7 +85,7 @@ const CampaignList = ({listContext}) => {
         </CardTitle>
         <Datagrid bulkActionButtons={false}>
           <FunctionField label={ translate("campaign_list.post") } render={record =>
-            <a target="_blank" href={`https://x.com/twitter/status/${record.contentId}`} rel="noreferrer">
+            <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">
               { translate("campaign_list.see_post") }
             </a>
           } />
