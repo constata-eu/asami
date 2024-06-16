@@ -48,7 +48,7 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
     d.wait_for_text("td.column-status", "Registered").await;
 
     d.test_app().wait_for_job("Subaccount collabs", OnChainJobKind::MakeSubAccountCollabs, OnChainJobStatus::Settled).await;
-    d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "360.0 ASAMI").await;
+    d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "90.0 ASAMI").await;
 
     d.wait_for("#help-card-no-campaigns").await;
     d.click("#balance-card-claim-account-button").await;
@@ -80,7 +80,7 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
     }
     d.test_app().wait_for_job("Account collabs", OnChainJobKind::MakeCollabs, OnChainJobStatus::Settled).await;
 
-    d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "3600.0 ASAMI").await;
+    d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "900.0 ASAMI").await;
     d.click("#claim-balances-button").await;
 
     try_until(10, 200, "No other window opened", || async {
