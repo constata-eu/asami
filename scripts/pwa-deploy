@@ -12,10 +12,10 @@ else
   IP=$STAGING_IP
 fi
 
-scp -r release/pwa root@$IP:/home/asami/new_pwa &&
+scp -r release/pwa/dist root@$IP:/home/asami/new_pwa &&
 ssh root@$IP '
 cd /home/asami &&
-mv pwa old_pwa
-mv new_pwa pwa
+mv pwa old_pwa &&
+mv new_pwa pwa &&
 rm -rf site &&
 ln -s pwa site'
