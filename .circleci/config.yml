@@ -24,9 +24,9 @@ jobs:
     steps:
       - checkout
       - browser-tools/install-chrome:
-        chrome-version: "122.0.6261.94"
+        chrome-version: "126.0.6478.61"
       - browser-tools/install-chromedriver:
-        chrome-version: "122.0.6261.94"
+        chrome-version: "126.0.6478.61"
       - run:
           name: Creating config
           command: cp api/Rocket.toml.sample api/Rocket.toml
