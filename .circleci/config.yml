@@ -60,7 +60,7 @@ jobs:
       - checkout
       - run:
           name: Creating config
-          command: cp Rocket.toml.example Rocket.toml
+          command: cp api/Rocket.toml.sample api/Rocket.toml
       - run:
           name: Wait for postgres
           command: dockerize -wait tcp://localhost:5432 -timeout 1m
