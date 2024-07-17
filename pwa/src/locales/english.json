@@ -281,7 +281,11 @@
     "consent_with_facebook": "Consent with Facebook",
     "web3_consent_title": "Consent and login with a WEB3 wallet",
     "web3_consent_body": "To collect your rewards, get ASAMI tokens, and vote.",
-    "consent_and_connect": "Consent and connect"
+    "consent_and_connect": "Consent and connect",
+    "x_mobile_warning": {
+        "title": "This may not work on mobile",
+        "text": "The X app is broken, there's not much we can do about it. If it doesn't work, you can try this option from your computer's browser or try one of the other options on mobile."
+    }
   },
   "about_us": {
     "go_back_button": "Go Back",

@@ -42,7 +42,7 @@ jobs:
 
       - run:
           name: Run tests
-          command: integration_tests/run webapp
+          command: cd integration_tests && ./run webapp
 
       - store_artifacts:
           path: target/artifacts
@@ -73,7 +73,7 @@ jobs:
 
       - run:
           name: Run tests
-          command: cargo test --workspace --exclude webapp --no-fail-fast -- --test-threads 1
+          command: cd integration_tests && ./run-ci model_and_api
 
       - store_artifacts:
           path: target/artifacts

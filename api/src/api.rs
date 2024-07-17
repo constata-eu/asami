@@ -334,6 +334,10 @@ impl Mutation {
     ) -> FieldResult<CampaignPreference> {
         input.process(context).await
     }
+
+    pub async fn create_email_login_link(context: &Context, email: String) -> FieldResult<i32> {
+        Ok(context.app.one_time_token().create_for_email(&email, None).await?)
+    }
 }
 
 // A root schema consists of a query and a mutation.

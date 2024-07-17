@@ -510,5 +510,6 @@ pub mod gql {
         AllHandlesMeta,
         AllCollabs,
         AllCollabsMeta,
+        CreateEmailLoginLink,
     ];
 }

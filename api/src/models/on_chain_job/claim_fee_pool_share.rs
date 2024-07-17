@@ -40,12 +40,24 @@ impl OnChainJob {
                 continue;
             }
 
+            self.state
+                .on_chain_job_account()
+                .insert(InsertOnChainJobAccount {
+                    job_id: self.attrs.id,
+                    account_id: a.attrs.id.clone(),
+                })
+                .save()
+                .await?;
+
             params.push(addr);
 
             if params.len() == 50 {
                 break;
             }
         }
+
+        params.sort();
+        params.dedup();
 
         if params.is_empty() {
             return Ok(None);

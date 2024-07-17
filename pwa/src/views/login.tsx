@@ -23,6 +23,7 @@ import truncate from 'lodash/truncate';
 import chunk from 'lodash/chunk';
 import flatten from 'lodash/flatten';
 import CampaignListEmpty from './campaign_list_empty';
+import {isMobile} from 'react-device-detect';
 
 const Login = () => {
   const translate = useTranslate();
@@ -283,15 +284,20 @@ const LoginSelector = ({open, setOpen}) => {
           </Typography>
           <Box display="flex" gap="1em" alignItems="center" mb="1em">
             <XIcon/>
-            <Button
-              id="x-login-button"
-              fullWidth
-              variant="contained"
-              color="inverted"
-              onClick={startXLogin}
-            >
-              { translate("login_form.consent_with_x") }
-            </Button>
+
+            { isMobile ?
+                <LoginWithXMobileWarning onClick={startXLogin} />
+                :
+                <Button
+                  id="x-login-button"
+                  fullWidth
+                  variant="contained"
+                  color="inverted"
+                  onClick={startXLogin}
+                >
+                  { translate("login_form.consent_with_x") }
+                </Button>
+            }
           </Box>
           <Box display="flex" gap="1em" alignItems="center" mb="1em">
             <FacebookIcon/>
@@ -335,6 +341,40 @@ const LoginSelector = ({open, setOpen}) => {
       </Box>
     </DialogContent>
   </Dialog>);
+}
+
+const LoginWithXMobileWarning = ({onClick}) => {
+  const translate = useTranslate();
+  const [open, setOpen] = useSafeSetState(false);
+  return (
+    <Box width="100%">
+        <Button
+          id="x-login-button"
+          fullWidth
+          variant="contained"
+          color="inverted"
+          onClick={ () => setOpen(true) }
+        >
+          { translate("login_form.consent_with_x") }
+        </Button>
+        <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" slotProps={{ backdrop: {sx: {background: "rgba(0,0,0,0.9)"}}}} PaperProps={ {"variant": "outlined", sx:{ borderWidth: "10px" }} }>
+            <DialogContent>
+                <Typography mb="1em" fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
+                    { translate("login_form.x_mobile_warning.title") }
+                </Typography>
+                <Typography mb="1em">{ translate("login_form.x_mobile_warning.text") }</Typography>
+                <Button
+                    id="x-login-button"
+                    fullWidth
+                    variant="contained"
+                    color="inverted"
+                    onClick={onClick}
+                >
+                    { translate("login_form.consent_with_x") }
+                </Button>
+            </DialogContent>
+        </Dialog>
+    </Box>);
 }
 
 export default Login;

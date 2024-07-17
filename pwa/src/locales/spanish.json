@@ -280,7 +280,11 @@
     "consent_with_facebook": "Aceptar con Facebook",
     "web3_consent_title": "Aceptar e ingresar con tu billetera WEB3",
     "web3_consent_body": "Para gastar tus recompensas, obtener tokens ASAMI, y votar.",
-    "consent_and_connect": "Aceptar y conectar"
+    "consent_and_connect": "Aceptar y conectar",
+    "x_mobile_warning": {
+        "title": "Esto puede fallar en el móvil",
+        "text": "La aplicación de X funciona mal, y no hay mucho que podamos hacer al respecto. Si no funciona, puedes intentar esta opción desde el navegador de tu ordenador o intentar otra de las opciones en tu móvil."
+    }
   },
   "about_us": {
     "go_back_button": "Volver",
