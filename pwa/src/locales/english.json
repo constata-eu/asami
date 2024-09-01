@@ -96,8 +96,7 @@
       "budget": "Total budget you'll spend, in DOC",
       "start_campaign": "Start Campaign",
       "service_summary": "You'll pay ~0.001 DOC per real person reached by a repost. Unused funds will be returned to you after 30 days.",
-      "x_description": "On X, members will repost your original post.",
-      "ig_description": "On Instagram, members will clone your ig post as their own. Use hashtags and mention yourself to drive traffic."
+      "x_description": "On X, members will repost your original post."
     },
     "tx_waiter": {
       "approving_title": "Approve budget spend",
@@ -277,11 +276,23 @@
     "reject_button": "I do not consent!",
     "read_more": "Read more",
     "web2_consent_title": "Consent and login with your social account.",
-    "consent_with_x": "Consent with X",
+    "consent_with_x": "Consent and login with X",
+    "consent_with_email": "Consent and login via Email",
     "consent_with_facebook": "Consent with Facebook",
     "web3_consent_title": "Consent and login with a WEB3 wallet",
     "web3_consent_body": "To collect your rewards, get ASAMI tokens, and vote.",
-    "consent_and_connect": "Consent and connect"
+    "consent_and_connect": "Consent and connect",
+    "send_email_token": {
+        "title": "Enter your email and we'll send you a login code.",
+        "submit": "Send me a code",
+        "error": "There was a problem sending your code. Contact us on X at @asami_club",
+        "done": "Code sent, check your inbox.",
+        "done_contact_us": "If you don't get your login token, contact us on X at @asami_club"
+    },
+    "x_mobile_warning": {
+        "title": "This may not work on mobile",
+        "text": "If login fails, we suggest you log-in using your Email address or a WEB3 wallet. You can also try again using X but on your laptop or from a different browser on your mobile."
+    }
   },
   "about_us": {
     "go_back_button": "Go Back",

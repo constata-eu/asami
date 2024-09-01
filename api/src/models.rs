@@ -43,6 +43,8 @@ pub mod collab;
 pub use collab::*;
 pub mod holder;
 pub use holder::*;
+pub mod one_time_token;
+pub use one_time_token::*;
 
 #[macro_export]
 macro_rules! make_sql_enum {
@@ -79,23 +81,6 @@ model! {
     account_id: String,
     #[sqlx_model_hints(int4)]
     user_id: i32,
-  }
-}
-
-/* One time tokens are just single use strings for the one time token authentication method.
- * The authentication strategy will only check that the string exists and has not been used.
- * This token's id is referenced in the lookup key of (at least one) AuthMethod.
- */
-model! {
-  state: App,
-  table: one_time_tokens,
-  struct OneTimeToken {
-    #[sqlx_model_hints(int4, default)]
-    id: i32,
-    #[sqlx_model_hints(varchar)]
-    value: String,
-    #[sqlx_model_hints(boolean, default)]
-    used: bool,
   }
 }
 

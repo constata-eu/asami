@@ -1,0 +1,4 @@
+#!/bin/bash
+pgrep -f "integration_tests/target/debug/deps" | xargs -r kill -9
+pgrep -f "bin/ganache" | xargs -r kill -9
+cargo test -j 4 --test $1 --no-fail-fast  -- --test-threads 1 

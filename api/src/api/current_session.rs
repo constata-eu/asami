@@ -222,7 +222,7 @@ impl CurrentSession {
                     app.one_time_token().select().used_eq(false).value_eq(&auth_data.to_string()).one().await,
                     "invalid_one_time_token"
                 );
-                format!("one_time_token:{}", token.attrs.id)
+                token.attrs.lookup_key
             }
             AuthMethodKind::X => {
                 let oauth_data: OauthCodeAndVerifier =

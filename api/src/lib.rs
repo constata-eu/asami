@@ -9,10 +9,12 @@ pub mod app;
 pub mod error;
 pub mod models;
 pub mod on_chain;
+pub mod lang;
 
 pub use api::*;
 pub use app::*;
 pub use error::*;
+pub use lang::*;
 
 #[rocket::get("/x_login?<code>&<state>")]
 pub async fn x_login(app: &State<App>, code: &str, state: &str) -> rocket::response::Redirect {

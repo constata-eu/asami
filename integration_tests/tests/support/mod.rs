@@ -133,7 +133,7 @@ macro_rules! api_test {
 macro_rules! app_test {
   ($test_name:ident($test_app:ident) $($e:tt)* ) => {
     test!{ $test_name
-      time_test::time_test!("api test");
+      time_test::time_test!("app test");
       let $test_app = crate::support::TestApp::init().await;
       {$($e)*};
     }

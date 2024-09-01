@@ -145,7 +145,6 @@ const CampaignForm = ({onSubmit, validate, handleClose}) => {
   return <Box p="1em" id="campaign-form">
     <Typography>{ translate("make_campaign_card.form_step.service_summary") }</Typography>
     <Typography>{ translate("make_campaign_card.form_step.x_description") }</Typography>
-    <Typography mb="1em">{ translate("make_campaign_card.form_step.ig_description") }</Typography>
     <Form sanitizeEmptyValues validate={validate} onSubmit={onSubmit}>
       <TextInput fullWidth required={true} size="large" variant="filled" source="contentUrl"
         label={ translate("make_campaign_card.form_step.content_url") } />

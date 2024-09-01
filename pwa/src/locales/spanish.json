@@ -96,8 +96,7 @@
       "budget": "Presupuesto total que gastarás, en DOC",
       "start_campaign": "Iniciar campaña",
       "service_summary": "Pagarás ~0.001 DOC por persona real alcanzada por un repost. Los fondos no utilizados serán devueltos después de 30 días.",
-      "x_description": "En X, los miembros repostearán tu post original.",
-      "ig_description": "En Instagram, los miembros clonarán tu post como propio. Usa hashtags y menciónate a ti mismo para generar tráfico."
+      "x_description": "En X, los miembros repostearán tu post original."
     },
     "tx_waiter": {
       "approving_title": "Aprobación del gasto del presupuesto",
@@ -116,7 +115,7 @@
     "failure_step": {
       "action_rejected": "Parece que cancelaste la creación de la campaña en tu cartera, intenta de nuevo si todavía estás interesado.",
       "wrong_signer": "¿Cambiaste tu cuenta de cartera? Estás usando Asami con %{expected} pero tu cartera está usando %{actual}. Cambia la cuenta conectada de tu cartera a %{expected} e intenta de nuevo.",
-      "unexpected_error": "Ocurrió un error inesperado, contáctanos en twitter o instagram y reenvía la información del error.",
+      "unexpected_error": "Ocurrió un error inesperado, contáctanos en X y reenvía la información del error.",
       "copy_info": "Copiar detalles del error",
       "info_copied": "Detalles del error copiados al portapapeles",
       "title": "Creación de campaña cancelada"
@@ -276,11 +275,23 @@
     "reject_button": "¡No acepto!",
     "read_more": "Leer más",
     "web2_consent_title": "Aceptar e ingresar con redes sociales.",
-    "consent_with_x": "Aceptar con X",
+    "consent_with_x": "Aceptar e ingresar con X",
+    "consent_with_email": "Aceptar e ingresar via Email",
     "consent_with_facebook": "Aceptar con Facebook",
     "web3_consent_title": "Aceptar e ingresar con tu billetera WEB3",
     "web3_consent_body": "Para gastar tus recompensas, obtener tokens ASAMI, y votar.",
-    "consent_and_connect": "Aceptar y conectar"
+    "consent_and_connect": "Aceptar y conectar",
+    "send_email_token": {
+        "title": "Danos tu email y te enviarémos un código de acceso.",
+        "submit": "Envíenme un código",
+        "error": "Hubo un problema enviando tu link. Contáctanos en X en @asami_club",
+        "done": "Código enviado, revisa tu correo",
+        "done_contact_us": "Si no recibes tu código de acceso, contáctanos en X en @asami_club"
+    },
+    "x_mobile_warning": {
+        "title": "Esto puede fallar en el móvil",
+        "text": "Si esto falla, te recomendamos iniciar sesión con tu Email, una wallet WEB3. También puedes intentar otra vez con X desde un ordenador o desde otro navegador en tu móvil."
+    }
   },
   "about_us": {
     "go_back_button": "Volver",

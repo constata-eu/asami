@@ -57,6 +57,7 @@ pub struct AppConfig {
     pub rsk: Rsk,
     pub x: XConfig,
     pub instagram: InstagramConfig,
+    pub sendgrid_api_key: String,
 }
 
 impl AppConfig {

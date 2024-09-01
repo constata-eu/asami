@@ -5,3 +5,4 @@ pub mod making_collabs;
 pub mod gasless_claims;
 pub mod claim_fee_pool_share;
 pub mod apply_voted_fee_rate;
+pub mod one_time_tokens;

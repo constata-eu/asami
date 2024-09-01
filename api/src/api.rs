@@ -44,6 +44,7 @@ pub async fn in_transaction(
     request: juniper::http::GraphQLBatchRequest,
     non_tx_current_session: Option<CurrentSession>,
     schema: &Schema,
+    lang: lang::Lang,
 ) -> GraphQLResponse {
     let err = || GraphQLResponse::error(field_error("unexpected_error_in_graphql", ""));
 
@@ -60,11 +61,13 @@ pub async fn in_transaction(
             Context {
                 app,
                 current_session: Some(CurrentSession(session)),
+                lang,
             }
         }
         None => Context {
             app,
             current_session: None,
+            lang,
         },
     };
 
@@ -90,8 +93,9 @@ pub async fn post_handler(
     app: &State<App>,
     current: CurrentSessionAndJson<juniper::http::GraphQLBatchRequest>,
     schema: &State<Schema>,
+    lang: lang::Lang,
 ) -> GraphQLResponse {
-    in_transaction(app.inner(), current.json, current.session, schema).await
+    in_transaction(app.inner(), current.json, current.session, schema, lang).await
 }
 
 #[rocket::get("/introspect")]
@@ -99,6 +103,7 @@ pub async fn introspect(app: &State<App>, schema: &State<Schema>) -> JsonResult<
     let ctx = Context {
         current_session: None,
         app: app.inner().clone(),
+        lang: lang::Lang::En,
     };
     let (res, _errors) = juniper::introspect(schema, &ctx, IntrospectionFormat::default())
         .map_err(|_| Error::Precondition("Invalid GraphQL schema for introspection".to_string()))?;
@@ -108,6 +113,7 @@ pub async fn introspect(app: &State<App>, schema: &State<Schema>) -> JsonResult<
 pub struct Context {
     app: App,
     current_session: Option<CurrentSession>,
+    lang: lang::Lang,
 }
 
 impl Context {
@@ -334,6 +340,18 @@ impl Mutation {
     ) -> FieldResult<CampaignPreference> {
         input.process(context).await
     }
+
+    pub async fn create_email_login_link(context: &Context, email: String) -> FieldResult<EmailLoginLink> {
+        Ok(EmailLoginLink{ id: context.app.one_time_token().create_for_email(email, context.lang, None).await?.attrs.id })
+    }
+}
+
+#[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+#[graphql(description = "A request to verify a handle for an account.")]
+pub struct EmailLoginLink {
+    #[graphql(description = "Unique numeric identifier of this resource")]
+    id: i32,
 }
 
 // A root schema consists of a query and a mutation.

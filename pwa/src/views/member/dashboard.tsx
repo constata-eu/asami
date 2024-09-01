@@ -2,7 +2,6 @@ import { useDataProvider, useAuthenticated } from "react-admin";
 import { LoggedInNavCard, ColumnsContainer } from '../layout';
 import { Box } from "@mui/material";
 import XSettings from "./x_settings";
-import IgSettings from "./ig_settings";
 import { useListController } from 'react-admin';
 import { getAuthKeys } from '../../lib/auth_provider';
 import BalanceCard from "../balance_card";
@@ -40,7 +39,6 @@ const Dashboard = () => {
 			<VersionTwoCard/>
       <BalanceCard />
       <XSettings handles={handles} />
-      <IgSettings handles={handles} />
       <CampaignList handles={handles}/>
     </ColumnsContainer>
     <CollabList />

@@ -54,6 +54,20 @@ mutation CreateHandle($input: CreateHandleInput!) {
     __typename
   }
 }
+mutation CreateGaslessAllowance {
+  createGaslessAllowance {
+    id
+    status
+    addr
+    unclaimedAsamiBalance
+    unclaimedDocBalance
+    asamiBalance
+    docBalance
+    rbtcBalance
+    allowsGasless
+    __typename
+  }
+}
 mutation CreateClaimAccountRequest($input: CreateClaimAccountRequestInput!) {
   createClaimAccountRequest(input: $input) {
     id
@@ -63,6 +77,8 @@ mutation CreateClaimAccountRequest($input: CreateClaimAccountRequestInput!) {
     unclaimedDocBalance
     asamiBalance
     docBalance
+    rbtcBalance
+    allowsGasless
     __typename
   }
 }
@@ -75,6 +91,12 @@ mutation CreateCampaignPreference($input: CreateCampaignPreferenceInput!) {
     __typename
   }
 }
+mutation CreateEmailLoginLink($email: String!) {
+  createEmailLoginLink(email: $email) {
+    id
+    __typename
+  }
+}
 query Account($id: String!) {
   Account(id: $id) {
     id
@@ -84,6 +106,8 @@ query Account($id: String!) {
     unclaimedDocBalance
     asamiBalance
     docBalance
+    rbtcBalance
+    allowsGasless
     __typename
   }
 }
@@ -96,6 +120,8 @@ query AllAccounts($page: Int, $perPage: Int, $sortField: String, $sortOrder: Str
     unclaimedDocBalance
     asamiBalance
     docBalance
+    rbtcBalance
+    allowsGasless
     __typename
   }
 }
