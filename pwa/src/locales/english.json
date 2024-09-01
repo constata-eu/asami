@@ -291,7 +291,7 @@
     },
     "x_mobile_warning": {
         "title": "This may not work on mobile",
-        "text": "The X app is broken, there's not much we can do about it. If it doesn't work, you can try this option from your computer's browser or try one of the other options on mobile."
+        "text": "If login fails, we suggest you log-in using your Email address or a WEB3 wallet. You can also try again using X but on your laptop or from a different browser on your mobile."
     }
   },
   "about_us": {

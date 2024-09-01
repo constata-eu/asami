@@ -290,7 +290,7 @@
     },
     "x_mobile_warning": {
         "title": "Esto puede fallar en el móvil",
-        "text": "La aplicación de X funciona mal, y no hay mucho que podamos hacer al respecto. Si no funciona, puedes intentar esta opción desde el navegador de tu ordenador o intentar otra de las opciones en tu móvil."
+        "text": "Si esto falla, te recomendamos iniciar sesión con tu Email, una wallet WEB3. También puedes intentar otra vez con X desde un ordenador o desde otro navegador en tu móvil."
     }
   },
   "about_us": {
