@@ -75,19 +75,13 @@ impl SyncedEventHub {
                 continue;
             };
 
-            let Some(creator) = self.state.account().select().addr_eq(e.account_addr().encode_hex()).optional().await?
-            else {
-                synced_event.info("syncing_campaign_event", "Creator has no account in this node.").await?;
-                continue;
-            };
-
             let Some(campaign) =
-                creator.campaign_scope().briefing_hash_eq(&e.campaign_id().encode_hex()).optional().await?
+                self.state.campaign_scope().briefing_hash_eq(&e.campaign_id().encode_hex()).optional().await?
             else {
                 synced_event
                     .info(
                         "sync_campaign_event",
-                        "Campaign not found. May be a mistake or a multi-node user.",
+                        format!("Campaign not found {}. May be a mistake or a multi-node user.", &e.campaign_id().encode_hex()),
                     )
                     .await?;
                 continue;

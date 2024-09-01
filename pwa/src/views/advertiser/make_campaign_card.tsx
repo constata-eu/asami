@@ -35,20 +35,20 @@ export const MakeCampaignCard = ({account, onCreate}) => {
   const onSubmit = async (values) => {
     setOpen(false)
     try {
-      const { doc, asami, asamiAddress, signer } = await contracts(account.addr);
+        const { doc, asami, asamiAddress, signer } = await contracts(account.addr);
 
-      setStep("APPROVING");
-      setOpen(true)
-      const input = values.makeCampaignInput;
+        setStep("APPROVING");
+        setOpen(true)
+        const input = values.makeCampaignInput;
 
-			let campaign = await dataProvider.create('CreateCampaignFromLink', { data: { input: {link: input.link, topicIds: [] }}});
+        let campaign = await dataProvider.create('CreateCampaignFromLink', { data: { input: {link: input.link, topicIds: [] }}});
 
-			const allowance = await doc.allowance(signer, asamiAddress);
-			if (allowance < input.budget ) {
-				const approval = await doc.approve(asamiAddress, input.budget, signer);
-				setApprovalTx(approval);
-				await approval.wait();
-			}
+        const allowance = await doc.allowance(signer, asamiAddress);
+        if (allowance < input.budget ) {
+            const approval = await doc.approve(asamiAddress, input.budget, signer);
+        setApprovalTx(approval);
+            await approval.wait();
+        }
 
       setStep("CREATING");
 

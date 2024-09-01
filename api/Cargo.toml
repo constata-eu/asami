@@ -56,6 +56,10 @@ name = "api"
 path = "src/main.rs"
 
 [[bin]]
+name = "testing"
+path = "src/bin.rs"
+
+[[bin]]
 name = "worker"
 path = "src/worker.rs"
 
