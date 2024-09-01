@@ -76,7 +76,7 @@ impl SyncedEventHub {
             };
 
             let Some(campaign) =
-                self.state.campaign().briefing_hash_eq(&e.campaign_id().encode_hex()).optional().await?
+                self.state.campaign().select().briefing_hash_eq(&e.campaign_id().encode_hex()).optional().await?
             else {
                 synced_event
                     .info(
