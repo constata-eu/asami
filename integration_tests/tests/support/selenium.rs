@@ -1,6 +1,6 @@
 use super::ApiClient;
 use crate::support::try_until;
-use api::models;
+use api::{lang, models};
 use chrono::Utc;
 use std::process::{Child, Command, Stdio};
 use thirtyfour::prelude::*;
@@ -181,6 +181,10 @@ impl Selenium<'_> {
             .one_time_token()
             .insert(models::InsertOneTimeToken {
                 value: "advertiser-token".to_string(),
+                lang: lang::Lang::Es,
+                lookup_key: "one_time_token".to_string(),
+                email: None,
+                user_id: None,
             })
             .save()
             .await
@@ -202,7 +206,13 @@ impl Selenium<'_> {
             .test_app
             .app
             .one_time_token()
-            .insert(models::InsertOneTimeToken { value: token.clone() })
+            .insert(models::InsertOneTimeToken {
+                value: token.clone(),
+                lang: lang::Lang::Es,
+                lookup_key: token.clone(),
+                email: None,
+                user_id: None,
+            })
             .save()
             .await
             .unwrap();

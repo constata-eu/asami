@@ -25,7 +25,6 @@ enum CollabStatus {
   REGISTERED
   CLEARED
   FAILED
-  DISPUTED
 }
 
 enum HandleStatus {
@@ -156,6 +155,10 @@ type Account {
   asamiBalance: String!
   "Doc Balance in a claimed account's address."
   docBalance: String!
+  "RBTC balance in a claimed account's address."
+  rbtcBalance: String!
+  "Is the account happy with receiving gasless claims if they are allowed in the smart contract?"
+  allowsGasless: Boolean!
 }
 
 "A campaign"
@@ -219,6 +222,12 @@ type Collab {
 }
 
 "A request to verify a handle for an account."
+type EmailLoginLink {
+  "Unique numeric identifier of this resource"
+  id: Int!
+}
+
+"A request to verify a handle for an account."
 type Handle {
   "Unique numeric identifier of this resource"
   id: Int!
@@ -257,8 +266,10 @@ type Mutation {
   createCampaignFromLink(input: CreateCampaignFromLinkInput!): Campaign!
   updateCampaign(id: Int!): Campaign!
   createHandle(input: CreateHandleInput!): Handle!
+  createGaslessAllowance: Account!
   createClaimAccountRequest(input: CreateClaimAccountRequestInput!): Account!
   createCampaignPreference(input: CreateCampaignPreferenceInput!): CampaignPreference!
+  createEmailLoginLink(email: String!): EmailLoginLink!
 }
 
 type Query {

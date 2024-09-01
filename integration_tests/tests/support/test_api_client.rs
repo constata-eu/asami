@@ -1,5 +1,6 @@
 use super::TestApp;
 pub use api::{
+    lang,
     models::{self, hasher, milli, u, u256, wei, Utc, U256},
     Decimal,
 };
@@ -14,7 +15,7 @@ pub use galvanic_assert::{
     matchers::{collection::*, variant::*, *},
     *,
 };
-use graphql_client::{self, GraphQLQuery};
+pub use graphql_client::{self, GraphQLQuery};
 use jwt_simple::{algorithms::*, prelude::*};
 use rocket::{http::Header, local::asynchronous::LocalResponse};
 pub use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -123,6 +124,10 @@ impl<'b> ApiClient<'b> {
             .one_time_token()
             .insert(models::InsertOneTimeToken {
                 value: token.to_string(),
+                email: None,
+                lang: lang::Lang::Es,
+                lookup_key: format!("one_time_token:{}", &token),
+                user_id: None,
             })
             .save()
             .await
@@ -498,6 +503,7 @@ pub mod gql {
         CreateSession,
         CreateClaimAccountRequest,
         CreateCampaignFromLink,
+        CreateEmailLoginLink,
         Campaign,
         AllCampaigns,
         AllCampaignsMeta,
@@ -510,6 +516,5 @@ pub mod gql {
         AllHandlesMeta,
         AllCollabs,
         AllCollabsMeta,
-        CreateEmailLoginLink,
     ];
 }

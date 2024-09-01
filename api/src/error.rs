@@ -42,6 +42,12 @@ impl Error {
     }
 }
 
+impl From<validators::errors::EmailError> for Error {
+    fn from(err: validators::errors::EmailError) -> Error {
+        Error::validation("invalid_email_address", &err.to_string())
+    }
+}
+
 impl<A: ethers::middleware::Middleware> From<ethers::contract::ContractError<A>> for Error {
     fn from(err: ethers::contract::ContractError<A>) -> Error {
         let desc = err.decode_revert::<String>().unwrap_or_else(|| format!("{:?}.{:?}", err, err.source()));

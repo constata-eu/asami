@@ -18,15 +18,14 @@ export const validateCampaignLink = (url) => {
     const contentId = path[path.length - 1];
 
     const is_x = (u.host.match(/\.?x\.com$/) || u.host.match(/\.?twitter\.com$/)) && contentId.match(/^\d+$/);
-		const is_ig = u.host.match(/\.?instagram.com$/) && contentId.match(/^[\d\w\-_]+$/);
 
-		if (!is_x && !is_ig) {
-			return "not_a_post_url";
-		}
+    if (!is_x) {
+        return "not_a_post_url";
+    }
 
   } catch {
 		return "invalid_url";
-	}
+  }
 	
 	return null;
 }

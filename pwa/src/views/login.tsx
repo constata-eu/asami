@@ -5,18 +5,32 @@ import { makeXUrl } from '../lib/auth_provider';
 import { etherToHex  } from '../lib/formatters';
 import { formatEther } from "ethers";
 import { publicDataProvider } from "../lib/data_provider";
-import { useSafeSetState, useStore, useListController, CoreAdminContext, useGetList, useTranslate, I18nContext } from 'react-admin';
+import {
+    useSafeSetState,
+    useStore,
+    useListController,
+    CoreAdminContext,
+    useGetList,
+    useTranslate,
+    I18nContext,
+    useDataProvider,
+    Form,
+    TextInput,
+    SaveButton,
+    useNotify,
+    email,
+    required
+} from 'react-admin';
+
 import { TwitterTweetEmbed } from 'react-twitter-embed';
 import { useNavigate } from 'react-router-dom';
 import { BareLayout, DeckCard } from './layout';
 import { Head2, Head3, light, green } from '../components/theme';
 import AsamiLogo from '../assets/logo.svg?react';
 import { useContracts } from "../components/contracts_context";
-import FacebookLogin from '@greatsumini/react-facebook-login';
 import { Settings } from '../settings';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import XIcon from '@mui/icons-material/X';
-import FacebookIcon from '@mui/icons-material/Facebook';
 import WalletIcon from '@mui/icons-material/Wallet';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import truncate from 'lodash/truncate';
@@ -24,6 +38,8 @@ import chunk from 'lodash/chunk';
 import flatten from 'lodash/flatten';
 import CampaignListEmpty from './campaign_list_empty';
 import {isMobile} from 'react-device-detect';
+import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
+import SendIcon from '@mui/icons-material/Send';
 
 const Login = () => {
   const translate = useTranslate();
@@ -300,28 +316,8 @@ const LoginSelector = ({open, setOpen}) => {
             }
           </Box>
           <Box display="flex" gap="1em" alignItems="center" mb="1em">
-            <FacebookIcon/>
-            <FacebookLogin
-              appId={ Settings.facebook.appId }
-              useRedirect
-              render={ ({onClick}) =>
-                <Button
-                  onClick={onClick}
-                  id="facebook-login-button"
-                  fullWidth
-                  variant="contained"
-                  color="inverted"
-                >
-                  { translate("login_form.consent_with_facebook") }
-                </Button> 
-              }
-              scope="public_profile"
-              dialogParams={{
-                redirect_uri: Settings.facebook.redirectUri,
-                state: "FacebookLoginState",
-                response_type: "code"
-              }}
-            />
+            <AlternateEmailIcon/>
+            <LoginWithEmail/>
           </Box>
         </Box>
         <Box>
@@ -373,6 +369,62 @@ const LoginWithXMobileWarning = ({onClick}) => {
                     { translate("login_form.consent_with_x") }
                 </Button>
             </DialogContent>
+        </Dialog>
+    </Box>);
+}
+
+const LoginWithEmail = ({onClick}) => {
+  const translate = useTranslate();
+  const [open, setOpen] = useSafeSetState(false);
+  const [sent, setSent] = useSafeSetState(false);
+  const dataProvider = useDataProvider();
+
+  const onSubmit = async (values) => {
+    try {
+        await dataProvider.create('EmailLoginLink', { data: { email: values.email }});
+        setSent(true);
+    } catch {
+        notify("login_form.send_email_token.error", {type: "error"});
+    }
+  }
+
+  const handleClose = () => {
+      setSent(false)
+      setOpen(false)
+  }
+
+  return (
+    <Box width="100%">
+        <Button
+          id="email-login-button"
+          fullWidth
+          variant="contained"
+          color="inverted"
+          onClick={ () => setOpen(true) }
+        >
+          { translate("login_form.consent_with_email") }
+        </Button>
+        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm" slotProps={{ backdrop: {sx: {background: "rgba(0,0,0,0.9)"}}}} PaperProps={ {"variant": "outlined", sx:{ borderWidth: "10px" }} }>
+            { !sent ? 
+                <DialogContent>
+                    <Typography mb="1em" fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
+                        { translate("login_form.send_email_token.title") }
+                    </Typography>
+                    <Form sanitizeEmptyValues onSubmit={onSubmit}>
+                      <TextInput fullWidth validate={[required(), email()]} size="large" variant="filled" source="email" label="Email"/>
+                      <SaveButton fullWidth id="submit-email-for-login-link" size="large" label={ translate("login_form.send_email_token.submit") } icon={<SendIcon/>} />
+                    </Form>
+                </DialogContent>
+                :
+                <Alert  severity="success" icon={false}>
+                  <Typography sx={{ color: "inherit" }} fontSize="1.5em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
+                    { translate("login_form.send_email_token.done") }
+                  </Typography>
+                  <Typography sx={{ color: "inherit" }}>
+                    { translate("login_form.send_email_token.done_contact_us") }
+                  </Typography>
+                </Alert>
+            }
         </Dialog>
     </Box>);
 }

@@ -5,6 +5,7 @@ address="0.0.0.0"
 limits = { json = "50MB", graphql = "50MB" }
 database_uri = "postgres://asami:password@localhost/asami_development"
 recaptcha_threshold=0.0
+sendgrid_api_key="yoursendingapikey"
 
 [global.x]
 client_id="ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ"

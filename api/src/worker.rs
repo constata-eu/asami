@@ -45,7 +45,7 @@ async fn main() {
     }];
 
     every![60 * 1000, |s| {
-        run!("ig_crawler do everything" { s.ig_crawl().do_everything().await });
+        run!("send_email_one_time_tokens" { s.one_time_token().send_email_tokens().await });
     }];
 
     futures::future::join_all(handles).await;

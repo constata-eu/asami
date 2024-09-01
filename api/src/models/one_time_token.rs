@@ -24,12 +24,18 @@ model! {
     lookup_key: String, // The email address, phone number, etc.
     #[sqlx_model_hints(boolean, default)]
     used: bool,
-    #[sqlx_model_hints(i32)]
+    // The user-id can be used to link a newly created auth method for this token
+    // to an existing user, but it's not used yet.
+    #[sqlx_model_hints(int4)]
     user_id: Option<i32>,
     #[sqlx_model_hints(timestamptz, default)]
     expires_at: DateTime<Utc>,
     #[sqlx_model_hints(timestamptz, default)]
     sent_at: Option<DateTime<Utc>>,
+    #[sqlx_model_hints(text)]
+    email: Option<String>,
+    #[sqlx_model_hints(language)]
+    lang: lang::Lang,
   }
 }
 
@@ -42,17 +48,59 @@ pub struct Email {
 }
 
 impl OneTimeTokenHub {
-    pub async fn create_for_email(&self, email: &str, user_id: Option<i32>) -> AsamiResult<OneTimeToken> {
-        Email::parse_string(email)?;
+    pub async fn create_for_email(&self, email: String, lang: lang::Lang, user_id: Option<i32>) -> AsamiResult<OneTimeToken> {
+        Email::parse_string(&email)?;
         let mut config = BasicConfig::default();
-        config.separator = "+".into();
+        config.separator = "-".into();
         config.capitalize_first = false.into();
-        let value = config.to_scheme().generate()
+        let value = config.to_scheme().generate();
 
         Ok(self.insert(InsertOneTimeToken{
             value,
             lookup_key: format!("email:{email}"),
             user_id,
-        }).await?)
+            email: Some(email),
+            lang,
+        }).save().await?)
+    }
+
+    pub async fn send_email_tokens(&self) -> AsamiResult<()> {
+        let all = self.select().sent_at_is_set(false).email_is_set(true).all().await?;
+        for token in all {
+            let Some(email) = token.email() else { continue; };
+
+            let subject = match token.lang() {
+                lang::Lang::Es => "Link de inicio de sesión en https://asami.club",
+                _ => "Your login link for https://asami.club",
+            };
+
+            let content = match token.lang() {
+                lang::Lang::Es => format!("<a href=\"{}/#/one_time_token_login?token={}\">Visita este link</a> para ingresar a asami.club\n\nSi no estás intentando iniciar sesión, puedes ignorar este correo.", self.state.settings.pwa_host, token.value()),
+                _ => format!("<a href=\"{}/#/one_time_token_login?token={}\">Visit this link</a> to log-in to asami club\n\nIf you're not trying to log-in, you can ignore this email.", self.state.settings.pwa_host, token.value()),
+            };
+
+            // Create the JSON body
+            let body = serde_json::json!({
+                "personalizations": [{
+                    "to": [{ "email": email }]
+                }],
+                "from": { "email": "hola@asami.club" },
+                "subject": subject,
+                "content": [{
+                    "type": "text/html",
+                    "value": content,
+                }]
+            });
+
+            // Perform the POST request
+            ureq::post("https://api.sendgrid.com/v3/mail/send")
+                .set("Authorization", &format!("Bearer {}", self.state.settings.sendgrid_api_key))
+                .set("Content-Type", "application/json")
+                .send_json(body)?;
+
+            token.update().sent_at(Some(Utc::now())).save().await?;
+        }
+
+        Ok(())
     }
 }

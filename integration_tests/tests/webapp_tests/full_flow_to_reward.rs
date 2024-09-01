@@ -9,10 +9,6 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
         u("100"), 20, &[]
     ).await;
 
-    let ig_campaign = advertiser.start_and_pay_campaign(
-        "https://instagram.com/somebody/ABCDEFG",
-        u("100"), 20, &[]
-    ).await;
     d.goto("http://127.0.0.1:5173").await;
 
     d.login().await;
@@ -25,30 +21,20 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
     d.wait_for(".MuiSnackbarContent-message").await;
     d.wait_until_gone(".MuiSnackbarContent-message").await;
 
-    d.fill_in("#ig-handle-request-form #username", "nubis_bruno").await;
-    d.click("#submit-ig-handle-request-form").await;
-    d.wait_for(".MuiSnackbarContent-message").await;
-    d.wait_until_gone(".MuiSnackbarContent-message").await;
-
     for (i, h) in d.app().handle().select().all().await?.into_iter().enumerate() {
         h.verify((1000 + i).to_string()).await?.set_score(wei("1234")).await?;
     }
 
     d.wait_for("#existing-x-handle-stats").await;
-    d.wait_for("#existing-ig-handle-stats").await;
 
     for h in d.app().handle().select().all().await? {
-        if *h.site() == Site::X {
-            x_campaign.make_collab(&h, u("2"), &h.attrs.username).await?;
-        } else {
-            ig_campaign.make_collab(&h, u("1"), &h.attrs.username).await?;
-        }
+        x_campaign.make_collab(&h, u("2"), &h.attrs.username).await?;
     }
 
     d.wait_for_text("td.column-status", "Registered").await;
 
     d.test_app().wait_for_job("Subaccount collabs", OnChainJobKind::MakeSubAccountCollabs, OnChainJobStatus::Settled).await;
-    d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "90.0 ASAMI").await;
+    d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "60.0 ASAMI").await;
 
     d.wait_for("#help-card-no-campaigns").await;
     d.click("#balance-card-claim-account-button").await;
@@ -70,17 +56,11 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
     d.test_app().start_mining().await;
 
     for h in d.app().handle().select().all().await? {
-        if *h.site() == Site::X {
-            x_campaign.make_collab(&h, u("20"),
-                &format!("{}-2", h.attrs.username)).await?;
-        } else {
-            ig_campaign.make_collab(&h, u("10"),
-                &format!("{}-2", h.attrs.username)).await?;
-        }
+        x_campaign.make_collab(&h, u("20"), &format!("{}-2", h.attrs.username)).await?;
     }
     d.test_app().wait_for_job("Account collabs", OnChainJobKind::MakeCollabs, OnChainJobStatus::Settled).await;
 
-    d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "900.0 ASAMI").await;
+    d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "600.0 ASAMI").await;
     d.click("#claim-balances-button").await;
 
     try_until(10, 200, "No other window opened", || async {
