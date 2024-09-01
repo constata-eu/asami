@@ -86,13 +86,13 @@ impl OneTimeTokenHub {
             };
 
             let subject = match token.lang() {
-                lang::Lang::Es => "Link de inicio de sesión en https://asami.club",
-                _ => "Your login link for https://asami.club",
+                lang::Lang::Es => "Link de inicio de sesión en asami.club",
+                _ => "Your login link for asami.club",
             };
 
             let content = match token.lang() {
-                lang::Lang::Es => format!("<a href=\"{}/#/one_time_token_login?token={}\">Visita este link</a> para ingresar a asami.club\n\nSi no estás intentando iniciar sesión, puedes ignorar este correo.", self.state.settings.pwa_host, token.value()),
-                _ => format!("<a href=\"{}/#/one_time_token_login?token={}\">Visit this link</a> to log-in to asami club\n\nIf you're not trying to log-in, you can ignore this email.", self.state.settings.pwa_host, token.value()),
+                lang::Lang::Es => format!("<a href=\"{}/#/one_time_token_login?token={}\">Visita este link</a> para ingresar a asami.club. Si no estás intentando iniciar sesión, puedes ignorar este correo.", self.state.settings.pwa_host, token.value()),
+                _ => format!("<a href=\"{}/#/one_time_token_login?token={}\">Visit this link</a> to log-in to asami.club. If you're not trying to log-in, you can ignore this email.", self.state.settings.pwa_host, token.value()),
             };
 
             // Create the JSON body
