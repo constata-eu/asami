@@ -7,16 +7,13 @@ impl OnChainJob {
          */
         let c = self.contract();
 
-        let accounts = self.state.account()
-            .select().status_eq(AccountStatus::Claimed).all().await?;
+        let accounts = self.state.account().select().status_eq(AccountStatus::Claimed).all().await?;
 
         let current_cycle = c.get_current_cycle().call().await?;
-        let supply = c.total_supply().call().await? - 
-            c.recent_tokens(current_cycle).call().await?;
+        let supply = c.total_supply().call().await? - c.recent_tokens(current_cycle).call().await?;
         let pool = c.get_fee_pool_before_recent_changes().call().await?;
 
-
-        if pool <= u("0") { 
+        if pool <= u("0") {
             self.info("skipping", "fees pool is empty").await?;
             return Ok(None);
         }

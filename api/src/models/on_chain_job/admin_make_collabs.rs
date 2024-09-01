@@ -96,7 +96,7 @@ impl OnChainJob {
                     let collab = link.collab().await?;
                     let campaign = collab.campaign().await?;
                     campaigns.insert(campaign.attrs.id.clone(), campaign);
-                    
+
                     // We do this exactly as it's done in the contract to have the same
                     // precision loss the contract may have.
                     let gross = collab.reward_u256();

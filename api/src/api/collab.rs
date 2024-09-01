@@ -23,9 +23,10 @@ pub struct Collab {
     dispute_reason: Option<String>,
     #[graphql(description = "The gross amount paid by the advertiser (campaign creator) for this collab.")]
     reward: String,
-    #[graphql( description = "The fee deducted by asami from the gross amount, field only available when reward cleared.")]
+    #[graphql(
+        description = "The fee deducted by asami from the gross amount, field only available when reward cleared."
+    )]
     fee: Option<String>,
-
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]

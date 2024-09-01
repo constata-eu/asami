@@ -23,7 +23,9 @@ pub struct Account {
     doc_balance: String,
     #[graphql(description = "RBTC balance in a claimed account's address.")]
     rbtc_balance: String,
-    #[graphql(description = "Is the account happy with receiving gasless claims if they are allowed in the smart contract?")]
+    #[graphql(
+        description = "Is the account happy with receiving gasless claims if they are allowed in the smart contract?"
+    )]
     allows_gasless: bool,
 }
 
@@ -106,7 +108,7 @@ impl Showable<models::Account, AccountFilter> for Account {
             rbtc_balance,
             unclaimed_asami_balance,
             unclaimed_doc_balance,
-            allows_gasless: d.attrs.allows_gasless
+            allows_gasless: d.attrs.allows_gasless,
         })
     }
 }

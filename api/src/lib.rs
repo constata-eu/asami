@@ -7,9 +7,9 @@ pub use rust_decimal::prelude::{Decimal, FromPrimitive, ToPrimitive};
 pub mod api;
 pub mod app;
 pub mod error;
+pub mod lang;
 pub mod models;
 pub mod on_chain;
-pub mod lang;
 
 pub use api::*;
 pub use app::*;

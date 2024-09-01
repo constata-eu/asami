@@ -157,7 +157,8 @@ impl CampaignHub {
         let auth = BearerToken::new(&conf.bearer_token);
         let api = TwitterApi::new(auth);
 
-        let campaigns = self.select()
+        let campaigns = self
+            .select()
             .budget_gt(weihex("0"))
             .campaign_kind_eq(CampaignKind::XRepost)
             .order_by(CampaignOrderBy::Id)
@@ -165,7 +166,8 @@ impl CampaignHub {
             .await?;
 
         for campaign in campaigns {
-            let post_id = campaign.content_id()?
+            let post_id = campaign
+                .content_id()?
                 .parse::<u64>()
                 .map_err(|_| Error::Validation("content_id".into(), "was stored in the db not as u64".into()))?;
 
@@ -267,7 +269,13 @@ impl Campaign {
             .await?)
     }
 
-    pub async fn make_failed_collab(&self, handle: &Handle, reward: U256, trigger: &str, reason: &str) -> AsamiResult<Collab> {
+    pub async fn make_failed_collab(
+        &self,
+        handle: &Handle,
+        reward: U256,
+        trigger: &str,
+        reason: &str,
+    ) -> AsamiResult<Collab> {
         Ok(self
             .state
             .collab()
@@ -323,7 +331,13 @@ impl Campaign {
         match self.make_collab(&handle, reward, trigger).await {
             Ok(req) => Ok(Some(req)),
             Err(Error::Validation(_, reason)) => {
-                self.state.info("sync_x_collabs", "make_x_collab_invalid", &(self.id(), handle.id(), &reason)).await;
+                self.state
+                    .info(
+                        "sync_x_collabs",
+                        "make_x_collab_invalid",
+                        &(self.id(), handle.id(), &reason),
+                    )
+                    .await;
 
                 if reason != "collab_exists" {
                     let collab = self.make_failed_collab(&handle, reward, trigger, &reason).await?;
@@ -331,9 +345,15 @@ impl Campaign {
                 } else {
                     Ok(None)
                 }
-            },
+            }
             Err(e) => {
-                self.state.info("sync_x_collabs", "make_x_collab_error", &(self.id(), handle.id(), e.to_string())).await;
+                self.state
+                    .info(
+                        "sync_x_collabs",
+                        "make_x_collab_error",
+                        &(self.id(), handle.id(), e.to_string()),
+                    )
+                    .await;
                 Err(e)
             }
         }

@@ -36,7 +36,6 @@ const Dashboard = () => {
     <ColumnsContainer>
       <LoggedInNavCard />
       <HelpCard handles={handles} campaigns={campaigns} />
-			<VersionTwoCard/>
       <BalanceCard />
       <XSettings handles={handles} />
       <CampaignList handles={handles}/>

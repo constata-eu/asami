@@ -23,15 +23,8 @@ impl OnChainJob {
                 continue;
             }
 
-            let (
-                trusted_admin,
-                max_gasless_doc_to_spend,
-                min_gasless_rbtc_to_receive,
-                _,
-                unclaimed_doc_balance,
-                _,
-                _,
-            ) = found;
+            let (trusted_admin, max_gasless_doc_to_spend, min_gasless_rbtc_to_receive, _, unclaimed_doc_balance, _, _) =
+                found;
 
             if trusted_admin != Address::default() && trusted_admin != self.state.settings.rsk.admin_address {
                 continue;
@@ -70,9 +63,7 @@ impl OnChainJob {
         let total_rbtc = U256::from(addresses.len()) * rbtc_per_user;
 
         return Ok(Some(
-            self.contract()
-                .gasless_claim_balances(doc_fee, rbtc_per_user, addresses)
-                .value(total_rbtc),
+            self.contract().gasless_claim_balances(doc_fee, rbtc_per_user, addresses).value(total_rbtc),
         ));
     }
 }

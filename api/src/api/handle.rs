@@ -99,6 +99,6 @@ impl CreateHandleInput {
     pub async fn process(self, context: &Context) -> FieldResult<Handle> {
         let req = context.account().await?.create_handle(self.site, &self.username).await?;
 
-        Ok(Handle::db_to_graphql(context,req).await?)
+        Ok(Handle::db_to_graphql(context, req).await?)
     }
 }

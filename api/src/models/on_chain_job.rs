@@ -8,15 +8,15 @@ use ethers::{
 use std::sync::Arc;
 use strum::IntoEnumIterator;
 
+mod admin_claim_balances_free;
 mod admin_legacy_claim_account;
 mod admin_make_collabs;
+mod apply_voted_fee_rate;
+mod claim_fee_pool_share;
 mod gasless_claim_balances;
 mod promote_sub_accounts;
 mod reimburse_campaigns;
 mod submit_reports;
-mod admin_claim_balances_free;
-mod claim_fee_pool_share;
-mod apply_voted_fee_rate;
 
 pub type AsamiSigner = SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>;
 pub type AsamiFunctionCall = FunctionCall<Arc<AsamiSigner>, AsamiSigner, ()>;

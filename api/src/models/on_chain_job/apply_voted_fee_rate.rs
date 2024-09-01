@@ -10,7 +10,7 @@ impl OnChainJob {
         if current_cycle == last_applied_on {
             return Ok(None);
         }
-        
+
         let voted = c.voted_fee_rate().call().await?;
         let rate = c.fee_rate().call().await?;
 

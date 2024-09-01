@@ -76,12 +76,15 @@ impl SyncedEventHub {
             };
 
             let Some(campaign) =
-                self.state.campaign_scope().briefing_hash_eq(&e.campaign_id().encode_hex()).optional().await?
+                self.state.campaign().briefing_hash_eq(&e.campaign_id().encode_hex()).optional().await?
             else {
                 synced_event
                     .info(
                         "sync_campaign_event",
-                        format!("Campaign not found {}. May be a mistake or a multi-node user.", &e.campaign_id().encode_hex()),
+                        format!(
+                            "Campaign not found {}. May be a mistake or a multi-node user.",
+                            &e.campaign_id().encode_hex()
+                        ),
                     )
                     .await?;
                 continue;
@@ -107,7 +110,8 @@ impl SyncedEventHub {
                 .valid_until(Some(models::i_to_utc(onchain.valid_until)))
                 .report_hash(report_hash)
                 .status(CampaignStatus::Published)
-                .save().await
+                .save()
+                .await
                 .context(format!("Syncing event {}", synced_event.id()))?;
         }
 

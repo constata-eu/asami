@@ -113,5 +113,5 @@ pub struct Rsk {
     pub blockchain_sync_cooldown: u64,
     pub gasless_rbtc_per_user: U256,
     pub gasless_fee: U256,
-    pub admin_claim_trigger: U256
+    pub admin_claim_trigger: U256,
 }

@@ -22,6 +22,6 @@ impl CreateClaimAccountRequestInput {
             )
             .await?;
 
-        Ok(Account::db_to_graphql(context,account).await?)
+        Ok(Account::db_to_graphql(context, account).await?)
     }
 }

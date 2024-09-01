@@ -113,6 +113,6 @@ impl CreateCampaignPreferenceInput {
                 .await?
         };
 
-        Ok(CampaignPreference::db_to_graphql(context,preference).await?)
+        Ok(CampaignPreference::db_to_graphql(context, preference).await?)
     }
 }

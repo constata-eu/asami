@@ -8,9 +8,9 @@
  */
 
 use super::*;
-use validators::prelude::*;
-use validators::models::Host;
 use chbs::{config::BasicConfig, prelude::*};
+use validators::models::Host;
+use validators::prelude::*;
 
 model! {
   state: App,
@@ -40,7 +40,13 @@ model! {
 }
 
 #[derive(Validator)]
-#[validator(email(comment(Disallow), ip(Allow), local(Allow), at_least_two_labels(Allow), non_ascii(Allow)))]
+#[validator(email(
+    comment(Disallow),
+    ip(Allow),
+    local(Allow),
+    at_least_two_labels(Allow),
+    non_ascii(Allow)
+))]
 pub struct Email {
     pub local_part: String,
     pub need_quoted: bool,
@@ -48,26 +54,36 @@ pub struct Email {
 }
 
 impl OneTimeTokenHub {
-    pub async fn create_for_email(&self, email: String, lang: lang::Lang, user_id: Option<i32>) -> AsamiResult<OneTimeToken> {
+    pub async fn create_for_email(
+        &self,
+        email: String,
+        lang: lang::Lang,
+        user_id: Option<i32>,
+    ) -> AsamiResult<OneTimeToken> {
         Email::parse_string(&email)?;
         let mut config = BasicConfig::default();
         config.separator = "-".into();
         config.capitalize_first = false.into();
         let value = config.to_scheme().generate();
 
-        Ok(self.insert(InsertOneTimeToken{
-            value,
-            lookup_key: format!("email:{email}"),
-            user_id,
-            email: Some(email),
-            lang,
-        }).save().await?)
+        Ok(self
+            .insert(InsertOneTimeToken {
+                value,
+                lookup_key: format!("email:{email}"),
+                user_id,
+                email: Some(email),
+                lang,
+            })
+            .save()
+            .await?)
     }
 
     pub async fn send_email_tokens(&self) -> AsamiResult<()> {
         let all = self.select().sent_at_is_set(false).email_is_set(true).all().await?;
         for token in all {
-            let Some(email) = token.email() else { continue; };
+            let Some(email) = token.email() else {
+                continue;
+            };
 
             let subject = match token.lang() {
                 lang::Lang::Es => "Link de inicio de sesión en https://asami.club",
@@ -94,7 +110,10 @@ impl OneTimeTokenHub {
 
             // Perform the POST request
             ureq::post("https://api.sendgrid.com/v3/mail/send")
-                .set("Authorization", &format!("Bearer {}", self.state.settings.sendgrid_api_key))
+                .set(
+                    "Authorization",
+                    &format!("Bearer {}", self.state.settings.sendgrid_api_key),
+                )
                 .set("Content-Type", "application/json")
                 .send_json(body)?;
 

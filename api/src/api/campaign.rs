@@ -124,7 +124,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
         let topic_ids = d.topic_ids().await?;
         let you_would_receive = match context.current_session {
             Some(_) => d.reward_for_account(&context.account().await?).await?.map(|x| x.encode_hex()),
-            None => None 
+            None => None,
         };
         let budget = d.available_budget().await.unwrap_or(d.budget_u256()).encode_hex();
         Ok(Campaign {
@@ -156,6 +156,6 @@ impl CreateCampaignFromLinkInput {
         let topics = context.app.topic().select().id_in(&self.topic_ids).all().await?;
         let campaign = context.app.campaign().create_from_link(&context.account().await?, &self.link, &topics).await?;
 
-        Ok(Campaign::db_to_graphql(context,campaign).await?)
+        Ok(Campaign::db_to_graphql(context, campaign).await?)
     }
 }
