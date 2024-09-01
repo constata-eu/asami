@@ -44,7 +44,7 @@ async fn main() {
         run!("verify_and_appraise_x_handles" { s.handle().verify_and_score_x().await });
     }];
 
-    every![60 * 1000, |s| {
+    every![1000, |s| {
         run!("send_email_one_time_tokens" { s.one_time_token().send_email_tokens().await });
     }];
 

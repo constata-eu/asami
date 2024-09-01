@@ -15,6 +15,7 @@ fi
 scp -r release/pwa/dist root@$IP:/home/asami/new_pwa &&
 ssh root@$IP '
 cd /home/asami &&
+rm -rf old_pwa &&
 mv pwa old_pwa &&
 mv new_pwa pwa &&
 rm -rf site &&
