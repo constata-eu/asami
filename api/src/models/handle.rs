@@ -123,7 +123,8 @@ impl HandleHub {
                         continue;
                     };
 
-                    let score = U256::from(public_metrics.followers_count) * wei("85") / wei("100");
+                    let followers = U256::from(public_metrics.followers_count.min(500));
+                    let score = followers * wei("85") / wei("100");
                     handles.push(req.verify(author_id.to_string()).await?.set_score(score).await?);
                 } else {
                     self.state.info("verify_and_score_x", "skipped_post_no_regex_capture", &post.text).await;
