@@ -39,7 +39,6 @@ model! {
   },
   has_many {
     CampaignTopic(campaign_id),
-    IgCampaignRule(campaign_id),
     Collab(campaign_id),
   },
   belongs_to {
@@ -157,7 +156,7 @@ impl CampaignHub {
         let auth = BearerToken::new(&conf.bearer_token);
         let api = TwitterApi::new(auth);
 
-        let campaigns = self
+        let mut campaigns = self
             .select()
             .budget_gt(weihex("0"))
             .campaign_kind_eq(CampaignKind::XRepost)
@@ -165,7 +164,7 @@ impl CampaignHub {
             .all()
             .await?;
 
-        for campaign in campaigns {
+        for campaign in campaigns.iter_mut() {
             let post_id = campaign
                 .content_id()?
                 .parse::<u64>()
@@ -248,10 +247,10 @@ impl Campaign {
         Ok(self.budget_u256().checked_sub(from_registered).unwrap_or(U256::zero()))
     }
 
-    pub async fn make_collab(&self, handle: &Handle, reward: U256, trigger: &str) -> AsamiResult<Collab> {
-        handle.validate_collaboration(self, reward, trigger).await?;
+    pub async fn make_collab(&mut self, handle: &Handle, reward: U256, trigger: &str) -> AsamiResult<Collab> {
+        handle.validate_collaboration(&self, reward, trigger).await?;
 
-        Ok(self
+        let collab = self
             .state
             .collab()
             .insert(InsertCollab {
@@ -266,7 +265,16 @@ impl Campaign {
                 dispute_reason: None,
             })
             .save()
-            .await?)
+            .await?;
+
+        self.clone().update()
+            .budget((self.budget_u256() - reward).encode_hex())
+            .save()
+            .await?;
+
+        self.reload().await?;
+
+        Ok(collab)
     }
 
     pub async fn make_failed_collab(
@@ -294,7 +302,7 @@ impl Campaign {
             .await?)
     }
 
-    pub async fn make_x_collab_with_user_id(&self, user_id: &str) -> AsamiResult<Option<Collab>> {
+    pub async fn make_x_collab_with_user_id(&mut self, user_id: &str) -> AsamiResult<Option<Collab>> {
         let Some(handle) = self
             .state
             .handle()
@@ -323,7 +331,7 @@ impl Campaign {
             return Ok(None);
         };
 
-        let Some(reward) = handle.reward_for(self) else {
+        let Some(reward) = handle.reward_for(&self) else {
             self.state.info("sync_x_collabs", "make_x_collab_no_reward", log_pointer).await;
             return Ok(None);
         };
@@ -357,10 +365,6 @@ impl Campaign {
                 Err(e)
             }
         }
-    }
-
-    pub async fn is_missing_ig_rules(&self) -> AsamiResult<bool> {
-        Ok(self.ig_campaign_rule_scope().count().await? == 0 && self.attrs.campaign_kind == CampaignKind::IgClonePost)
     }
 
     pub fn decoded_advertiser_addr(&self) -> AsamiResult<Address> {

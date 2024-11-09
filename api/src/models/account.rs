@@ -94,9 +94,6 @@ impl Account {
             if done.contains(c.id()) {
                 continue;
             };
-            if c.is_missing_ig_rules().await? {
-                continue;
-            };
 
             for h in &handles {
                 let Some(trigger) = h.user_id() else {

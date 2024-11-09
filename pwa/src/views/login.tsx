@@ -148,10 +148,8 @@ const PublicCampaignList = ({loginAs}) => {
     { items.map((item, index) => {
       if(item.yourPostHere) {
         return <YourPostHere key={`your-post-here-${index}`} loginAs={loginAs}/>
-      } else if (item.campaignKind == "XREPOST") {
-        return <PublicXCampaign key={item.id} item={item} loginAs={loginAs}/>;
       } else {
-        return <PublicInstagramCampaign key={item.id} item={item} loginAs={loginAs}/>;
+        return <PublicXCampaign key={item.id} item={item} loginAs={loginAs}/>;
       }
     })}
   </>;
@@ -221,39 +219,6 @@ const PublicXCampaign = ({loginAs, item}) => {
     />
     <CardContent>
       <TwitterTweetEmbed tweetId={JSON.parse(item.briefingJson)} options={{ theme: "dark", align: "center", width: "250px", conversation: "none"}} />
-    </CardContent>
-  </DeckCard>;
-}
-
-const PublicInstagramCampaign = ({loginAs, item}) => {
-  const translate = useTranslate();
-  const {data, isLoading} = useGetList(
-    "IgCampaignRule",
-    { filter: {campaignIdEq: item.id}, perPage: 1,}
-  );
-
-  if (isLoading || !data[0]) {
-    return null;
-  }
-
-  const dataUri = "data:image/jpeg;base64,"+data[0].image;
-  const filename = `campaign_${data[0].campaignId}.jpg`;
-
-  return <DeckCard id={`campaign-container-${item.id}`}>
-    <PublicCardHeader
-      icon={<InstagramIcon/>}
-      item={item}
-      loginAs={loginAs}
-      buttonLabel={ translate("public_ig_campaign.main_button") }
-    />
-
-    <CardContent>
-      <Box display="flex" flexDirection="column" alignItems="center">
-        <a href={ dataUri } target="_blank" download={filename} rel="noreferrer">
-          <img style={{maxWidth: "100%", maxHeight: "400px"}} src={dataUri} />
-        </a>
-        { !!data[0].caption && <Typography>{ truncate(data[0].caption, {length: 120}) }</Typography> }
-      </Box>
     </CardContent>
   </DeckCard>;
 }

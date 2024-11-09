@@ -27,8 +27,6 @@ pub mod campaign_preference;
 pub use campaign_preference::*;
 pub mod session;
 pub use session::*;
-pub mod ig_crawl;
-pub use ig_crawl::*;
 pub mod audit_log_entry;
 pub use audit_log_entry::*;
 pub mod on_chain_job;

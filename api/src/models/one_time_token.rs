@@ -100,7 +100,7 @@ impl OneTimeTokenHub {
                 "personalizations": [{
                     "to": [{ "email": email }]
                 }],
-                "from": { "email": "hola@asami.club" },
+                "from": { "email": "asami@asami.club" },
                 "subject": subject,
                 "content": [{
                     "type": "text/html",
