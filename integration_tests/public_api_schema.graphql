@@ -117,12 +117,6 @@ input HandleFilter {
   accountIdEq: String
 }
 
-input IgCampaignRuleFilter {
-  ids: [Int!]
-  idEq: Int
-  campaignIdEq: Int
-}
-
 """
   Combined date and time (with time zone) in [RFC 3339][0] format.
 
@@ -245,18 +239,6 @@ type Handle {
   status: HandleStatus!
 }
 
-"Rules for posting a campaign"
-type IgCampaignRule {
-  "Unique Id for this campaign rules"
-  id: Int!
-  "The campaign this rules belong to"
-  campaignId: Int!
-  "The base64 encoded image itself."
-  image: String!
-  "The caption the user must post for this image."
-  caption: String!
-}
-
 type ListMetadata {
   count: Int!
 }
@@ -289,9 +271,6 @@ type Query {
   CampaignPreference(id: Int!): CampaignPreference!
   allCampaignPreferences(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignPreferenceFilter): [CampaignPreference!]!
   _allCampaignPreferencesMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignPreferenceFilter): ListMetadata!
-  IgCampaignRule(id: Int!): IgCampaignRule!
-  allIgCampaignRules(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: IgCampaignRuleFilter): [IgCampaignRule!]!
-  _allIgCampaignRulesMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: IgCampaignRuleFilter): ListMetadata!
 }
 
 "A campaign started by an advertiser"

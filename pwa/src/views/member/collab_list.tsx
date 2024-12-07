@@ -13,6 +13,7 @@ const CollabList = () => {
   const listContext = useListController({
     disableSyncWithLocation: true,
     filter: {memberIdEq: getAuthKeys().session.accountId },
+    sort: { field: 'id', order: 'DESC' },
     perPage: 20,
     queryOptions: {
       refetchInterval: 3000,

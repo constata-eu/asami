@@ -12,14 +12,14 @@ app_test! { creates_campaign_register_collabs_and_reimburses(a)
     alice.claim_account().await;
     let handle = alice.create_handle("alice_on_x", "11111", Site::X, u("5000")).await;
 
-    a.register_collab("collab for alice", &campaign, &handle, u("10"), "unique_post_trigger").await;
+    a.register_collab("collab for alice", &mut campaign, &handle, u("10"), "unique_post_trigger").await;
 
     campaign.reload().await?;
 
     assert_eq!(campaign.available_budget().await.unwrap(), u("90"));
     assert_eq!(campaign.budget_u256(), u("90"));
 
-    a.register_collab("second collab for alice", &campaign, &handle, u("90"), "second_post_trigger").await;
+    a.register_collab("second collab for alice", &mut campaign, &handle, u("90"), "second_post_trigger").await;
 
     campaign.reload().await?;
     assert_eq!(campaign.available_budget().await.unwrap(), u("0"));
@@ -77,7 +77,7 @@ app_test! { campaign_submit_report_tests(a)
     let mut alice = a.client().await;
     alice.claim_account().await;
     let handle = alice.create_handle("alice_on_x", "11111", Site::X, u("5000")).await;
-    a.register_collab("collab for alice", &campaign, &handle, u("10"), "unique_post_trigger").await;
+    a.register_collab("collab for alice", &mut campaign, &handle, u("10"), "unique_post_trigger").await;
 
     let second_hash = campaign.build_report_hash().await?.encode_hex();
     assert_ne!(first_hash, second_hash);
@@ -149,6 +149,41 @@ app_test! { reduce_race_condition_risk_submitting_report(a)
         OnChainJobKind::SubmitReports,
         OnChainJobStatus::Skipped
     ).await;
+}
+
+app_test! { rejects_collabs_if_registered_over_budget(a)
+    let mut advertiser = a.client().await;
+    advertiser.setup_as_advertiser("test main advertiser").await;
+    let mut campaign = advertiser.start_and_pay_campaign("https://x.com/somebody/status/1716421161867710954", u("100"), 30, &[]).await;
+    assert_eq!(campaign.budget_u256(), u("100"));
+    assert_eq!(*campaign.campaign_kind(), CampaignKind::XRepost);
+
+    let mut alice = a.client().await;
+    alice.claim_account().await;
+    let handle = alice.create_handle("alice_on_x", "11111", Site::X, u("5000")).await;
+    
+    let one = campaign.make_collab(&handle, u("95"), "trigger_one").await.unwrap();
+    let mut two = campaign.make_collab(&handle, u("5"), "trigger_two").await.unwrap();
+
+    assert!(campaign.make_collab(&handle, u("10"), "trigger_two").await.is_err());
+    
+    // This update corrupts data, making the collab be registered for more than it could.
+    two = two.update().reward(u("50").encode_hex()).save().await.unwrap();
+
+    campaign.reload().await?;
+    assert_eq!(campaign.available_budget().await.unwrap(), u("0"));
+    assert_eq!(campaign.budget_u256(), u("100"));
+
+    let job = a.wait_for_job(
+        "Making collabs",
+        OnChainJobKind::MakeCollabs,
+        OnChainJobStatus::Settled
+    ).await;
+
+    assert_eq!(*two.reloaded().await.unwrap().status(), CollabStatus::Failed);
+    let job_collabs = job.on_chain_job_collab_vec().await.unwrap();
+    assert_eq!(job_collabs.len(), 1);
+    assert_eq!(job_collabs[0].attrs.collab_id, one.attrs.id);
 }
 
 app_test! { reduce_race_condition_risk_with_reimbursements(a)

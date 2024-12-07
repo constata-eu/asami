@@ -64,9 +64,9 @@ impl OnChainJob {
             });
         }
 
-        return Ok(Some(
+        Ok(Some(
             self.state.on_chain.asami_contract.admin_make_sub_account_collabs(params),
-        ));
+        ))
     }
 
     /// When an OnChainJob for making collabs is done, we sync the collabs and campaigns
@@ -74,52 +74,55 @@ impl OnChainJob {
     pub async fn admin_make_collabs_on_state_change(self) -> anyhow::Result<Self> {
         use OnChainJobStatus::*;
 
-        match self.status() {
-            Settled => {
-                let contract = &self.state.on_chain.asami_contract;
+        if self.status() == &Settled {
+            let contract = &self.state.on_chain.asami_contract;
 
-                let Some(block) = self.block().and_then(|d| d.to_u64()).map(|u| U64::from(u)) else {
-                    anyhow::bail!("Expected a valid block number for on chain job {}", self.id());
-                };
+            let Some(block) = self.block().and_then(|d| d.to_u64()).map(|u| U64::from(u)) else {
+                anyhow::bail!("Expected a valid block number for on chain job {}", self.id());
+            };
 
-                let fee_rate = contract.fee_rate().block(block).call().await?;
+            let fee_rate = contract.fee_rate().block(block).call().await?;
 
-                // All collabs, by definition, are made by our own admin address, so it's easy
-                // to know the admin fee. We still check it on-chain for that block to avoid
-                // race conditions.
-                let admin_fee_rate =
-                    contract.accounts(self.state.settings.rsk.admin_address).block(block).call().await?.5; // In this position is for feeRateWhenAdmin
+            // All collabs, by definition, are made by our own admin address, so it's easy
+            // to know the admin fee. We still check it on-chain for that block to avoid
+            // race conditions.
+            let admin_fee_rate =
+                contract.accounts(self.state.settings.rsk.admin_address).block(block).call().await?.5; // In this position is for feeRateWhenAdmin
 
-                let mut campaigns = HashMap::new();
+            // After a number of collabs have been made, and before we make the collabs cleared,
+            // we first update the campaign budgets, to prevent new collabs coming in racey.
+            // We need to update the campaign budgets before moving the collabs to cleared.
+            let mut campaigns = HashMap::new();
 
-                for link in self.on_chain_job_collab_vec().await? {
-                    let collab = link.collab().await?;
-                    let campaign = collab.campaign().await?;
-                    campaigns.insert(campaign.attrs.id.clone(), campaign);
-
-                    // We do this exactly as it's done in the contract to have the same
-                    // precision loss the contract may have.
-                    let gross = collab.reward_u256();
-                    let fee = (gross * fee_rate) / u("100");
-                    let admin_fee = (gross * admin_fee_rate) / u("100");
-                    let full_fee = fee + admin_fee;
-                    collab.update().status(CollabStatus::Cleared).fee(Some(full_fee.encode_hex())).save().await?;
-                }
-
-                for (_, campaign) in campaigns {
-                    let budget = contract
-                        .get_campaign(campaign.decoded_advertiser_addr()?, campaign.decoded_briefing_hash())
-                        .block(block)
-                        .call()
-                        .await?
-                        .budget;
-                    campaign.update().budget(budget.encode_hex()).save().await?;
-                }
+            for link in self.on_chain_job_collab_vec().await? {
+                let campaign = link.collab().await?.campaign().await?;
+                campaigns.insert(campaign.attrs.id.clone(), campaign);
             }
-            _ => {}
+
+            for (_, campaign) in campaigns {
+                let budget = contract
+                    .get_campaign(campaign.decoded_advertiser_addr()?, campaign.decoded_briefing_hash())
+                    .block(block)
+                    .call()
+                    .await?
+                    .budget;
+                campaign.update().budget(budget.encode_hex()).save().await?;
+            }
+
+            for link in self.on_chain_job_collab_vec().await? {
+                let collab = link.collab().await?;
+
+                // We do this exactly as it's done in the contract to have the same
+                // precision loss the contract may have.
+                let gross = collab.reward_u256();
+                let fee = (gross * fee_rate) / u("100");
+                let admin_fee = (gross * admin_fee_rate) / u("100");
+                let full_fee = fee + admin_fee;
+                collab.update().status(CollabStatus::Cleared).fee(Some(full_fee.encode_hex())).save().await?;
+            }
         }
 
-        return Ok(self);
+        Ok(self)
     }
 
     // The params to make sub account collabs and regular account collabs are similar.
@@ -139,16 +142,27 @@ impl OnChainJob {
 
         // Getting a campaign and asserting if we're still the admin is costly.
         // So we cache that here, by campaign_id.
-        let mut campaign_cache: HashMap<i32, Option<Campaign>> = HashMap::new();
+        // We store the budget one more time before trying to send the transaction.
+        // If the collabs where registered and not rejected immediately by the X processor
+        // due to a stale campaign budget or other unexpected problem, we weed them out here.
+        // This is bad for the user, as they should learn about rejectiosn ASAP, but at least
+        // we prevent over-budget failed transactions being built.
+        let mut campaign_cache: HashMap<i32, Option<(U256, Campaign)>> = HashMap::new();
+
         let mut params: HashMap<_, Vec<_>> = HashMap::new();
 
         for collab in all_collabs {
-            let cached_campaign = match campaign_cache.get(collab.campaign_id()) {
+            let cached_campaign = match campaign_cache.get_mut(collab.campaign_id()) {
                 Some(x) => x,
                 None => {
                     let campaign = collab.campaign().await?;
+                    let budget = self.state.on_chain.asami_contract.get_campaign(
+                        campaign.decoded_advertiser_addr()?,
+                        campaign.decoded_briefing_hash()
+                    ).call().await?.budget;
+
                     let value = if campaign.we_are_trusted_admin().await? {
-                        Some(campaign)
+                        Some((budget,campaign))
                     } else {
                         None
                     };
@@ -157,7 +171,19 @@ impl OnChainJob {
             };
 
             match cached_campaign {
-                Some(campaign) => {
+                Some((budget, campaign)) => {
+                    if collab.reward_u256() > *budget {
+                        self.info(
+                            "making_collabs",
+                            &format!("on double check, collab was over-budget {}", collab.id()),
+                        )
+                        .await?;
+                        collab.update().status(CollabStatus::Failed).save().await?;
+                        continue;
+                    }
+
+                    *budget -= collab.reward_u256(); 
+
                     let insert = InsertOnChainJobCollab {
                         job_id: self.attrs.id,
                         collab_id: collab.attrs.id,

@@ -29,6 +29,8 @@ rust_decimal = "*"
 image = { version = "0.24.7" }
 image_hasher = "1.1.0"
 rand = "*"
+test-log = { version = "0.2", features = ["trace"] }
+nix = { version = "*", features = ["process", "signal"]}
 
 [lib]
 name = "integration_tests"
@@ -36,7 +38,3 @@ name = "integration_tests"
 [[bin]]
 name = "update_graphql_definitions"
 path = "src/update_graphql_definitions.rs"
-
-[[bin]]
-name = "update_contract_and_truffle"
-path = "src/update_contract_and_truffle.rs"

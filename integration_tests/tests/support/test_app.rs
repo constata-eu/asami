@@ -30,23 +30,24 @@ impl TestApp {
         Command::new("sqlx")
             .current_dir("../api")
             .env("DATABASE_URL", &config.database_uri)
-            .args(&["database", "reset", "-y"])
+            .args(["database", "reset", "-y"])
             .output()
             .expect("SQLX not available.");
 
         let truffle = Truffle::start();
-        config.rsk.legacy_contract_address = truffle.addresses.legacy.clone();
-        config.rsk.doc_contract_address = truffle.addresses.doc.clone();
-        config.rsk.asami_contract_address = truffle.addresses.asami.clone();
+        config.rsk.legacy_contract_address.clone_from(&truffle.addresses.legacy);
+        config.rsk.doc_contract_address.clone_from(&truffle.addresses.doc);
+        config.rsk.asami_contract_address.clone_from(&truffle.addresses.asami);
+
         let provider = Provider::<Http>::try_from(&config.rsk.rpc_url)
             .unwrap()
             .interval(std::time::Duration::from_millis(10));
+        provider.request::<_, bool>("evm_setAutomine", vec![false]).await.unwrap();
+        provider.request::<_, bool>("evm_setIntervalMining", vec![0]).await.unwrap();
         let app = App::new("password".to_string(), config).await.unwrap();
 
         let fig = Config::figment().merge((Config::LOG_LEVEL, LogLevel::Off));
         let rocket_client = RocketClient::tracked(api::custom_server(app.clone(), fig)).await.unwrap();
-
-        provider.request::<_, bool>("miner_stop", ()).await.unwrap();
 
         Self {
             rocket_client,
@@ -57,7 +58,7 @@ impl TestApp {
     }
 
     pub async fn evm_increase_time(&self, seconds: U256) -> u64 {
-        self.provider.request::<_, u64>("evm_increaseTime", vec![seconds.encode_hex()]).await.unwrap()
+        self.provider.request::<_, String>("evm_increaseTime", vec![seconds.encode_hex()]).await.unwrap().parse().unwrap()
     }
 
     pub async fn evm_forward_to_next_cycle(&self) {
@@ -66,15 +67,18 @@ impl TestApp {
     }
 
     pub async fn evm_mine(&self) {
-        self.provider.request::<_, U256>("evm_mine", None::<()>).await.unwrap();
+        self.provider.request::<Vec<()>, U256>("evm_mine", vec![]).await.unwrap();
+        self.provider.request::<_, bool>("evm_setAutomine", vec![false]).await.unwrap();
     }
 
     pub async fn stop_mining(&self) {
-        self.provider.request::<_, bool>("miner_stop", ()).await.unwrap();
+        self.provider.request::<_, bool>("evm_setIntervalMining", vec![0]).await.unwrap();
+        self.provider.request::<_, bool>("evm_setAutomine", vec![false]).await.unwrap();
     }
 
     pub async fn start_mining(&self) {
-        self.provider.request::<_, bool>("miner_start", ()).await.unwrap();
+        self.provider.request::<_, bool>("evm_setIntervalMining", vec![1]).await.unwrap();
+        self.provider.request::<_, bool>("evm_setAutomine", vec![false]).await.unwrap();
     }
 
     pub async fn admin_nonce(&self) -> U256 {
@@ -200,8 +204,8 @@ impl TestApp {
             .await
             .expect(&format!("Cannot find account balances for {account}"));
         assert_eq!(
-            self.rbtc_balance_of(&account).await,
-            expected_rbtc,
+            self.rbtc_balance_of(&account).await / wei("100000000000"),
+            expected_rbtc / wei("100000000000"),
             "rbtc balance mismatch on '{reference}'"
         );
         assert_eq!(
@@ -399,22 +403,30 @@ impl TestApp {
     pub async fn register_collab(
         &self,
         context: &str,
-        campaign: &models::Campaign,
+        campaign: &mut models::Campaign,
         handle: &models::Handle,
         reward: U256,
         trigger: &str,
     ) -> models::Collab {
         use api::models::{OnChainJobKind, OnChainJobStatus};
-        let collab = campaign
-            .make_collab(handle, reward, trigger)
-            .await
-            .expect(&format!("Collab to be created in context '{context}'"));
-
         let job_kind = if handle.account().await.unwrap().addr().is_some() {
             OnChainJobKind::MakeCollabs
         } else {
             OnChainJobKind::MakeSubAccountCollabs
         };
+
+        self
+            .wait_for_job(
+                &format!("Waiting for old job to be skipped in context {context}"),
+                job_kind,
+                OnChainJobStatus::Skipped,
+            )
+            .await;
+
+        let collab = campaign
+            .make_collab(handle, reward, trigger)
+            .await
+            .unwrap_or_else(|_| panic!("Collab to be created in context '{context}'"));
 
         let job = self
             .wait_for_job(
@@ -449,7 +461,7 @@ impl TestApp {
         let found = wait_for(150, 50, || async {
             self.evm_mine().await;
             let new_jobs = self.app.on_chain_job().run_scheduler().await.unwrap();
-            new_jobs.into_iter().find(|job| job.attrs.status == status && job.attrs.kind == kind).is_some()
+            new_jobs.into_iter().any(|job| job.attrs.status == status && job.attrs.kind == kind)
         })
         .await;
 
@@ -593,7 +605,7 @@ impl TestApp {
     {
         let mut txs = vec![];
         for (i, fn_call) in fn_calls.into_iter().enumerate() {
-            match fn_call.nonce(nonce + U256::from(i)).send().await {
+            match fn_call.gas(1000000).nonce(nonce + U256::from(i)).send().await {
                 Err(e) => {
                     let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error"));
                     panic!("Sending tx with reference '{reference}' failed with: {desc}");

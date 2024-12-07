@@ -1,8 +1,8 @@
-use ::api::models::*;
+use api::models::*;
 
 app_test! { applies_voted_fee_rate_as_soon_as_possible(a)
     /* Calls and settles, then it is skipped, then next month it calls it again */
-    let campaign = a.quick_campaign(u("100"), 30, &[]).await;
+    let mut campaign = a.quick_campaign(u("100"), 30, &[]).await;
 
     let mut alice = a.client().await;
     alice.claim_account().await;
@@ -10,7 +10,7 @@ app_test! { applies_voted_fee_rate_as_soon_as_possible(a)
     campaign.make_collab(&handle, u("100"), "first_collab").await?;
 
     a.wait_for_job(
-        "Collabs should be made",
+        "Balances should be claimed",
         OnChainJobKind::GaslessClaimBalances,
         OnChainJobStatus::Settled
     ).await;
@@ -62,6 +62,6 @@ app_test! { test_claim_account_in_its_own_test(a)
     todo!("fail here");
 }
 
-app_test! { avoid_race_condition_detecting_problems_with_claiming_an_account 
+app_test! { avoid_race_condition_detecting_problems_with_claiming_an_account
 }
 */

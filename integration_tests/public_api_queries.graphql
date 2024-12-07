@@ -257,27 +257,3 @@ query AllCampaignPreferencesMeta($page: Int, $perPage: Int, $sortField: String, 
     __typename
   }
 }
-query IgCampaignRule($id: Int!) {
-  IgCampaignRule(id: $id) {
-    id
-    campaignId
-    image
-    caption
-    __typename
-  }
-}
-query AllIgCampaignRules($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: IgCampaignRuleFilter) {
-  allIgCampaignRules(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
-    id
-    campaignId
-    image
-    caption
-    __typename
-  }
-}
-query AllIgCampaignRulesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: IgCampaignRuleFilter) {
-  _allIgCampaignRulesMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
-    count
-    __typename
-  }
-}

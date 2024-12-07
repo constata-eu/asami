@@ -1,13 +1,13 @@
-/// This module tests how the scheduler interacts with fees distribution.
-/// The inner workings and amounts distributed by the smart contract are tested elsewhere.
+// This module tests how the scheduler interacts with fees distribution.
+// The inner workings and amounts distributed by the smart contract are tested elsewhere.
+
+/*
 #[macro_use]
 use ethers::signers::Signer;
-
 app_test! { distributes_fees_to_holders (_a)
     todo!("Make assertions about fee cycles and fees at");
     todo!("Try to have someone collect twice");
 }
-/*
 app_test!{ distributes_fees_to_holders (a)
   a.run_idempotent_background_tasks_a_few_times().await;
   // No asami tokens, so nothing to share

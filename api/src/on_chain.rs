@@ -10,13 +10,13 @@ use std::sync::Arc;
 
 abigen!(
     LegacyContractCode,
-    "../contract/build/contracts/Asami.json",
+    "../contract/ignition/deployments/chain-31337/artifacts/LocalAsami#Asami.json",
     derives(serde::Deserialize, serde::Serialize),
 );
 
 abigen!(
     AsamiContractCode,
-    "../contract/build/contracts/AsamiCore.json",
+    "../contract/ignition/deployments/chain-31337/artifacts/LocalAsami#AsamiCore.json",
     derives(serde::Deserialize, serde::Serialize),
 );
 

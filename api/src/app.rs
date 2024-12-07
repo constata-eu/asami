@@ -56,7 +56,6 @@ pub struct AppConfig {
     pub pwa_host: String,
     pub rsk: Rsk,
     pub x: XConfig,
-    pub instagram: InstagramConfig,
     pub sendgrid_api_key: String,
 }
 
@@ -68,7 +67,7 @@ impl AppConfig {
     pub async fn db(&self) -> AsamiResult<Db> {
         let mut options = PgConnectOptions::from_str(&self.database_uri)?;
         options.disable_statement_logging();
-        let pool_options = PgPoolOptions::new().max_connections(5);
+        let pool_options = PgPoolOptions::new().max_connections(50);
         let pool = pool_options.connect_with(options).await?;
         Ok(Db {
             pool,
@@ -85,18 +84,6 @@ pub struct XConfig {
     pub bearer_token: String,
     pub asami_user_id: u64,
     pub crawl_cooldown_minutes: u64,
-}
-
-#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
-pub struct InstagramConfig {
-    pub client_id: String,
-    pub client_secret: String,
-    pub redirect_uri: String,
-    pub crawl_cooldown_minutes: i64,
-    pub apify_key: String,
-    pub verification_image_url: String,
-    pub verification_caption: String,
-    pub verification_posts_count: i64,
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]

@@ -105,7 +105,7 @@ impl CampaignHub {
         let campaign_kind = if (host.ends_with("twitter.com") || host.ends_with("x.com")) && x_regex.is_match(&briefing)
         {
             CampaignKind::XRepost
-        } else if host.ends_with("instagram.com") && ig_regex.is_match(&briefing) {
+        } else if host.ends_with("instagram.com") && ig_regex.is_match(briefing) {
             CampaignKind::IgClonePost
         } else {
             return Err(Error::validation("link", "invalid_domain_or_route"));
@@ -241,7 +241,7 @@ impl Campaign {
             .all()
             .await?
             .iter()
-            .map(|x| u256(x.reward()))
+            .map(|x| x.reward_u256() )
             .fold(U256::zero(), |acc, x| acc + x);
 
         Ok(self.budget_u256().checked_sub(from_registered).unwrap_or(U256::zero()))
@@ -254,8 +254,8 @@ impl Campaign {
             .state
             .collab()
             .insert(InsertCollab {
-                campaign_id: self.attrs.id.clone(),
-                handle_id: handle.attrs.id.clone(),
+                campaign_id: self.attrs.id,
+                handle_id: handle.attrs.id,
                 advertiser_id: self.attrs.account_id.clone(),
                 member_id: handle.account_id().clone(),
                 collab_trigger_unique_id: trigger.to_string(),
@@ -264,11 +264,6 @@ impl Campaign {
                 status: CollabStatus::Registered,
                 dispute_reason: None,
             })
-            .save()
-            .await?;
-
-        self.clone().update()
-            .budget((self.budget_u256() - reward).encode_hex())
             .save()
             .await?;
 
@@ -331,7 +326,7 @@ impl Campaign {
             return Ok(None);
         };
 
-        let Some(reward) = handle.reward_for(&self) else {
+        let Some(reward) = handle.reward_for(self) else {
             self.state.info("sync_x_collabs", "make_x_collab_no_reward", log_pointer).await;
             return Ok(None);
         };

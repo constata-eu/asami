@@ -1,8 +1,8 @@
 // This module tests how collabs are made for accounts and sub accounts.
-use ::api::models::*;
+use api::models::*;
 
 app_test! { makes_gasless_claims_as_soon_as_possible(a)
-    let campaign = a.quick_campaign(u("2000"), 30, &[]).await;
+    let mut campaign = a.quick_campaign(u("2000"), 30, &[]).await;
 
     // Alice and bob will collab and get some pending balance.
     let mut alice = a.client().await;
@@ -12,7 +12,7 @@ app_test! { makes_gasless_claims_as_soon_as_possible(a)
     let mut bob = a.client().await;
     bob.claim_account().await;
     let bob_x = bob.create_handle("bob_on_x", "22222", Site::X, wei("10000")).await;
-    
+
     // Carl won't have enough money for gasless withdrawal yet, so will be skipped.
     let mut carl = a.client().await;
     carl.claim_account().await;
@@ -32,6 +32,8 @@ app_test! { makes_gasless_claims_as_soon_as_possible(a)
     // Eve has not allowed gasless claims so we honour it.
     let mut eve = a.client().await;
     eve.claim_account().await;
+    eve.account().await.disallow_gasless().await?;
+
     let eve_x = eve.create_handle("eve_on_x", "88888", Site::X, wei("10000")).await;
 
     for user in [&alice_x, &bob_x, &carl_x, &stranger_x, &susan_x, &eve_x] {
@@ -48,7 +50,7 @@ app_test! { makes_gasless_claims_as_soon_as_possible(a)
         stranger.asami_contract().config_account(stranger.address(), u("6"), u("0"), u("0"))
     ).await;
 
-    assert!(a.admin_rbtc_balance().await < wei("39999000000000000000"));
+    assert!(a.admin_rbtc_balance().await < wei("39999900000000000000"));
     assert!(a.admin_rbtc_balance().await > wei("39998000000000000000"));
 
     // This will run all other required jobs to get to the gasless claims part.
@@ -74,10 +76,9 @@ app_test! { makes_gasless_claims_as_soon_as_possible(a)
     a.assert_balances_of("Carl after claim", carl.address(),
         u("10"), milli("45"), u("0"), milli("6000"), u("0")
     ).await;
-
     // We are not their trusted admin.
     a.assert_balances_of("Stranger after claim", stranger.address(),
-        wei("9999930170000000000"),
+        wei("9999965096999755679"),
         wei("8999100000000000000"), u("0"),
         wei("1199880000000000000000"), u("0"),
     ).await;
@@ -101,15 +102,16 @@ app_test! { makes_gasless_claims_as_soon_as_possible(a)
         OnChainJobStatus::Skipped
     ).await;
 
-    assert!(a.admin_rbtc_balance().await < wei("39997500000000000000"));
-    assert!(a.admin_rbtc_balance().await > wei("39996500000000000000"));
+    let balance = a.admin_rbtc_balance().await;
+    assert!(balance  < wei("39999000000000000000"));
+    assert!(balance > wei("39998000000000000000"));
 }
 
 app_test! { makes_admin_claim(a)
     assert_eq!(a.admin_asami_balance().await, u("0"));
     let mut advertiser = a.client().await;
     advertiser.setup_as_advertiser_with_amount("test main advertiser", u("20000")).await;
-    let campaign = advertiser.start_and_pay_campaign(
+    let mut campaign = advertiser.start_and_pay_campaign(
         "https://x.com/somebody/status/1716421161867710954",
         u("20000"), 30, &[]).await;
 

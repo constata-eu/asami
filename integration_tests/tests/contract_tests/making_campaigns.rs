@@ -1,8 +1,4 @@
-use crate::support::TestApp;
-use ::api::{
-    models::{AsamiFunctionCall, U256},
-    on_chain::*,
-};
+use api::on_chain::*;
 
 app_test! { full_campaign_workflow_until_reimbursed (a)
     let mut advertiser = a.client().await;
@@ -194,7 +190,7 @@ app_test! { campaign_submit_report_tests (a)
 
   a.send_revert_tx("only admin can submit report", "sr1",
     advertiser.asami_contract().submit_reports(
-      vec![ SubmitReportsParam{ account: account, briefing_hash: campaign, report_hash: u("1000") }]
+      vec![ SubmitReportsParam{ account, briefing_hash: campaign, report_hash: u("1000") }]
     )
   ).await;
 

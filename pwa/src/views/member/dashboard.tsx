@@ -8,7 +8,7 @@ import BalanceCard from "../balance_card";
 import CollabList from "./collab_list";
 import HelpCard from "./help_card";
 import VersionTwoCard from "../version_2";
-import { XCampaign, IgCampaign} from "./campaigns";
+import { XCampaign } from "./campaigns";
 
 const Dashboard = () => {
   useAuthenticated();

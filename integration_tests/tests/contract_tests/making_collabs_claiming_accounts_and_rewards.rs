@@ -1,4 +1,4 @@
-use ::api::on_chain::*;
+use api::on_chain::*;
 
 app_test! { full_contract_workflow_from_collabs_to_balance_claims(a)
   let mut advertiser = a.client().await;
@@ -67,7 +67,7 @@ app_test! { full_contract_workflow_from_collabs_to_balance_claims(a)
   ).await;
 
   a.assert_balances_of("carl after claim", carl.address(),
-    wei("9999757324000000000"),
+    wei("9999878661999150634"),
     u("0"), u("36"),
     u("0"), u("4800")
   ).await;
@@ -182,7 +182,7 @@ app_test! { gasless_claim_common_error_cases(a)
   a.assert_balances_of(
     "Alice balances after gasless claim",
     alice.address(),
-    wei("10999857770000000000"),
+    wei("10999928884999502195"),
     u("0"), wei("899999999990000000"),
     u("0"), u("120")
   ).await;
@@ -206,7 +206,7 @@ app_test! { user_can_manage_a_gasless_amount_approval(a)
 
   let (trusted_admin, max_gasless_doc_to_spend, min_gasless_rbtc_to_receive,_,_,_,_,) = a.asami_contract().accounts(alice.address()).call().await.unwrap();
   assert_eq!(trusted_admin, a.client_admin_address());
-  assert_eq!(max_gasless_doc_to_spend, u("0"));
+  assert_eq!(max_gasless_doc_to_spend, u("1"));
   assert_eq!(min_gasless_rbtc_to_receive, wei("6000000000000"));
 
   a.send_make_collab_tx("A collab is registered generating rewards", "230000", &advertiser, u("deadbeef"), &alice, u("100")).await;
@@ -234,7 +234,7 @@ app_test! { user_can_manage_a_gasless_amount_approval(a)
   a.assert_balances_of(
     "Alice balances after gasless claim",
     alice.address(),
-    wei("10999901546000000000"),
+    wei("10999967872999775111"),
     u("0"), u("80"),
     u("0"), u("12000")
   ).await;
@@ -244,7 +244,7 @@ app_test! { user_can_manage_a_gasless_amount_approval(a)
   a.assert_balances_of(
     "Alice balances after second collab",
     alice.address(),
-    wei("10999901546000000000"),
+    wei("10999967872999775111"),
     u("90"), u("80"),
     u("12000"), u("12000")
   ).await;
@@ -270,7 +270,7 @@ app_test! { simultaneous_gasless_and_regular_claims_fail(a)
   a.assert_balances_of(
     "Alice has balances to claim",
     alice.address(),
-    wei("9999857770000000000"),
+    wei("9999928884999502195"),
     u("90"), u("0"),
     u("12000"), u("0")
   ).await;
@@ -290,7 +290,7 @@ app_test! { simultaneous_gasless_and_regular_claims_fail(a)
   a.assert_balances_of(
     "Alice balances after one claim",
     alice.address(),
-    wei("9999857770000000000"),
+    wei("9999928884999502195"),
     u("0"), u("90"),
     u("0"), u("12000")
   ).await;

@@ -84,13 +84,16 @@ impl OnChainJobHub {
                 job.execute().await?;
             }
             Submitted => {
-                job.check_confirmation().await?;
+                let updated = job.check_confirmation().await?;
+                if *updated.status() == Failed {
+                    anyhow::bail!("An on-chain job failed. Bailing out to conserve gas money.");
+                }
             }
             Confirmed => {
                 job.check_settlement().await?;
             }
             _ => {}
-        }
+        };
 
         // For now we just schedule all jobs to sleep a fixed period after every action.
         // This could be smarter so we make a job sleep less for an almost immediate retry
@@ -239,7 +242,7 @@ impl OnChainJob {
                     self.fail("full_failure_message", format!("{e:?}")).await?;
                     AsamiContractError::from_middleware_error(e)
                         .decode_revert::<String>()
-                        .unwrap_or_else(|| format!("non_revert_error"))
+                        .unwrap_or_else(|| "non_revert_error".to_string())
                 }
                 _ => "no_failure_reason_wtf".to_string(),
             };

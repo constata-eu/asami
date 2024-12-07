@@ -73,16 +73,6 @@ struct OauthCodeAndVerifier {
     oauth_verifier: String,
 }
 
-#[derive(serde::Deserialize)]
-struct FacebookAuthToken {
-    access_token: String,
-}
-#[derive(serde::Deserialize)]
-struct FacebookUserProfile {
-    id: String,
-    //name: String
-}
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct CurrentSession(pub Session);
 
@@ -248,33 +238,9 @@ impl CurrentSession {
                     auth_some!(x.payload().data.as_ref(), "no_twitter_payload_data").id
                 )
             }
-            AuthMethodKind::Facebook => {
-                let token_result = ureq::get("https://graph.facebook.com/v18.0/oauth/access_token")
-                    .query_pairs(vec![
-                        ("client_id", app.settings.instagram.client_id.as_str()),
-                        ("redirect_uri", app.settings.instagram.redirect_uri.as_str()),
-                        ("client_secret", app.settings.instagram.client_secret.as_str()),
-                        ("code", auth_data),
-                    ])
-                    .call();
-                let token_response = auth_try!(token_result, "could_not_request_facebook_access_token");
-                let access_token = auth_try!(
-                    token_response.into_json::<FacebookAuthToken>(),
-                    "could_not_get_facebook_auth_token"
-                )
-                .access_token;
-                let result = ureq::get(&format!("https://graph.facebook.com/me?access_token={access_token}")).call();
-                let response = auth_try!(result, "could_not_request_facebook_profile");
-                auth_try!(
-                    response.into_json::<FacebookUserProfile>(),
-                    "facebook_token_was_not_json"
-                )
-                .id
-            }
             AuthMethodKind::Eip712 => {
                 eip_712_sig_to_address(app.settings.rsk.chain_id, auth_data).map_err(ApiAuthError::Fail)?
             }
-            _ => return Err(ApiAuthError::Fail("auth_method_not_supported_yet".to_string())),
         };
 
         Ok((auth_method_kind, lookup_key, auth_data.to_string()))

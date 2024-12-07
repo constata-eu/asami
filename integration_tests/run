@@ -1,4 +1,8 @@
 #!/bin/bash
+docker stop asami_test_db
+docker run --name asami_test_db --rm -e POSTGRES_USER=asami -e POSTGRES_PASSWORD=password -e POSTGRES_DB=asami_development -p 5432:5432 -d postgres
+dockerize -wait tcp://localhost:5432 -timeout 60s
+pgrep -f "hardhat node" | xargs -r kill -9
+cd ../api && sqlx database reset -y && cd -
 pgrep -f "integration_tests/target/debug/deps" | xargs -r kill -9
-pgrep -f "bin/ganache" | xargs -r kill -9
-cargo test -j 4 --color always --test $1 $2 -- --test-threads 1 --nocapture 2>&1 | less -R
+RUST_BACKTRACE=1 cargo test --color always --test $1 $2 -- --test-threads 1 --nocapture 2>&1

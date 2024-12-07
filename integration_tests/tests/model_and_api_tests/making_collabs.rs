@@ -1,5 +1,5 @@
 // This module tests how collabs are made for accounts and sub accounts.
-use ::api::models::*;
+use api::models::*;
 
 app_test! { sends_collabs_for_accounts_and_sub_accounts(a)
     let mut campaign = a.quick_campaign(u("100"), 30, &[]).await;
@@ -42,7 +42,7 @@ app_test! { sends_collabs_for_accounts_and_sub_accounts(a)
 app_test! { skips_if_we_are_no_longer_campaign_admins(a)
     let mut advertiser = a.client().await;
     advertiser.setup_as_advertiser("test main advertiser").await;
-    let campaign = advertiser.start_and_pay_campaign("https://x.com/somebody/status/1716421161867710954", u("100"), 30, &[]).await;
+    let mut campaign = advertiser.start_and_pay_campaign("https://x.com/somebody/status/1716421161867710954", u("100"), 30, &[]).await;
 
     let handle = a.quick_handle("alice_on_x", "11111", Site::X, u("5000")).await;
     campaign.make_x_collab_with_user_id(handle.user_id().as_ref().unwrap()).await?;
@@ -98,13 +98,13 @@ app_test! { fails_when_handle_is_missing_topics (a)
 
     let mut advertiser = a.client().await;
     advertiser.setup_as_advertiser("test main advertiser").await;
-    let met_topics = a.quick_campaign( u("100"), 30, &[*beauty.id()]).await;
+    let mut met_topics = a.quick_campaign( u("100"), 30, &[*beauty.id()]).await;
     assert!(met_topics.make_collab(&handle, u("10"), "first_post_trigger").await.is_ok());
 
-    let no_topics = a.quick_campaign(u("100"), 30, &[]).await;
+    let mut no_topics = a.quick_campaign(u("100"), 30, &[]).await;
     assert!(no_topics.make_collab(&handle, u("10"), "second_post_trigger").await.is_ok());
 
-    let unmet_topics = a.quick_campaign(u("100"), 30, &[*crypto.id(), *sports.id()]).await;
+    let mut unmet_topics = a.quick_campaign(u("100"), 30, &[*crypto.id(), *sports.id()]).await;
 
     assert_eq!(
         unmet_topics.make_collab(&handle, u("20"), "third_post_trigger").await.unwrap_err().to_string(),
@@ -115,7 +115,7 @@ app_test! { fails_when_handle_is_missing_topics (a)
 app_test! { registers_collab_for_last_accepted_handle(a)
     // If someone loses their account, they can create a new one and re-bind their handles.
     // So collabs should always register to the most recently linked handle.
-    let campaign = a.quick_campaign(u("100"), 30, &[]).await;
+    let mut campaign = a.quick_campaign(u("100"), 30, &[]).await;
 
     let global_user_id = "11111";
 
@@ -130,7 +130,7 @@ app_test! { registers_collab_for_last_accepted_handle(a)
     assert_eq!(old_handle.collab_vec().await?.len(), 1);
     assert_eq!(new_handle.collab_vec().await?.len(), 0);
 
-    let second_campaign = a.quick_campaign(u("100"), 30, &[]).await;
+    let mut second_campaign = a.quick_campaign(u("100"), 30, &[]).await;
     assert!(second_campaign.make_x_collab_with_user_id(&global_user_id).await?.is_some());
 
     assert_eq!(old_handle.collab_vec().await?.len(), 1);
@@ -144,13 +144,4 @@ app_test! { handle_has_a_max_reward_for_campaign(a)
 
     assert_eq!(small.reward_for(&campaign).unwrap(), u("5"));
     assert_eq!(big.reward_for(&campaign).unwrap(), milli("9999"));
-}
-
-app_test! { validates_handle_type_with_campaign_kind(a) 
-    let campaign = a.quick_campaign(u("100"), 30, &[]).await;
-    let ig = a.quick_handle("small_on_x", "11111", Site::Instagram, wei("5000")).await;
-    assert_eq!(
-        campaign.make_collab(&ig, u("10"), "first_post_trigger").await.unwrap_err().to_string(),
-        "Invalid input on site: campaign_and_handle_sites_dont_match"
-    );
 }

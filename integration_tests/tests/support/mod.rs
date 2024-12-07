@@ -69,9 +69,8 @@ pub fn rematch<'a>(expr: &'a str) -> Box<dyn Matcher<'a, String> + 'a> {
 #[macro_export]
 macro_rules! test {
   ($i:ident $($e:tt)* ) => {
-    #[test]
+    #[test_log::test(test)]
     fn $i() {
-      #![allow(unused_imports)]
       use crate::support::*;
       use anyhow::*;
 

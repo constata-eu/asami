@@ -165,7 +165,10 @@ impl Handle {
     }
 
     pub async fn validate_collaboration(&self, campaign: &Campaign, reward: U256, trigger: &str) -> AsamiResult<()> {
+        // The funds calculation is always made with a fresh copy of the campaign as it could have been updated.
         let available_funds = campaign
+            .reloaded()
+            .await?
             .available_budget()
             .await
             .map_err(|e| Error::runtime(&format!("campaign available funds calculation: {e:?}")))?;
@@ -175,7 +178,7 @@ impl Handle {
             .collab()
             .select()
             .collab_trigger_unique_id_eq(trigger.to_string())
-            .campaign_id_eq(campaign.attrs.id.clone())
+            .campaign_id_eq(campaign.attrs.id)
             .count()
             .await?
             > 0;

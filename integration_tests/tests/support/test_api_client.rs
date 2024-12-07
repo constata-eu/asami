@@ -357,6 +357,9 @@ impl<'b> ApiClient<'b> {
 
     pub async fn claim_account(&mut self) {
         self.submit_claim_account_request().await;
+
+        self.account().await.update().allows_gasless(true).save().await.unwrap();
+
         self.test_app.wait_for_job(
             &format!("Claming account {:?}", self.account_id()),
             models::OnChainJobKind::PromoteSubAccounts,
