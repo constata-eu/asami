@@ -204,7 +204,7 @@ impl OnChainJob {
             return Ok(self);
         }
 
-        Ok(self.update().status(Settled).save().await?.dispatch_state_change().await?)
+        self.update().status(Settled).save().await?.dispatch_state_change().await
     }
 
     async fn get_mined_tx_data(

@@ -29,7 +29,6 @@ import { Head2, Head3, light, green } from '../components/theme';
 import AsamiLogo from '../assets/logo.svg?react';
 import { useContracts } from "../components/contracts_context";
 import { Settings } from '../settings';
-import InstagramIcon from '@mui/icons-material/Instagram';
 import XIcon from '@mui/icons-material/X';
 import WalletIcon from '@mui/icons-material/Wallet';
 import CampaignIcon from '@mui/icons-material/Campaign';
@@ -86,6 +85,9 @@ const Login = () => {
                 <Button href="/#/about" color="inverted" fullWidth id="button-about-us" >
                   { translate("login.about_asami_button") }
                 </Button>
+                <Button href="/#/Stats/0/show" color="inverted" fullWidth id="button-stats" >
+                  { translate("explorer.menu.stats") }
+                </Button>
                 <Button
                   href={ `https://x.com/${translate("login.x_handle")}` }
                   target="_blank"
@@ -96,17 +98,6 @@ const Login = () => {
                   id="button-visit-x"
                 >
                   { translate("login.x_handle") }
-                </Button>
-                <Button
-                  href={ `https://instagram.com/${translate("login.ig_handle")}` }
-                  target="_blank"
-                  startIcon={ <InstagramIcon /> }
-                  color="inverted"
-                  size="small"
-                  fullWidth
-                  id="button-visit-instagram"
-                >
-                  { translate("login.ig_handle") }
                 </Button>
               </Box>
             </Box>

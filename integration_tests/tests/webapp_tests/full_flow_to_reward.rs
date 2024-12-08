@@ -60,6 +60,8 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
     }
     d.test_app().wait_for_job("Account collabs", OnChainJobKind::MakeCollabs, OnChainJobStatus::Settled).await;
 
+    wait_here();
+
     d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "2400.0 ASAMI").await;
     d.click("#claim-balances-button").await;
 

@@ -248,7 +248,7 @@ impl Campaign {
     }
 
     pub async fn make_collab(&mut self, handle: &Handle, reward: U256, trigger: &str) -> AsamiResult<Collab> {
-        handle.validate_collaboration(&self, reward, trigger).await?;
+        handle.validate_collaboration(self, reward, trigger).await?;
 
         let collab = self
             .state

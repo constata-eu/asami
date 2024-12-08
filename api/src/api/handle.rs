@@ -42,11 +42,12 @@ impl Showable<models::Handle, HandleFilter> for Handle {
     fn sort_field_to_order_by(field: &str) -> Option<models::HandleOrderBy> {
         match field {
             "id" => Some(HandleOrderBy::Id),
+            "score" => Some(HandleOrderBy::Score),
             _ => None,
         }
     }
 
-    fn filter_to_select(context: &Context, filter: Option<HandleFilter>) -> FieldResult<models::SelectHandle> {
+    fn filter_to_select(_context: &Context, filter: Option<HandleFilter>) -> FieldResult<models::SelectHandle> {
         if let Some(f) = filter {
             Ok(models::SelectHandle {
                 id_in: f.ids,
@@ -55,21 +56,17 @@ impl Showable<models::Handle, HandleFilter> for Handle {
                 status_in: f.status_in,
                 site_eq: f.site_eq,
                 user_id_like: f.user_id_like,
-                account_id_eq: Some(context.account_id()?),
+                account_id_eq: f.account_id_eq,
                 ..Default::default()
             })
         } else {
-            Ok(models::SelectHandle {
-                account_id_eq: Some(context.account_id()?),
-                ..Default::default()
-            })
+            Ok(Default::default())
         }
     }
 
-    fn select_by_id(context: &Context, id: i32) -> FieldResult<models::SelectHandle> {
+    fn select_by_id(_context: &Context, id: i32) -> FieldResult<models::SelectHandle> {
         Ok(models::SelectHandle {
             id_eq: Some(id),
-            account_id_eq: Some(context.account_id()?),
             ..Default::default()
         })
     }

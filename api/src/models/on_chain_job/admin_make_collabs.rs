@@ -8,15 +8,12 @@ impl OnChainJob {
     pub async fn admin_make_collabs_make_call(&self) -> anyhow::Result<Option<AsamiFunctionCall>> {
         let by_campaign = self
             .group_and_filter_collabs(|collab| async move {
-                let item = if let Some(account_addr) = collab.account().await?.decoded_addr()? {
-                    Some(MakeCollabsParamItem {
+                Ok(collab.account().await?.decoded_addr()?.map(|account_addr|{
+                    MakeCollabsParamItem {
                         account_addr,
                         doc_reward: collab.reward_u256(),
-                    })
-                } else {
-                    None
-                };
-                Ok(item)
+                    }
+                }))
             })
             .await?;
 
@@ -33,7 +30,7 @@ impl OnChainJob {
             });
         }
 
-        return Ok(Some(self.state.on_chain.asami_contract.admin_make_collabs(params)));
+        Ok(Some(self.state.on_chain.asami_contract.admin_make_collabs(params)))
     }
 
     pub async fn admin_make_sub_account_collabs_make_call(&self) -> anyhow::Result<Option<AsamiFunctionCall>> {

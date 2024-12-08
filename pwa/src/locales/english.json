@@ -345,5 +345,39 @@
 	"version_two": {
 		"title": "Version 2 is here 🎉",
 		"text": "Batteries included! Now you can get some RBTC with your rewards, so your wallet is always ready to be used with other apps in the rootstock ecosystem."
+	},
+	"explorer": {
+	  "menu": {
+	    "stats": "Club Stats",
+	    "handles": "Handles",
+	    "accounts": "Members",
+	    "campaigns": "Campaigns",
+	    "collabs": "Collabs",
+	    "oracle": "Oracle"
+	  },
+	  "stats": {
+	    "title": "Club Stats",
+	    "description": "These are the general club stats right now. You can explore all club activities in Members, Campaigns, Handles, and Collabs."
+	  },
+	  "campaigns": {
+	    "title": "Campaigns",
+	    "description": "These are all the campaigns ever created by advertisers."
+	  },
+	  "handles": {
+	    "title": "Handles",
+	    "description": "These are the handles that engage in collabs. They are scored by the campaign manager."
+	  },
+	  "accounts": {
+	    "title": "Members",
+	    "description": "Club members that can be making campaigns, collaborating, or both."
+	  },
+	  "collabs": {
+	    "title": "Collaborations",
+	    "description": "A collaboration occurs when a Handle reposts, participating on a Campaign"
+	  },
+	  "oracle": {
+	    "title": "Oracle Jobs",
+	    "description": "This campaign manager's on-chain jobs. This is the only campaign manager so far."
+	  }
 	}
 }

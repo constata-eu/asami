@@ -75,13 +75,11 @@ const CampaignList = ({handles}) => {
   };
 
   const xHandle = handles.data?.filter((x) => x.site == 'X')[0];
-  const igHandle = handles.data?.filter((x) => x.site == 'INSTAGRAM')[0];
 
   return ( <>
     <Box id="campaign-list" display="flex" flexWrap="wrap">
-      { listContext.data.map((item) => item.campaignKind == "XREPOST" ?
-        <XCampaign key={item.id} handle={xHandle} campaign={item} prefsContext={prefsContext} setPreference={setPreference} /> :
-        <IgCampaign key={item.id} handle={igHandle} campaign={item} prefsContext={prefsContext} setPreference={setPreference} />
+      { listContext.data.map((item) =>
+        <XCampaign key={item.id} handle={xHandle} campaign={item} prefsContext={prefsContext} setPreference={setPreference} />
       )}
     </Box>
     </>

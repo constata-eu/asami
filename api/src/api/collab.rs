@@ -27,6 +27,7 @@ pub struct Collab {
         description = "The fee deducted by asami from the gross amount, field only available when reward cleared."
     )]
     fee: Option<String>,
+    collab_trigger_unique_id: String,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -49,6 +50,8 @@ impl Showable<models::Collab, CollabFilter> for Collab {
     fn sort_field_to_order_by(field: &str) -> Option<models::CollabOrderBy> {
         match field {
             "id" => Some(CollabOrderBy::Id),
+            "reward" => Some(CollabOrderBy::Reward),
+            "fee" => Some(CollabOrderBy::Fee),
             _ => None,
         }
     }
@@ -91,6 +94,7 @@ impl Showable<models::Collab, CollabFilter> for Collab {
             dispute_reason: d.attrs.dispute_reason,
             reward: d.attrs.reward,
             fee: d.attrs.fee,
+            collab_trigger_unique_id: d.attrs.collab_trigger_unique_id,
         })
     }
 }

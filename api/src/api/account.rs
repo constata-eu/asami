@@ -27,6 +27,8 @@ pub struct Account {
         description = "Is the account happy with receiving gasless claims if they are allowed in the smart contract?"
     )]
     allows_gasless: bool,
+    #[graphql(description = "Date in which this account was created")]
+    created_at: UtcDateTime,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -34,7 +36,7 @@ pub struct Account {
 pub struct AccountFilter {
     ids: Option<Vec<String>>,
     id_eq: Option<String>,
-    addr_eq: Option<String>,
+    addr_like: Option<String>,
 }
 
 #[rocket::async_trait]
@@ -50,8 +52,8 @@ impl Showable<models::Account, AccountFilter> for Account {
         if let Some(f) = filter {
             Ok(models::SelectAccount {
                 id_in: f.ids,
-                id_eq: f.id_eq,
-                addr_eq: f.addr_eq,
+                id_eq: f.id_eq.map(|x| wei(x).encode_hex() ),
+                addr_like: into_like_search(f.addr_like),
                 ..Default::default()
             })
         } else {

@@ -1,5 +1,5 @@
 import {useEffect } from "react";
-import { Admin, CustomRoutes, useSafeSetState, useStore, Authenticated } from "react-admin";
+import { Admin, Resource, CustomRoutes, useSafeSetState, useStore, Authenticated } from "react-admin";
 import { ContractsProvider } from './components/contracts_context';
 import { Settings } from './settings';
 import { GoogleReCaptchaProvider, } from 'react-google-recaptcha-v3';
@@ -16,6 +16,12 @@ import { Container, Skeleton } from '@mui/material';
 import { XLogin, FacebookLogin, Eip712Login, OneTimeTokenLogin } from './views/oauth_redirect';
 import polyglotI18nProvider from 'ra-i18n-polyglot';
 import { messages, browserLocale } from "./i18n";
+import { HandleList } from './views/explorer/handles';
+import { CampaignList } from './views/explorer/campaigns';
+import { AccountList } from './views/explorer/accounts';
+import { CollabList } from './views/explorer/collabs';
+import { OnChainJobList } from './views/explorer/on_chain_jobs';
+import { StatsShow } from './views/explorer/stats';
 
 const Dashboard = () => {
   const [searchParams,] = useSearchParams();
@@ -56,11 +62,41 @@ export const App = () => {
         dataProvider={dataProvider}
         i18nProvider={i18nProvider}
       >
+        <Resource
+          name="Handle"
+          list={HandleList}
+          recordRepresentation={(record) => record.username}
+        />
+
+        <Resource
+          name="Campaign"
+          list={CampaignList}
+        />
+
+        <Resource
+          name="Account"
+          list={AccountList}
+        />
+
+        <Resource
+          name="Collab"
+          list={CollabList}
+        />
+
+        <Resource
+          name="OnChainJob"
+          list={OnChainJobList}
+        />
+
+        <Resource
+          name="Stats"
+          show={StatsShow}
+        />
+
         <CustomRoutes>
           <Route path="/about" element={<About/>}/>
           <Route path="/one_time_token_login" element={<OneTimeTokenLogin/>}/>
           <Route path="/x_login" element={<XLogin/>}/>
-          <Route path="/facebook_login" element={<FacebookLogin/>}/>
           <Route path="/eip712_login" element={<Eip712Login/>}/>
         </CustomRoutes>
       </Admin>

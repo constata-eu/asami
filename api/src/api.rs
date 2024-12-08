@@ -1,4 +1,7 @@
+use crate::models::{CampaignStatus, CollabStatus};
+
 use super::{error::Error, models, *};
+use ethers::{abi::AbiEncode, types::U256};
 use juniper::{
     graphql_object, graphql_value, EmptySubscription, FieldError, FieldResult, GraphQLInputObject, GraphQLObject,
     IntrospectionFormat,
@@ -24,6 +27,12 @@ mod claim_account_request;
 use claim_account_request::*;
 mod campaign_preference;
 use campaign_preference::*;
+mod on_chain_job;
+use on_chain_job::*;
+mod audit_log_entry;
+use audit_log_entry::*;
+mod stats;
+use stats::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -293,6 +302,30 @@ make_graphql_query! {
     [Handle, allHandles, allHandlesMeta, "_allHandlesMeta", HandleFilter, i32],
     [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, i32],
     [CampaignPreference, allCampaignPreferences, allCampaignPreferencesMeta, "_allCampaignPreferencesMeta", CampaignPreferenceFilter, i32],
+    [OnChainJob, allOnChainJobs, allOnChainJobsMeta, "_allOnChainJobsMeta", OnChainJobFilter, i32],
+    [AuditLogEntry, allAuditLogEntries, allAuditLogEntriesMeta, "_allAuditLogEntriesMeta", AuditLogEntryFilter, i32],
+  }
+
+  #[graphql(name="Stats")]
+  async fn stats(context: &Context, _id: i32) -> FieldResult<Stats> {
+      let total_rewards_paid: U256 = context.app
+        .collab()
+        .select()
+        .status_eq(CollabStatus::Cleared)
+        .all()
+        .await?
+        .iter()
+        .map(|c| c.reward_u256() )
+        .fold(U256::zero(), |acc, x| acc + x);
+
+      Ok(Stats {
+          id: 0,
+          total_active_handles: context.app.db.fetch_one_scalar(sqlx::query_scalar("SELECT count(distinct handle_id) FROM collabs")).await?,
+          total_collabs: context.app.collab().select().count().await?.try_into()?,
+          total_campaigns: context.app.campaign().select().status_eq(CampaignStatus::Published).count().await?.try_into()?,
+          total_rewards_paid: total_rewards_paid.encode_hex(),
+          date: chrono::Utc::now()
+      })
   }
 }
 
