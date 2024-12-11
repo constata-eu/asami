@@ -12,7 +12,7 @@ impl OnChainJob {
 
         let accounts = self.state.account().select().status_eq(AccountStatus::Claimed).all().await?;
 
-        let mut addresses = vec![];
+        let mut addresses = std::collections::HashSet::new();
 
         for a in accounts {
             let Some(found) = a.find_on_chain().await? else {
@@ -45,7 +45,7 @@ impl OnChainJob {
             let Some(addr) = a.decoded_addr()? else {
                 continue;
             };
-            addresses.push(addr);
+            addresses.insert(addr);
 
             self.link_account(&a).await?;
 
