@@ -63,7 +63,7 @@ impl OnChainJob {
         let total_rbtc = U256::from(addresses.len()) * rbtc_per_user;
 
         return Ok(Some(
-            self.contract().gasless_claim_balances(doc_fee, rbtc_per_user, addresses).value(total_rbtc),
+            self.contract().gasless_claim_balances(doc_fee, rbtc_per_user, Vec::from_iter(addresses)).value(total_rbtc),
         ));
     }
 }
