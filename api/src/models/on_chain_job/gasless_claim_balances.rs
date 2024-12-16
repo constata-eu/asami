@@ -66,4 +66,16 @@ impl OnChainJob {
             self.contract().gasless_claim_balances(doc_fee, rbtc_per_user, addresses).value(total_rbtc),
         ));
     }
+
+    /// When an OnChainJob for making collabs is done, we sync the collabs and campaigns
+    /// state from the blockchain. We do not rely on events for this checks.
+    pub async fn gasless_claim_balances_on_state_change(self) -> anyhow::Result<Self> {
+        if *self.status() == OnChainJobStatus::Settled {
+            self.state.account().hydrate_on_chain_columns_for(
+                self.on_chain_job_account_vec().await?.iter().map(|i| i.account_id() )
+            ).await?;
+        }
+
+        Ok(self)
+    }
 }

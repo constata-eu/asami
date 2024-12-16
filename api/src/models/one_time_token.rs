@@ -61,9 +61,11 @@ impl OneTimeTokenHub {
         user_id: Option<i32>,
     ) -> AsamiResult<OneTimeToken> {
         Email::parse_string(&email)?;
-        let mut config = BasicConfig::default();
-        config.separator = "-".into();
-        config.capitalize_first = false.into();
+        let config = BasicConfig{
+            separator: "-".into(),
+            capitalize_first: false.into(),
+            ..Default::default()
+        };
         let value = config.to_scheme().generate();
 
         Ok(self

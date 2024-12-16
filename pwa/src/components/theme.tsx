@@ -69,6 +69,20 @@ const theme = {
     MuiCssBaseline: {
       styleOverrides: `.twitter-tweet iframe { border-radius: 13px; } ${fontFaces.join("\n")}`
     },
+    RaSimpleShowLayout: {
+      styleOverrides: {
+        root: {
+          "& .RaSimpleShowLayout-stack": {
+            gap: "2em",
+            "flex-direction": "row",
+            flexDirection: "row",
+          },
+          "& .RaSimpleShowLayout-row": {
+            marginTop: 0
+          }
+        }
+      }
+    }
   }
 };
 

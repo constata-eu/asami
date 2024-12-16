@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use super::*;
 
 impl OnChainJob {
@@ -22,7 +24,7 @@ impl OnChainJob {
                 .on_chain_job_campaign()
                 .insert(InsertOnChainJobCampaign {
                     job_id: self.attrs.id,
-                    campaign_id: c.attrs.id.clone(),
+                    campaign_id: c.attrs.id,
                 })
                 .save()
                 .await?;
@@ -37,6 +39,20 @@ impl OnChainJob {
             return Ok(None);
         }
 
-        return Ok(Some(self.state.on_chain.asami_contract.reimburse_campaigns(params)));
+        Ok(Some(self.state.on_chain.asami_contract.reimburse_campaigns(params)))
+    }
+
+    pub async fn reimburse_campaigns_on_state_change(self) -> anyhow::Result<Self> {
+        if *self.status() == OnChainJobStatus::Settled {
+            let mut accounts = HashSet::new();
+
+            for link in self.on_chain_job_campaign_vec().await? {
+                accounts.insert(link.campaign().await?.attrs.account_id);
+            }
+
+            self.state.account().hydrate_on_chain_columns_for(accounts.iter()).await?;
+        }
+
+        Ok(self)
     }
 }

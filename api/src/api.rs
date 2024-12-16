@@ -320,7 +320,8 @@ make_graphql_query! {
 
       Ok(Stats {
           id: 0,
-          total_active_handles: context.app.db.fetch_one_scalar(sqlx::query_scalar("SELECT count(distinct handle_id) FROM collabs")).await?,
+          total_active_handles:
+              context.app.db.fetch_one_scalar::<i32>(sqlx::query_scalar("SELECT count(distinct handle_id)::INT4 FROM collabs")).await?,
           total_collabs: context.app.collab().select().count().await?.try_into()?,
           total_campaigns: context.app.campaign().select().status_eq(CampaignStatus::Published).count().await?.try_into()?,
           total_rewards_paid: total_rewards_paid.encode_hex(),

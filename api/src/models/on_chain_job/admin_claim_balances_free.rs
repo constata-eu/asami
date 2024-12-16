@@ -10,11 +10,11 @@ impl OnChainJob {
             return Ok(None);
         }
 
-        return Ok(Some(
+        Ok(Some(
             self.state
                 .on_chain
                 .asami_contract
                 .admin_claim_balances_free(vec![self.state.settings.rsk.admin_address]),
-        ));
+        ))
     }
 }

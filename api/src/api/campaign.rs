@@ -29,6 +29,12 @@ pub struct Campaign {
     topic_ids: Vec<i32>,
     #[graphql(description = "The reward you would receive. None means it does not apply.")]
     you_would_receive: Option<String>,
+    #[graphql(description = "How many collabs did the campaign get")]
+    total_collabs: i32,
+    #[graphql(description = "How much the campaign has spent so far in rewards")]
+    total_spent: String,
+    #[graphql(description = "The campaign total budget: remaining + spent")]
+    total_budget: String,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -68,6 +74,9 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     fn sort_field_to_order_by(field: &str) -> Option<models::CampaignOrderBy> {
         match field {
             "id" => Some(CampaignOrderBy::Id),
+            "totalCollabs" => Some(CampaignOrderBy::TotalCollabs),
+            "totalSpent" => Some(CampaignOrderBy::TotalSpent),
+            "totalBudget" => Some(CampaignOrderBy::TotalBudget),
             "createdAt" => Some(CampaignOrderBy::CreatedAt),
             _ => None,
         }
@@ -139,6 +148,9 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
             status: d.attrs.status,
             topic_ids,
             you_would_receive,
+            total_collabs: d.attrs.total_collabs,
+            total_spent: d.attrs.total_spent,
+            total_budget: d.attrs.total_budget,
         })
     }
 }

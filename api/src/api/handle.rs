@@ -23,6 +23,10 @@ pub struct Handle {
     score: Option<String>,
     #[graphql(description = "Status of this handle.")]
     status: HandleStatus,
+    #[graphql(description = "Collabs made")]
+    total_collabs: i32,
+    #[graphql(description = "Rewards from collabs made")]
+    total_collab_rewards: String,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -43,6 +47,8 @@ impl Showable<models::Handle, HandleFilter> for Handle {
         match field {
             "id" => Some(HandleOrderBy::Id),
             "score" => Some(HandleOrderBy::Score),
+            "totalCollabs" => Some(HandleOrderBy::TotalCollabs),
+            "totalCollabRewards" => Some(HandleOrderBy::TotalCollabRewards),
             _ => None,
         }
     }
@@ -80,6 +86,8 @@ impl Showable<models::Handle, HandleFilter> for Handle {
             user_id: d.attrs.user_id,
             score: d.attrs.score,
             status: d.attrs.status,
+            total_collabs: d.attrs.total_collabs,
+            total_collab_rewards: d.attrs.total_collab_rewards,
         })
     }
 }

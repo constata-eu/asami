@@ -544,7 +544,7 @@ dependencies = [
  "serde",
  "serde_bytes",
  "serde_json",
- "time 0.3.34",
+ "time 0.3.37",
  "uuid 1.7.0",
 ]
 
@@ -912,7 +912,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e859cd57d0710d9e06c381b550c06e76992472a8c6d527aecd2fc673dcc231fb"
 dependencies = [
  "percent-encoding",
- "time 0.3.34",
+ "time 0.3.37",
  "version_check",
 ]
 
@@ -923,7 +923,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3cd91cf61412820176e137621345ee43b3f4423e589e7ae4e50d601d93e35ef8"
 dependencies = [
  "percent-encoding",
- "time 0.3.34",
+ "time 0.3.37",
  "version_check",
 ]
 
@@ -1917,7 +1917,7 @@ dependencies = [
  "mime",
  "serde",
  "serde_json",
- "time 0.3.34",
+ "time 0.3.37",
  "tokio",
  "url",
  "webdriver",
@@ -4453,7 +4453,7 @@ dependencies = [
  "serde_json",
  "state",
  "tempfile",
- "time 0.3.34",
+ "time 0.3.37",
  "tokio",
  "tokio-stream",
  "tokio-util",
@@ -4542,7 +4542,7 @@ dependencies = [
  "smallvec",
  "stable-pattern",
  "state",
- "time 0.3.34",
+ "time 0.3.37",
  "tokio",
  "uncased",
 ]
@@ -4985,7 +4985,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "serde_with_macros",
- "time 0.3.34",
+ "time 0.3.37",
 ]
 
 [[package]]
@@ -5117,7 +5117,7 @@ dependencies = [
  "num-bigint",
  "num-traits",
  "thiserror",
- "time 0.3.34",
+ "time 0.3.37",
 ]
 
 [[package]]
@@ -5736,9 +5736,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.34"
+version = "0.3.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8248b6521bb14bc45b4067159b9b6ad792e2d6d754d6c41fb50e29fefe38749"
+checksum = "35e7868883861bd0e56d9ac6efcaaca0d6d5d82a2a7ec8209ff492c07cf37b21"
 dependencies = [
  "deranged",
  "itoa",
@@ -5757,9 +5757,9 @@ checksum = "ef927ca75afb808a4d64dd374f00a2adf8d0fcff8e7b184af886c3c87ec4a3f3"
 
 [[package]]
 name = "time-macros"
-version = "0.2.17"
+version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ba3a3ef41e6672a2f0f001392bb5dcd3ff0a9992d618ca761a11c3121547774"
+checksum = "2834e6017e3e5e4b9834939793b282bc03b37a3336245fa820e35e233e2a85de"
 dependencies = [
  "num-conv",
  "time-core",
@@ -6096,7 +6096,7 @@ dependencies = [
  "serde_urlencoded",
  "strum 0.24.1",
  "thiserror",
- "time 0.3.34",
+ "time 0.3.37",
  "tokio",
  "url",
 ]
@@ -6509,7 +6509,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "time 0.3.34",
+ "time 0.3.37",
  "unicode-segmentation",
  "url",
 ]
@@ -6840,7 +6840,7 @@ dependencies = [
  "hmac 0.12.1",
  "pbkdf2 0.11.0",
  "sha1",
- "time 0.3.34",
+ "time 0.3.37",
  "zstd",
 ]
 

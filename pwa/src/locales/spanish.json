@@ -1,5 +1,22 @@
 {
   "resources": {
+    "Account": {
+      "fields": {
+        "unclaimedAsamiBalance": "ASAMI pendientes",
+        "unclaimedDocBalance": "DOC pendientes",
+        "addr": "Billetera",
+        "totalCollabs": "Colaboraciones",
+        "totalCollabRewards": "Cobró",
+        "totalCampaigns": "Campañas creadas",
+        "totalCollabsReceived": "Le colaboraron",
+        "totalSpent": "Gastó",
+        "createdAt": "Se unió el",
+        "asamiBalance": "ASAMI",
+        "rbtcBalance": "RBTC",
+        "docBalance": "DOC",
+        "allowsGasless": "Retira sin RBTC"
+      }
+    }
   },
 	"campaign_kinds": {
 		"XREPOST": "Repost en X",
@@ -354,6 +371,30 @@
 	    "campaigns": "Campañas",
 	    "collabs": "Colaboraciones",
 	    "oracle": "Oráculo"
+	  },
+	  "stats": {
+	    "title": "Estadísticas",
+	    "description": "Estas son las estadísticas generales del club a la fecha. Puedes explorar las actividades por Miembro, Campaña, Cuenta o Colaboraciones"
+	  },
+	  "campaigns": {
+	    "title": "Campañas",
+	    "description": "Estas son todas las campañas creadas por los miembros anunciantes."
+	  },
+	  "handles": {
+	    "title": "Cuentas",
+	    "description": "Estas son las cuentas de X de miembros que hacen colaboraciones. Están calificadas por el administrador de campañas." 
+	  },
+	  "accounts": {
+	    "title": "Miembros",
+	    "description": "Todos los miembros del club que pueden estar creando campañás, colaborando, o ambas."
+	  },
+	  "collabs": {
+	    "title": "Colaboraciones",
+	    "description": "Una colaboración ocurre cuando una Cuenta repostea, participando en una Campaña."
+	  },
+	  "oracle": {
+	    "title": "Oráculo",
+	    "description": "Estas son las tareas de este administrador de campañas. Es el único administrador a la fecha."
 	  }
 	}
 }

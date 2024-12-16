@@ -1,5 +1,22 @@
 {
   "resources": {
+    "Account": {
+      "fields": {
+        "unclaimedAsamiBalance": "Unclaimed ASAMI",
+        "unclaimedDocBalance": "Unclaimed DOC",
+        "addr": "Wallet Address",
+        "totalCollabs": "Collabs made",
+        "totalCollabRewards": "Collabs Reward",
+        "totalCampaigns": "Campaigns created",
+        "totalCollabsReceived": "Collabs received",
+        "totalSpent": "Spent",
+        "createdAt": "Joined",
+        "asamiBalance": "ASAMI",
+        "rbtcBalance": "RBTC",
+        "docBalance": "DOC",
+        "allowsGasless": "Wants Gasless" 
+      }
+    }
   },
 	"campaign_kinds": {
 		"XREPOST": "Repost in X",
@@ -377,7 +394,7 @@
 	  },
 	  "oracle": {
 	    "title": "Oracle Jobs",
-	    "description": "This campaign manager's on-chain jobs. This is the only campaign manager so far."
+	    "description": "These are this campaign manager's on-chain jobs. This is the only campaign manager so far."
 	  }
 	}
 }

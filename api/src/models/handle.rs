@@ -18,6 +18,16 @@ model! {
     score: Option<String>,
     #[sqlx_model_hints(handle_status, default)]
     status: HandleStatus,
+
+    // These columns are part of the account activity report
+    // they are denormalized and re-hydrated when:
+    // - A collab for one of the user handles user is settled.
+    #[sqlx_model_hints(boolean, default)]
+    force_hydrate: bool,
+    #[sqlx_model_hints(int4, default)]
+    total_collabs: i32,
+    #[sqlx_model_hints(varchar, default)]
+    total_collab_rewards: String,
   },
   has_many {
     HandleTopic(handle_id),
@@ -29,6 +39,40 @@ model! {
 }
 
 impl HandleHub {
+    pub async fn force_hydrate(&self) -> AsamiResult<()> {
+        let ids = self.state.db.fetch_all_scalar(
+            sqlx::query_scalar!("SELECT id FROM handles WHERE force_hydrate = true LIMIT 50")
+        ).await?;
+        if ids.is_empty() {
+            return Ok(())
+        }
+        self.hydrate_report_columns_for(ids.iter().copied()).await?;
+        self.state.db.execute(
+            sqlx::query!("UPDATE handles SET force_hydrate = false WHERE id = ANY($1)", &ids)
+        ).await?;
+        Ok(())
+    }
+
+    pub async fn hydrate_report_columns_for(&self, ids: impl Iterator<Item = i32>) -> AsamiResult<()> {
+        for id in ids {
+            let handle = self.find(id).await?;
+            let mut total_collabs = 0;
+            let mut total_collab_rewards = u("0");
+            for collab in handle.collab_scope().status_eq(CollabStatus::Cleared).all().await? {
+                total_collabs += 1;
+                total_collab_rewards += collab.reward_u256();
+            }
+            handle
+                .update()
+                .total_collabs(total_collabs)
+                .total_collab_rewards(total_collab_rewards.encode_hex())
+                .save()
+                .await?;
+        }
+
+        Ok(())
+    }
+
     pub async fn verify_and_score_x(&self) -> AsamiResult<Vec<Handle>> {
         use rust_decimal::prelude::*;
         use tokio::time::*;
@@ -86,7 +130,7 @@ impl HandleHub {
 
                 let text: &String = post.note_tweet.as_ref().and_then(|n| n.text.as_ref()).unwrap_or(&post.text);
 
-                if let Some(capture) = msg_regex.captures(&text) {
+                if let Some(capture) = msg_regex.captures(text) {
                     let Ok(account_id_str) = capture[1].parse::<String>() else {
                         self.state
                             .info(

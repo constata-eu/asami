@@ -14,6 +14,7 @@ import { SelectInput, SearchInput, Datagrid, List,
 } from 'react-admin';
 import { BareLayout, DeckCard, ExplorerLayout } from '../layout';
 import { Box, Typography } from '@mui/material';
+import { AmountField } from '../../components/custom_fields';
 
 export const StatsShow = () => {
   let translate = useTranslate();
@@ -27,7 +28,7 @@ export const StatsShow = () => {
               <NumberField source="totalActiveHandles" />
               <NumberField source="totalCollabs" />
               <NumberField source="totalCampaigns" />
-              <NumberField source="totalRewardsPaid" />
+              <AmountField source="totalRewardsPaid" />
               <DateField source="date" showTime />
           </SimpleShowLayout>
       </Show>

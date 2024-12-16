@@ -105,7 +105,7 @@ impl OnChainJobHub {
             next.update().sleep_until(Utc::now() + cooldown).save().await?;
         };
 
-        return Ok(vec![cloned.reloaded().await?]);
+        Ok(vec![cloned.reloaded().await?])
     }
 }
 
@@ -139,13 +139,13 @@ impl OnChainJob {
                     .as_middleware_error()
                     .and_then(|m| m.as_error_response())
                     .map(|x| x.message.clone())
-                    .unwrap_or_else(|| String::new());
+                    .unwrap_or_else(String::new);
 
                 if maybe_funds.starts_with("insufficient funds") {
                     self.fail("rpc_error_waiting_more", format!("{e:?}")).await?;
                     self.update().status_line(Some(maybe_funds)).save().await?
                 } else {
-                    let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error"));
+                    let desc = e.decode_revert::<String>().unwrap_or_else(|| "no_revert_error".to_string());
                     self.fail("early_revert_message", format!("{e:?}")).await?;
                     self.update().status(Reverted).status_line(Some(desc)).save().await?
                 }
@@ -172,7 +172,7 @@ impl OnChainJob {
             Failed
         };
 
-        Ok(self
+        self
             .update()
             .status(status)
             .gas_used(receipt.gas_used.map(|x| x.encode_hex()))
@@ -182,7 +182,7 @@ impl OnChainJob {
             .save()
             .await?
             .dispatch_state_change()
-            .await?)
+            .await
     }
 
     pub async fn check_settlement(self) -> anyhow::Result<Self> {
@@ -261,6 +261,9 @@ impl OnChainJob {
             MakeCollabs => self.admin_make_collabs_on_state_change().await,
             MakeSubAccountCollabs => self.admin_make_collabs_on_state_change().await,
             SubmitReports => self.submit_reports_on_state_change().await,
+            ReimburseCampaigns => self.reimburse_campaigns_on_state_change().await,
+            GaslessClaimBalances => self.gasless_claim_balances_on_state_change().await,
+            ClaimFeePoolShare => self.claim_fee_pool_share_on_state_change().await,
             _ => Ok(self),
         }
     }

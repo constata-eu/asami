@@ -32,6 +32,19 @@ model! {
     report_hash: Option<String>,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
+
+    // These columns are part of the campaign activity report
+    // they are denormalized and re-hydrated when:
+    // - A collab for the campaign is settled.
+    // - The campaign budget changes.
+    #[sqlx_model_hints(boolean, default)]
+    force_hydrate: bool,
+    #[sqlx_model_hints(int4, default)]
+    total_collabs: i32,
+    #[sqlx_model_hints(varchar, default)]
+    total_spent: String,
+    #[sqlx_model_hints(varchar, default)]
+    total_budget: String,
   },
   queries {
       needing_report("valid_until IS NOT NULL AND valid_until < now() AND report_hash IS NULL"),
@@ -77,6 +90,43 @@ make_sql_enum![
 ];
 
 impl CampaignHub {
+    pub async fn force_hydrate(&self) -> AsamiResult<()> {
+        let ids = self.state.db.fetch_all_scalar(
+            sqlx::query_scalar!("SELECT id FROM campaigns WHERE force_hydrate = true LIMIT 50")
+        ).await?;
+        if ids.is_empty() {
+            return Ok(())
+        }
+        self.hydrate_report_columns_for(ids.iter().copied()).await?;
+        self.state.db.execute(
+            sqlx::query!("UPDATE campaigns SET force_hydrate = false WHERE id = ANY($1)", &ids)
+        ).await?;
+        Ok(())
+    }
+
+    pub async fn hydrate_report_columns_for(&self, ids: impl Iterator<Item = i32>) -> AsamiResult<()> {
+        for id in ids {
+            let campaign = self.find(id).await?;
+            let mut total_collabs = 0;
+            let mut total_spent = u("0");
+            for collab in campaign.collab_scope().status_eq(CollabStatus::Cleared).all().await? {
+                total_collabs += 1;
+                total_spent += collab.reward_u256();
+            }
+
+            let total_budget = campaign.budget_u256() + total_spent;
+            campaign
+                .update()
+                .total_collabs(total_collabs)
+                .total_spent(total_spent.encode_hex())
+                .total_budget(total_budget.encode_hex())
+                .save()
+                .await?;
+        }
+
+        Ok(())
+    }
+
     pub async fn create_from_link(&self, account: &Account, link: &str, topics: &[Topic]) -> AsamiResult<Campaign> {
         use regex::Regex;
         use url::Url;
@@ -91,7 +141,7 @@ impl CampaignHub {
             return Err(Error::validation("link", "no_segments"));
         };
 
-        let Some(briefing) = path.get(path.len() - 1) else {
+        let Some(briefing) = path.last() else {
             return Err(Error::validation("link", "no_content_id"));
         };
 
@@ -102,7 +152,7 @@ impl CampaignHub {
         let x_regex = Regex::new(r#"^\d+$"#).map_err(|_| Error::precondition("invalid_x_regex"))?;
         let ig_regex = Regex::new(r#"^[\d\w\-_]+$"#).map_err(|_| Error::precondition("invalid_ig_regex"))?;
 
-        let campaign_kind = if (host.ends_with("twitter.com") || host.ends_with("x.com")) && x_regex.is_match(&briefing)
+        let campaign_kind = if (host.ends_with("twitter.com") || host.ends_with("x.com")) && x_regex.is_match(briefing)
         {
             CampaignKind::XRepost
         } else if host.ends_with("instagram.com") && ig_regex.is_match(briefing) {
@@ -138,8 +188,8 @@ impl CampaignHub {
             self.state
                 .campaign_topic()
                 .insert(InsertCampaignTopic {
-                    campaign_id: campaign.attrs.id.clone(),
-                    topic_id: t.attrs.id.clone(),
+                    campaign_id: campaign.attrs.id,
+                    topic_id: t.attrs.id,
                 })
                 .save()
                 .await?;
@@ -283,8 +333,8 @@ impl Campaign {
             .state
             .collab()
             .insert(InsertCollab {
-                campaign_id: self.attrs.id.clone(),
-                handle_id: handle.attrs.id.clone(),
+                campaign_id: self.attrs.id,
+                handle_id: handle.attrs.id,
                 advertiser_id: self.attrs.account_id.clone(),
                 member_id: handle.account_id().clone(),
                 collab_trigger_unique_id: trigger.to_string(),

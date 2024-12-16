@@ -6,7 +6,7 @@ use crate::{
     },
 };
 use ethers::prelude::{EthLogDecode, Event};
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
 pub type AsamiEvent<D> = Event<Arc<AsamiSigner>, AsamiSigner, D>;
 
@@ -70,13 +70,16 @@ impl SyncedEventHub {
             .query_with_meta()
             .await?;
 
+        let mut account_ids = HashSet::new();
+        let mut campaign_ids = vec![];
+
         for (e, meta) in &events {
             let Some(synced_event) = self.save_unprocessed_event(meta, &e).await? else {
                 continue;
             };
 
             let Some(campaign) =
-                self.state.campaign().select().briefing_hash_eq(&e.campaign_id().encode_hex()).optional().await?
+                self.state.campaign().select().briefing_hash_eq(e.campaign_id().encode_hex()).optional().await?
             else {
                 synced_event
                     .info(
@@ -104,6 +107,9 @@ impl SyncedEventHub {
                 Some(onchain.report_hash.encode_hex())
             };
 
+            campaign_ids.push(*campaign.id()); 
+            account_ids.insert(campaign.account_id().clone());
+
             campaign
                 .update()
                 .budget(onchain.budget.encode_hex())
@@ -114,6 +120,10 @@ impl SyncedEventHub {
                 .await
                 .context(format!("Syncing event {}", synced_event.id()))?;
         }
+            
+        self.state.campaign().hydrate_report_columns_for( campaign_ids.into_iter() ).await?;
+        self.state.account().hydrate_report_columns_for( account_ids.iter() ).await?;
+        self.state.account().hydrate_on_chain_columns_for( account_ids.iter() ).await?;
 
         Ok(())
     }

@@ -28,8 +28,8 @@ export const OnChainJobList = () => {
 
   return (
     <ExplorerLayout>
-      <Typography mt="0.5em" variant="h3">{ translate("explorer.handles.title") }</Typography>
-      <Typography variant="body">{ translate("explorer.handles.description") }</Typography>
+      <Typography mt="0.5em" variant="h3">{ translate("explorer.oracle.title") }</Typography>
+      <Typography variant="body">{ translate("explorer.oracle.description") }</Typography>
       <List disableAuthentication filters={filters} exporter={false}>
         <Datagrid rowClick={false} bulkActionButtons={false}>
           <TextField source="id" />

@@ -2,7 +2,7 @@ use super::*;
 use crate::on_chain::{
     MakeCollabsParam, MakeCollabsParamItem, MakeSubAccountCollabsParam, MakeSubAccountCollabsParamItem,
 };
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 impl OnChainJob {
     pub async fn admin_make_collabs_make_call(&self) -> anyhow::Result<Option<AsamiFunctionCall>> {
@@ -69,12 +69,10 @@ impl OnChainJob {
     /// When an OnChainJob for making collabs is done, we sync the collabs and campaigns
     /// state from the blockchain. We do not rely on events for this checks.
     pub async fn admin_make_collabs_on_state_change(self) -> anyhow::Result<Self> {
-        use OnChainJobStatus::*;
-
-        if self.status() == &Settled {
+        if *self.status() == OnChainJobStatus::Settled {
             let contract = &self.state.on_chain.asami_contract;
 
-            let Some(block) = self.block().and_then(|d| d.to_u64()).map(|u| U64::from(u)) else {
+            let Some(block) = self.block().and_then(|d| d.to_u64()).map(U64::from) else {
                 anyhow::bail!("Expected a valid block number for on chain job {}", self.id());
             };
 
@@ -93,7 +91,7 @@ impl OnChainJob {
 
             for link in self.on_chain_job_collab_vec().await? {
                 let campaign = link.collab().await?.campaign().await?;
-                campaigns.insert(campaign.attrs.id.clone(), campaign);
+                campaigns.insert(campaign.attrs.id, campaign);
             }
 
             for (_, campaign) in campaigns {
@@ -106,8 +104,14 @@ impl OnChainJob {
                 campaign.update().budget(budget.encode_hex()).save().await?;
             }
 
+            let mut account_ids = HashSet::new();
+            let mut handle_ids = HashSet::new();
+
             for link in self.on_chain_job_collab_vec().await? {
                 let collab = link.collab().await?;
+                account_ids.insert(collab.attrs.member_id.clone());
+                account_ids.insert(collab.attrs.advertiser_id.clone());
+                handle_ids.insert(collab.attrs.handle_id); 
 
                 // We do this exactly as it's done in the contract to have the same
                 // precision loss the contract may have.
@@ -117,6 +121,10 @@ impl OnChainJob {
                 let full_fee = fee + admin_fee;
                 collab.update().status(CollabStatus::Cleared).fee(Some(full_fee.encode_hex())).save().await?;
             }
+
+            self.state.account().hydrate_report_columns_for(account_ids.iter()).await?;
+            self.state.account().hydrate_on_chain_columns_for(account_ids.iter()).await?;
+            self.state.handle().hydrate_report_columns_for(handle_ids.into_iter()).await?;
         }
 
         Ok(self)
@@ -172,7 +180,7 @@ impl OnChainJob {
                     if collab.reward_u256() > *budget {
                         self.info(
                             "making_collabs",
-                            &format!("on double check, collab was over-budget {}", collab.id()),
+                            format!("on double check, collab was over-budget {}", collab.id()),
                         )
                         .await?;
                         collab.update().status(CollabStatus::Failed).save().await?;
@@ -199,7 +207,7 @@ impl OnChainJob {
                 None => {
                     self.info(
                         "making_collabs",
-                        &format!("we are not campaign trusted admin for collab {}", collab.id()),
+                        format!("we are not campaign trusted admin for collab {}", collab.id()),
                     )
                     .await?;
                     collab.info("making_collabs", "we_are_not_campaign_trusted_admin").await?;

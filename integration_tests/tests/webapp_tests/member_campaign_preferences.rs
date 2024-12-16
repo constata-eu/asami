@@ -1,5 +1,5 @@
 use api::models::Site;
-use graphql_client::GraphQLQuery;
+//use graphql_client::GraphQLQuery;
 use crate::support::gql::{create_campaign_preference::*, *};
 
 browser_test! { hides_ignored_and_shows_attempted_repost (mut d)

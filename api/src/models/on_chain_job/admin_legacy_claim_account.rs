@@ -45,21 +45,16 @@ impl OnChainJob {
             })
             .collect();
 
-        return Ok(Some(self.state.on_chain.legacy_contract.claim_accounts(params)));
+        Ok(Some(self.state.on_chain.legacy_contract.claim_accounts(params)))
     }
 
     pub async fn admin_legacy_claim_account_on_state_change(self) -> anyhow::Result<Self> {
-        use OnChainJobStatus::*;
-
-        match self.status() {
-            Settled => {
-                for link in self.on_chain_job_account_vec().await? {
-                    link.account().await?.update().processed_for_legacy_claim(true).save().await?;
-                }
+        if *self.status() == OnChainJobStatus::Settled {
+            for link in self.on_chain_job_account_vec().await? {
+                link.account().await?.update().processed_for_legacy_claim(true).save().await?;
             }
-            _ => {}
         }
 
-        return Ok(self);
+        Ok(self)
     }
 }
