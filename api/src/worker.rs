@@ -36,6 +36,16 @@ async fn main() {
         run!("Sync on-chain events" { s.synced_event().sync_on_chain_events().await });
     }];
 
+    every![10000, |s| { 
+        run!("Force account hydrations" { s.account().force_hydrate().await });
+        run!("Force handle hydrations" { s.handle().force_hydrate().await });
+        run!("Force campaign hydrations" { s.campaign().force_hydrate().await });
+    }];
+
+    every![10000, |s| {
+        run!("Attempt account on-chain hydrate" { s.account().hydrate_on_chain_values_just_in_case().await });
+    }];
+
     every![settings.x.crawl_cooldown_minutes * 60 * 1000, |s| {
         run!("sync_x_collabs" { s.campaign().sync_x_collabs().await });
     }];

@@ -7,6 +7,7 @@ import { getAuthKeys } from '../../lib/auth_provider';
 import BalanceCard from "../balance_card";
 import CollabList from "./collab_list";
 import HelpCard from "./help_card";
+import StatsCard from "../stats_card";
 import VersionTwoCard from "../version_2";
 import { XCampaign } from "./campaigns";
 
@@ -36,8 +37,9 @@ const Dashboard = () => {
     <ColumnsContainer>
       <LoggedInNavCard />
       <HelpCard handles={handles} campaigns={campaigns} />
-      <BalanceCard />
+      <StatsCard />
       <XSettings handles={handles} />
+      <BalanceCard />
       <CampaignList handles={handles}/>
     </ColumnsContainer>
     <CollabList />
@@ -75,13 +77,11 @@ const CampaignList = ({handles}) => {
   };
 
   const xHandle = handles.data?.filter((x) => x.site == 'X')[0];
-  const igHandle = handles.data?.filter((x) => x.site == 'INSTAGRAM')[0];
 
   return ( <>
     <Box id="campaign-list" display="flex" flexWrap="wrap">
-      { listContext.data.map((item) => item.campaignKind == "XREPOST" ?
-        <XCampaign key={item.id} handle={xHandle} campaign={item} prefsContext={prefsContext} setPreference={setPreference} /> :
-        <IgCampaign key={item.id} handle={igHandle} campaign={item} prefsContext={prefsContext} setPreference={setPreference} />
+      { listContext.data.map((item) =>
+        <XCampaign key={item.id} handle={xHandle} campaign={item} prefsContext={prefsContext} setPreference={setPreference} />
       )}
     </Box>
     </>

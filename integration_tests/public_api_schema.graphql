@@ -10,6 +10,14 @@ enum AccountStatus {
   BANNED
 }
 
+enum AuditLogSeverity {
+  TRACE
+  DEBUG
+  INFO
+  WARN
+  FAIL
+}
+
 enum CampaignKind {
   XREPOST
   IG_CLONE_POST
@@ -34,6 +42,29 @@ enum HandleStatus {
   INACTIVE
 }
 
+enum OnChainJobKind {
+  PROMOTE_SUB_ACCOUNTS
+  ADMIN_LEGACY_CLAIM_ACCOUNT
+  ADMIN_CLAIM_BALANCES_FREE
+  GASLESS_CLAIM_BALANCES
+  REIMBURSE_CAMPAIGNS
+  SUBMIT_REPORTS
+  MAKE_COLLABS
+  MAKE_SUB_ACCOUNT_COLLABS
+  CLAIM_FEE_POOL_SHARE
+  APPLY_VOTED_FEE_RATE
+}
+
+enum OnChainJobStatus {
+  SCHEDULED
+  SKIPPED
+  REVERTED
+  SUBMITTED
+  FAILED
+  CONFIRMED
+  SETTLED
+}
+
 enum Site {
   X
   INSTAGRAM
@@ -46,22 +77,27 @@ enum Site {
 }
 
 input AccountFilter {
-  ids: [String!]
-  idEq: String
-  addrEq: String
+  ids: [Int!]
+  idEq: Int
+  addrLike: String
+}
+
+input AuditLogEntryFilter {
+  ids: [Int!]
+  idEq: Int
 }
 
 input CampaignFilter {
   ids: [Int!]
   idEq: Int
-  accountIdEq: String
+  accountIdEq: Int
   budgetGt: String
   budgetLt: String
   budgetEq: String
   briefingHashEq: String
   briefingJsonLike: String
   statusNe: CampaignStatus
-  availableToAccountId: String
+  availableToAccountId: Int
 }
 
 input CampaignPreferenceFilter {
@@ -75,12 +111,12 @@ input CollabFilter {
   idEq: Int
   campaignIdEq: Int
   campaignIdIn: [Int!]
-  advertiserIdEq: String
-  advertiserIdIn: [String!]
+  advertiserIdEq: Int
+  advertiserIdIn: [Int!]
   handleIdEq: Int
   handleIdIn: [Int!]
-  memberIdEq: String
-  memberIdIn: [String!]
+  memberIdEq: Int
+  memberIdIn: [Int!]
 }
 
 "The input for creating a new CampaignRequest."
@@ -114,7 +150,12 @@ input HandleFilter {
   statusIn: [HandleStatus!]
   siteEq: Site
   userIdLike: String
-  accountIdEq: String
+  accountIdEq: Int
+}
+
+input OnChainJobFilter {
+  ids: [Int!]
+  idEq: Int
 }
 
 """
@@ -133,10 +174,28 @@ input HandleFilter {
 """
 scalar DateTime
 
+"""
+  128 bit representation of a fixed-precision decimal number.
+
+  The finite set of values of `Decimal` scalar are of the form
+  m / 10<sup>e</sup>, where m is an integer such that
+  -2<sup>96</sup> < m < 2<sup>96</sup>, and e is an integer between 0 and 28
+  inclusive.
+
+  Always serializes as `String`. But may be deserialized from `Int` and
+  `Float` values too. It's not recommended to deserialize from a `Float`
+  directly, as the floating point representation may be unexpected.
+
+  See also [`rust_decimal`] crate for details.
+
+  [`rust_decimal`]: https://docs.rs/rust_decimal
+"""
+scalar Decimal
+
 "A summary view of everything important regarding a member account."
 type Account {
-  "Account ID as stored in the ASAMI contract."
-  id: String!
+  "Account ID as integer"
+  id: Int!
   "Status of this account claim request, if any."
   status: AccountStatus!
   "The address of a claimed account."
@@ -153,6 +212,31 @@ type Account {
   rbtcBalance: String!
   "Is the account happy with receiving gasless claims if they are allowed in the smart contract?"
   allowsGasless: Boolean!
+  "Date in which this account was created"
+  createdAt: DateTime!
+  "Collabs made"
+  totalCollabs: Int!
+  "Rewards from collabs made"
+  totalCollabRewards: String!
+  "Campaigns created"
+  totalCampaigns: Int!
+  "Collabs received in campaings"
+  totalCollabsReceived: Int!
+  "Total spent on collabs received"
+  totalSpent: String!
+}
+
+"An message logged for any part of the system"
+type AuditLogEntry {
+  "Unique numeric identifier of this resource"
+  id: Int!
+  severity: AuditLogSeverity!
+  createdAt: DateTime!
+  kind: String!
+  subkind: String!
+  context: String!
+  loggableType: String
+  loggableId: String
 }
 
 "A campaign"
@@ -160,7 +244,7 @@ type Campaign {
   "Unique numeric identifier of this resource"
   id: Int!
   "The id of the account that created this."
-  accountId: String!
+  accountId: Int!
   "The total budget for this campaign to be collected by users."
   budget: String!
   "The kind of campaign, what's expected from the member."
@@ -179,6 +263,12 @@ type Campaign {
   topicIds: [Int!]!
   "The reward you would receive. None means it does not apply."
   youWouldReceive: String
+  "How many collabs did the campaign get"
+  totalCollabs: Int!
+  "How much the campaign has spent so far in rewards"
+  totalSpent: String!
+  "The campaign total budget: remaining + spent"
+  totalBudget: String!
 }
 
 "Internal UX preferences for specific campaigns"
@@ -200,11 +290,11 @@ type Collab {
   "The campaign whose content was reposted."
   campaignId: Int!
   "The person that created the campaign."
-  advertiserId: String!
+  advertiserId: Int!
   "The handle that reposted the content."
   handleId: Int!
   "The member who owns the handle."
-  memberId: String!
+  memberId: Int!
   "Status of this collab."
   status: CollabStatus!
   "Reason to dispute this collab, if any."
@@ -213,6 +303,7 @@ type Collab {
   reward: String!
   "The fee deducted by asami from the gross amount, field only available when reward cleared."
   fee: String
+  collabTriggerUniqueId: String!
 }
 
 "A request to verify a handle for an account."
@@ -226,7 +317,7 @@ type Handle {
   "Unique numeric identifier of this resource"
   id: Int!
   "The id of the account that made the request."
-  accountId: String!
+  accountId: Int!
   "The social network of this handle: X, Instagram, Nostr."
   site: Site!
   "The username on the given social network. This may change by the user, it may not be a unique id."
@@ -237,6 +328,10 @@ type Handle {
   score: String
   "Status of this handle."
   status: HandleStatus!
+  "Collabs made"
+  totalCollabs: Int!
+  "Rewards from collabs made"
+  totalCollabRewards: String!
 }
 
 type ListMetadata {
@@ -252,6 +347,30 @@ type Mutation {
   createClaimAccountRequest(input: CreateClaimAccountRequestInput!): Account!
   createCampaignPreference(input: CreateCampaignPreferenceInput!): CampaignPreference!
   createEmailLoginLink(email: String!): EmailLoginLink!
+}
+
+"A contract call made by the campaign manager or oracle."
+type OnChainJob {
+  "Unique numeric identifier of this resource"
+  id: Int!
+  "The status of this job"
+  status: OnChainJobStatus!
+  "What kind of job is it, corresponds to the contract function being called."
+  kind: OnChainJobKind!
+  "The transaction hash if the job has been submitted."
+  txHash: String
+  "Gas used making this call"
+  gasUsed: String
+  "Nonce used to submit the transaction"
+  nonce: String
+  "Block in which the transaction was confirmed"
+  block: Decimal
+  "An extended description about the job status as a single line"
+  statusLine: String
+  "When this job will be attempted"
+  sleepUntil: DateTime!
+  "When this job was first scheduled"
+  createdAt: DateTime!
 }
 
 type Query {
@@ -271,6 +390,13 @@ type Query {
   CampaignPreference(id: Int!): CampaignPreference!
   allCampaignPreferences(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignPreferenceFilter): [CampaignPreference!]!
   _allCampaignPreferencesMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CampaignPreferenceFilter): ListMetadata!
+  OnChainJob(id: Int!): OnChainJob!
+  allOnChainJobs(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: OnChainJobFilter): [OnChainJob!]!
+  _allOnChainJobsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: OnChainJobFilter): ListMetadata!
+  AuditLogEntry(id: Int!): AuditLogEntry!
+  allAuditLogEntries(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: AuditLogEntryFilter): [AuditLogEntry!]!
+  _allAuditLogEntriesMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: AuditLogEntryFilter): ListMetadata!
+  Stats(id: Int!): Stats!
 }
 
 "A campaign started by an advertiser"
@@ -280,7 +406,7 @@ type Session {
   "The user associated to this session."
   userId: Int!
   "The account IDS associated with this user."
-  accountId: String!
+  accountId: Int!
   "The pubkey associated to this session."
   pubkey: String!
   "The content to share."
@@ -289,4 +415,20 @@ type Session {
   createdAt: DateTime!
   "The last time this session was updated."
   updatedAt: DateTime
+}
+
+"A contract call made by the campaign manager or oracle."
+type Stats {
+  "Unique numeric identifier of this resource"
+  id: Int!
+  "Handles that made at least one collab"
+  totalActiveHandles: Int!
+  "How many collabs were made"
+  totalCollabs: Int!
+  "How many campaigns were run"
+  totalCampaigns: Int!
+  "How much money was paid in rewards"
+  totalRewardsPaid: String!
+  "Date in which these stats were calculated"
+  date: DateTime!
 }

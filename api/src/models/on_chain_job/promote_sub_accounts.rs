@@ -27,21 +27,19 @@ impl OnChainJob {
             })
             .collect();
 
-        return Ok(Some(self.state.on_chain.asami_contract.promote_sub_accounts(params)));
+        Ok(Some(self.state.on_chain.asami_contract.promote_sub_accounts(params)))
     }
 
     pub async fn promote_sub_accounts_on_state_change(self) -> anyhow::Result<Self> {
-        use OnChainJobStatus::*;
-
-        match self.status() {
-            Settled => {
-                for link in self.on_chain_job_account_vec().await? {
-                    link.account().await?.update().status(AccountStatus::Claimed).save().await?;
-                }
+        if *self.status() == OnChainJobStatus::Settled {
+            for link in self.on_chain_job_account_vec().await? {
+                link.account().await?.update().status(AccountStatus::Claimed).save().await?;
             }
-            _ => {}
+            self.state.account().hydrate_on_chain_columns_for(
+                self.on_chain_job_account_vec().await?.iter().map(|i| i.account_id() )
+            ).await?;
         }
 
-        return Ok(self);
+        Ok(self)
     }
 }

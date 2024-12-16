@@ -23,6 +23,9 @@ mutation CreateCampaignFromLink($input: CreateCampaignFromLinkInput!) {
     createdAt
     topicIds
     youWouldReceive
+    totalCollabs
+    totalSpent
+    totalBudget
     __typename
   }
 }
@@ -39,6 +42,9 @@ mutation UpdateCampaign($id: Int!) {
     createdAt
     topicIds
     youWouldReceive
+    totalCollabs
+    totalSpent
+    totalBudget
     __typename
   }
 }
@@ -51,6 +57,8 @@ mutation CreateHandle($input: CreateHandleInput!) {
     userId
     score
     status
+    totalCollabs
+    totalCollabRewards
     __typename
   }
 }
@@ -65,6 +73,12 @@ mutation CreateGaslessAllowance {
     docBalance
     rbtcBalance
     allowsGasless
+    createdAt
+    totalCollabs
+    totalCollabRewards
+    totalCampaigns
+    totalCollabsReceived
+    totalSpent
     __typename
   }
 }
@@ -79,6 +93,12 @@ mutation CreateClaimAccountRequest($input: CreateClaimAccountRequestInput!) {
     docBalance
     rbtcBalance
     allowsGasless
+    createdAt
+    totalCollabs
+    totalCollabRewards
+    totalCampaigns
+    totalCollabsReceived
+    totalSpent
     __typename
   }
 }
@@ -108,6 +128,12 @@ query Account($id: String!) {
     docBalance
     rbtcBalance
     allowsGasless
+    createdAt
+    totalCollabs
+    totalCollabRewards
+    totalCampaigns
+    totalCollabsReceived
+    totalSpent
     __typename
   }
 }
@@ -122,6 +148,12 @@ query AllAccounts($page: Int, $perPage: Int, $sortField: String, $sortOrder: Str
     docBalance
     rbtcBalance
     allowsGasless
+    createdAt
+    totalCollabs
+    totalCollabRewards
+    totalCampaigns
+    totalCollabsReceived
+    totalSpent
     __typename
   }
 }
@@ -144,6 +176,9 @@ query Campaign($id: Int!) {
     createdAt
     topicIds
     youWouldReceive
+    totalCollabs
+    totalSpent
+    totalBudget
     __typename
   }
 }
@@ -160,6 +195,9 @@ query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: St
     createdAt
     topicIds
     youWouldReceive
+    totalCollabs
+    totalSpent
+    totalBudget
     __typename
   }
 }
@@ -178,6 +216,8 @@ query Handle($id: Int!) {
     userId
     score
     status
+    totalCollabs
+    totalCollabRewards
     __typename
   }
 }
@@ -190,6 +230,8 @@ query AllHandles($page: Int, $perPage: Int, $sortField: String, $sortOrder: Stri
     userId
     score
     status
+    totalCollabs
+    totalCollabRewards
     __typename
   }
 }
@@ -210,6 +252,7 @@ query Collab($id: Int!) {
     disputeReason
     reward
     fee
+    collabTriggerUniqueId
     __typename
   }
 }
@@ -224,6 +267,7 @@ query AllCollabs($page: Int, $perPage: Int, $sortField: String, $sortOrder: Stri
     disputeReason
     reward
     fee
+    collabTriggerUniqueId
     __typename
   }
 }
@@ -254,6 +298,85 @@ query AllCampaignPreferences($page: Int, $perPage: Int, $sortField: String, $sor
 query AllCampaignPreferencesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignPreferenceFilter) {
   _allCampaignPreferencesMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
     count
+    __typename
+  }
+}
+query OnChainJob($id: Int!) {
+  OnChainJob(id: $id) {
+    id
+    status
+    kind
+    txHash
+    gasUsed
+    nonce
+    block
+    statusLine
+    sleepUntil
+    createdAt
+    __typename
+  }
+}
+query AllOnChainJobs($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: OnChainJobFilter) {
+  allOnChainJobs(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    status
+    kind
+    txHash
+    gasUsed
+    nonce
+    block
+    statusLine
+    sleepUntil
+    createdAt
+    __typename
+  }
+}
+query AllOnChainJobsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: OnChainJobFilter) {
+  _allOnChainJobsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query AuditLogEntry($id: Int!) {
+  AuditLogEntry(id: $id) {
+    id
+    severity
+    createdAt
+    kind
+    subkind
+    context
+    loggableType
+    loggableId
+    __typename
+  }
+}
+query AllAuditLogEntries($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: AuditLogEntryFilter) {
+  allAuditLogEntries(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    severity
+    createdAt
+    kind
+    subkind
+    context
+    loggableType
+    loggableId
+    __typename
+  }
+}
+query AllAuditLogEntriesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: AuditLogEntryFilter) {
+  _allAuditLogEntriesMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query Stats($id: Int!) {
+  Stats(id: $id) {
+    id
+    totalActiveHandles
+    totalCollabs
+    totalCampaigns
+    totalRewardsPaid
+    date
     __typename
   }
 }

@@ -209,7 +209,7 @@ impl CurrentSession {
         let lookup_key = match auth_method_kind {
             AuthMethodKind::OneTimeToken => {
                 auth_try!(
-                    app.one_time_token().select().used_eq(false).value_eq(&auth_data.to_string()).one().await,
+                    app.one_time_token().select().used_eq(false).value_eq(auth_data.to_string()).one().await,
                     "invalid_one_time_token"
                 ).update().used(true).save().await?.attrs.lookup_key
             }

@@ -463,7 +463,7 @@ impl<'b> ApiClient<'b> {
       self.gql(
         &gql::AllCampaigns::build_query(gql::all_campaigns::Variables{
           filter: Some(gql::all_campaigns::CampaignFilter {
-            available_to_account_id: Some(self.account().await.attrs.id),
+            available_to_account_id: Some(api::models::hex_to_i32(&self.account().await.attrs.id).unwrap().into()),
             ids: None,
             id_eq: None,
             account_id_eq: None,

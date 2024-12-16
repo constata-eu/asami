@@ -28,7 +28,7 @@ impl OnChainJob {
                 .on_chain_job_campaign()
                 .insert(InsertOnChainJobCampaign {
                     job_id: self.attrs.id,
-                    campaign_id: c.attrs.id.clone(),
+                    campaign_id: c.attrs.id,
                 })
                 .save()
                 .await?;
@@ -44,23 +44,18 @@ impl OnChainJob {
             return Ok(None);
         }
 
-        return Ok(Some(self.state.on_chain.asami_contract.submit_reports(params)));
+        Ok(Some(self.state.on_chain.asami_contract.submit_reports(params)))
     }
 
     pub async fn submit_reports_on_state_change(self) -> anyhow::Result<Self> {
-        use OnChainJobStatus::*;
-
-        match self.status() {
-            Settled => {
-                for link in self.on_chain_job_campaign_vec().await? {
-                    let campaign = link.campaign().await?;
-                    let report_hash = campaign.find_on_chain().await?.report_hash;
-                    campaign.update().report_hash(Some(report_hash.encode_hex())).save().await?;
-                }
+        if *self.status() == OnChainJobStatus::Settled {
+            for link in self.on_chain_job_campaign_vec().await? {
+                let campaign = link.campaign().await?;
+                let report_hash = campaign.find_on_chain().await?.report_hash;
+                campaign.update().report_hash(Some(report_hash.encode_hex())).save().await?;
             }
-            _ => {}
         }
 
-        return Ok(self);
+        Ok(self)
     }
 }

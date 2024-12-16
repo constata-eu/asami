@@ -10,7 +10,7 @@ pub struct Campaign {
     #[graphql(description = "Unique numeric identifier of this resource")]
     id: i32,
     #[graphql(description = "The id of the account that created this.")]
-    account_id: String,
+    account_id: i32,
     #[graphql(description = "The total budget for this campaign to be collected by users.")]
     budget: String,
     #[graphql(description = "The kind of campaign, what's expected from the member.")]
@@ -29,6 +29,12 @@ pub struct Campaign {
     topic_ids: Vec<i32>,
     #[graphql(description = "The reward you would receive. None means it does not apply.")]
     you_would_receive: Option<String>,
+    #[graphql(description = "How many collabs did the campaign get")]
+    total_collabs: i32,
+    #[graphql(description = "How much the campaign has spent so far in rewards")]
+    total_spent: String,
+    #[graphql(description = "The campaign total budget: remaining + spent")]
+    total_budget: String,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -36,21 +42,22 @@ pub struct Campaign {
 pub struct CampaignFilter {
     ids: Option<Vec<i32>>,
     id_eq: Option<i32>,
-    account_id_eq: Option<String>,
+    account_id_eq: Option<i32>,
     budget_gt: Option<String>,
     budget_lt: Option<String>,
     budget_eq: Option<String>,
-    briefing_hash_eq: Option<String>,
+    briefing_hash_like: Option<String>,
     briefing_json_like: Option<String>,
     status_ne: Option<CampaignStatus>,
-    available_to_account_id: Option<String>,
+    status_eq: Option<CampaignStatus>,
+    available_to_account_id: Option<i32>,
 }
 
-async fn make_available_to_account_id_filter(context: &Context, account_id: String) -> FieldResult<CampaignFilter> {
+async fn make_available_to_account_id_filter(context: &Context, account_id: i32) -> FieldResult<CampaignFilter> {
     let offers = context
         .app
         .account()
-        .find(account_id)
+        .find(&i32_to_hex(account_id))
         .await?
         .campaign_offers()
         .await?
@@ -68,6 +75,11 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     fn sort_field_to_order_by(field: &str) -> Option<models::CampaignOrderBy> {
         match field {
             "id" => Some(CampaignOrderBy::Id),
+            "budget" => Some(CampaignOrderBy::Budget),
+            "totalCollabs" => Some(CampaignOrderBy::TotalCollabs),
+            "totalSpent" => Some(CampaignOrderBy::TotalSpent),
+            "totalBudget" => Some(CampaignOrderBy::TotalBudget),
+            "validUntil" => Some(CampaignOrderBy::ValidUntil),
             "createdAt" => Some(CampaignOrderBy::CreatedAt),
             _ => None,
         }
@@ -102,11 +114,15 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
         if let Some(f) = filter {
             Ok(models::SelectCampaign {
                 id_in: f.ids,
-                account_id_eq: f.account_id_eq,
+                account_id_eq: f.account_id_eq.map(i32_to_hex),
                 id_eq: f.id_eq,
                 budget_gt: f.budget_gt,
+                budget_lt: f.budget_lt,
+                budget_eq: f.budget_eq,
+                status_eq: f.status_eq,
                 status_ne: f.status_ne,
                 briefing_json_like: into_like_search(f.briefing_json_like),
+                briefing_hash_like: into_like_search(f.briefing_hash_like),
                 ..Default::default()
             })
         } else {
@@ -129,7 +145,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
         let budget = d.available_budget().await.unwrap_or(d.budget_u256()).encode_hex();
         Ok(Campaign {
             id: d.attrs.id,
-            account_id: d.attrs.account_id,
+            account_id: hex_to_i32(&d.attrs.account_id)?,
             budget,
             valid_until: d.attrs.valid_until,
             campaign_kind: d.attrs.campaign_kind,
@@ -139,6 +155,9 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
             status: d.attrs.status,
             topic_ids,
             you_would_receive,
+            total_collabs: d.attrs.total_collabs,
+            total_spent: d.attrs.total_spent,
+            total_budget: d.attrs.total_budget,
         })
     }
 }

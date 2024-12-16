@@ -18,6 +18,6 @@ impl OnChainJob {
             return Ok(None);
         }
 
-        return Ok(Some(c.apply_voted_fee_rate()));
+        Ok(Some(c.apply_voted_fee_rate()))
     }
 }

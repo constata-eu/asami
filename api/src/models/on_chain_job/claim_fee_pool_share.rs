@@ -37,14 +37,7 @@ impl OnChainJob {
                 continue;
             }
 
-            self.state
-                .on_chain_job_account()
-                .insert(InsertOnChainJobAccount {
-                    job_id: self.attrs.id,
-                    account_id: a.attrs.id.clone(),
-                })
-                .save()
-                .await?;
+            self.link_account(&a).await?;
 
             params.push(addr);
 
@@ -60,6 +53,18 @@ impl OnChainJob {
             return Ok(None);
         }
 
-        return Ok(Some(c.claim_fee_pool_share(params)));
+        Ok(Some(c.claim_fee_pool_share(params)))
+    }
+
+    /// When an OnChainJob for making collabs is done, we sync the collabs and campaigns
+    /// state from the blockchain. We do not rely on events for this checks.
+    pub async fn claim_fee_pool_share_on_state_change(self) -> anyhow::Result<Self> {
+        if *self.status() == OnChainJobStatus::Settled {
+            self.state.account().hydrate_on_chain_columns_for(
+                self.on_chain_job_account_vec().await?.iter().map(|i| i.account_id() )
+            ).await?;
+        }
+
+        Ok(self)
     }
 }

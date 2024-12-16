@@ -10,7 +10,7 @@ pub struct Handle {
     #[graphql(description = "Unique numeric identifier of this resource")]
     id: i32,
     #[graphql(description = "The id of the account that made the request.")]
-    account_id: String,
+    account_id: i32,
     #[graphql(description = "The social network of this handle: X, Instagram, Nostr.")]
     site: Site,
     #[graphql(
@@ -23,6 +23,10 @@ pub struct Handle {
     score: Option<String>,
     #[graphql(description = "Status of this handle.")]
     status: HandleStatus,
+    #[graphql(description = "Collabs made")]
+    total_collabs: i32,
+    #[graphql(description = "Rewards from collabs made")]
+    total_collab_rewards: String,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -34,7 +38,7 @@ pub struct HandleFilter {
     status_in: Option<Vec<HandleStatus>>,
     site_eq: Option<Site>,
     user_id_like: Option<String>,
-    account_id_eq: Option<String>,
+    account_id_eq: Option<i32>,
 }
 
 #[rocket::async_trait]
@@ -42,11 +46,14 @@ impl Showable<models::Handle, HandleFilter> for Handle {
     fn sort_field_to_order_by(field: &str) -> Option<models::HandleOrderBy> {
         match field {
             "id" => Some(HandleOrderBy::Id),
+            "score" => Some(HandleOrderBy::Score),
+            "totalCollabs" => Some(HandleOrderBy::TotalCollabs),
+            "totalCollabRewards" => Some(HandleOrderBy::TotalCollabRewards),
             _ => None,
         }
     }
 
-    fn filter_to_select(context: &Context, filter: Option<HandleFilter>) -> FieldResult<models::SelectHandle> {
+    fn filter_to_select(_context: &Context, filter: Option<HandleFilter>) -> FieldResult<models::SelectHandle> {
         if let Some(f) = filter {
             Ok(models::SelectHandle {
                 id_in: f.ids,
@@ -55,21 +62,17 @@ impl Showable<models::Handle, HandleFilter> for Handle {
                 status_in: f.status_in,
                 site_eq: f.site_eq,
                 user_id_like: f.user_id_like,
-                account_id_eq: Some(context.account_id()?),
+                account_id_eq: f.account_id_eq.map(i32_to_hex),
                 ..Default::default()
             })
         } else {
-            Ok(models::SelectHandle {
-                account_id_eq: Some(context.account_id()?),
-                ..Default::default()
-            })
+            Ok(Default::default())
         }
     }
 
-    fn select_by_id(context: &Context, id: i32) -> FieldResult<models::SelectHandle> {
+    fn select_by_id(_context: &Context, id: i32) -> FieldResult<models::SelectHandle> {
         Ok(models::SelectHandle {
             id_eq: Some(id),
-            account_id_eq: Some(context.account_id()?),
             ..Default::default()
         })
     }
@@ -77,12 +80,14 @@ impl Showable<models::Handle, HandleFilter> for Handle {
     async fn db_to_graphql(_context: &Context, d: models::Handle) -> AsamiResult<Self> {
         Ok(Handle {
             id: d.attrs.id,
-            account_id: d.attrs.account_id,
+            account_id: hex_to_i32(&d.attrs.account_id)?,
             site: d.attrs.site,
             username: d.attrs.username,
             user_id: d.attrs.user_id,
             score: d.attrs.score,
             status: d.attrs.status,
+            total_collabs: d.attrs.total_collabs,
+            total_collab_rewards: d.attrs.total_collab_rewards,
         })
     }
 }

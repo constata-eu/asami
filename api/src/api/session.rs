@@ -12,7 +12,7 @@ pub struct Session {
     #[graphql(description = "The user associated to this session.")]
     user_id: i32,
     #[graphql(description = "The account IDS associated with this user.")]
-    account_id: String,
+    account_id: i32,
     #[graphql(description = "The pubkey associated to this session.")]
     pubkey: String,
     #[graphql(description = "The content to share.")]
@@ -71,7 +71,7 @@ impl Showable<models::Session, SessionFilter> for Session {
         Ok(Session {
             id: d.attrs.id,
             user_id: d.attrs.user_id,
-            account_id: d.attrs.account_id,
+            account_id: hex_to_i32(&d.attrs.account_id)?,
             pubkey: d.attrs.pubkey,
             nonce: d.attrs.nonce.to_string(),
             created_at: d.attrs.created_at,

@@ -1,4 +1,3 @@
-
 export const contentId = (campaign) => JSON.parse(campaign.briefingJson)
 
 export const viewPostUrl = (campaign) => {

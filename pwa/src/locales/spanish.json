@@ -1,12 +1,111 @@
 {
   "resources": {
+    "Account": {
+      "fields": {
+        "unclaimedAsamiBalance": "ASAMI pendientes",
+        "unclaimedDocBalance": "DOC pendientes",
+        "addr": "Billetera",
+        "totalCollabs": "Colaboraciones",
+        "totalCollabRewards": "Cobró",
+        "totalCampaigns": "Campañas creadas",
+        "totalCollabsReceived": "Le colaboraron",
+        "totalSpent": "Gastó",
+        "createdAt": "Se unió el",
+        "asamiBalance": "ASAMI",
+        "rbtcBalance": "RBTC",
+        "docBalance": "DOC",
+        "allowsGasless": "Retira sin RBTC",
+        "idEq": "por ID",
+        "addrLike": "por billetera"
+      }
+    },
+    "Campaign": {
+      "fields": {
+        "briefingJson": "ID en X",
+        "status": "Estado",
+        "totalCollabs": "Colaboraciones",
+        "budget": "Disponible",
+        "totalSpent": "Gastado",
+        "totalBudget": "Total",
+        "validUntil": "Válida hasta",
+        "createdAt": "Creada el",
+        "accountId": "Miembro",
+        "briefingHash": "ID en el contrato",
+        "idEq": "por ID",
+        "briefingJsonLike": "por ID en X",
+        "briefingHashLike": "por ID en el contrato",
+        "accountIdEq": "por miembro",
+        "statusEq": "estado es",
+        "statusNe": "estado no es"
+      }
+    },
+    "Handle": {
+      "fields": {
+        "username": "Usuario en X",
+        "score": "Nivel de influencia",
+        "status": "Estado",
+        "totalCollabs": "Colaboraciones",
+        "totalCollabRewards": "Total cobrado",
+        "accountId": "Miembro",
+        "site": "Red Social",
+        "idEq": "por ID",
+        "usernameLike": "por usuario en X",
+        "accountIdEq": "por miembro"
+      }
+    },
+    "Collab": {
+      "fields": {
+        "campaignId": "Campaña",
+        "handleId": "Cuenta",
+        "reward": "Recompensa",
+        "fee": "Comisión",
+        "status": "Estado",
+        "advertiserId": "Miembro Anunciante",
+        "memberId": "Miembro colaborador",
+        "disputeReason": "Detalle adicional",
+        "collabTriggerUniqueId": "Disparador en X",
+        "idEq": "por ID",
+        "campaignIdEq": "por campaña",
+        "handleIdEq": "por cuenta",
+        "advertiserIdEq": "por miembro anunciante",
+        "memberIdEq": "por miembro colaborador",
+        "collabTriggerUniqueIdLike": "por disparador",
+        "statusEq": "estado es",
+        "statusNe": "estado no es"
+      }
+    },
+    "OnChainJob": {
+      "fields": {
+        "status": "Estado",
+        "kind": "Trabajo",
+        "sleepUntil": "A ejecutarse el",
+        "createdAt": "Creado el",
+        "txHash": "TX en blockchain",
+        "gasUsed": "Gas usado",
+        "nonce": "Nonce",
+        "block": "Bloque",
+        "statusLine": "Mensaje"
+      }
+    },
+    "Stats": {
+      "fields": {
+        "totalActiveHandles": "Cuentas de X activas",
+        "totalCollabs": "Colaboraciones",
+        "totalCampaigns": "Campañas",
+        "totalRewardsPaid": "Pagos"
+      }
+    }
   },
 	"campaign_kinds": {
 		"XREPOST": "Repost en X",
 		"IG_CLONE_POST": "Publicar en Instagram"
 	},
 	"footer": {
-    "built_with": "Hecho con"
+    "built_with": "Smart contract bitcoiner en",
+    "tech_sponsor": "Sponsor de tecnología",
+    "funds_sponsor": "Sponsor de campañas",
+    "with_support_from": "Apoyo general de",
+    "campaign_manager": "Administrado por"
   },
   "campaign_list": {
     "title": "Campañas activas",
@@ -345,5 +444,40 @@
 		"title": "La versión 2 ya está aquí 🎉",
 		"text": "Batteries included! Now you can get some RBTC with your rewards, so your wallet is always ready to use your rewards in the rootstock ecosystem.",
 		"text": "Con baterías incluidas! Ahora puedes recibir RBTC con tus recompensas, para que tu billetera esté siempre lista para ser usada con otras aplicaciones de la red rootstock."
+	},
+	"explorer": {
+	  "menu": {
+	    "stats": "Datos del club",
+	    "handles": "Cuentas",
+	    "accounts": "Miembros",
+	    "campaigns": "Campañas",
+	    "collabs": "Colaboraciones",
+	    "oracle": "Oráculo"
+	  },
+	  "stats": {
+	    "title": "Datos del club",
+	    "description": "Estas son las estadísticas generales del club a la fecha. Puedes explorar las actividades por Miembro, Campaña, Cuenta o Colaboraciones",
+	    "explore_btn": "Explorar todo"
+	  },
+	  "campaigns": {
+	    "title": "Campañas",
+	    "description": "Estas son todas las campañas creadas por los miembros anunciantes."
+	  },
+	  "handles": {
+	    "title": "Cuentas",
+	    "description": "Estas son las cuentas de X de miembros que hacen colaboraciones. Están calificadas por el administrador de campañas." 
+	  },
+	  "accounts": {
+	    "title": "Miembros",
+	    "description": "Todos los miembros del club que pueden estar creando campañás, colaborando, o ambas."
+	  },
+	  "collabs": {
+	    "title": "Colaboraciones",
+	    "description": "Una colaboración ocurre cuando una Cuenta repostea, participando en una Campaña."
+	  },
+	  "oracle": {
+	    "title": "Oráculo",
+	    "description": "Estas son las tareas de este administrador de campañas. Es el único administrador a la fecha."
+	  }
 	}
 }

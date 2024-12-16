@@ -7,8 +7,8 @@ use super::{
 #[serde(rename_all = "camelCase")]
 #[graphql(description = "A summary view of everything important regarding a member account.")]
 pub struct Account {
-    #[graphql(description = "Account ID as stored in the ASAMI contract.")]
-    id: String,
+    #[graphql(description = "Account ID as integer")]
+    id: i32,
     #[graphql(description = "Status of this account claim request, if any.")]
     status: AccountStatus,
     #[graphql(description = "The address of a claimed account.")]
@@ -27,14 +27,27 @@ pub struct Account {
         description = "Is the account happy with receiving gasless claims if they are allowed in the smart contract?"
     )]
     allows_gasless: bool,
+    #[graphql(description = "Date in which this account was created")]
+    created_at: UtcDateTime,
+
+    #[graphql(description = "Collabs made")]
+    total_collabs: i32,
+    #[graphql(description = "Rewards from collabs made")]
+    total_collab_rewards: String,
+    #[graphql(description = "Campaigns created")]
+    total_campaigns: i32,
+    #[graphql(description = "Collabs received in campaings")]
+    total_collabs_received: i32,
+    #[graphql(description = "Total spent on collabs received")]
+    total_spent: String,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountFilter {
-    ids: Option<Vec<String>>,
-    id_eq: Option<String>,
-    addr_eq: Option<String>,
+    ids: Option<Vec<i32>>,
+    id_eq: Option<i32>,
+    addr_like: Option<String>,
 }
 
 #[rocket::async_trait]
@@ -42,6 +55,17 @@ impl Showable<models::Account, AccountFilter> for Account {
     fn sort_field_to_order_by(field: &str) -> Option<models::AccountOrderBy> {
         match field {
             "id" => Some(AccountOrderBy::Id),
+            "asamiBalance" => Some(AccountOrderBy::AsamiBalance),
+            "docBalance" => Some(AccountOrderBy::DocBalance),
+            "rbtcBalance" => Some(AccountOrderBy::RbtcBalance),
+            "unclaimedAsamiBalance" => Some(AccountOrderBy::UnclaimedAsamiBalance),
+            "unclaimedDocBalance" => Some(AccountOrderBy::UnclaimedDocBalance),
+            "totalCollabs" => Some(AccountOrderBy::TotalCollabs),
+            "totalCollabRewards" => Some(AccountOrderBy::TotalCollabRewards),
+            "totalCampaigns" => Some(AccountOrderBy::TotalCampaigns),
+            "totalCollabsReceived" => Some(AccountOrderBy::TotalCollabsReceived),
+            "totalSpent" => Some(AccountOrderBy::TotalSpent),
+            "createdAt" => Some(AccountOrderBy::CreatedAt),
             _ => None,
         }
     }
@@ -49,9 +73,9 @@ impl Showable<models::Account, AccountFilter> for Account {
     fn filter_to_select(_context: &Context, filter: Option<AccountFilter>) -> FieldResult<models::SelectAccount> {
         if let Some(f) = filter {
             Ok(models::SelectAccount {
-                id_in: f.ids,
-                id_eq: f.id_eq,
-                addr_eq: f.addr_eq,
+                id_in: f.ids.map(|ids| ids.into_iter().map(i32_to_hex).collect() ),
+                id_eq: f.id_eq.map(i32_to_hex),
+                addr_like: into_like_search(f.addr_like),
                 ..Default::default()
             })
         } else {
@@ -61,54 +85,30 @@ impl Showable<models::Account, AccountFilter> for Account {
 
     fn select_by_id(_context: &Context, id: String) -> FieldResult<models::SelectAccount> {
         Ok(models::SelectAccount {
-            id_eq: Some(id),
+            id_eq: Some(wei(id).encode_hex()),
             ..Default::default()
         })
     }
 
     async fn db_to_graphql(_context: &Context, d: models::Account) -> AsamiResult<Self> {
-        let asami = &d.state.on_chain.asami_contract;
-        let address = d.decoded_addr()?;
-
-        let (doc_balance, asami_balance, rbtc_balance, unclaimed_doc_balance, unclaimed_asami_balance) = match address {
-            Some(address) => {
-                let account = asami.accounts(address).call().await?;
-                (
-                    d.state.on_chain.doc_contract.balance_of(address).call().await?.encode_hex(),
-                    asami.balance_of(address).call().await?.encode_hex(),
-                    asami.client().get_balance(address, None).await?.encode_hex(),
-                    account.4.encode_hex(),
-                    account.3.encode_hex(),
-                )
-            }
-            None => {
-                let admin = d.state.settings.rsk.admin_address;
-                let (unclaimed_doc, unclaimed_asami) = asami
-                    .get_sub_account(admin, u256(d.id()))
-                    .call()
-                    .await
-                    .map(|s| {
-                        (
-                            s.unclaimed_doc_balance.encode_hex(),
-                            s.unclaimed_asami_balance.encode_hex(),
-                        )
-                    })
-                    .unwrap_or_else(|_| (weihex("0"), weihex("0")));
-
-                (weihex("0"), weihex("0"), weihex("0"), unclaimed_doc, unclaimed_asami)
-            }
-        };
+        let addr = d.decoded_addr()?.map(|x| format!("{x:?}"));
 
         Ok(Account {
-            id: d.attrs.id,
+            id: hex_to_i32(&d.attrs.id)?,
             status: d.attrs.status,
-            addr: address.map(|x| format!("{x:?}")),
-            asami_balance,
-            doc_balance,
-            rbtc_balance,
-            unclaimed_asami_balance,
-            unclaimed_doc_balance,
+            addr,
+            asami_balance: d.attrs.asami_balance,
+            doc_balance: d.attrs.doc_balance,
+            rbtc_balance: d.attrs.rbtc_balance,
+            unclaimed_asami_balance: d.attrs.unclaimed_asami_balance,
+            unclaimed_doc_balance: d.attrs.unclaimed_doc_balance,
             allows_gasless: d.attrs.allows_gasless,
+            created_at: d.attrs.created_at,
+            total_collabs: d.attrs.total_collabs,
+            total_collab_rewards: d.attrs.total_collab_rewards,
+            total_campaigns: d.attrs.total_campaigns,
+            total_collabs_received: d.attrs.total_collabs_received,
+            total_spent: d.attrs.total_spent,
         })
     }
 }

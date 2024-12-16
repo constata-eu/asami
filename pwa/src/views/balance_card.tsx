@@ -1,7 +1,7 @@
 import { useTranslate, useGetOne, useNotify, useDataProvider} from "react-admin";
 import { formatAddress } from '../lib/formatters';
 import { Box, CardContent, Typography, Button, Divider } from "@mui/material";
-import { formatEther } from "ethers";
+import { formatEther, parseEther } from "ethers";
 import { Head2 } from '../components/theme';
 import { DeckCard } from './layout';
 import { FunctionField, SimpleShowLayout} from 'react-admin';
@@ -10,6 +10,8 @@ import ClaimAccountButton from './claim_account';
 import { useContracts } from "../components/contracts_context";
 import WalletIcon from '@mui/icons-material/Wallet';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
+
+const truncateEther = (str) => Math.trunc(+(formatEther(str)) * 1e4) / 1e4
 
 const BalanceCard = () => {
   const {data, isLoading } = useGetOne(
@@ -38,9 +40,9 @@ const Unclaimed = ({account}) => {
       <Head2>{ translate("balance_card.title") }</Head2>
       <SimpleShowLayout record={account} sx={{ p: 0, my: 1}}>
         <FunctionField source="unclaimedDocBalance" label={ translate("balance_card.unclaimed.doc_label") }
-          render={ record => `${formatEther(record.unclaimedDocBalance)} DOC` } />
+          render={ record => `${truncateEther(record.unclaimedDocBalance)} DOC` } />
         <FunctionField source="unclaimedAsamiBalance" label={ translate("balance_card.unclaimed.asami_label") }
-          render={ record => `${formatEther(record.unclaimedAsamiBalance)} ASAMI` }  />
+          render={ record => `${truncateEther(record.unclaimedAsamiBalance)} ASAMI` }  />
       </SimpleShowLayout>
     </CardContent>
     <Divider />
@@ -99,9 +101,9 @@ const Done = ({account}) => {
           account={account}
         />
         <FunctionField source="unclaimedDocBalance" label={ translate("balance_card.unclaimed.doc_label") }
-          render={ record => `${formatEther(record.unclaimedDocBalance)} DOC` } />
+          render={ record => `${truncateEther(record.unclaimedDocBalance)} DOC` } />
         <FunctionField source="unclaimedAsamiBalance" label={ translate("balance_card.unclaimed.asami_label") }
-          render={ record => `${formatEther(record.unclaimedAsamiBalance)} ASAMI` }  />
+          render={ record => `${truncateEther(record.unclaimedAsamiBalance)} ASAMI` }  />
       </SimpleShowLayout>
 			{ hasUnclaimed && hasEnoughRbtc && <ClaimButton account={account} /> }
 			{ hasUnclaimed && unclaimedDoc > 1 && <Box mt="1em">
@@ -163,7 +165,7 @@ const BalanceWithAddButton = ({symbol, account}) => {
 
   return <FunctionField
     render={ () => <Box display="flex" gap="1em" alignItems="center" justifyContent="space-between">
-      <Typography>${formatEther(balance)} {symbol}</Typography>
+      <Typography>${truncateEther(balance)} {symbol}</Typography>
       <Button id={`add-to-wallet-${symbol}`} sx={{ padding: "0.1em" }} size="small" color="inverted" onClick={addToken}>
         <WalletIcon sx={{ fontSize: "20px"}}/>
         <NorthEastIcon sx={{ fontSize: "15px"}}/>

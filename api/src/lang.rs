@@ -31,7 +31,7 @@ impl<'r> FromRequest<'r> for Lang {
     type Error = ();
 
     async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
-        Outcome::Success(MaybeLang::from_request_base(&req).value.unwrap_or(Lang::En))
+        Outcome::Success(MaybeLang::from_request_base(req).value.unwrap_or(Lang::En))
     }
 }
 
@@ -47,7 +47,7 @@ impl MaybeLang {
             .unwrap_or("en")
             .split(",")
             // Get the locale, not the country code
-            .filter_map(|l| l.split(|c| c == '-' || c == ';').nth(0))
+            .filter_map(|l| l.split(['-', ';']).nth(0))
             // Get the first requested locale we support
             .find(|l| *l == "en" || *l == "es")
             .map(|l| if l == "es" { Lang::Es } else { Lang::En });
@@ -61,6 +61,6 @@ impl<'r> FromRequest<'r> for MaybeLang {
     type Error = ();
 
     async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
-        Outcome::Success(Self::from_request_base(&req))
+        Outcome::Success(Self::from_request_base(req))
     }
 }
