@@ -10,7 +10,7 @@ pub struct Handle {
     #[graphql(description = "Unique numeric identifier of this resource")]
     id: i32,
     #[graphql(description = "The id of the account that made the request.")]
-    account_id: String,
+    account_id: i32,
     #[graphql(description = "The social network of this handle: X, Instagram, Nostr.")]
     site: Site,
     #[graphql(
@@ -38,7 +38,7 @@ pub struct HandleFilter {
     status_in: Option<Vec<HandleStatus>>,
     site_eq: Option<Site>,
     user_id_like: Option<String>,
-    account_id_eq: Option<String>,
+    account_id_eq: Option<i32>,
 }
 
 #[rocket::async_trait]
@@ -62,7 +62,7 @@ impl Showable<models::Handle, HandleFilter> for Handle {
                 status_in: f.status_in,
                 site_eq: f.site_eq,
                 user_id_like: f.user_id_like,
-                account_id_eq: f.account_id_eq,
+                account_id_eq: f.account_id_eq.map(i32_to_hex),
                 ..Default::default()
             })
         } else {
@@ -80,7 +80,7 @@ impl Showable<models::Handle, HandleFilter> for Handle {
     async fn db_to_graphql(_context: &Context, d: models::Handle) -> AsamiResult<Self> {
         Ok(Handle {
             id: d.attrs.id,
-            account_id: d.attrs.account_id,
+            account_id: hex_to_i32(&d.attrs.account_id)?,
             site: d.attrs.site,
             username: d.attrs.username,
             user_id: d.attrs.user_id,

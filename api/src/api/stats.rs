@@ -1,23 +1,5 @@
 use super::{models::*, *};
 
-/*
-Dashboard:
-    - Vanity Metrics:
-        - Total handles with at least one collab.
-        - Total collabs.
-        - Total rewards paid.
-        - Total campaign count.
-
-    - Asami token:
-        - Contract address balance.
-        - Total asami tokens issued. Total pending to issue.
-        - Breakdown of asami token holders.
-
-    - On chain jobs:
-        - Campaign admin address:
-        - Campaign admin address balance.
-*/
-
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 #[graphql(description = "A contract call made by the campaign manager or oracle.")]

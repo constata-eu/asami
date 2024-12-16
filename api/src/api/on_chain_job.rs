@@ -41,7 +41,8 @@ impl Showable<models::OnChainJob, OnChainJobFilter> for OnChainJob {
     fn sort_field_to_order_by(field: &str) -> Option<models::OnChainJobOrderBy> {
         match field {
             "id" => Some(OnChainJobOrderBy::Id),
-            "created_at" => Some(OnChainJobOrderBy::CreatedAt),
+            "createdAt" => Some(OnChainJobOrderBy::CreatedAt),
+            "sleepUntil" => Some(OnChainJobOrderBy::SleepUntil),
             _ => None,
         }
     }

@@ -14,7 +14,85 @@
         "asamiBalance": "ASAMI",
         "rbtcBalance": "RBTC",
         "docBalance": "DOC",
-        "allowsGasless": "Retira sin RBTC"
+        "allowsGasless": "Retira sin RBTC",
+        "idEq": "por ID",
+        "addrLike": "por billetera"
+      }
+    },
+    "Campaign": {
+      "fields": {
+        "briefingJson": "ID en X",
+        "status": "Estado",
+        "totalCollabs": "Colaboraciones",
+        "budget": "Disponible",
+        "totalSpent": "Gastado",
+        "totalBudget": "Total",
+        "validUntil": "Válida hasta",
+        "createdAt": "Creada el",
+        "accountId": "Miembro",
+        "briefingHash": "ID en el contrato",
+        "idEq": "por ID",
+        "briefingJsonLike": "por ID en X",
+        "briefingHashLike": "por ID en el contrato",
+        "accountIdEq": "por miembro",
+        "statusEq": "estado es",
+        "statusNe": "estado no es"
+      }
+    },
+    "Handle": {
+      "fields": {
+        "username": "Usuario en X",
+        "score": "Nivel de influencia",
+        "status": "Estado",
+        "totalCollabs": "Colaboraciones",
+        "totalCollabRewards": "Total cobrado",
+        "accountId": "Miembro",
+        "site": "Red Social",
+        "idEq": "por ID",
+        "usernameLike": "por usuario en X",
+        "accountIdEq": "por miembro"
+      }
+    },
+    "Collab": {
+      "fields": {
+        "campaignId": "Campaña",
+        "handleId": "Cuenta",
+        "reward": "Recompensa",
+        "fee": "Comisión",
+        "status": "Estado",
+        "advertiserId": "Miembro Anunciante",
+        "memberId": "Miembro colaborador",
+        "disputeReason": "Detalle adicional",
+        "collabTriggerUniqueId": "Disparador en X",
+        "idEq": "por ID",
+        "campaignIdEq": "por campaña",
+        "handleIdEq": "por cuenta",
+        "advertiserIdEq": "por miembro anunciante",
+        "memberIdEq": "por miembro colaborador",
+        "collabTriggerUniqueIdLike": "por disparador",
+        "statusEq": "estado es",
+        "statusNe": "estado no es"
+      }
+    },
+    "OnChainJob": {
+      "fields": {
+        "status": "Estado",
+        "kind": "Trabajo",
+        "sleepUntil": "A ejecutarse el",
+        "createdAt": "Creado el",
+        "txHash": "TX en blockchain",
+        "gasUsed": "Gas usado",
+        "nonce": "Nonce",
+        "block": "Bloque",
+        "statusLine": "Mensaje"
+      }
+    },
+    "Stats": {
+      "fields": {
+        "totalActiveHandles": "Cuentas de X activas",
+        "totalCollabs": "Colaboraciones",
+        "totalCampaigns": "Campañas",
+        "totalRewardsPaid": "Pagos"
       }
     }
   },
@@ -23,7 +101,11 @@
 		"IG_CLONE_POST": "Publicar en Instagram"
 	},
 	"footer": {
-    "built_with": "Hecho con"
+    "built_with": "Smart contract bitcoiner en",
+    "tech_sponsor": "Sponsor de tecnología",
+    "funds_sponsor": "Sponsor de campañas",
+    "with_support_from": "Apoyo general de",
+    "campaign_manager": "Administrado por"
   },
   "campaign_list": {
     "title": "Campañas activas",
@@ -365,7 +447,7 @@
 	},
 	"explorer": {
 	  "menu": {
-	    "stats": "Estadísticas",
+	    "stats": "Datos del club",
 	    "handles": "Cuentas",
 	    "accounts": "Miembros",
 	    "campaigns": "Campañas",
@@ -373,8 +455,9 @@
 	    "oracle": "Oráculo"
 	  },
 	  "stats": {
-	    "title": "Estadísticas",
-	    "description": "Estas son las estadísticas generales del club a la fecha. Puedes explorar las actividades por Miembro, Campaña, Cuenta o Colaboraciones"
+	    "title": "Datos del club",
+	    "description": "Estas son las estadísticas generales del club a la fecha. Puedes explorar las actividades por Miembro, Campaña, Cuenta o Colaboraciones",
+	    "explore_btn": "Explorar todo"
 	  },
 	  "campaigns": {
 	    "title": "Campañas",

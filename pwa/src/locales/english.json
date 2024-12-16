@@ -14,7 +14,77 @@
         "asamiBalance": "ASAMI",
         "rbtcBalance": "RBTC",
         "docBalance": "DOC",
-        "allowsGasless": "Wants Gasless" 
+        "allowsGasless": "Wants Gasless", 
+        "idEq": "by ID",
+        "addrLike": "by wallet address"
+      }
+    },
+    "Campaign": {
+      "fields": {
+        "briefingJson": "ID on X",
+        "status": "Status",
+        "totalCollabs": "Collabs",
+        "budget": "Available",
+        "totalSpent": "Spent",
+        "totalBudget": "Total",
+        "validUntil": "Valid until",
+        "createdAt": "Created at",
+        "accountId": "Member",
+        "briefingHash": "Contract ID",
+        "idEq": "by ID",
+        "briefingJsonLike": "by ID on X",
+        "briefingHashLike": "by contract ID",
+        "accountIdEq": "by member ID",
+        "statusEq": "status is",
+        "statusNe": "status is not"
+      }
+    },
+    "Handle": {
+      "fields": {
+        "username": "X username",
+        "score": "Influence level",
+        "status": "Status",
+        "totalCollabs": "Collabs",
+        "totalCollabRewards": "Total Rewards",
+        "accountId": "Member",
+        "site": "Social site",
+        "idEq": "by ID",
+        "usernameLike": "by X username",
+        "accountIdEq": "by member"
+      }
+    },
+    "Collab": {
+      "fields": {
+        "campaignId": "Campaign",
+        "handleId": "Handle",
+        "reward": "Reward",
+        "fee": "Fee",
+        "status": "Status",
+        "advertiserId": "Advertiser member",
+        "memberId": "Collaborator member",
+        "disputeReason": "Additional details",
+        "collabTriggerUniqueId": "Trigger on X",
+        "idEq": "by ID",
+        "campaignIdEq": "by campaign",
+        "handleIdEq": "by account",
+        "advertiserIdEq": "by advertiser member",
+        "memberIdEq": "by collaborator member",
+        "collabTriggerUniqueIdLike": "by trigger on X",
+        "statusEq": "status is",
+        "statusNe": "status is not"
+      }
+    },
+    "OnChainJob": {
+      "fields": {
+        "status": "Stauts",
+        "kind": "Job kind",
+        "sleepUntil": "Will run on",
+        "createdAt": "Created at",
+        "txHash": "Blockchain TX",
+        "gasUsed": "Gas used",
+        "nonce": "Nonce",
+        "block": "Block",
+        "statusLine": "Status message"
       }
     }
   },
@@ -24,6 +94,13 @@
 	},
 	"footer": {
     "built_with": "Built with"
+  },
+	"footer": {
+    "built_with": "Bitcoiner smart-contract in",
+    "tech_sponsor": "Industrial-grade tech sponsor",
+    "funds_sponsor": "Campaign funding sponsor",
+    "with_support_from": "Overall support from",
+    "campaign_manager": "Managed by"
   },
   "campaign_list": {
     "title": "Active campaigns",
@@ -374,7 +451,8 @@
 	  },
 	  "stats": {
 	    "title": "Club Stats",
-	    "description": "These are the general club stats right now. You can explore all club activities in Members, Campaigns, Handles, and Collabs."
+	    "description": "These are the general club stats right now. You can explore all club activities in Members, Campaigns, Handles, and Collabs.",
+	    "explore_btn": "Explore data"
 	  },
 	  "campaigns": {
 	    "title": "Campaigns",

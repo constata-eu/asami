@@ -112,6 +112,15 @@ pub fn u256<T: AsRef<str> + std::fmt::Debug>(u: T) -> U256 {
     U256::decode_hex(u).unwrap_or(U256::zero())
 }
 
+// Converts an account id expressed in hex to an i32
+pub fn hex_to_i32(hex: &str) -> Result<i32, std::num::TryFromIntError> {
+    u256(hex).as_u32().try_into()
+}
+
+pub fn i32_to_hex(i: i32) -> String {
+    U256::from(i).encode_hex()
+}
+
 pub fn wei<T: AsRef<str>>(t: T) -> U256 {
     U256::from_dec_str(t.as_ref()).unwrap_or(U256::zero())
 }

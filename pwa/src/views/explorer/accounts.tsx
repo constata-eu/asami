@@ -10,6 +10,8 @@ import { SelectInput, SearchInput, Datagrid, List,
   NumberField,
   BooleanField, ReferenceInput, AutocompleteInput, BooleanInput,
   SimpleShowLayout,
+  ReferenceManyField,
+  SingleFieldList,
   EditButton, ReferenceField,
 } from 'react-admin';
 import { Link } from 'react-router-dom';
@@ -37,7 +39,7 @@ export const AccountList = () => {
 
           <FunctionField textAlign="right" source="totalCollabs" render={ (record) =>
             record.totalCollabs > 0 ?
-              <Link to={`/Collab?displayedFilters=%7B%7D&filter=%7B%22memberIdEq%22%3A%22${record.id}%22%7D`}>
+              <Link to={`/Collab?displayedFilters=%7B%7D&filter=%7B%22memberIdEq%22%3A${record.id}%7D`}>
                 <NumberField source="totalCollabs" />
               </Link>
               :
@@ -46,7 +48,7 @@ export const AccountList = () => {
           <AmountField textAlign="right" source="totalCollabRewards" />
           <FunctionField textAlign="right" source="totalCampaigns" render={ (record) =>
             record.totalCampaigns > 0 ?
-              <Link to={`/Campaign?displayedFilters=%7B%7D&filter=%7B%22accountIdEq%22%3A%22${record.id}%22%7D`}>
+              <Link to={`/Campaign?displayedFilters=%7B%7D&filter=%7B%22accountIdEq%22%3A${record.id}%7D`}>
                 <NumberField source="totalCampaigns" />
               </Link>
               :
@@ -70,6 +72,15 @@ export const AccountList = () => {
 
 const ExpandAccount = () => <SimpleShowLayout>
   <TextField emptyText="-" source="addr" />
+  <ReferenceManyField label="Handle" reference="Handle" target="accountIdEq">
+      <SingleFieldList>
+        <FunctionField source="username" render={ (record) =>
+          <Link to={`/Handle?displayedFilters=%7B%7D&filter=%7B%22accountIdEq%22%3A${record.accountId}%7D`}>
+            <TextField source="username" />
+          </Link>
+        }/>
+      </SingleFieldList>
+  </ReferenceManyField>
   <AmountField textAlign="right" source="asamiBalance" />
   <AmountField textAlign="right" source="rbtcBalance" />
   <AmountField textAlign="right" source="docBalance" />

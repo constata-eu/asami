@@ -10,6 +10,7 @@ import { useListController, ListContextProvider, useTranslate } from 'react-admi
 import { getAuthKeys } from '../../lib/auth_provider';
 import { MakeCampaignCard } from './make_campaign_card';
 import BalanceCard from "../balance_card";
+import StatsCard from "../stats_card";
 
 const Dashboard = () => {
   useAuthenticated();
@@ -44,6 +45,7 @@ const Dashboard = () => {
     <ColumnsContainer>
       <LoggedInNavCard />
 			<AdvertiserHelpCard account={data} />
+      <StatsCard />
       <BalanceCard />
       { data.status == "CLAIMED" && <MakeCampaignCard account={data} onCreate={() => listContext.refetch() } /> }
 

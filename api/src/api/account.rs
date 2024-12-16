@@ -7,8 +7,8 @@ use super::{
 #[serde(rename_all = "camelCase")]
 #[graphql(description = "A summary view of everything important regarding a member account.")]
 pub struct Account {
-    #[graphql(description = "Account ID as stored in the ASAMI contract.")]
-    id: String,
+    #[graphql(description = "Account ID as integer")]
+    id: i32,
     #[graphql(description = "Status of this account claim request, if any.")]
     status: AccountStatus,
     #[graphql(description = "The address of a claimed account.")]
@@ -45,8 +45,8 @@ pub struct Account {
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountFilter {
-    ids: Option<Vec<String>>,
-    id_eq: Option<String>,
+    ids: Option<Vec<i32>>,
+    id_eq: Option<i32>,
     addr_like: Option<String>,
 }
 
@@ -73,8 +73,8 @@ impl Showable<models::Account, AccountFilter> for Account {
     fn filter_to_select(_context: &Context, filter: Option<AccountFilter>) -> FieldResult<models::SelectAccount> {
         if let Some(f) = filter {
             Ok(models::SelectAccount {
-                id_in: f.ids,
-                id_eq: f.id_eq.map(|x| wei(x).encode_hex() ),
+                id_in: f.ids.map(|ids| ids.into_iter().map(i32_to_hex).collect() ),
+                id_eq: f.id_eq.map(i32_to_hex),
                 addr_like: into_like_search(f.addr_like),
                 ..Default::default()
             })
@@ -85,7 +85,7 @@ impl Showable<models::Account, AccountFilter> for Account {
 
     fn select_by_id(_context: &Context, id: String) -> FieldResult<models::SelectAccount> {
         Ok(models::SelectAccount {
-            id_eq: Some(id),
+            id_eq: Some(wei(id).encode_hex()),
             ..Default::default()
         })
     }
@@ -94,7 +94,7 @@ impl Showable<models::Account, AccountFilter> for Account {
         let addr = d.decoded_addr()?.map(|x| format!("{x:?}"));
 
         Ok(Account {
-            id: d.attrs.id,
+            id: hex_to_i32(&d.attrs.id)?,
             status: d.attrs.status,
             addr,
             asami_balance: d.attrs.asami_balance,

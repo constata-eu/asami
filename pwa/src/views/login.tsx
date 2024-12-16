@@ -39,6 +39,7 @@ import CampaignListEmpty from './campaign_list_empty';
 import {isMobile} from 'react-device-detect';
 import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import SendIcon from '@mui/icons-material/Send';
+import StatsCard from "./stats_card";
 
 const Login = () => {
   const translate = useTranslate();
@@ -101,9 +102,9 @@ const Login = () => {
                 </Button>
               </Box>
             </Box>
-
             <JoinNow key="join-now" loginAs={loginAs}/>
             <PublicCampaignList loginAs={loginAs} />
+            <StatsCard />
           </Box>
 
         </Box>

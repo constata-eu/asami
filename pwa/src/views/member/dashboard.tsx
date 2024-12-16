@@ -7,6 +7,7 @@ import { getAuthKeys } from '../../lib/auth_provider';
 import BalanceCard from "../balance_card";
 import CollabList from "./collab_list";
 import HelpCard from "./help_card";
+import StatsCard from "../stats_card";
 import VersionTwoCard from "../version_2";
 import { XCampaign } from "./campaigns";
 
@@ -36,8 +37,9 @@ const Dashboard = () => {
     <ColumnsContainer>
       <LoggedInNavCard />
       <HelpCard handles={handles} campaigns={campaigns} />
-      <BalanceCard />
+      <StatsCard />
       <XSettings handles={handles} />
+      <BalanceCard />
       <CampaignList handles={handles}/>
     </ColumnsContainer>
     <CollabList />

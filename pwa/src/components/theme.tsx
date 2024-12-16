@@ -69,16 +69,34 @@ const theme = {
     MuiCssBaseline: {
       styleOverrides: `.twitter-tweet iframe { border-radius: 13px; } ${fontFaces.join("\n")}`
     },
+    RaFilterForm: {
+      styleOverrides: {
+        root: {
+          "& .RaFilterForm-filterFormInput .MuiFormControl-root": {
+            marginBottom: 0,
+          },
+          "& .hide-filter": {
+            marginBottom: "4px"
+          }
+        }
+      }
+      
+    },
     RaSimpleShowLayout: {
       styleOverrides: {
         root: {
+          padding: 0,
           "& .RaSimpleShowLayout-stack": {
-            gap: "2em",
-            "flex-direction": "row",
+            gap: "0.5em",
             flexDirection: "row",
+            flexWrap: "wrap",
+            margin: "1em 0"
           },
           "& .RaSimpleShowLayout-row": {
-            marginTop: 0
+            marginTop: 0,
+            background: "rgba(0,0,0, 0.2)",
+            padding: "0.5em",
+            borderRadius: "5px"
           }
         }
       }

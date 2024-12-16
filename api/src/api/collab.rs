@@ -12,11 +12,11 @@ pub struct Collab {
     #[graphql(description = "The campaign whose content was reposted.")]
     campaign_id: i32,
     #[graphql(description = "The person that created the campaign.")]
-    advertiser_id: String,
+    advertiser_id: i32,
     #[graphql(description = "The handle that reposted the content.")]
     handle_id: i32,
     #[graphql(description = "The member who owns the handle.")]
-    member_id: String,
+    member_id: i32,
     #[graphql(description = "Status of this collab.")]
     status: CollabStatus,
     #[graphql(description = "Reason to dispute this collab, if any.")]
@@ -37,12 +37,14 @@ pub struct CollabFilter {
     id_eq: Option<i32>,
     campaign_id_eq: Option<i32>,
     campaign_id_in: Option<Vec<i32>>,
-    advertiser_id_eq: Option<String>,
-    advertiser_id_in: Option<Vec<String>>,
+    advertiser_id_eq: Option<i32>,
+    advertiser_id_in: Option<Vec<i32>>,
     handle_id_eq: Option<i32>,
     handle_id_in: Option<Vec<i32>>,
-    member_id_eq: Option<String>,
-    member_id_in: Option<Vec<String>>,
+    member_id_eq: Option<i32>,
+    member_id_in: Option<Vec<i32>>,
+    status_eq: Option<CollabStatus>,
+    status_ne: Option<CollabStatus>,
 }
 
 #[rocket::async_trait]
@@ -62,12 +64,12 @@ impl Showable<models::Collab, CollabFilter> for Collab {
                 id_in: f.ids,
                 campaign_id_eq: f.campaign_id_eq,
                 campaign_id_in: f.campaign_id_in,
-                advertiser_id_eq: f.advertiser_id_eq,
-                advertiser_id_in: f.advertiser_id_in,
+                advertiser_id_eq: f.advertiser_id_eq.map(i32_to_hex),
+                advertiser_id_in: f.advertiser_id_in.map(|ids| ids.into_iter().map(i32_to_hex).collect() ),
                 handle_id_eq: f.handle_id_eq,
                 handle_id_in: f.handle_id_in,
-                member_id_in: f.member_id_in,
-                member_id_eq: f.member_id_eq,
+                member_id_eq: f.member_id_eq.map(i32_to_hex),
+                member_id_in: f.member_id_in.map(|ids| ids.into_iter().map(i32_to_hex).collect() ),
                 id_eq: f.id_eq,
                 ..Default::default()
             })
@@ -87,9 +89,9 @@ impl Showable<models::Collab, CollabFilter> for Collab {
         Ok(Collab {
             id: d.attrs.id,
             campaign_id: d.attrs.campaign_id,
-            advertiser_id: d.attrs.advertiser_id,
+            advertiser_id: hex_to_i32(&d.attrs.advertiser_id)?,
             handle_id: d.attrs.handle_id,
-            member_id: d.attrs.member_id,
+            member_id: hex_to_i32(&d.attrs.member_id)?,
             status: d.attrs.status,
             dispute_reason: d.attrs.dispute_reason,
             reward: d.attrs.reward,

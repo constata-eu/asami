@@ -24,7 +24,7 @@ export const StatsShow = () => {
       <Typography mt="0.5em" variant="h3">{ translate("explorer.stats.title") }</Typography>
       <Typography variant="body">{ translate("explorer.stats.description") }</Typography>
       <Show>
-          <SimpleShowLayout>
+          <SimpleShowLayout sx={{ marginX: "1em"}}>
               <NumberField source="totalActiveHandles" />
               <NumberField source="totalCollabs" />
               <NumberField source="totalCampaigns" />

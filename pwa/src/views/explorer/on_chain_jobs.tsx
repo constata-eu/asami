@@ -8,6 +8,7 @@ import { SelectInput, SearchInput, Datagrid, List,
   TextInput,
   DateField,
   NumberField,
+  SimpleShowLayout,
   BooleanField, ReferenceInput, AutocompleteInput, BooleanInput,
   EditButton, ReferenceField,
 } from 'react-admin';
@@ -18,32 +19,27 @@ import { BigNumField } from '../../components/custom_fields';
 export const OnChainJobList = () => {
   let translate = useTranslate();
 
-  const filters = [
-    <TextInput source="idEq" alwaysOn />,
-    //<SelectInput label="Sport" source="sport" choices={sportChoices} alwaysOn />,
-    //<ReferenceInput label="Country" source="country" reference="countries" alwaysOn>
-    //  <AutocompleteInput size="small" optionText="name" />
-    //</ReferenceInput>,
-  ];
-
   return (
     <ExplorerLayout>
       <Typography mt="0.5em" variant="h3">{ translate("explorer.oracle.title") }</Typography>
       <Typography variant="body">{ translate("explorer.oracle.description") }</Typography>
-      <List disableAuthentication filters={filters} exporter={false}>
-        <Datagrid rowClick={false} bulkActionButtons={false}>
+      <List disableAuthentication exporter={false}>
+        <Datagrid bulkActionButtons={false} expand={<ExpandOnChainJob/>}>
           <TextField source="id" />
           <TextField source="status" sortable={false} />
           <TextField source="kind" sortable={false} />
+          <DateField source="sleepUntil" showTime />
           <DateField source="createdAt" showTime />
-          <DateField source="sleepUntil" sortable={false} showTime />
-          <TextField source="txHash" sortable={false} />
-          <BigNumField textAlign="right" source="gasUsed" sortable={false} />
-          <BigNumField textAlign="right" source="nonce" sortable={false} />
-          <TextField source="block" sortable={false} />
-          <TextField source="statusLine" sortable={false} />
         </Datagrid>
       </List>
     </ExplorerLayout>
   );
 };
+
+const ExpandOnChainJob = () => <SimpleShowLayout>
+    <TextField source="txHash"/>
+    <BigNumField textAlign="right" source="gasUsed" />
+    <BigNumField textAlign="right" source="nonce" />
+    <TextField source="block" />
+    <TextField source="statusLine" />
+</SimpleShowLayout>

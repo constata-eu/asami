@@ -94,14 +94,14 @@ impl OnChainJob {
                 campaigns.insert(campaign.attrs.id, campaign);
             }
 
-            for (_, campaign) in campaigns {
+            for (_, campaign) in &mut campaigns {
                 let budget = contract
                     .get_campaign(campaign.decoded_advertiser_addr()?, campaign.decoded_briefing_hash())
                     .block(block)
                     .call()
                     .await?
                     .budget;
-                campaign.update().budget(budget.encode_hex()).save().await?;
+                campaign.clone().update().budget(budget.encode_hex()).save().await?;
             }
 
             let mut account_ids = HashSet::new();
@@ -125,6 +125,7 @@ impl OnChainJob {
             self.state.account().hydrate_report_columns_for(account_ids.iter()).await?;
             self.state.account().hydrate_on_chain_columns_for(account_ids.iter()).await?;
             self.state.handle().hydrate_report_columns_for(handle_ids.into_iter()).await?;
+            self.state.campaign().hydrate_report_columns_for(campaigns.keys().copied()).await?;
         }
 
         Ok(self)
