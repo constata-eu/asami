@@ -208,9 +208,10 @@ impl CampaignHub {
 
         let mut campaigns = self
             .select()
-            .budget_gt(weihex("0"))
+            .budget_gt(milli("50").encode_hex())
             .campaign_kind_eq(CampaignKind::XRepost)
             .order_by(CampaignOrderBy::Id)
+            .desc(true)
             .all()
             .await?;
 
@@ -259,6 +260,8 @@ impl CampaignHub {
     }
 
     async fn x_cooldown(&self) {
+        // The basic plan allows 5 requests ever 15 minutes, that is, a 3 minute cooldown
+        // between api calls.
         tokio::time::sleep(tokio::time::Duration::from_millis(3 * 60 * 1000)).await;
     }
 }
