@@ -9,7 +9,7 @@ use juniper::{
 use sqlx_models_orm::*;
 
 use juniper_rocket::{graphiql_source, GraphQLResponse};
-use rocket::{http::Status, State};
+use rocket::{http::Status, serde::json::Json, State};
 
 mod current_session;
 use current_session::*;
@@ -33,6 +33,8 @@ mod audit_log_entry;
 use audit_log_entry::*;
 mod stats;
 use stats::*;
+mod topic;
+use topic::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -303,6 +305,7 @@ make_graphql_query! {
     [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, i32],
     [CampaignPreference, allCampaignPreferences, allCampaignPreferencesMeta, "_allCampaignPreferencesMeta", CampaignPreferenceFilter, i32],
     [OnChainJob, allOnChainJobs, allOnChainJobsMeta, "_allOnChainJobsMeta", OnChainJobFilter, i32],
+    [Topic, allTopics, allTopicsMeta, "_allTopicsMeta", TopicFilter, i32],
     [AuditLogEntry, allAuditLogEntries, allAuditLogEntriesMeta, "_allAuditLogEntriesMeta", AuditLogEntryFilter, i32],
   }
 

@@ -80,23 +80,14 @@ impl Truffle {
                 "localhost",
             ])
             .current_dir(&dir)
-            .env(
-                "ADMIN_ADDRESS",
-                ethers::utils::hex::encode(config.rsk.admin_address),
-            )
-            .env(
-                "MEMBER_ADDRESS",
-                "0x6868db995fdEEf093320A8Ee64b01F450b044f2C",
-            )
+            .env("ADMIN_ADDRESS", ethers::utils::hex::encode(config.rsk.admin_address))
+            .env("MEMBER_ADDRESS", "0x6868db995fdEEf093320A8Ee64b01F450b044f2C")
             .output()
             .unwrap();
 
-        let json = std::fs::read_to_string(
-            "../contract/ignition/deployments/chain-31337/deployed_addresses.json",
-        )
-        .expect("cannot read deployed_addresses.json");
-        let addresses: Addresses =
-            serde_json::from_str(&json).expect("Wrong addresses.json file contents");
+        let json = std::fs::read_to_string("../contract/ignition/deployments/chain-31337/deployed_addresses.json")
+            .expect("cannot read deployed_addresses.json");
+        let addresses: Addresses = serde_json::from_str(&json).expect("Wrong addresses.json file contents");
 
         let deployer = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 

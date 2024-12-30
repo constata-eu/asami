@@ -19,6 +19,12 @@
         "addrLike": "by wallet address"
       }
     },
+    "Topic": {
+      "names": {
+        "speaks_spanish": "Spanish speaking",
+        "speaks_english": "English speaking"
+      }
+    },
     "Campaign": {
       "fields": {
         "briefingJson": "ID on X",
@@ -50,7 +56,8 @@
         "site": "Social site",
         "idEq": "by ID",
         "usernameLike": "by X username",
-        "accountIdEq": "by member"
+        "accountIdEq": "by member",
+        "topic": "Categories"
       }
     },
     "Collab": {
@@ -89,8 +96,7 @@
     }
   },
 	"campaign_kinds": {
-		"XREPOST": "Repost in X",
-		"IG_CLONE_POST": "Make Instagram Post"
+		"XREPOST": "Repost in X"
 	},
 	"footer": {
     "built_with": "Built with"
@@ -118,11 +124,11 @@
   },
   "claim_account": {
     "success": "The admin will hand over control of your account to you soon.",
-    "error": "Oops, we could not receive your request. Please try again or contact the admin on X or Instagram."
+    "error": "Oops, we could not receive your request. Please try again or contact the admin on X."
   },
   "advertiser_help": {
     "title": "Little help:",
-    "CLAIMED": "You can create a campaign in X or Instagram by providing a link to any post, and members will amplify it. Remember they have the last word, so make your post friendly!",
+    "CLAIMED": "You can create a campaign in X by providing a link to any post, and members will amplify it. Remember they have the last word, so make your post friendly!",
     "CLAIMING": "You'll be able to start new campaigns once the admin processes your account claim",
     "MANAGED": "You should connect your WEB3 wallet to be able to create campaigns.",
 		"BANNED": "Your account has been deactivated 😭. Your funds are still in the smart contract, and you can find them there, but you cannot longer use this website."
@@ -160,33 +166,33 @@
   },
   "campaign_request": {
     "title": "Suggest a campaign",
-    "text": "Got a campaign idea for X or Instagram? Share it with us! If approved, we'll launch it, and you'll earn Asami tokens for each repost.",
+    "text": "Got a campaign idea for X? Share it with us! If approved, we'll launch it, and you'll earn Asami tokens for each repost.",
     "send_suggestion": "Send Suggestion",
-    "post_url_label": "The X or Instagram post link",
+    "post_url_label": "The X post link",
     "cancel": "Cancel",
     "success": "Your suggestion has been received!",
     "errors": {
-      "not_a_post_url": "The link you provided does not appear to be an X or Instagram post.",
+      "not_a_post_url": "The link you provided does not appear to be an X post.",
       "invalid_url": "The link must point to a post, and start with https://..."
     }
   },
   "make_campaign_card": {
     "title": "Start a campaign!",
-    "pay_members": "Pay club members to repost any X post, or to clone any Instagram post.",
+    "pay_members": "Pay club members to repost any X post.",
     "doc_funded": "Campaigns are funded in DoC, a US dollar pegged stablecoin from Money On Chain, that you can mint yourself using RBTC.",
     "get_doc": "Go get some DoC",
     "start_campaign": "Start Campaign",
     "close": "Close",
-    "post_url_label": "The X or Instagram post link",
+    "post_url_label": "The X post link",
     "cancel": "Cancel",
     "errors": {
       "budget_too_low": "Budget is too low, must be at least 1 DOC",
       "budget_not_a_number": "Budget must be a number",
-      "not_a_post_url": "The link you provided does not appear to be an X or Instagram post.",
+      "not_a_post_url": "The link you provided does not appear to be an X post.",
       "invalid_url": "The link must point to a post, and start with https://..."
     },
     "form_step": {
-      "content_url": "Link to X or Instagram post",
+      "content_url": "Link to X post",
       "budget": "Total budget you'll spend, in DOC",
       "start_campaign": "Start Campaign",
       "service_summary": "You'll pay ~0.001 DOC per real person reached by a repost. Unused funds will be returned to you after 30 days.",
@@ -209,7 +215,7 @@
     "failure_step": {
       "action_rejected": "It looks like you cancelled the campaign creation in your wallet, try again if you're still interested.",
       "wrong_signer": "Did you change your wallet account? You are using Asami with %{expected} but your wallet is using %{actual}. Switch your wallet connected account to %{expected} and try again.",
-      "unexpected_error": "An unexpected error ocurred, contact us on twitter or instagram and forward the error information.",
+      "unexpected_error": "An unexpected error ocurred, contact us on X and forward the error information.",
       "copy_info": "Copy error details",
       "info_copied": "Error details copied to your clipboard",
       "title": "Campaign creation cancelled"
@@ -228,28 +234,12 @@
     "x": {
       "main_button": "Repost to earn",
       "attempted": "Now just wait, your repost may take up to an hour to register in Asami."
-    },
-    "ig": {
-      "main_button": "Make post to earn",
-      "attempted": "Now just wait, your post may take up to an hour to register in Asami.",
-      "see_instructions_again": "See instructions again",
-      "title": "Post this to instagram",
-      "instruction_with_caption": "Make and instagram post using the provided image and caption.",
-      "instruction_without_caption": "Make an instagram post using the provided image.",
-      "caption_copied": "Caption copied to clipboard",
-      "post_not_story": "Make a post, not a story.",
-      "no_filters": "Do not use filters on the image.",
-      "public_post": "Make the post public to everyone.",
-      "no_private_account": "Make sure your account is not private",
-      "follow_rules": "Follow these rules, or Asami won't be able to detect your post.",
-      "download_image": "Download image",
-      "copy_text": "Copy text"
     }
   },
   "help_card": {
     "title": "What's next?",
     "collaborate": "You can collaborate in a campaign, but remember, people are listening to you, be responsible an true to yourself when choosing what content to amplify.",
-    "verify_handles": "Help us verify your X or Instagram account. We'll estimate your influence level, and you'll be able to start earning for your reposts",
+    "verify_handles": "Help us verify your X account. We'll estimate your influence level, and you'll be able to start earning for your reposts",
     "wait_for_campaigns": "There are no campaigns for you to amplify at the moment. Come back tomorrow!"
   },
   "handle_settings": {
@@ -260,23 +250,6 @@
       "price_per_repost": "Price per repost",
       "score": "Influence level",
       "locked_until": "Values in force until"
-    },
-    "ig": {
-      "create_request": {
-        "text": "Your instagram account must be public, and we need to verify you own it, to estimate your influence level, so you can get paid to repost.",
-        "username_label": "Your instagram username",
-        "username_help": "Example: @zuck",
-        "save": "Continue",
-        "success": "We've got your username!",
-        "username_error": "That does not seem to be an Instagram username. It should be something like '@zuck'"
-      },
-      "make_verification_post": {
-        "caption_copied": "Caption copied to clipboard",
-        "verify_username": "Post this message to verify your username ownership, consent to use asami, and disclosure to your followers.",
-        "guidelines": "Make it a post, not a story. Do not use filters. Leave the text as-is. Make sure your account is public.",
-        "get_image": "Get image",
-        "copy_text": "Get text"
-      }
     },
     "x": {
       "create_request": {
@@ -354,12 +327,12 @@
   },
   "your_post_here": {
     "title": "Your post, here.",
-    "message": "Pay club members to repost your Instagram or X content.",
+    "message": "Pay club members to repost your X content.",
     "button": "Start a campaign"
   },
   "join_now": {
     "title": "Monetize any audience size.",
-    "message": "Repost content from advertisers in X an Instagram and receive US dollar equivalent crypto, with rewards based on your genuine reach.",
+    "message": "Repost content from advertisers in X and receive US dollar equivalent crypto, with rewards based on your genuine reach.",
     "no_crypto_no_problem": "No crypto? No problem!",
     "learn_later": "You can start accumulating rewards now, and learn more about using crypto later.",
     "button": "Join the club, it's free!"

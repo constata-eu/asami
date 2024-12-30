@@ -22,9 +22,14 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
     d.wait_until_gone(".MuiSnackbarContent-message").await;
 
     for (i, h) in d.app().handle().select().all().await?.into_iter().enumerate() {
+        d.test_app().app.handle_topic().insert(InsertHandleTopic{
+            handle_id: h.attrs.id,
+            topic_id: 2
+        });
         h.verify((1000 + i).to_string()).await?.set_score(wei("1234")).await?;
     }
 
+    wait_here();
     d.wait_for("#existing-x-handle-stats").await;
 
     for h in d.app().handle().select().all().await? {

@@ -175,6 +175,8 @@ impl CurrentSession {
             }
         }
 
+        app.account().hydrate_on_chain_columns_for([session.account_id().clone()].iter()).await?;
+
         Ok(session)
     }
 

@@ -45,6 +45,16 @@ model! {
     total_spent: String,
     #[sqlx_model_hints(varchar, default)]
     total_budget: String,
+
+    // These fields have X metrics for the campaign
+    #[sqlx_model_hints(int4, default)]
+    impression_count: i32,
+    #[sqlx_model_hints(int4, default)]
+    reply_count: i32,
+    #[sqlx_model_hints(int4, default)]
+    repost_count: i32,
+    #[sqlx_model_hints(int4, default)]
+    like_count: i32,
   },
   queries {
       needing_report("valid_until IS NOT NULL AND valid_until < now() AND report_hash IS NULL"),
@@ -222,6 +232,20 @@ impl CampaignHub {
                 .map_err(|_| Error::Validation("content_id".into(), "was stored in the db not as u64".into()))?;
 
             self.state.info("sync_x_collabs", "fetching_retweets", &post_id).await;
+            if let Some(metrics) = api.get_tweet(post_id).send().await?.data.as_ref().and_then(|o| o.organic_metrics.as_ref()) {
+                campaign
+                    .clone()
+                    .update()
+                    .impression_count(metrics.impression_count as i32)
+                    .reply_count(metrics.reply_count as i32)
+                    .repost_count(metrics.retweet_count as i32)
+                    .like_count(metrics.like_count as i32)
+                    .save()
+                    .await?;
+           } else {
+                self.state.info("sync_x_collabs", "no_organic_metrics_for", &post_id).await;
+           }
+
             let reposts = api.get_tweet_retweeted_by(post_id).send().await?;
             self.state.info("sync_x_collabs", "got_reposts", ()).await;
 

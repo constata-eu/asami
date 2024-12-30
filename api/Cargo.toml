@@ -25,6 +25,7 @@ rust_decimal = "*"
 rust_decimal_macros = "*"
 tokio = { version = "1.2.0", features = ["full"] }
 chrono = { version = "0.4", features = ["serde"] }
+time = "0.3.37"
 jwt-simple = "0.11.6"
 base64-serde = "0.7.0"
 base64 = "0.21.2"

@@ -85,7 +85,7 @@ const CampaignList = ({listContext}) => {
         <CardTitle text="campaign_list.title" >
           <Typography mt="1em">{ translate("campaign_list.text") } </Typography>
         </CardTitle>
-        <Datagrid bulkActionButtons={false}>
+        <Datagrid resource="Campaign" bulkActionButtons={false}>
           <FunctionField label={ translate("campaign_list.post") } render={record =>
             <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">
               { translate("campaign_list.see_post") }

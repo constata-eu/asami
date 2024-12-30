@@ -1,6 +1,6 @@
-import { useTranslate} from "react-admin";
+import { useTranslate, ReferenceArrayField, SingleFieldList } from "react-admin";
 import { DeckCard } from '../layout';
-import { Box, CardContent, Skeleton, Typography } from "@mui/material";
+import { Box, Chip, CardContent, Skeleton, Typography } from "@mui/material";
 import { formatEther } from "ethers";
 import { Head2 } from '../../components/theme';
 import { SimpleForm, CreateBase, TextInput, SaveButton, useNotify } from 'react-admin';
@@ -55,6 +55,11 @@ export const HandleStats = ({handle, id}) => {
         render={ (x) => <>{x.username} <Typography variant="span" sx={{fontSize: "0.8em", lineHeight: "1em" }}>[{x.userId}]</Typography></> }
       />
       <FunctionField label={ translate("handle_settings.stats.score") } render={ h => `${BigInt(h.score)} 力` }  />
+      <ReferenceArrayField label={ translate("resources.Handle.fields.topic")} reference="Topic" source="topicIds">
+        <SingleFieldList empty={<>-</>} linkType={false}>
+            <FunctionField render={ h => <Chip size="small" variant="outlined" label={translate(`resources.Topic.names.${h.name}`)} /> } />
+        </SingleFieldList>
+      </ReferenceArrayField>
     </SimpleShowLayout>
   </Box>;
 }
@@ -92,6 +97,7 @@ export const CreateHandle = ({onSave, namespace, site, handleMinLength, handleMa
         { translate(`handle_settings.${namespace}.create_request.text`) }
       </Typography>
       <TextInput sx={{mb: "1em" }} fullWidth required={true} size="large" variant="filled" source="username"
+        id="username"
         label={ translate(`handle_settings.${namespace}.create_request.username_label`) }
         helperText={ translate(`handle_settings.${namespace}.create_request.username_help`) }
       />

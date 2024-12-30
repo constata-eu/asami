@@ -19,6 +19,12 @@
         "addrLike": "por billetera"
       }
     },
+    "Topic": {
+      "names": {
+        "speaks_spanish": "Hablan español",
+        "speaks_english": "Hablan inglés"
+      }
+    },
     "Campaign": {
       "fields": {
         "briefingJson": "ID en X",
@@ -50,7 +56,8 @@
         "site": "Red Social",
         "idEq": "por ID",
         "usernameLike": "por usuario en X",
-        "accountIdEq": "por miembro"
+        "accountIdEq": "por miembro",
+        "topic": "Categorias"
       }
     },
     "Collab": {
@@ -97,8 +104,7 @@
     }
   },
 	"campaign_kinds": {
-		"XREPOST": "Repost en X",
-		"IG_CLONE_POST": "Publicar en Instagram"
+		"XREPOST": "Repost en X"
 	},
 	"footer": {
     "built_with": "Smart contract bitcoiner en",
@@ -123,11 +129,11 @@
   },
   "claim_account": {
     "success": "El administrador the entregará el control de tu cuenta pronto.",
-    "error": "Ups, no pudimos recibir tu pedido. Por favor contáctate con el administrador en X o Instagram."
+    "error": "Ups, no pudimos recibir tu pedido. Por favor contáctate con el administrador en X."
   },
   "advertiser_help": {
     "title": "Un tip:",
-    "CLAIMED": "Puedes crear una campaña en X o en Instagram poniendo el enlace a algún posteo, y los miembros lo amplificarán. Recuerda que ellos tienen la última palabra, así que haz un posteo amigable!",
+    "CLAIMED": "Puedes crear una campaña en X poniendo el enlace a algún posteo, y los miembros lo amplificarán. Recuerda que ellos tienen la última palabra, así que haz un posteo amigable!",
     "CLAIMING": "Podrás crear campañas nuevas cuando el administrador te entregue el control de tu cuenta.",
     "MANAGED": "Debes conectar tu billetera WEB3, y así podrás crear campañas",
     "BANNED": "Tu cuenta fue desactivada 😭. Tus fondos siguen en el contrato inteligente y puedes buscarlos ahí, pero ya no puedes usar esta web."
@@ -165,33 +171,33 @@
   },
   "campaign_request": {
     "title": "Sugiere una campaña",
-    "text": "¿Tienes una idea de campaña para X o Instagram? ¡Compártela con nosotros! Si es aprobada, la lanzaremos y ganarás tokens de Asami por cada repost.",
+    "text": "¿Tienes una idea de campaña para X? ¡Compártela con nosotros! Si es aprobada, la lanzaremos y ganarás tokens de Asami por cada repost.",
     "send_suggestion": "Enviar sugerencia",
-    "post_url_label": "El enlace del post de X o Instagram",
+    "post_url_label": "El enlace del post de X",
     "cancel": "Cancelar",
     "success": "¡Tu sugerencia ha sido recibida!",
     "errors": {
-      "not_a_post_url": "El enlace que proporcionaste no parece ser un post de X o Instagram.",
+      "not_a_post_url": "El enlace que proporcionaste no parece ser un post de X.",
       "invalid_url": "El enlace debe apuntar a un post y comenzar con https://..."
     }
   },
   "make_campaign_card": {
     "title": "¡Inicia una campaña!",
-    "pay_members": "Paga a los miembros del club para repostear cualquier post de X, o para clonar cualquier post de Instagram.",
+    "pay_members": "Paga a los miembros del club para repostear cualquier post de X.",
     "doc_funded": "Las campañas se financian en DOC, una stablecoin vinculada al US$ de Money On Chain, que puedes acuñar tú mismo usando RBTC.",
     "get_doc": "Ve a conseguir algo de DOC",
     "start_campaign": "Iniciar campaña",
     "close": "Cerrar",
-    "post_url_label": "El enlace del post de X o Instagram",
+    "post_url_label": "El enlace del post de X",
     "cancel": "Cancelar",
     "errors": {
       "budget_too_low": "El presupuesto es demasiado bajo, debe ser al menos 1 DOC",
       "budget_not_a_number": "El presupuesto debe ser un número",
-      "not_a_post_url": "El enlace que proporcionaste no parece ser un post de X o Instagram.",
+      "not_a_post_url": "El enlace que proporcionaste no parece ser un post de X.",
       "invalid_url": "El enlace debe apuntar a un post y comenzar con https://..."
     },
     "form_step": {
-      "content_url": "Enlace al post de X o Instagram",
+      "content_url": "Enlace al post de X",
       "budget": "Presupuesto total que gastarás, en DOC",
       "start_campaign": "Iniciar campaña",
       "service_summary": "Pagarás ~0.001 DOC por persona real alcanzada por un repost. Los fondos no utilizados serán devueltos después de 30 días.",
@@ -233,28 +239,12 @@
     "x": {
       "main_button": "Repostea y cobra",
       "attempted": "Ahora solo espera, a Asami le puede tomar hasta una hora registrar tu repost"
-    },
-    "ig": {
-      "main_button": "Postea y cobra",
-      "attempted": "Ahora solo espera, a Asami le puede tomar hasta una hora registrar tu post",
-      "see_instructions_again": "Ver instrucciones otra vez",
-      "title": "Haz un post en instagram",
-      "instruction_with_caption": "Haz una publicación en Instagram usando la imagen proporcionada y el pie de foto.",
-      "instruction_without_caption": "Haz una publicación en Instagram usando únicamente la imagen proporcionada.",
-      "caption_copied": "Pie de foto copiado al portapapeles",
-      "post_not_story": "Haz una publicación, no una historia.",
-      "no_filters": "No uses filtros en la imagen.",
-      "public_post": "Haz la publicación pública para todos.",
-      "no_private_account": "Asegúrate de que tu cuenta no sea privada",
-      "follow_rules": "Sigue estas reglas, o Asami no podrá detectar tu publicación.",
-      "download_image": "Descargar imagen",
-      "copy_text": "Copiar texto"
     }
   },
   "help_card": {
     "title": "¿Qué sigue?",
     "collaborate": "Puedes colaborar en una campaña, pero recuerda, la gente te está escuchando, sé responsable y fiel a ti mismo al elegir qué contenido amplificar.",
-    "verify_handles": "Ayúdanos a verificar tu cuenta de X o Instagram. Calcularemos tu nivel de influencia, y podrás empezar a ganar por tus republicaciones",
+    "verify_handles": "Ayúdanos a verificar tu cuenta de X. Calcularemos tu nivel de influencia, y podrás empezar a ganar por tus republicaciones",
     "wait_for_campaigns": "No hay campañas disponibles para que amplifiques en este momento. ¡Vuelve mañana!"
   },
   "handle_settings": {
@@ -265,23 +255,6 @@
       "price_per_repost": "Precio por republicación",
       "score": "Nivel de influencia",
       "locked_until": "Valores vigentes hasta"
-    },
-    "ig": {
-      "create_request": {
-        "text": "Tu cuenta de Instagram debe ser pública, y necesitamos verificar que eres el propietario para calcular tu nivel de influencia, así podrás recibir pagos por republicar.",
-        "username_label": "Tu nombre de usuario en Instagram",
-        "username_help": "Ejemplo: @zuck",
-        "save": "Continuar",
-        "success": "¡Hemos obtenido tu nombre de usuario!",
-        "username_error": "Eso no parece ser un nombre de usuario de Instagram. Debería ser algo como '@zuck'"
-      },
-      "make_verification_post": {
-        "caption_copied": "Pie de foto copiado al portapapeles",
-        "verify_username": "Publica este mensaje para verificar la propiedad de tu nombre de usuario, consentir el uso de asami y la divulgación a tus seguidores.",
-        "guidelines": "Hazlo una publicación, no una historia. No uses filtros. Deja el texto tal como está. Asegúrate de que tu cuenta sea pública.",
-        "get_image": "Obtener imagen",
-        "copy_text": "Obtener texto"
-      }
     },
     "x": {
       "create_request": {
@@ -358,12 +331,12 @@
   },
   "your_post_here": {
     "title": "Tu anuncio aquí",
-    "message": "Ofrece una recompensa para que los miembros del club amplifiquen tu publicación en Instagram o X.",
+    "message": "Ofrece una recompensa para que los miembros del club amplifiquen tu publicación en X.",
     "button": "Envíar publicación"
   },
   "join_now": {
     "title": "Monetiza cualquier nivel de audiencia.",
-    "message": "Comparte contenido de anunciantes en X e Instagram y recibe crypto equivalente a US$, con recompensas basadas en tu alcance genuino.", 
+    "message": "Comparte contenido de anunciantes en X y recibe crypto equivalente a US$, con recompensas basadas en tu alcance genuino.", 
     "no_crypto_no_problem": "¿No usas crypto?",
     "learn_later": "¡No hay problema! Puedes acumular recompensas ahora, y aprender a usar crypto luego.",
     "button": "Únete al club gratis!"

@@ -1,5 +1,5 @@
 import {useEffect } from "react";
-import { Admin, Resource, CustomRoutes, useSafeSetState, useStore, Authenticated } from "react-admin";
+import { Admin, Resource, CustomRoutes, useSafeSetState, useStore, Authenticated, useRecordContext, useTranslate } from "react-admin";
 import { ContractsProvider } from './components/contracts_context';
 import { Settings } from './settings';
 import { GoogleReCaptchaProvider, } from 'react-google-recaptcha-v3';
@@ -41,7 +41,7 @@ export const App = () => {
     initApp();
   }, []);
 
-  const i18nProvider =  polyglotI18nProvider(locale => messages[locale], browserLocale);
+  const i18nProvider = polyglotI18nProvider(locale => messages[locale], browserLocale);
 
   if (!dataProvider || !i18nProvider) {
     return <Container maxWidth="md">
@@ -91,6 +91,10 @@ export const App = () => {
         <Resource
           name="Stats"
           show={StatsShow}
+        />
+
+        <Resource
+          name="Topic"
         />
 
         <CustomRoutes>
