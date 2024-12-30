@@ -15,7 +15,7 @@ ALTER TABLE handles ADD COLUMN scored_tweet_count int4 NOT NULL default 0;
 ALTER TABLE handles ADD COLUMN legacy_score varchar NOT NULL default '0x0000000000000000000000000000000000000000000000000000000000000000';
 
 
-UPDATE handles SET legacy_score = score;
+UPDATE handles SET legacy_score = score WHERE score IS NOT NULL;
 UPDATE handles SET last_scoring = NULL;
 
 INSERT INTO topics (name) VALUES ('speaks_english'), ('speaks_spanish');
