@@ -44,7 +44,7 @@
     "ra-language-spanish": "^1.0.0",
     "ra-ui-materialui": "^4.13.2",
     "react": "^18.2.0",
-    "react-admin": "^4.13.0",
+    "react-admin": "^5.4.2",
     "react-device-detect": "^2.2.3",
     "react-dom": "^18.2.0",
     "react-google-recaptcha-v3": "^1.10.1",

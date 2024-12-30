@@ -28,6 +28,22 @@ model! {
     total_collabs: i32,
     #[sqlx_model_hints(varchar, default)]
     total_collab_rewards: String,
+
+    // These columns are the raw values updated for the new scoring algorithm
+    #[sqlx_model_hints(timestamptz, default)]
+    last_scoring: Option<UtcDateTime>,
+    #[sqlx_model_hints(int4, default)]
+    avg_impression_count: i32,
+    #[sqlx_model_hints(int4, default)]
+    avg_reply_count: i32,
+    #[sqlx_model_hints(int4, default)]
+    avg_repost_count: i32,
+    #[sqlx_model_hints(int4, default)]
+    avg_like_count: i32,
+    #[sqlx_model_hints(int4, default)]
+    scored_tweet_count: i32,
+    #[sqlx_model_hints(varchar, default)]
+    legacy_score: String,
   },
   has_many {
     HandleTopic(handle_id),
@@ -73,13 +89,13 @@ impl HandleHub {
         Ok(())
     }
 
-    pub async fn verify_and_score_x(&self) -> AsamiResult<Vec<Handle>> {
+    pub async fn verify_pending(&self) -> AsamiResult<Vec<Handle>> {
         use rust_decimal::prelude::*;
         use tokio::time::*;
         use twitter_v2::{api_result::*, authorization::BearerToken, query::*, TwitterApi};
 
         if self.select().status_eq(HandleStatus::Unverified).count().await? == 0 {
-            self.state.info("verify_and_score_x", "no_unverified_handles_found_skipping", ()).await;
+            self.state.info("verify_pending", "no_unverified_handles_found_skipping", ()).await;
             return Ok(vec![]);
         }
 
@@ -112,67 +128,62 @@ impl HandleHub {
             let Some(data) = payload.data() else { break };
 
             for post in data {
-                self.state.info("verify_and_score_x", "mention_post", &post).await;
+                self.state.info("verify_pending", "mention_post", &post).await;
                 let Some(author_id) = post.author_id else { continue };
                 let Some(author) = payload
                     .includes()
                     .and_then(|i| i.users.as_ref())
                     .and_then(|i| i.iter().find(|x| x.id == author_id))
                 else {
-                    self.state.info("verify_and_score_x", "skipped_post_no_author", &post.id).await;
-                    continue;
-                };
-
-                let Some(public_metrics) = author.public_metrics.clone() else {
-                    self.state.info("verify_and_score_x", "skipped_post_no_public_metrics", &post.id).await;
+                    self.state.info("verify_pending", "skipped_post_no_author", &post.id).await;
                     continue;
                 };
 
                 let text: &String = post.note_tweet.as_ref().and_then(|n| n.text.as_ref()).unwrap_or(&post.text);
 
-                if let Some(capture) = msg_regex.captures(text) {
-                    let Ok(account_id_str) = capture[1].parse::<String>() else {
-                        self.state
-                            .info(
-                                "verify_and_score_x",
-                                "skipped_post_no_account_id_str",
-                                format!("{capture:?}"),
-                            )
-                            .await;
-                        continue;
-                    };
-                    let Ok(account_id) = U256::from_dec_str(&account_id_str).map(U256::encode_hex) else {
-                        self.state.info("verify_and_score_x", "skipped_post_no_account_id_dec", &account_id_str).await;
-                        continue;
-                    };
+                let Some(capture) = msg_regex.captures(text) else {
+                    self.state.info("verify_pending", "skipped_post_no_regex_capture", &post.text).await;
+                    continue;
+                };
 
-                    let Some(req) = self
-                        .state
-                        .handle()
-                        .select()
-                        .status_eq(HandleStatus::Unverified)
-                        .site_eq(Site::X)
-                        .username_ilike(&author.username)
-                        .account_id_eq(&account_id)
-                        .optional()
-                        .await?
-                    else {
-                        self.state
-                            .info(
-                                "verify_and_score_x",
-                                "skipped_post_no_pending_request",
-                                (&author.username, &account_id),
-                            )
-                            .await;
-                        continue;
-                    };
+                let Ok(account_id_str) = capture[1].parse::<String>() else {
+                    self.state
+                        .info(
+                            "verify_pending",
+                            "skipped_post_no_account_id_str",
+                            format!("{capture:?}"),
+                        )
+                        .await;
+                    continue;
+                };
 
-                    let followers = U256::from(public_metrics.followers_count.min(500));
-                    let score = followers * wei("85") / wei("100");
-                    handles.push(req.verify(author_id.to_string()).await?.set_score(score).await?);
-                } else {
-                    self.state.info("verify_and_score_x", "skipped_post_no_regex_capture", &post.text).await;
-                }
+                let Ok(account_id) = U256::from_dec_str(&account_id_str).map(U256::encode_hex) else {
+                    self.state.info("verify_pending", "skipped_post_no_account_id_dec", &account_id_str).await;
+                    continue;
+                };
+
+                let Some(req) = self
+                    .state
+                    .handle()
+                    .select()
+                    .status_eq(HandleStatus::Unverified)
+                    .site_eq(Site::X)
+                    .username_ilike(&author.username)
+                    .account_id_eq(&account_id)
+                    .optional()
+                    .await?
+                else {
+                    self.state
+                        .info(
+                            "verify_pending",
+                            "skipped_post_no_pending_request",
+                            (&author.username, &account_id),
+                        )
+                        .await;
+                    continue;
+                };
+
+                handles.push(req.verify(author_id.to_string()).await?);
             }
 
             // We only fetch a backlog of 700 tweets.
@@ -189,7 +200,7 @@ impl HandleHub {
             indexer_state.update().x_handle_verification_checkpoint(checkpoint).save().await?;
             self.state
                 .info(
-                    "verify_and_score_x",
+                    "verify_pending",
                     "done_processing_updating_indexer_state",
                     &checkpoint,
                 )
@@ -197,7 +208,99 @@ impl HandleHub {
         }
         Ok(handles)
     }
+    
+    pub async fn score_pending(&self) -> AsamiResult<Vec<Handle>> {
+        use twitter_v2::{authorization::BearerToken, query::*, TwitterApi};
+        let now = Utc::now();
+
+        // The window to score is one month starting a week ago.
+        // Se we don't count old tweets, but we also give recent
+        // tweets a week to gain impressions.
+        let start_time = time::OffsetDateTime::from_unix_timestamp(
+            (now - chrono::Duration::days(37)).timestamp()
+        )?
+        .to_offset(time::UtcOffset::UTC);
+
+        let end_time = time::OffsetDateTime::from_unix_timestamp(
+            (now - chrono::Duration::days(7)).timestamp()
+        )?
+        .to_offset(time::UtcOffset::UTC);
+
+        let pending = self.select()
+            .status_in(vec![HandleStatus::Verified, HandleStatus::Active])
+            .last_scoring_lt(now - chrono::Duration::days(7))
+            .all()
+            .await?;
+
+        if pending.is_empty() {
+            self.state.info("score_pending", "no_handles_pending_scoring", ()).await;
+            return Ok(vec![]);
+        }
+
+        let mut handles = vec![];
+
+        let conf = &self.state.settings.x;
+        let auth = BearerToken::new(&conf.bearer_token);
+        let api = TwitterApi::new(auth);
+
+        for handle in pending {
+            let Some(user_id) = handle.user_id().as_ref().and_then(|x| x.parse::<u64>().ok() ) else {
+                self.state.info("score_pending", "handle_has_no_user_id", &handle).await;
+                continue;
+            
+            };
+
+            let Some(tweets) = api.get_user_tweets(user_id)
+                .start_time(start_time)
+                .end_time(end_time)
+                .exclude(vec![Exclude::Retweets])
+                .tweet_fields(vec![TweetField::AuthorId, TweetField::OrganicMetrics])
+                .send()
+                .await?
+                .into_data() else {
+                    self.state.info("score_pending", "could_not_get_tweets_for", &handle).await;
+                    continue;
+            };
+
+            let mut impression_count = 0_i32;
+            let mut reply_count = 0_i32;
+            let mut repost_count = 0_i32;
+            let mut like_count = 0_i32;
+            let mut tweet_count = 0_i32;
+            for tweet in tweets {
+                let Some(m) = tweet.organic_metrics else {
+                    self.state.info("score_pending", "no_tweet_metrics_for", serde_json::json![[handle.id(), tweet.id]]).await;
+                    continue;
+                };
+                impression_count += m.impression_count as i32;
+                reply_count += m.reply_count as i32;
+                repost_count += m.retweet_count as i32;
+                like_count += m.like_count as i32;
+                tweet_count += 1;
+                if tweet_count > 10 {
+                    break;
+                }
+            }
+
+            let avg_impression_count = f64::from(impression_count) / 10.0;
+            let score_result = 10_000.0 * (1.0 - (-0.0001 * avg_impression_count).exp());
+            let score = Some(U256::from(score_result.floor() as u64).encode_hex());
+
+            handles.push(handle.update()
+                .avg_impression_count(impression_count / 10_i32)
+                .avg_reply_count(reply_count / 10_i32)
+                .avg_repost_count(repost_count / 10_i32)
+                .avg_like_count(like_count / 10_i32)
+                .scored_tweet_count(tweet_count)
+                .score(score)
+                .save()
+                .await?);
+        }
+
+        Ok(handles)
+    }
 }
+
 
 impl Handle {
     pub async fn verify(self, user_id: String) -> sqlx::Result<Self> {

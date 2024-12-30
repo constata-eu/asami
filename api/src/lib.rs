@@ -1,5 +1,5 @@
 pub use anyhow::Context;
-use rocket::{self, fairing::AdHoc, figment, http::Method, routes, serde::json::Json, State};
+use rocket::{self, fairing::AdHoc, figment, http::Method, routes, State};
 use rocket_cors::{AllowedHeaders, AllowedOrigins, Origins};
 use rocket_recaptcha_v3::ReCaptcha;
 pub use rust_decimal::prelude::{Decimal, FromPrimitive, ToPrimitive};

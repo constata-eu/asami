@@ -11,10 +11,11 @@ import { SelectInput, SearchInput, Datagrid, List,
   SimpleShowLayout,
   BooleanField, ReferenceInput, AutocompleteInput, BooleanInput,
   EditButton, ReferenceField,
+  ReferenceArrayField, SingleFieldList,
 } from 'react-admin';
 import { Link } from 'react-router-dom';
 import { BareLayout, DeckCard, ExplorerLayout } from '../layout';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Chip } from '@mui/material';
 import { BigNumField, AmountField } from '../../components/custom_fields';
 
 export const HandleList = () => {
@@ -31,7 +32,7 @@ export const HandleList = () => {
       <Typography mt="0.5em" variant="h3">{ translate("explorer.handles.title") }</Typography>
       <Typography variant="body">{ translate("explorer.handles.description") }</Typography>
       <List disableAuthentication filters={filters} exporter={false}>
-        <Datagrid bulkActionButtons={false} >
+        <Datagrid bulkActionButtons={false} expand={<ExpandHandle/>} >
           <TextField source="id" />
           <TextField source="username" sortable={false} />
           <BigNumField textAlign="right" source="score" />
@@ -50,9 +51,22 @@ export const HandleList = () => {
               <TextField source="accountId" />
             </Link>
           }/>
-          <TextField source="site" sortable={false} />
         </Datagrid>
       </List>
     </ExplorerLayout>
   );
 };
+
+const ExpandHandle = () => {
+  const translate = useTranslate();
+  
+  return <SimpleShowLayout>
+      <ReferenceArrayField label={ translate("resources.Handle.fields.topic")} reference="Topic" source="topicIds">
+        <SingleFieldList empty={<>-</>} linkType={false}>
+            <FunctionField render={ h => <Chip size="small" variant="outlined" label={translate(`resources.Topic.names.${h.name}`)} /> } />
+        </SingleFieldList>
+      </ReferenceArrayField>
+
+      <TextField source="site" sortable={false} />
+  </SimpleShowLayout>;
+}

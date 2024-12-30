@@ -21,6 +21,8 @@ pub struct Handle {
     user_id: Option<String>,
     #[graphql(description = "The score given to this handle by Asami's admin.")]
     score: Option<String>,
+    #[graphql(description = "Topics assigned to this handle")]
+    topic_ids: Vec<i32>,
     #[graphql(description = "Status of this handle.")]
     status: HandleStatus,
     #[graphql(description = "Collabs made")]
@@ -78,6 +80,7 @@ impl Showable<models::Handle, HandleFilter> for Handle {
     }
 
     async fn db_to_graphql(_context: &Context, d: models::Handle) -> AsamiResult<Self> {
+        let topic_ids = d.topic_ids().await?;
         Ok(Handle {
             id: d.attrs.id,
             account_id: hex_to_i32(&d.attrs.account_id)?,
@@ -85,6 +88,7 @@ impl Showable<models::Handle, HandleFilter> for Handle {
             username: d.attrs.username,
             user_id: d.attrs.user_id,
             score: d.attrs.score,
+            topic_ids,
             status: d.attrs.status,
             total_collabs: d.attrs.total_collabs,
             total_collab_rewards: d.attrs.total_collab_rewards,

@@ -1,4 +1,11 @@
-import { useSafeSetState, useDataProvider, useTranslate } from "react-admin";
+import {
+  useSafeSetState,
+  useDataProvider,
+  useTranslate,
+  ReferenceArrayInput,
+  AutocompleteArrayInput
+} from "react-admin";
+
 import { LinearProgress, Alert, Box, Button, CardContent, Typography } from "@mui/material";
 import { Dialog } from '@mui/material';
 import { formatAddress } from '../../lib/formatters';
@@ -41,7 +48,7 @@ export const MakeCampaignCard = ({account, onCreate}) => {
         setOpen(true)
         const input = values.makeCampaignInput;
 
-        let campaign = await dataProvider.create('CreateCampaignFromLink', { data: { input: {link: input.link, topicIds: [] }}});
+        let campaign = await dataProvider.create('CreateCampaignFromLink', { data: { input: {link: input.link, topicIds: input.topicIds }}});
 
         const allowance = await doc.allowance(signer, asamiAddress);
         if (allowance < input.budget ) {
@@ -82,6 +89,7 @@ export const MakeCampaignCard = ({account, onCreate}) => {
       return { contentUrl: translate(`make_campaign_card.errors.${error}`) };
     }
     input.link = values.contentUrl;
+    input.topicIds = values.topic_ids;
 
     try {
       const parsed = parseEther(values.budget);
@@ -150,6 +158,18 @@ const CampaignForm = ({onSubmit, validate, handleClose}) => {
         label={ translate("make_campaign_card.form_step.content_url") } />
       <TextInput fullWidth required={true} size="large" variant="filled" source="budget"
         label={ translate("make_campaign_card.form_step.budget") } />
+
+      <ReferenceArrayInput
+        fullWidth
+        size="large"
+        variant="filled"
+        source="topic_ids"
+        reference="Topic"
+        label="topics"
+      >
+        <AutocompleteArrayInput optionText={(x) => translate(`resources.Topic.names.${x.name}`)} />
+      </ReferenceArrayInput>
+
       <Stack gap="1em">
         <SaveButton fullWidth id="submit-start-campaign-form" size="large"
           label={ translate("make_campaign_card.form_step.start_campaign") } icon={<CampaignIcon/>} />

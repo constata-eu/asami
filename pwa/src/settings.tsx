@@ -3,13 +3,13 @@ const development = {
   environment: 'development',
   recaptchaSiteKey: "6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX",
   rsk: {
-    chainId: 1337,
+    chainId: 31337,
     rpcUrls: {
-      1337: 'http://localhost:8545',
+      31337: 'http://localhost:8545',
     },
     supportedChains: [
       {
-        chainId: '0x539', // hex 1337
+        chainId: '0x7a69', // hex 31337
         chainName: 'RSK Local',
         nativeCurrency: {
           name: 'Local RSK BTC',
