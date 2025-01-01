@@ -45,6 +45,9 @@ model! {
     #[sqlx_model_hints(varchar, default)]
     legacy_score: String,
   },
+  queries {
+      need_scoring("status IN ('verified', 'active') AND (last_scoring IS NULL OR last_scoring < $1)", date: UtcDateTime)
+  },
   has_many {
     HandleTopic(handle_id),
     Collab(handle_id),
@@ -226,9 +229,7 @@ impl HandleHub {
         )?
         .to_offset(time::UtcOffset::UTC);
 
-        let pending = self.select()
-            .status_in(vec![HandleStatus::Verified, HandleStatus::Active])
-            .last_scoring_lt(now - chrono::Duration::days(7))
+        let pending = self.need_scoring(now - chrono::Duration::days(7))
             .all()
             .await?;
 

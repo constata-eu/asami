@@ -51,8 +51,8 @@ async fn main() {
     }];
 
     every![settings.x.crawl_cooldown_minutes * 60 * 1000, |s| {
-        run!("verify_handles" { s.handle().verify_pending().await });
-        run!("verify_score_pending" { s.handle().score_pending().await });
+        run!("verify_pending" { s.handle().verify_pending().await });
+        run!("score_pending" { s.handle().score_pending().await });
     }];
 
     every![1000, |s| {
