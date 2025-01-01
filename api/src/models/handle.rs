@@ -245,22 +245,26 @@ impl HandleHub {
         let api = TwitterApi::new(auth);
 
         for handle in pending {
+            self.state.info("score_pending", "scoring handle", &handle).await;
             let Some(user_id) = handle.user_id().as_ref().and_then(|x| x.parse::<u64>().ok() ) else {
                 self.state.info("score_pending", "handle_has_no_user_id", &handle).await;
                 continue;
             
             };
 
-            let Some(tweets) = api.get_user_tweets(user_id)
+            let response = api.get_user_tweets(user_id)
                 .start_time(start_time)
                 .end_time(end_time)
                 .exclude(vec![Exclude::Retweets])
-                .tweet_fields(vec![TweetField::AuthorId, TweetField::OrganicMetrics])
+                .tweet_fields(vec![TweetField::AuthorId, TweetField::PublicMetrics])
                 .send()
-                .await?
-                .into_data() else {
-                    self.state.info("score_pending", "could_not_get_tweets_for", &handle).await;
-                    continue;
+                .await?;
+
+            tokio::time::sleep(tokio::time::Duration::from_millis(3 * 60 * 1000)).await;
+
+            let Some(tweets) = response.data() else {
+                self.state.info("score_pending", "could_not_get_tweets_for", &response).await;
+                continue;
             };
 
             let mut impression_count = 0_i32;
@@ -269,11 +273,17 @@ impl HandleHub {
             let mut like_count = 0_i32;
             let mut tweet_count = 0_i32;
             for tweet in tweets {
-                let Some(m) = tweet.organic_metrics else {
+                let Some(m) = tweet.public_metrics.as_ref() else {
                     self.state.info("score_pending", "no_tweet_metrics_for", serde_json::json![[handle.id(), tweet.id]]).await;
                     continue;
                 };
-                impression_count += m.impression_count as i32;
+                // We estimate the impression count from public metrics
+                // until we change the system to request access to private impression metrics.
+                let estimated_impression_count =
+                    (m.like_count * 30) +
+                    (m.reply_count * 200) +
+                    (m.quote_count.map(|q| q * 40).unwrap_or(0));
+                impression_count += estimated_impression_count as i32;
                 reply_count += m.reply_count as i32;
                 repost_count += m.retweet_count as i32;
                 like_count += m.like_count as i32;
@@ -297,6 +307,7 @@ impl HandleHub {
                 .score(score)
                 .save()
                 .await?);
+
         }
 
         Ok(handles)
