@@ -31,7 +31,7 @@ const CollabList = () => {
         <CardTitle text="collab_list.title">
           <Typography>{ translate("collab_list.text") }.</Typography>
         </CardTitle>
-        <Datagrid bulkActionButtons={false}>
+        <Datagrid bulkActionButtons={false} resource="Collab">
 					<FunctionField source="status" render={record => 
 						<>
 							<Typography>{translate(`collab_list.statuses.${record.status}.title`)}</Typography>
