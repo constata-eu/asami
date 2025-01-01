@@ -293,6 +293,7 @@ impl HandleHub {
                 .avg_repost_count(repost_count / 10_i32)
                 .avg_like_count(like_count / 10_i32)
                 .scored_tweet_count(tweet_count)
+                .last_scoring(Some(now))
                 .score(score)
                 .save()
                 .await?);
