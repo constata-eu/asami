@@ -281,8 +281,22 @@ impl Account {
         Ok(campaigns)
     }
 
-    pub async fn create_handle(&self, site: Site, username: &str) -> sqlx::Result<Handle> {
-        self.state
+    pub async fn create_handle(&self, site: Site, username: &str) -> AsamiResult<Handle> {
+        let existing = self
+            .state
+            .handle()
+            .select()
+            .site_eq(site)
+            .username_ilike(username)
+            .status_in(vec![HandleStatus::Verified, HandleStatus::Active])
+            .count()
+            .await? > 0;
+
+        if existing {
+            return Err(Error::validation("handle", "handle_already_in_use_by_someone_else"));
+        }
+
+        Ok(self.state
             .handle()
             .insert(InsertHandle {
                 account_id: self.attrs.id.clone(),
@@ -290,7 +304,7 @@ impl Account {
                 site,
             })
             .save()
-            .await
+            .await?)
     }
 
     pub async fn create_claim_account_request(
