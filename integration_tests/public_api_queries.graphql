@@ -56,6 +56,7 @@ mutation CreateHandle($input: CreateHandleInput!) {
     username
     userId
     score
+    topicIds
     status
     totalCollabs
     totalCollabRewards
@@ -215,6 +216,7 @@ query Handle($id: Int!) {
     username
     userId
     score
+    topicIds
     status
     totalCollabs
     totalCollabRewards
@@ -229,6 +231,7 @@ query AllHandles($page: Int, $perPage: Int, $sortField: String, $sortOrder: Stri
     username
     userId
     score
+    topicIds
     status
     totalCollabs
     totalCollabRewards
@@ -333,6 +336,26 @@ query AllOnChainJobs($page: Int, $perPage: Int, $sortField: String, $sortOrder: 
 }
 query AllOnChainJobsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: OnChainJobFilter) {
   _allOnChainJobsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query Topic($id: Int!) {
+  Topic(id: $id) {
+    id
+    name
+    __typename
+  }
+}
+query AllTopics($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: TopicFilter) {
+  allTopics(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    name
+    __typename
+  }
+}
+query AllTopicsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: TopicFilter) {
+  _allTopicsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
     count
     __typename
   }

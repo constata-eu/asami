@@ -279,6 +279,9 @@
         "success": "¡Hemos obtenido tu nombre!",
         "username_error": "Eso no parece ser un nombre de usuario de X. Debería ser algo como '@jack'"
       },
+      "in_progress": {
+        "text": "Estamos verificando tu cuenta de X, puede tomar hasta una hora."
+      },
       "make_verification_post": {
         "text": "Publica este mensaje para verificar la propiedad de tu nombre, consentir el uso de asami y la divulgación a tus seguidores.",
         "post_text": "A partir de hoy, algunas de mis republicaciones serán pagadas, ya que me uní a @asami_club [%{accountId}]",

@@ -274,6 +274,9 @@
         "success": "We've got your handle!",
         "username_error": "That does not seem to be an X username. It should be something like '@jack'"
       },
+      "in_progress": {
+        "text": "We're verifying your X account, this may take up to one hour."
+      },
       "make_verification_post": {
         "text": "Post this message to verify your handle ownership, consent to use asami, and disclosure to your followers.",
         "post_text": "Starting today, some of my reposts will be paid for, as I joined @asami_club [%{accountId}]",

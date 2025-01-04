@@ -94,9 +94,10 @@ input CampaignFilter {
   budgetGt: String
   budgetLt: String
   budgetEq: String
-  briefingHashEq: String
+  briefingHashLike: String
   briefingJsonLike: String
   statusNe: CampaignStatus
+  statusEq: CampaignStatus
   availableToAccountId: Int
 }
 
@@ -117,12 +118,17 @@ input CollabFilter {
   handleIdIn: [Int!]
   memberIdEq: Int
   memberIdIn: [Int!]
+  statusEq: CollabStatus
+  statusNe: CollabStatus
 }
 
 "The input for creating a new CampaignRequest."
 input CreateCampaignFromLinkInput {
   link: String!
   topicIds: [Int!]!
+  pricePerPoint: String!
+  maxIndividualReward: String!
+  minIndividualReward: String!
 }
 
 "The input for creating a new CampaignPreference."
@@ -156,6 +162,11 @@ input HandleFilter {
 input OnChainJobFilter {
   ids: [Int!]
   idEq: Int
+}
+
+input TopicFilter {
+  ids: [Int!]
+  nameLike: String
 }
 
 """
@@ -326,6 +337,8 @@ type Handle {
   userId: String
   "The score given to this handle by Asami's admin."
   score: String
+  "Topics assigned to this handle"
+  topicIds: [Int!]!
   "Status of this handle."
   status: HandleStatus!
   "Collabs made"
@@ -393,6 +406,9 @@ type Query {
   OnChainJob(id: Int!): OnChainJob!
   allOnChainJobs(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: OnChainJobFilter): [OnChainJob!]!
   _allOnChainJobsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: OnChainJobFilter): ListMetadata!
+  Topic(id: Int!): Topic!
+  allTopics(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: TopicFilter): [Topic!]!
+  _allTopicsMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: TopicFilter): ListMetadata!
   AuditLogEntry(id: Int!): AuditLogEntry!
   allAuditLogEntries(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: AuditLogEntryFilter): [AuditLogEntry!]!
   _allAuditLogEntriesMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: AuditLogEntryFilter): ListMetadata!
@@ -431,4 +447,11 @@ type Stats {
   totalRewardsPaid: String!
   "Date in which these stats were calculated"
   date: DateTime!
+}
+
+type Topic {
+  "Topic ID as integer"
+  id: Int!
+  "Human readable topic name, in english"
+  name: String!
 }

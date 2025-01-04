@@ -260,6 +260,7 @@ impl<'b> ApiClient<'b> {
         duration: i64,
         topic_ids: &[i32],
     ) -> models::Campaign {
+        use api::models::AbiEncode;
         use gql::create_campaign_from_link::*;
         let response: graphql_client::Response<ResponseData> = self
             .gql_response(
@@ -267,6 +268,9 @@ impl<'b> ApiClient<'b> {
                     input: CreateCampaignFromLinkInput {
                         link: link.to_string(),
                         topic_ids: topic_ids.iter().map(|x| *x as i64).collect(),
+                        price_per_point: milli("1").encode_hex(),
+                        max_individual_reward: milli("20000").encode_hex(),
+                        min_individual_reward: milli("200").encode_hex(),
                     },
                 }),
                 vec![],
@@ -470,8 +474,9 @@ impl<'b> ApiClient<'b> {
             ids: None,
             id_eq: None,
             account_id_eq: None,
-            briefing_hash_eq: None,
+            briefing_hash_like: None,
             briefing_json_like: None,
+            status_eq: None,
             budget_eq: None,
             budget_gt: None,
             budget_lt: None,
