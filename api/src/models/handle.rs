@@ -254,6 +254,7 @@ impl HandleHub {
             };
 
             let response = api.get_user_tweets(user_id)
+                .max_results(75)
                 .start_time(start_time)
                 .end_time(end_time)
                 .exclude(vec![Exclude::Retweets, Exclude::Replies])
@@ -396,9 +397,12 @@ impl Handle {
 
     // Returning None means the account cannot receive rewards.
     // Most likely because it has not been scored yet.
-    pub fn reward_for(&self, _campaign: &Campaign) -> Option<U256> {
+    pub fn reward_for(&self, campaign: &Campaign) -> Option<U256> {
+        let high = campaign.max_individual_reward_u256();
+        let low = campaign.min_individual_reward_u256();
         let score = u256(self.score().as_ref()?);
-        Some(milli("9999").min(milli("1") * score))
+        let base = campaign.price_per_point_u256() * score;
+        Some(base.clamp(low, high))
     }
 
     pub async fn add_topic(&self, topic: &Topic) -> anyhow::Result<HandleTopic> {

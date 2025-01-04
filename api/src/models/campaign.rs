@@ -26,6 +26,12 @@ model! {
     briefing_json: String,
     #[sqlx_model_hints(varchar)]
     budget: String,
+    #[sqlx_model_hints(varchar)]
+    price_per_point: String,
+    #[sqlx_model_hints(varchar)]
+    max_individual_reward: String,
+    #[sqlx_model_hints(varchar)]
+    min_individual_reward: String,
     #[sqlx_model_hints(timestamptz, default)]
     valid_until: Option<UtcDateTime>,
     #[sqlx_model_hints(varchar, default)]
@@ -137,7 +143,15 @@ impl CampaignHub {
         Ok(())
     }
 
-    pub async fn create_from_link(&self, account: &Account, link: &str, topics: &[Topic]) -> AsamiResult<Campaign> {
+    pub async fn create_from_link(
+        &self,
+        account: &Account,
+        link: &str,
+        topics: &[Topic],
+        price_per_point: U256,
+        max_individual_reward: U256,
+        min_individual_reward: U256,
+    ) -> AsamiResult<Campaign> {
         use regex::Regex;
         use url::Url;
 
@@ -190,6 +204,9 @@ impl CampaignHub {
                 budget: weihex("0"),
                 briefing_hash: briefing_hash.encode_hex(),
                 briefing_json,
+                price_per_point: price_per_point.encode_hex(),
+                max_individual_reward: max_individual_reward.encode_hex(),
+                min_individual_reward: min_individual_reward.encode_hex(),
             })
             .save()
             .await?;
@@ -232,11 +249,10 @@ impl CampaignHub {
                 .map_err(|_| Error::Validation("content_id".into(), "was stored in the db not as u64".into()))?;
 
             self.state.info("sync_x_collabs", "fetching_retweets", &post_id).await;
-            if let Some(metrics) = api.get_tweet(post_id).send().await?.data.as_ref().and_then(|o| o.organic_metrics.as_ref()) {
+            if let Some(metrics) = api.get_tweet(post_id).send().await?.data.as_ref().and_then(|o| o.public_metrics.as_ref()) {
                 campaign
                     .clone()
                     .update()
-                    .impression_count(metrics.impression_count as i32)
                     .reply_count(metrics.reply_count as i32)
                     .repost_count(metrics.retweet_count as i32)
                     .like_count(metrics.like_count as i32)
@@ -308,6 +324,18 @@ impl Campaign {
 
     pub fn budget_u256(&self) -> U256 {
         u256(self.budget())
+    }
+
+    pub fn max_individual_reward_u256(&self) -> U256 {
+        u256(self.max_individual_reward())
+    }
+
+    pub fn min_individual_reward_u256(&self) -> U256 {
+        u256(self.min_individual_reward())
+    }
+
+    pub fn price_per_point_u256(&self) -> U256 {
+        u256(self.price_per_point())
     }
 
     pub async fn available_budget(&self) -> anyhow::Result<U256> {

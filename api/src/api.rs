@@ -405,3 +405,10 @@ fn field_error(message: &str, second_message: &str) -> FieldError {
 fn into_like_search(i: Option<String>) -> Option<String> {
     i.map(|s| format!("%{s}%"))
 }
+
+fn parse_u256(fieldname: &str, value: &str) -> FieldResult<U256> {
+    use ethers::abi::AbiDecode;
+    Ok(U256::decode_hex(value).map_err(|_e|
+        Error::validation(fieldname, "invalid_hex_encoded_u256_value")
+    )?)
+} 

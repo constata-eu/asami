@@ -193,6 +193,12 @@
     "errors": {
       "budget_too_low": "El presupuesto es demasiado bajo, debe ser al menos 1 DOC",
       "budget_not_a_number": "El presupuesto debe ser un número",
+      "price_per_point_not_a_number": "El precio por impresión no es un número",
+      "price_per_point_too_low": "El precio por impresión es muy bajo",
+      "max_too_low": "La recompensa máxima es muy baja",
+      "max_not_a_number": "La recompensa máxima no es un número",
+      "min_too_low": "La recompensa mínima es muy baja",
+      "min_not_a_number": "La recompensa mínima no es un número",
       "not_a_post_url": "El enlace que proporcionaste no parece ser un post de X.",
       "invalid_url": "El enlace debe apuntar a un post y comenzar con https://..."
     },
@@ -200,8 +206,16 @@
       "content_url": "Enlace al post de X",
       "budget": "Presupuesto total que gastarás, en DOC",
       "start_campaign": "Iniciar campaña",
-      "service_summary": "Pagarás ~0.001 DOC por persona real alcanzada por un repost. Los fondos no utilizados serán devueltos después de 30 días.",
-      "x_description": "En X, los miembros repostearán tu post original."
+      "service_summary": "Los miembros republicarán tu contenido y cobrarán en base a su alcance",
+      "refund_notice": "Los fondos que no se utilicen se devolveran en 30 días",
+      "price_per_point": "DOC por cada impresión que sumen",
+      "price_per_point_help": "Las impresiones que suma cada colaborador son solo una aproximación y no están garantizadas. Un valor de 0.002 quiere decir que apuntas a pagar 2 DOC cada 1000 impressiones.",
+      "max_individual_reward": "Máximo de DOC a pagar por colaborador",
+      "max_individual_reward_help": "Ningún colaborador recibirá más que esta cantidad de DOC, sin importar su alcance.",
+      "min_individual_reward": "Mínimo de DOC a pagar por colaborador",
+      "min_individual_reward_help": "Los colaboradores cobrarán al menos este monto, sin importar su alcance. Usa esto para incentivar a colaboradores de menos alcance.",
+      "topics": "Criterio de audiencia",
+      "topics_help": "Solo los miembros que cumplen todos los criterias podrán colaborar. Déjalo vacío para que cualquier miembro pueda colaborar."
     },
     "tx_waiter": {
       "approving_title": "Aprobación del gasto del presupuesto",

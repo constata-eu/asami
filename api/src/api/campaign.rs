@@ -102,7 +102,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     }
 
     async fn count(context: &Context, filter: Option<CampaignFilter>) -> FieldResult<ListMetadata> {
-        if let Some(account_ids) = filter.as_ref().and_then(|f| f.available_to_account_id.clone()) {
+        if let Some(account_ids) = filter.as_ref().and_then(|f| f.available_to_account_id) {
             let ids_filter = make_available_to_account_id_filter(context, account_ids).await?;
             Self::base_count(context, Some(ids_filter)).await
         } else {
@@ -168,12 +168,22 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
 pub struct CreateCampaignFromLinkInput {
     pub link: String,
     pub topic_ids: Vec<i32>,
+    pub price_per_point: String,
+    pub max_individual_reward: String,
+    pub min_individual_reward: String,
 }
 
 impl CreateCampaignFromLinkInput {
     pub async fn process(self, context: &Context) -> FieldResult<Campaign> {
         let topics = context.app.topic().select().id_in(&self.topic_ids).all().await?;
-        let campaign = context.app.campaign().create_from_link(&context.account().await?, &self.link, &topics).await?;
+        let campaign = context.app.campaign().create_from_link(
+            &context.account().await?,
+            &self.link,
+            &topics,
+            parse_u256("price_per_point", &self.price_per_point)?,
+            parse_u256("max_individual_reward", &self.max_individual_reward)?,
+            parse_u256("min_individual_reward", &self.min_individual_reward)?,
+        ).await?;
 
         Ok(Campaign::db_to_graphql(context, campaign).await?)
     }

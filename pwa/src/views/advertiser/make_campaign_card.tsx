@@ -48,7 +48,18 @@ export const MakeCampaignCard = ({account, onCreate}) => {
         setOpen(true)
         const input = values.makeCampaignInput;
 
-        let campaign = await dataProvider.create('CreateCampaignFromLink', { data: { input: {link: input.link, topicIds: input.topicIds }}});
+        debugger;
+        const campaign = await dataProvider.create('CreateCampaignFromLink', {
+          data: {
+            input: {
+              link: input.link,
+              pricePerPoint: toBeHex(input.pricePerPoint, 32),
+              maxIndividualReward: toBeHex(input.maxIndividualReward, 32),
+              minIndividualReward: toBeHex(input.minIndividualReward, 32),
+              topicIds: input.topicIds
+            }
+          }
+        });
 
         const allowance = await doc.allowance(signer, asamiAddress);
         if (allowance < input.budget ) {
@@ -79,6 +90,19 @@ export const MakeCampaignCard = ({account, onCreate}) => {
     }
   }
 
+  const parseNumber = (value, min_allowed, too_low_msg, nan_message) => {
+    try {
+      const parsed = parseEther(value);
+      if( parsed < parseEther(min_allowed) ) {
+        return { error: translate(`make_campaign_card.errors.${too_low_message}`) };
+      }
+      return { ok: BigInt(zeroPadValue(toBeHex(parsed), 32)) };
+    } catch {
+      return { error: translate(`make_campaign_card.errors.${nan_message}`) };
+    }
+    
+  }
+
   const validate = (values) => {
     let input = {
       duration: 30,
@@ -90,16 +114,32 @@ export const MakeCampaignCard = ({account, onCreate}) => {
     }
     input.link = values.contentUrl;
     input.topicIds = values.topic_ids;
+    input.pricePerPoint = values.pricePerPoint;
 
-    try {
-      const parsed = parseEther(values.budget);
-      if( parsed <= parseEther("0") ) {
-        return { budget: translate('make_campaign_card.errors.budget_too_low') };
-      }
-      input.budget = BigInt(zeroPadValue(toBeHex(parsed), 32));
-    } catch {
-      return { budget: translate('make_campaign_card.errors.budget_not_a_number') };
+    const budget = parseNumber(values.budget, "1", "budget_too_low", "budget_not_a_number");
+    if (budget.error ) {
+      return { budget: budget.error };
     }
+    input.budget = budget.ok;
+
+    const ppp = parseNumber(values.pricePerPoint, "0.001", "price_per_point_too_low", "price_per_point_not_a_number");
+    if (ppp.error ) {
+      return { pricePerPoint: ppp.error };
+    }
+    input.pricePerPoint = ppp.ok;
+
+    const max = parseNumber(values.maxIndividualReward, "0", "max_too_low", "max_not_a_number");
+    if (max.error ) {
+      return { maxIndividualReward: max.error };
+    }
+    input.maxIndividualReward = max.ok;
+
+    const min = parseNumber(values.minIndividualReward, "0", "min_too_low", "min_not_a_number");
+    if (min.error ) {
+      return { minIndividualReward: min.error };
+    }
+    input.minIndividualReward = min.ok;
+    
     values.makeCampaignInput = input;
   }
   
@@ -150,13 +190,19 @@ export const MakeCampaignCard = ({account, onCreate}) => {
 
 const CampaignForm = ({onSubmit, validate, handleClose}) => {
   const translate = useTranslate();
+  const defaultValues = {
+    pricePerPoint: "0.003",
+    maxIndividualReward: "10",
+    minIndividualReward: "0.2",
+  };
   return <Box p="1em" id="campaign-form">
     <Typography>{ translate("make_campaign_card.form_step.service_summary") }</Typography>
-    <Typography>{ translate("make_campaign_card.form_step.x_description") }</Typography>
-    <Form sanitizeEmptyValues validate={validate} onSubmit={onSubmit}>
-      <TextInput fullWidth required={true} size="large" variant="filled" source="contentUrl"
-        label={ translate("make_campaign_card.form_step.content_url") } />
-      <TextInput fullWidth required={true} size="large" variant="filled" source="budget"
+    <Typography mb={2}>{ translate("make_campaign_card.form_step.refund_notice") }</Typography>
+    <Form defaultValues={defaultValues} sanitizeEmptyValues validate={validate} onSubmit={onSubmit}>
+      <TextInput fullWidth required={true} size="small" variant="filled" source="contentUrl"
+        label={ translate("make_campaign_card.form_step.content_url") }
+      />
+      <TextInput fullWidth required={true} size="small" variant="filled" source="budget"
         label={ translate("make_campaign_card.form_step.budget") } />
 
       <ReferenceArrayInput
@@ -165,10 +211,26 @@ const CampaignForm = ({onSubmit, validate, handleClose}) => {
         variant="filled"
         source="topic_ids"
         reference="Topic"
-        label="topics"
       >
-        <AutocompleteArrayInput optionText={(x) => translate(`resources.Topic.names.${x.name}`)} />
+        <AutocompleteArrayInput
+          label={ translate("make_campaign_card.form_step.topics") }
+          helperText={ translate("make_campaign_card.form_step.topics_help") }
+          sx={{mb: "0.5em"}}
+          size="small" optionText={(x) => translate(`resources.Topic.names.${x.name}`)} />
       </ReferenceArrayInput>
+
+      <TextInput fullWidth required={true} value="0.002" size="small" variant="filled" source="pricePerPoint"
+        helperText={ translate("make_campaign_card.form_step.price_per_point_help")}
+        sx={{mb: "0.5em"}}
+        label={ translate("make_campaign_card.form_step.price_per_point") } />
+      <TextInput fullWidth required={true} size="small" variant="filled" source="maxIndividualReward"
+        helperText={ translate("make_campaign_card.form_step.max_individual_reward_help")}
+        sx={{mb: "0.5em"}}
+        label={ translate("make_campaign_card.form_step.max_individual_reward") } />
+      <TextInput fullWidth required={true} size="small" variant="filled" source="minIndividualReward"
+        helperText={ translate("make_campaign_card.form_step.min_individual_reward_help")}
+        sx={{mb: "0.5em"}}
+        label={ translate("make_campaign_card.form_step.min_individual_reward") } />
 
       <Stack gap="1em">
         <SaveButton fullWidth id="submit-start-campaign-form" size="large"

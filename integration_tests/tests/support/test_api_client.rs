@@ -163,6 +163,7 @@ impl<'b> ApiClient<'b> {
         site: models::Site,
         score: U256,
     ) -> models::Handle {
+        use ethers::abi::AbiEncode;
         use gql::create_handle::*;
         let gql_site = match site {
             models::Site::X => Site::X,
@@ -194,7 +195,9 @@ impl<'b> ApiClient<'b> {
             .verify(user_id.into())
             .await
             .unwrap()
-            .set_score(score)
+            .update()
+            .score(Some(score.encode_hex()))
+            .save()
             .await
             .unwrap()
     }

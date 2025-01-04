@@ -26,7 +26,7 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
             handle_id: h.attrs.id,
             topic_id: 2
         });
-        h.verify((1000 + i).to_string()).await?.set_score(wei("1234")).await?;
+        h.verify((1000 + i).to_string()).await?.update().score(Some(weihex("1234"))).save().await?;
     }
 
     wait_here();

@@ -188,6 +188,12 @@
     "errors": {
       "budget_too_low": "Budget is too low, must be at least 1 DOC",
       "budget_not_a_number": "Budget must be a number",
+      "price_per_point_not_a_number": "Price per impression is not a number",
+      "price_per_point_too_low": "Price per impression is too low",
+      "max_too_low": "Maximum individual reward is too low",
+      "max_not_a_number": "Maximum individual reward is not a number",
+      "min_too_low": "Minimum individual reward is too low",
+      "min_not_a_number": "Minimum individual reward is not a number",
       "not_a_post_url": "The link you provided does not appear to be an X post.",
       "invalid_url": "The link must point to a post, and start with https://..."
     },
@@ -195,8 +201,16 @@
       "content_url": "Link to X post",
       "budget": "Total budget you'll spend, in DOC",
       "start_campaign": "Start Campaign",
-      "service_summary": "You'll pay ~0.001 DOC per real person reached by a repost. Unused funds will be returned to you after 30 days.",
-      "x_description": "On X, members will repost your original post."
+      "service_summary": "Members will repost your content and get paid based on their reach",
+      "refund_notice": "Unused funds will be returned to you after 30 days.",
+      "price_per_point": "DOC per impression contributed.",
+      "price_per_point_help": "Impressions contributed by collaborators are only a rough approximation, and are not guaranteed. A value of 0.002 means your intent is to pay 2 DOC every 1K impressions.",
+      "max_individual_reward": "Max DOC per individual collaborator",
+      "max_individual_reward_help": "No collaborator will be paid more than this, regardless of how many impressions they contribute.",
+      "min_individual_reward": "Min DOC per individual collaborator",
+      "min_individual_reward_help": "Collaborators will be paid at least this much, regardles of impressions. You can use this to incentivize contributions from lower reach members.",
+      "topics": "Relevant audience criteria",
+      "topics_help": "Only members who meet all selected criteria can collaborate. Leave blank if you want anyone to collaborate."
     },
     "tx_waiter": {
       "approving_title": "Approve budget spend",
