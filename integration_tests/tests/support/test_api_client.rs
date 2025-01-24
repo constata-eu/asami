@@ -76,7 +76,7 @@ impl<'b> ApiClient<'b> {
     }
 
     pub async fn x_handle(&self) -> models::Handle {
-        self.account().await.handle_scope().site_eq(models::Site::X).one().await.unwrap()
+        self.account().await.handle_scope().one().await.unwrap()
     }
 
     pub fn local_wallet(&self) -> &LocalWallet {
@@ -160,23 +160,16 @@ impl<'b> ApiClient<'b> {
         &self,
         username: &str,
         user_id: &str,
-        site: models::Site,
         score: U256,
     ) -> models::Handle {
         use ethers::abi::AbiEncode;
         use gql::create_handle::*;
-        let gql_site = match site {
-            models::Site::X => Site::X,
-            models::Site::Instagram => Site::INSTAGRAM,
-            _ => panic!("Site not supported in tests yet {site:?}"),
-        };
 
         let response: graphql_client::Response<ResponseData> = self
             .gql_response(
                 &gql::CreateHandle::build_query(Variables {
                     input: CreateHandleInput {
                         username: username.to_string(),
-                        site: gql_site,
                     },
                 }),
                 vec![],

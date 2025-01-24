@@ -66,7 +66,5 @@ const ExpandHandle = () => {
             <FunctionField render={ h => <Chip size="small" variant="outlined" label={translate(`resources.Topic.names.${h.name}`)} /> } />
         </SingleFieldList>
       </ReferenceArrayField>
-
-      <TextField source="site" sortable={false} />
   </SimpleShowLayout>;
 }

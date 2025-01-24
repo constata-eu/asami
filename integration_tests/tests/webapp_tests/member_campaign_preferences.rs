@@ -5,7 +5,7 @@ use crate::support::gql::{create_campaign_preference::*, *};
 browser_test! { hides_ignored_and_shows_attempted_repost (mut d)
     d.login().await;
 
-    d.api.create_handle("alice_on_x", "11111", Site::X, u("200")).await;
+    d.api.create_handle("alice_on_x", "11111", u("200")).await;
 
     let ignorable = d.test_app().quick_campaign(u("10"), 2, &[]).await;
     let important = d.test_app().quick_campaign(u("100"), 2, &[]).await;
@@ -23,7 +23,7 @@ browser_test! { hides_ignored_and_shows_attempted_repost (mut d)
 
 api_test! { filters_campaigns_for_account (mut a)
     a.claim_account().await;
-    a.create_handle("alice_on_x", "1111", Site::X, wei("100")).await;
+    a.create_handle("alice_on_x", "1111", wei("100")).await;
 
     let one = a.test_app.quick_campaign(u("10"), 2, &[]).await;
     let two = a.test_app.quick_campaign(u("100"), 2, &[]).await;

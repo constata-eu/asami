@@ -91,9 +91,6 @@ const CampaignList = ({listContext}) => {
               { translate("campaign_list.see_post") }
             </a>
           } />
-          <FunctionField label={ translate("campaign_list.kind") } render={record =>
-						translate(`campaign_kinds.${record.campaignKind}`)
-          } />
           <FunctionField source="status" label={ translate("campaign_list.status") } render={record => {
 						if (record.status == "SUBMITTED") {
 							return translate("campaign_list.statuses.publishing");

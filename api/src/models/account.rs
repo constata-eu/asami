@@ -281,12 +281,11 @@ impl Account {
         Ok(campaigns)
     }
 
-    pub async fn create_handle(&self, site: Site, username: &str) -> AsamiResult<Handle> {
+    pub async fn create_handle(&self, username: &str) -> AsamiResult<Handle> {
         let existing = self
             .state
             .handle()
             .select()
-            .site_eq(site)
             .username_ilike(username)
             .status_in(vec![HandleStatus::Verified, HandleStatus::Active])
             .count()
@@ -301,7 +300,6 @@ impl Account {
             .insert(InsertHandle {
                 account_id: self.attrs.id.clone(),
                 username: username.to_string(),
-                site,
             })
             .save()
             .await?)

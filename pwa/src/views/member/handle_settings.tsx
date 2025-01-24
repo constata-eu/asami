@@ -7,10 +7,10 @@ import { SimpleForm, CreateBase, TextInput, SaveButton, useNotify } from 'react-
 import { FunctionField, SimpleShowLayout} from 'react-admin';
 import { Stack } from '@mui/material';
 
-export const HandleSettings = ({handles, site, namespace, handleMinLength, handleMaxLength, icon, verificationPost}) => {
+export const HandleSettings = ({handles, namespace, handleMinLength, handleMaxLength, icon, verificationPost}) => {
   const translate = useTranslate();
   let content;
-  const handle = handles.data?.filter((x) => x.site == site)[0];
+  const handle = handles.data?.[0];
 
   if (handles.isLoading){
     content = (<>
@@ -27,7 +27,6 @@ export const HandleSettings = ({handles, site, namespace, handleMinLength, handl
 		content = <CreateHandle
 			onSave={handles.refetch}
 			namespace={namespace}
-			site={site}
 			handleMinLength={handleMinLength}
 			handleMaxLength={handleMaxLength}
 		/>;
@@ -64,7 +63,7 @@ export const HandleStats = ({handle, id}) => {
   </Box>;
 }
 
-export const CreateHandle = ({onSave, namespace, site, handleMinLength, handleMaxLength }) => {
+export const CreateHandle = ({onSave, namespace, handleMinLength, handleMaxLength }) => {
   const translate = useTranslate();
   const notify = useNotify();
 
@@ -79,7 +78,7 @@ export const CreateHandle = ({onSave, namespace, site, handleMinLength, handleMa
 
   const validate = (values) => {
     let errors = {};
-    let input = { site: site};
+    let input = {};
 
     if ( values.username.match(new RegExp(`^@?(\\w){${handleMinLength},${handleMaxLength}}$`) )) {
       input.username = values.username.replace("@","");

@@ -11,8 +11,6 @@ pub struct Handle {
     id: i32,
     #[graphql(description = "The id of the account that made the request.")]
     account_id: i32,
-    #[graphql(description = "The social network of this handle: X, Instagram, Nostr.")]
-    site: Site,
     #[graphql(
         description = "The username on the given social network. This may change by the user, it may not be a unique id."
     )]
@@ -38,7 +36,6 @@ pub struct HandleFilter {
     id_eq: Option<i32>,
     username_like: Option<String>,
     status_in: Option<Vec<HandleStatus>>,
-    site_eq: Option<Site>,
     user_id_like: Option<String>,
     account_id_eq: Option<i32>,
 }
@@ -62,7 +59,6 @@ impl Showable<models::Handle, HandleFilter> for Handle {
                 id_eq: f.id_eq,
                 username_like: into_like_search(f.username_like),
                 status_in: f.status_in,
-                site_eq: f.site_eq,
                 user_id_like: f.user_id_like,
                 account_id_eq: f.account_id_eq.map(i32_to_hex),
                 ..Default::default()
@@ -84,7 +80,6 @@ impl Showable<models::Handle, HandleFilter> for Handle {
         Ok(Handle {
             id: d.attrs.id,
             account_id: hex_to_i32(&d.attrs.account_id)?,
-            site: d.attrs.site,
             username: d.attrs.username,
             user_id: d.attrs.user_id,
             score: d.attrs.score,
@@ -101,12 +96,11 @@ impl Showable<models::Handle, HandleFilter> for Handle {
 #[serde(rename_all = "camelCase")]
 pub struct CreateHandleInput {
     pub username: String,
-    pub site: Site,
 }
 
 impl CreateHandleInput {
     pub async fn process(self, context: &Context) -> FieldResult<Handle> {
-        let req = context.account().await?.create_handle(self.site, &self.username).await?;
+        let req = context.account().await?.create_handle(&self.username).await?;
 
         Ok(Handle::db_to_graphql(context, req).await?)
     }

@@ -13,8 +13,6 @@ pub struct Campaign {
     account_id: i32,
     #[graphql(description = "The total budget for this campaign to be collected by users.")]
     budget: String,
-    #[graphql(description = "The kind of campaign, what's expected from the member.")]
-    campaign_kind: CampaignKind,
     #[graphql(description = "Auxiliary data related to this campaign's briefing")]
     briefing_json: String,
     #[graphql(description = "Auxiliary data related to this campaign's briefing")]
@@ -148,7 +146,6 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
             account_id: hex_to_i32(&d.attrs.account_id)?,
             budget,
             valid_until: d.attrs.valid_until,
-            campaign_kind: d.attrs.campaign_kind,
             briefing_json: d.attrs.briefing_json,
             briefing_hash: d.attrs.briefing_hash,
             created_at: d.attrs.created_at,

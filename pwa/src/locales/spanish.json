@@ -103,9 +103,6 @@
       }
     }
   },
-	"campaign_kinds": {
-		"XREPOST": "Repost en X"
-	},
 	"footer": {
     "built_with": "Smart contract bitcoiner en",
     "tech_sponsor": "Sponsor de tecnología",

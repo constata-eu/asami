@@ -97,10 +97,10 @@ impl TestApp {
         client.start_and_pay_campaign( "https://x.com/somebody/status/1716421161867710954", budget, duration, topic_ids).await
     }
 
-    pub async fn quick_handle(&self, username: &str, user_id: &str, site: models::Site, score: U256) -> models::Handle {
+    pub async fn quick_handle(&self, username: &str, user_id: &str, score: U256) -> models::Handle {
         let mut client = self.client().await;
         client.claim_account().await;
-        client.create_handle(username, user_id, site, score).await
+        client.create_handle(username, user_id, score).await
     }
 
     pub fn make_random_local_wallet(&self) -> LocalWallet {

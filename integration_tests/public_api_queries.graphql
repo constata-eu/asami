@@ -15,7 +15,6 @@ mutation CreateCampaignFromLink($input: CreateCampaignFromLinkInput!) {
     id
     accountId
     budget
-    campaignKind
     briefingJson
     briefingHash
     validUntil
@@ -34,7 +33,6 @@ mutation UpdateCampaign($id: Int!) {
     id
     accountId
     budget
-    campaignKind
     briefingJson
     briefingHash
     validUntil
@@ -52,7 +50,6 @@ mutation CreateHandle($input: CreateHandleInput!) {
   createHandle(input: $input) {
     id
     accountId
-    site
     username
     userId
     score
@@ -169,7 +166,6 @@ query Campaign($id: Int!) {
     id
     accountId
     budget
-    campaignKind
     briefingJson
     briefingHash
     validUntil
@@ -188,7 +184,6 @@ query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: St
     id
     accountId
     budget
-    campaignKind
     briefingJson
     briefingHash
     validUntil
@@ -212,7 +207,6 @@ query Handle($id: Int!) {
   Handle(id: $id) {
     id
     accountId
-    site
     username
     userId
     score
@@ -227,7 +221,6 @@ query AllHandles($page: Int, $perPage: Int, $sortField: String, $sortOrder: Stri
   allHandles(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
     id
     accountId
-    site
     username
     userId
     score

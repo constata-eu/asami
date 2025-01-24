@@ -6,7 +6,6 @@ app_test! { creates_campaign_register_collabs_and_reimburses(a)
     advertiser.setup_as_advertiser("test main advertiser").await;
     let mut campaign = advertiser.start_and_pay_campaign("https://x.com/somebody/status/1716421161867710954", u("100"), 30, &[]).await;
     assert_eq!(campaign.budget_u256(), u("100"));
-    assert_eq!(*campaign.campaign_kind(), CampaignKind::XRepost);
 
     let mut alice = a.client().await;
     alice.claim_account().await;
@@ -156,7 +155,6 @@ app_test! { rejects_collabs_if_registered_over_budget(a)
     advertiser.setup_as_advertiser("test main advertiser").await;
     let mut campaign = advertiser.start_and_pay_campaign("https://x.com/somebody/status/1716421161867710954", u("100"), 30, &[]).await;
     assert_eq!(campaign.budget_u256(), u("100"));
-    assert_eq!(*campaign.campaign_kind(), CampaignKind::XRepost);
 
     let mut alice = a.client().await;
     alice.claim_account().await;

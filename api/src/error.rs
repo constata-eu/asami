@@ -56,7 +56,9 @@ impl From<time::error::ComponentRange> for Error {
 
 impl<A: ethers::middleware::Middleware> From<ethers::contract::ContractError<A>> for Error {
     fn from(err: ethers::contract::ContractError<A>) -> Error {
-        let desc = err.decode_revert::<String>().unwrap_or_else(|| format!("{:?}.{:?}", err, err.source()));
+        let desc = err
+            .decode_revert::<String>()
+            .unwrap_or_else(|| format!("{:?}.{:?}", err, err.source()));
         Error::Service("rsk_contract".into(), desc)
     }
 }
@@ -135,7 +137,11 @@ impl<S: ScalarValue> IntoFieldError<S> for Error {
                 graphql_value!({ "error": { "field": "third_party_service", "message": service.as_str() } }),
             ),
             _ => {
-                warn!("A wild error appeared: {:?}\n\n{:?}\n", &self, &self.source());
+                warn!(
+                    "A wild error appeared: {:?}\n\n{:?}\n",
+                    &self,
+                    &self.source()
+                );
                 FieldError::new("unexpected error", graphql_value!(None))
             }
         }
@@ -149,9 +155,15 @@ impl<'r> Responder<'r, 'static> for Error {
                 Status::UnprocessableEntity,
                 Json(json![{"error": { "field": field, "message": message}}]),
             ),
-            Error::DatabaseError(sqlx::Error::RowNotFound) => (Status::NotFound, Json(json![{ "error": "Not found" }])),
+            Error::DatabaseError(sqlx::Error::RowNotFound) => {
+                (Status::NotFound, Json(json![{ "error": "Not found" }]))
+            }
             _ => {
-                warn!("A wild error appeared: {:?}\n\n{:?}\n", &self, &self.source());
+                warn!(
+                    "A wild error appeared: {:?}\n\n{:?}\n",
+                    &self,
+                    &self.source()
+                );
                 (
                     Status::InternalServerError,
                     Json(json![{ "error": "Unexpected Error" }]),

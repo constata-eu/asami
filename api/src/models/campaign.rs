@@ -16,8 +16,6 @@ model! {
     // this should not affect any existing campaigns.
     #[sqlx_model_hints(varchar)]
     advertiser_addr: String,
-    #[sqlx_model_hints(campaign_kind)]
-    campaign_kind: CampaignKind,
     #[sqlx_model_hints(campaign_status, default)]
     status: CampaignStatus,
     #[sqlx_model_hints(varchar)]
@@ -87,14 +85,6 @@ model! {
     topic_id: i32,
   }
 }
-
-make_sql_enum![
-    "campaign_kind",
-    pub enum CampaignKind {
-        XRepost,     // Members will have to make a post on X.
-        IgClonePost, // Members must clone a post on IG.
-    }
-];
 
 make_sql_enum![
     "campaign_status",
@@ -174,16 +164,10 @@ impl CampaignHub {
         };
 
         let x_regex = Regex::new(r#"^\d+$"#).map_err(|_| Error::precondition("invalid_x_regex"))?;
-        let ig_regex = Regex::new(r#"^[\d\w\-_]+$"#).map_err(|_| Error::precondition("invalid_ig_regex"))?;
 
-        let campaign_kind = if (host.ends_with("twitter.com") || host.ends_with("x.com")) && x_regex.is_match(briefing)
-        {
-            CampaignKind::XRepost
-        } else if host.ends_with("instagram.com") && ig_regex.is_match(briefing) {
-            CampaignKind::IgClonePost
-        } else {
+        if !((host.ends_with("twitter.com") || host.ends_with("x.com")) && x_regex.is_match(briefing)) {
             return Err(Error::validation("link", "invalid_domain_or_route"));
-        };
+        }
 
         let Ok(briefing_hash) = models::hasher::u256digest(briefing.as_bytes()) else {
             return Err(Error::precondition(
@@ -200,7 +184,6 @@ impl CampaignHub {
             .insert(InsertCampaign {
                 account_id: account.attrs.id.clone(),
                 advertiser_addr: advertiser_addr.clone(),
-                campaign_kind,
                 budget: weihex("0"),
                 briefing_hash: briefing_hash.encode_hex(),
                 briefing_json,
@@ -236,7 +219,6 @@ impl CampaignHub {
         let mut campaigns = self
             .select()
             .budget_gt(milli("50").encode_hex())
-            .campaign_kind_eq(CampaignKind::XRepost)
             .order_by(CampaignOrderBy::Id)
             .desc(true)
             .all()
@@ -407,7 +389,6 @@ impl Campaign {
             .state
             .handle()
             .select()
-            .site_eq(Site::X)
             .user_id_eq(user_id.to_string())
             .order_by(HandleOrderBy::Id)
             .status_eq(HandleStatus::Active)
@@ -512,12 +493,7 @@ impl Campaign {
 
     // Find out how much this campaign would pay an account.
     pub async fn reward_for_account(&self, account: &Account) -> AsamiResult<Option<U256>> {
-        let site = match self.campaign_kind() {
-            CampaignKind::IgClonePost => Site::Instagram,
-            CampaignKind::XRepost => Site::X,
-        };
-
-        if let Some(handle) = account.handle_scope().site_eq(site).optional().await? {
+        if let Some(handle) = account.handle_scope().optional().await? {
             Ok(handle.reward_for(self))
         } else {
             Ok(None)

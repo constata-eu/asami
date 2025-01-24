@@ -18,11 +18,6 @@ enum AuditLogSeverity {
   FAIL
 }
 
-enum CampaignKind {
-  XREPOST
-  IG_CLONE_POST
-}
-
 enum CampaignStatus {
   DRAFT
   SUBMITTED
@@ -63,17 +58,6 @@ enum OnChainJobStatus {
   FAILED
   CONFIRMED
   SETTLED
-}
-
-enum Site {
-  X
-  INSTAGRAM
-  LINKED_IN
-  FACEBOOK
-  TIK_TOK
-  YOUTUBE
-  NOSTR
-  BLUESKY
 }
 
 input AccountFilter {
@@ -146,7 +130,6 @@ input CreateClaimAccountRequestInput {
 "The input for creating a new Handle."
 input CreateHandleInput {
   username: String!
-  site: Site!
 }
 
 input HandleFilter {
@@ -154,7 +137,6 @@ input HandleFilter {
   idEq: Int
   usernameLike: String
   statusIn: [HandleStatus!]
-  siteEq: Site
   userIdLike: String
   accountIdEq: Int
 }
@@ -258,8 +240,6 @@ type Campaign {
   accountId: Int!
   "The total budget for this campaign to be collected by users."
   budget: String!
-  "The kind of campaign, what's expected from the member."
-  campaignKind: CampaignKind!
   "Auxiliary data related to this campaign's briefing"
   briefingJson: String!
   "Auxiliary data related to this campaign's briefing"
@@ -329,8 +309,6 @@ type Handle {
   id: Int!
   "The id of the account that made the request."
   accountId: Int!
-  "The social network of this handle: X, Instagram, Nostr."
-  site: Site!
   "The username on the given social network. This may change by the user, it may not be a unique id."
   username: String!
   "The unique user_id in the given social network. This never changes."

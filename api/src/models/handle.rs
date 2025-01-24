@@ -9,8 +9,6 @@ model! {
     id: i32,
     #[sqlx_model_hints(varchar)]
     account_id: String,
-    #[sqlx_model_hints(site)]
-    site: Site,
     #[sqlx_model_hints(varchar)]
     username: String,
     #[sqlx_model_hints(varchar, default)]
@@ -43,11 +41,9 @@ model! {
     avg_like_count: i32,
     #[sqlx_model_hints(int4, default)]
     scored_tweet_count: i32,
-    #[sqlx_model_hints(varchar, default)]
-    legacy_score: String,
   },
   queries {
-      need_scoring("site = 'x' AND status IN ('verified', 'active') AND (last_scoring IS NULL OR last_scoring < $1)", date: UtcDateTime)
+      need_scoring("status IN ('verified', 'active') AND (last_scoring IS NULL OR last_scoring < $1)", date: UtcDateTime)
   },
   has_many {
     HandleTopic(handle_id),
@@ -171,7 +167,6 @@ impl HandleHub {
                     .handle()
                     .select()
                     .status_eq(HandleStatus::Unverified)
-                    .site_eq(Site::X)
                     .username_ilike(&author.username)
                     .account_id_eq(&account_id)
                     .optional()
@@ -376,15 +371,11 @@ impl Handle {
         }
 
         if available_funds < reward {
-            return Err(Error::validation("site", "campaign_has_not_enough_funds"));
+            return Err(Error::validation("all", "campaign_has_not_enough_funds"));
         }
 
         if campaign.valid_until().map(|end| end <= Utc::now()).unwrap_or(true) {
-            return Err(Error::validation("site", "campaign_has_expired"));
-        }
-
-        if !self.site().can_do_campaign_kind(campaign.campaign_kind()) {
-            return Err(Error::validation("site", "campaign_and_handle_sites_dont_match"));
+            return Err(Error::validation("all", "campaign_has_expired"));
         }
 
         let handle_topics = self.topic_ids().await?;

@@ -95,9 +95,6 @@
       }
     }
   },
-	"campaign_kinds": {
-		"XREPOST": "Repost in X"
-	},
 	"footer": {
     "built_with": "Built with"
   },

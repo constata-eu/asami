@@ -13,10 +13,3 @@ make_sql_enum![
         Bluesky,
     }
 ];
-
-impl Site {
-    pub fn can_do_campaign_kind(&self, kind: &CampaignKind) -> bool {
-        *self == Self::X && kind == &CampaignKind::XRepost
-            || *self == Self::Instagram && kind == &CampaignKind::IgClonePost
-    }
-}
