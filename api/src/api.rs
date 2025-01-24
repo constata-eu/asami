@@ -377,7 +377,7 @@ impl Mutation {
 
     pub async fn create_email_login_link(context: &Context, email: String) -> FieldResult<EmailLoginLink> {
         Ok(EmailLoginLink {
-            id: context.app.one_time_token().create_for_email(email, context.lang, None).await?.attrs.id,
+            id: context.app.one_time_token().create_for_email(email.to_lowercase(), context.lang, None).await?.attrs.id,
         })
     }
 }

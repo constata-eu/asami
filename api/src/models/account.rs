@@ -73,6 +73,7 @@ model! {
     Handle(account_id),
     Campaign(account_id),
     CampaignPreference(account_id),
+    AccountUser(account_id),
   }
 }
 
@@ -314,6 +315,18 @@ impl Account {
         if self.is_claimed_or_claiming() {
             return Err(Error::validation("account", "cannot_call_on_claimed_account"));
         }
+
+        if let Some(user) = self.account_user_scope().optional().await? {
+            self.state.auth_method()
+                .insert(InsertAuthMethod {
+                    user_id: user.attrs.id,
+                    lookup_key: addr.clone(),
+                    kind: AuthMethodKind::Eip712
+                })
+                .save()
+                .await
+                .map_err(|_| Error::validation("addr", "address_already_in_use") )?;
+        };
 
         Ok(self
             .clone()

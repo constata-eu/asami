@@ -60,7 +60,8 @@ impl OneTimeTokenHub {
         lang: lang::Lang,
         user_id: Option<i32>,
     ) -> AsamiResult<OneTimeToken> {
-        Email::parse_string(&email)?;
+        let canonical = email.to_lowercase();
+        Email::parse_string(&canonical)?;
         let config = BasicConfig{
             separator: "-".into(),
             capitalize_first: false.into(),
@@ -71,9 +72,9 @@ impl OneTimeTokenHub {
         Ok(self
             .insert(InsertOneTimeToken {
                 value,
-                lookup_key: format!("email:{email}"),
+                lookup_key: format!("email:{canonical}"),
                 user_id,
-                email: Some(email),
+                email: Some(canonical),
                 lang,
             })
             .save()

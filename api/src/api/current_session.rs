@@ -94,7 +94,7 @@ impl CurrentSession {
         Self::validate_recaptcha(req, app).await?;
         let pubkey = Self::get_login_pubkey(req)?;
         let nonce = Self::validate_jwt(jwt, &pubkey, req, &body).await?;
-        let (kind, lookup_key, auth_data) = Self::validate_auth_data(app, req).await?;
+        let (kind, lookup_key, auth_data, x_username) = Self::validate_auth_data(app, req).await?;
 
         let maybe_auth_method = app.auth_method().select().kind_eq(kind).lookup_key_eq(&lookup_key).optional().await?;
 
@@ -170,8 +170,16 @@ impl CurrentSession {
         );
 
         if let Some(account) = new_account {
-            if kind == AuthMethodKind::Eip712 {
-                account.create_claim_account_request(lookup_key, auth_data, session.attrs.id.clone()).await?;
+            match kind {
+                AuthMethodKind::Eip712 => {
+                    account.create_claim_account_request(lookup_key, auth_data, session.attrs.id.clone()).await?;
+                },
+                AuthMethodKind::X => {
+                    if let Some(username) = x_username {
+                        account.create_handle(&username).await?;
+                    }
+                },
+                _ => {}
             }
         }
 
@@ -197,7 +205,7 @@ impl CurrentSession {
     async fn validate_auth_data(
         app: &App,
         req: &Request<'_>,
-    ) -> Result<(AuthMethodKind, String, String), ApiAuthError> {
+    ) -> Result<(AuthMethodKind, String, String, Option<String>), ApiAuthError> {
         let auth_method_kind_string = auth_some!(
             req.headers().get_one("Auth-Method-Kind"),
             "no_auth_method_kind_in_headers"
@@ -208,12 +216,14 @@ impl CurrentSession {
         );
         let auth_data = auth_some!(req.headers().get_one("Auth-Data"), "no_auth_data_in_headers");
 
-        let lookup_key = match auth_method_kind {
+        let (lookup_key, x_username) = match auth_method_kind {
             AuthMethodKind::OneTimeToken => {
-                auth_try!(
+                let key = auth_try!(
                     app.one_time_token().select().used_eq(false).value_eq(auth_data.to_string()).one().await,
                     "invalid_one_time_token"
-                ).update().used(true).save().await?.attrs.lookup_key
+                ).update().used(true).save().await?.attrs.lookup_key;
+
+                (key, None)
             }
             AuthMethodKind::X => {
                 let oauth_data: OauthCodeAndVerifier =
@@ -234,18 +244,16 @@ impl CurrentSession {
                 let twitter = twitter_v2::TwitterApi::new(token);
 
                 let x = auth_try!(twitter.get_users_me().send().await, "could_not_find_twitter_me");
-
-                format!(
-                    "{}",
-                    auth_some!(x.payload().data.as_ref(), "no_twitter_payload_data").id
-                )
+                let user = auth_some!(x.into_data(), "no_twitter_payload_data");
+                (user.id.to_string(), Some(user.username))
             }
             AuthMethodKind::Eip712 => {
-                eip_712_sig_to_address(app.settings.rsk.chain_id, auth_data).map_err(ApiAuthError::Fail)?
+                let key = eip_712_sig_to_address(app.settings.rsk.chain_id, auth_data).map_err(ApiAuthError::Fail)?;
+                (key, None)
             }
         };
 
-        Ok((auth_method_kind, lookup_key, auth_data.to_string()))
+        Ok((auth_method_kind, lookup_key, auth_data.to_string(), x_username))
     }
 
     async fn validate_recaptcha(req: &Request<'_>, app: &App) -> Result<(), ApiAuthError> {

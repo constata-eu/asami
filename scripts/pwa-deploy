@@ -5,12 +5,7 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 STAGING_IP=128.199.33.144
 PRODUCTION_IP=167.99.18.108
 
-if [[ $1 == "production" ]]
-then
-  IP=$PRODUCTION_IP
-else
-  IP=$STAGING_IP
-fi
+IP=$PRODUCTION_IP
 
 scp -r release/pwa/dist root@$IP:/home/asami/new_pwa &&
 ssh root@$IP '
