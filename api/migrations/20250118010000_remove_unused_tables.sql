@@ -20,9 +20,11 @@ DROP TABLE set_score_and_topics_requests;
 DROP TABLE old_handles;                              
 
 -- Delete all facebook auth methods.
+DELETE from sessions WHERE auth_method_id IN (SELECT id FROM auth_methods WHERE kind = 'facebook');
 DELETE from auth_methods WHERE kind = 'facebook';
 
 -- Delete all handles.
+DELETE FROM handle_topics WHERE handle_id in (SELECT id FROM handles WHERE site = 'instagram');
 DELETE FROM handles WHERE site = 'instagram';
 
 -- Remove handle alltogether.
