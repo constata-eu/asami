@@ -46,7 +46,6 @@ export const defaultDataProvider = async () => {
             id
 						accountId
 						budget
-						campaignKind
 						briefingJson
 						briefingHash
 						validUntil

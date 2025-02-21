@@ -204,7 +204,7 @@
       "budget": "Presupuesto total que gastarás, en DOC",
       "start_campaign": "Iniciar campaña",
       "service_summary": "Los miembros republicarán tu contenido y cobrarán en base a su alcance",
-      "refund_notice": "Los fondos que no se utilicen se devolveran en 30 días",
+      "refund_notice": "Los fondos que no se utilicen se devolveran en 15 días",
       "price_per_point": "DOC por cada impresión que sumen",
       "price_per_point_help": "Las impresiones que suma cada colaborador son solo una aproximación y no están garantizadas. Un valor de 0.002 quiere decir que apuntas a pagar 2 DOC cada 1000 impressiones.",
       "max_individual_reward": "Máximo de DOC a pagar por colaborador",

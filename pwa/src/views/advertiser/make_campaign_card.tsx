@@ -105,7 +105,7 @@ export const MakeCampaignCard = ({account, onCreate}) => {
 
   const validate = (values) => {
     let input = {
-      duration: 30,
+      duration: 15,
     };
 
     const error = validateCampaignLink(values.contentUrl);

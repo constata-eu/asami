@@ -199,7 +199,7 @@
       "budget": "Total budget you'll spend, in DOC",
       "start_campaign": "Start Campaign",
       "service_summary": "Members will repost your content and get paid based on their reach",
-      "refund_notice": "Unused funds will be returned to you after 30 days.",
+      "refund_notice": "Unused funds will be returned to you after 15 days.",
       "price_per_point": "DOC per impression contributed.",
       "price_per_point_help": "Impressions contributed by collaborators are only a rough approximation, and are not guaranteed. A value of 0.002 means your intent is to pay 2 DOC every 1K impressions.",
       "max_individual_reward": "Max DOC per individual collaborator",
