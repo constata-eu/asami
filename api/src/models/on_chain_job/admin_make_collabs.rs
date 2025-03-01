@@ -145,6 +145,7 @@ impl OnChainJob {
         T: Clone,
     {
         let all_collabs = self.state.collab().select().status_eq(CollabStatus::Registered).all().await?;
+        let now = Utc::now();
 
         // Getting a campaign and asserting if we're still the admin is costly.
         // So we cache that here, by campaign_id.
@@ -178,6 +179,18 @@ impl OnChainJob {
 
             match cached_campaign {
                 Some((budget, campaign)) => {
+                    if let Some(valid_until) = campaign.valid_until().as_ref() {
+                        if *valid_until < now {
+                            self.info(
+                                "making_collabs",
+                                format!("on double check, collab was for a campaign that ended {}", collab.id()),
+                            )
+                            .await?;
+                            collab.update().status(CollabStatus::Failed).save().await?;
+                            continue;
+                        }
+                    }
+
                     if collab.reward_u256() > *budget {
                         self.info(
                             "making_collabs",
