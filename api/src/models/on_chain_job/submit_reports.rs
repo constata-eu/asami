@@ -16,7 +16,8 @@ impl OnChainJob {
             // To reduce race conditions on recently extended campaigns, that result in failed
             // transactions, we double check here that this campaign's on-chain
             // state is invalid.
-            if c.find_on_chain().await?.valid_until > now {
+            let on_chain = c.find_on_chain().await?;
+            if on_chain.valid_until > now || on_chain.report_hash != u("0") {
                 continue;
             }
 
