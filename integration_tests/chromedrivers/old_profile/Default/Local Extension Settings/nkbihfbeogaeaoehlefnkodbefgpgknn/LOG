@@ -1,0 +1,5 @@
+2025/04/08-01:06:07.489 333b8 Creating DB /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn since it was missing.
+2025/04/08-01:06:07.521 333b8 Reusing MANIFEST /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn/MANIFEST-000001
+2025/04/08-01:07:12.548 333b9 Level-0 table #5: started
+2025/04/08-01:07:12.640 333b9 Level-0 table #5: 13214309 bytes OK
+2025/04/08-01:07:12.652 333b9 Delete type=0 #3

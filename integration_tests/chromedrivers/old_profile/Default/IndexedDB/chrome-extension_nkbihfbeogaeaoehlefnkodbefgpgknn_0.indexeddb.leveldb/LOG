@@ -1,0 +1,2 @@
+2025/04/08-01:06:07.845 333e1 Creating DB /home/nubis/asami/integration_tests/chromedrivers/profile/Default/IndexedDB/chrome-extension_nkbihfbeogaeaoehlefnkodbefgpgknn_0.indexeddb.leveldb since it was missing.
+2025/04/08-01:06:07.875 333e1 Reusing MANIFEST /home/nubis/asami/integration_tests/chromedrivers/profile/Default/IndexedDB/chrome-extension_nkbihfbeogaeaoehlefnkodbefgpgknn_0.indexeddb.leveldb/MANIFEST-000001

@@ -1,0 +1,2 @@
+#/bin/bash
+chromedrivers/chrome-linux/chrome --no-sandbox --user-data-dir=chromedrivers/profile

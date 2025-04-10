@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = [
+  "api",
+  "integration_tests",
+]
+
+[workspace.dependencies]
+tokio = { version = "1.2.0", features = ["full"] }
+anyhow = "1"
+nix = { version = "0.28", features = ["fs", "process", "signal"]}
+sqlx-cli = { version = "0.8.3", default-features = false, features = [
+  "postgres",
+  "rustls",
+] }
+sqlx = { version = "0.8.3", features = [
+  "bigdecimal",
+  "chrono",
+  "migrate",
+  "postgres",
+  "json",
+  "runtime-tokio-rustls",
+] }
+
