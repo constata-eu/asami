@@ -3,6 +3,7 @@ target
 *.swo
 *.swp
 contract/contracts/artifacts
+integration_tests/chromedrivers/chrome-linux/chrome
 .deps/*
 pwa/dist/*
 release
