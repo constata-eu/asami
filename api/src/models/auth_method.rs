@@ -6,6 +6,7 @@ model! {
   struct AuthMethod {
     #[sqlx_model_hints(int4, default)]
     id: i32,
+    #[sqlx_model_hints(int4)]
     user_id: i32,
     #[sqlx_model_hints(auth_method_kind)]
     kind: AuthMethodKind,

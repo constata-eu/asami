@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM on_chain_job_collabs WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR job_id = $4::int4) AND (NOT $5::boolean OR collab_id = $6::int4)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "9caef19d10557fc276e7203cb6058dcb82844e615896aacb4ebe83357bbb8007"
+}

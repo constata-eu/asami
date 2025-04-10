@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM on_chain_jobs WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR status = $6::on_chain_job_status) AND (NOT $7::boolean OR kind = $8::on_chain_job_kind) AND (NOT $9::boolean OR tx_hash = $10::varchar) AND (NOT $11::boolean OR gas_used = $12::varchar) AND (NOT $13::boolean OR nonce = $14::varchar) AND (NOT $15::boolean OR block = $16::numeric) AND (NOT $17::boolean OR status_line = $18::varchar) AND (NOT $19::boolean OR sleep_until = $20::timestamptz) AND (NOT $21::boolean OR created_at = $22::timestamptz)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        {
+          "Custom": {
+            "name": "on_chain_job_status",
+            "kind": {
+              "Enum": [
+                "scheduled",
+                "skipped",
+                "reverted",
+                "submitted",
+                "failed",
+                "confirmed",
+                "settled"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "on_chain_job_kind",
+            "kind": {
+              "Enum": [
+                "promote_sub_accounts",
+                "admin_legacy_claim_account",
+                "admin_claim_balances_free",
+                "gasless_claim_balances",
+                "reimburse_campaigns",
+                "submit_reports",
+                "make_collabs",
+                "make_sub_account_collabs",
+                "claim_fee_pool_share",
+                "apply_voted_fee_rate"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "7267f74119e89f0852d07e221688874f42b108af6a708cb9a65bb20116fb02f6"
+}

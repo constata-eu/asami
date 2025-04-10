@@ -1,0 +1,91 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \naddress as \"address!: String\", \nblock_number as \"block_number!: Decimal\", \nblock_hash as \"block_hash!: String\", \ntx_hash as \"tx_hash!: String\", \ntx_index as \"tx_index!: Decimal\", \nlog_index as \"log_index!: String\", \ndata as \"data!: String\", \ncreated_at as \"created_at!: UtcDateTime\" FROM synced_events WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR address = $4::varchar) AND (NOT $5::boolean OR block_number = $6::decimal) AND (NOT $7::boolean OR block_hash = $8::varchar) AND (NOT $9::boolean OR tx_hash = $10::varchar) AND (NOT $11::boolean OR tx_index = $12::decimal) AND (NOT $13::boolean OR log_index = $14::varchar) AND (NOT $15::boolean OR data = $16::varchar) AND (NOT $17::boolean OR created_at = $18::timestamptz) ORDER BY \n      (CASE ($19 = 'Id' AND NOT $20) WHEN true THEN id ELSE NULL END),\n      (CASE ($19 = 'Id' AND $20) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'Address' AND NOT $20) WHEN true THEN address ELSE NULL END),\n      (CASE ($19 = 'Address' AND $20) WHEN true THEN address ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'BlockNumber' AND NOT $20) WHEN true THEN block_number ELSE NULL END),\n      (CASE ($19 = 'BlockNumber' AND $20) WHEN true THEN block_number ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'BlockHash' AND NOT $20) WHEN true THEN block_hash ELSE NULL END),\n      (CASE ($19 = 'BlockHash' AND $20) WHEN true THEN block_hash ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'TxHash' AND NOT $20) WHEN true THEN tx_hash ELSE NULL END),\n      (CASE ($19 = 'TxHash' AND $20) WHEN true THEN tx_hash ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'TxIndex' AND NOT $20) WHEN true THEN tx_index ELSE NULL END),\n      (CASE ($19 = 'TxIndex' AND $20) WHEN true THEN tx_index ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'LogIndex' AND NOT $20) WHEN true THEN log_index ELSE NULL END),\n      (CASE ($19 = 'LogIndex' AND $20) WHEN true THEN log_index ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'Data' AND NOT $20) WHEN true THEN data ELSE NULL END),\n      (CASE ($19 = 'Data' AND $20) WHEN true THEN data ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'CreatedAt' AND NOT $20) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($19 = 'CreatedAt' AND $20) WHEN true THEN created_at ELSE NULL END) DESC\n     LIMIT $21 OFFSET $22",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "address!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "block_number!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 3,
+        "name": "block_hash!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "tx_hash!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "tx_index!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 6,
+        "name": "log_index!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "data!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e821cec9fef900e21b486cad571b198c879f9a3deaf23e081546628a8378475e"
+}

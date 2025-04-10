@@ -5,17 +5,17 @@ model! {
   state: App,
   table: handles,
   struct Handle {
-    #[sqlx_model_hints(int4, default)]
+    #[sqlx_model_hints(int4, default, op_in)]
     id: i32,
     #[sqlx_model_hints(varchar)]
     account_id: String,
-    #[sqlx_model_hints(varchar)]
+    #[sqlx_model_hints(varchar, op_like, op_ilike)]
     username: String,
-    #[sqlx_model_hints(varchar, default)]
+    #[sqlx_model_hints(varchar, default, op_like)]
     user_id: Option<String>,
     #[sqlx_model_hints(varchar, default)]
     score: Option<String>,
-    #[sqlx_model_hints(handle_status, default)]
+    #[sqlx_model_hints(handle_status, default, op_in)]
     status: HandleStatus,
 
     // These columns are part of the account activity report

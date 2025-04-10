@@ -1,0 +1,66 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO auth_methods (user_id, \nkind, \nlookup_key) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET id = auth_methods.id RETURNING id as \"id!: i32\", \nuser_id as \"user_id!: i32\", \nkind as \"kind!: AuthMethodKind\", \nlookup_key as \"lookup_key!: String\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "kind!: AuthMethodKind",
+        "type_info": {
+          "Custom": {
+            "name": "auth_method_kind",
+            "kind": {
+              "Enum": [
+                "x",
+                "facebook",
+                "eip712",
+                "one_time_token"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "lookup_key!: String",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        {
+          "Custom": {
+            "name": "auth_method_kind",
+            "kind": {
+              "Enum": [
+                "x",
+                "facebook",
+                "eip712",
+                "one_time_token"
+              ]
+            }
+          }
+        },
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "2e61337f92a99ecb1cafc9052807aed3e916c292864587cca1d6475de9311c37"
+}

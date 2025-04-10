@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM campaign_preferences WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR campaign_id = $8::int4) AND (NOT $9::boolean OR not_interested_on = $10::timestamptz) AND ($11::boolean IS NULL OR (($11::boolean AND not_interested_on IS NOT NULL) OR (NOT $11::boolean AND not_interested_on IS NULL))) AND (NOT $12::boolean OR attempted_on = $13::timestamptz)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "3c55b22316a04fbb58b3be7a6d702648a3ee0aedb1d436f6e044d273f03b6eee"
+}

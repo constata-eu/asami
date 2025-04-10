@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM auth_methods WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR user_id = $4::int4) AND (NOT $5::boolean OR kind = $6::auth_method_kind) AND (NOT $7::boolean OR lookup_key = $8::Varchar)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        {
+          "Custom": {
+            "name": "auth_method_kind",
+            "kind": {
+              "Enum": [
+                "x",
+                "facebook",
+                "eip712",
+                "one_time_token"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "35146c77c411292945b22878df78adbc80ef3ac51752cf7eda1a24fa43a7581f"
+}

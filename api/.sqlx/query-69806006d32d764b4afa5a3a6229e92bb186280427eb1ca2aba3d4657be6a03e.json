@@ -1,0 +1,128 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE collabs SET (id, \ncampaign_id, \nadvertiser_id, \nmember_id, \ncollab_trigger_unique_id, \nhandle_id, \nstatus, \ndispute_reason, \nreward, \nfee, \ncreated_at) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE campaign_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE advertiser_id END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE member_id END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE collab_trigger_unique_id END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE handle_id END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE status END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE dispute_reason END), (CASE $18::boolean WHEN TRUE THEN $19 ELSE reward END), (CASE $20::boolean WHEN TRUE THEN $21 ELSE fee END), (CASE $22::boolean WHEN TRUE THEN $23 ELSE created_at END)) WHERE id = $1 RETURNING id as \"id!: i32\", \ncampaign_id as \"campaign_id!: i32\", \nadvertiser_id as \"advertiser_id!: String\", \nmember_id as \"member_id!: String\", \ncollab_trigger_unique_id as \"collab_trigger_unique_id!: String\", \nhandle_id as \"handle_id!: i32\", \nstatus as \"status!: CollabStatus\", \ndispute_reason as \"dispute_reason!: Option < String >\", \nreward as \"reward!: String\", \nfee as \"fee!: Option < String >\", \ncreated_at as \"created_at!: UtcDateTime\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "campaign_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "advertiser_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "member_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "collab_trigger_unique_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "handle_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "status!: CollabStatus",
+        "type_info": {
+          "Custom": {
+            "name": "collab_status",
+            "kind": {
+              "Enum": [
+                "registered",
+                "cleared",
+                "failed",
+                "disputed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "dispute_reason!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "reward!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "fee!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        {
+          "Custom": {
+            "name": "collab_status",
+            "kind": {
+              "Enum": [
+                "registered",
+                "cleared",
+                "failed",
+                "disputed"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "69806006d32d764b4afa5a3a6229e92bb186280427eb1ca2aba3d4657be6a03e"
+}

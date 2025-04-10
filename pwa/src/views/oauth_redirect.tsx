@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { Alert, Typography, Box, CircularProgress, Button } from '@mui/material';
 import { useTranslate, useSafeSetState } from 'react-admin';
 import { useNavigate } from 'react-router-dom';
@@ -99,6 +99,7 @@ const RegularLogin = ({ authData, authMethodKind}) => {
   const navigate = useNavigate();
   const translate = useTranslate();
   const [error, setError] = useSafeSetState();
+  const hasRun = useRef(false);
 
   const onVerify = useCallback(async (recaptchaToken) => {
     try {
@@ -107,7 +108,7 @@ const RegularLogin = ({ authData, authMethodKind}) => {
     } catch (e) {
       setError(e.message || translate("login.unexpected_error"))
     }
-  }, []);
+  }, [authProvider, authMethodKind, authData, navigate]);
 
   return (!error ?
     <>

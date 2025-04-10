@@ -8,21 +8,21 @@ model! {
   state: App,
   table: campaigns,
   struct Campaign {
-    #[sqlx_model_hints(int4, default)]
+    #[sqlx_model_hints(int4, default, op_in)]
     id: i32,
     #[sqlx_model_hints(varchar)]
     account_id: String,
     // We may allow an asami account to change their address
     // this should not affect any existing campaigns.
-    #[sqlx_model_hints(varchar)]
+    #[sqlx_model_hints(varchar, op_like)]
     advertiser_addr: String,
-    #[sqlx_model_hints(campaign_status, default)]
+    #[sqlx_model_hints(campaign_status, default, op_ne)]
     status: CampaignStatus,
-    #[sqlx_model_hints(varchar)]
+    #[sqlx_model_hints(varchar, op_like)]
     briefing_hash: String,
-    #[sqlx_model_hints(varchar)]
+    #[sqlx_model_hints(varchar, op_like)]
     briefing_json: String,
-    #[sqlx_model_hints(varchar)]
+    #[sqlx_model_hints(varchar, op_lt, op_gt)]
     budget: String,
     #[sqlx_model_hints(varchar)]
     price_per_point: String,

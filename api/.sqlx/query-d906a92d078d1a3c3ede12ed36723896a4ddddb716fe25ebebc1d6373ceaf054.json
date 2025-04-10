@@ -1,0 +1,111 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \nseverity as \"severity!: AuditLogSeverity\", \ncreated_at as \"created_at!: UtcDateTime\", \nkind as \"kind!: String\", \nsubkind as \"subkind!: String\", \ncontext as \"context!: String\", \nloggable_type as \"loggable_type!: Option < String >\", \nloggable_id as \"loggable_id!: Option < String >\" FROM audit_log_entries WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR severity = $6::audit_log_severity) AND (NOT $7::boolean OR created_at = $8::timestamptz) AND (NOT $9::boolean OR kind = $10::varchar) AND (NOT $11::boolean OR subkind = $12::varchar) AND (NOT $13::boolean OR context = $14::text) AND (NOT $15::boolean OR loggable_type = $16::varchar) AND (NOT $17::boolean OR loggable_id = $18::varchar) ORDER BY \n      (CASE ($19 = 'Id' AND NOT $20) WHEN true THEN id ELSE NULL END),\n      (CASE ($19 = 'Id' AND $20) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'Severity' AND NOT $20) WHEN true THEN severity ELSE NULL END),\n      (CASE ($19 = 'Severity' AND $20) WHEN true THEN severity ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'CreatedAt' AND NOT $20) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($19 = 'CreatedAt' AND $20) WHEN true THEN created_at ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'Kind' AND NOT $20) WHEN true THEN kind ELSE NULL END),\n      (CASE ($19 = 'Kind' AND $20) WHEN true THEN kind ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'Subkind' AND NOT $20) WHEN true THEN subkind ELSE NULL END),\n      (CASE ($19 = 'Subkind' AND $20) WHEN true THEN subkind ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'Context' AND NOT $20) WHEN true THEN context ELSE NULL END),\n      (CASE ($19 = 'Context' AND $20) WHEN true THEN context ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'LoggableType' AND NOT $20) WHEN true THEN loggable_type ELSE NULL END),\n      (CASE ($19 = 'LoggableType' AND $20) WHEN true THEN loggable_type ELSE NULL END) DESC\n    ,\n      (CASE ($19 = 'LoggableId' AND NOT $20) WHEN true THEN loggable_id ELSE NULL END),\n      (CASE ($19 = 'LoggableId' AND $20) WHEN true THEN loggable_id ELSE NULL END) DESC\n     LIMIT $21 OFFSET $22",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "severity!: AuditLogSeverity",
+        "type_info": {
+          "Custom": {
+            "name": "audit_log_severity",
+            "kind": {
+              "Enum": [
+                "trace",
+                "debug",
+                "info",
+                "warn",
+                "fail"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "kind!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "subkind!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "context!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "loggable_type!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "loggable_id!: Option < String >",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        {
+          "Custom": {
+            "name": "audit_log_severity",
+            "kind": {
+              "Enum": [
+                "trace",
+                "debug",
+                "info",
+                "warn",
+                "fail"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Text",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "d906a92d078d1a3c3ede12ed36723896a4ddddb716fe25ebebc1d6373ceaf054"
+}

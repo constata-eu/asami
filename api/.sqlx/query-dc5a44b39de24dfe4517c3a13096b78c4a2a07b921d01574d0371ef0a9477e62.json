@@ -1,0 +1,65 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM collabs WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR campaign_id = $6::int4) AND (NOT $7::boolean OR campaign_id = ANY(CAST($8 as int4[])) ) AND (NOT $9::boolean OR advertiser_id = $10::varchar) AND (NOT $11::boolean OR advertiser_id = ANY(CAST($12 as varchar[])) ) AND (NOT $13::boolean OR member_id = $14::varchar) AND (NOT $15::boolean OR member_id = ANY(CAST($16 as varchar[])) ) AND (NOT $17::boolean OR collab_trigger_unique_id = $18::varchar) AND (NOT $19::boolean OR handle_id = $20::int4) AND (NOT $21::boolean OR handle_id = ANY(CAST($22 as int4[])) ) AND (NOT $23::boolean OR status = $24::collab_status) AND (NOT $25::boolean OR dispute_reason = $26::varchar) AND (NOT $27::boolean OR reward = $28::varchar) AND (NOT $29::boolean OR fee = $30::varchar) AND (NOT $31::boolean OR created_at = $32::timestamptz)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "VarcharArray",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "VarcharArray",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        {
+          "Custom": {
+            "name": "collab_status",
+            "kind": {
+              "Enum": [
+                "registered",
+                "cleared",
+                "failed",
+                "disputed"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "dc5a44b39de24dfe4517c3a13096b78c4a2a07b921d01574d0371ef0a9477e62"
+}

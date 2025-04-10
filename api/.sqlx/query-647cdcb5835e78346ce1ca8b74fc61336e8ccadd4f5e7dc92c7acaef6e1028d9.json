@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO on_chain_job_collabs (job_id, \ncollab_id) VALUES ($1, $2) RETURNING id as \"id!: i32\", \njob_id as \"job_id!: i32\", \ncollab_id as \"collab_id!: i32\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "job_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "collab_id!: i32",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "647cdcb5835e78346ce1ca8b74fc61336e8ccadd4f5e7dc92c7acaef6e1028d9"
+}

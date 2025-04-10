@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM on_chain_job_campaigns WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b17d5d979a0b581057885589d538c94a0ee66c1392cf80e44cdf5f58cd3fb12b"
+}

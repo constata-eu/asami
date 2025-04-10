@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO handle_topics (handle_id, \ntopic_id) VALUES ($1, $2) RETURNING id as \"id!: i32\", \nhandle_id as \"handle_id!: i32\", \ntopic_id as \"topic_id!: i32\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "handle_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "topic_id!: i32",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "11e22bad71ecae2a7ec27fa065692afb26998d467d09b730db20ea19adc362c2"
+}

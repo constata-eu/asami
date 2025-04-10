@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 api = { path = "../api" }
-tokio = { version = "1.2.0", features = ["full"] }
+tokio = { workspace = true }
 assert_cmd = "*"
 thirtyfour = "0.31"
 regex = "*"
@@ -18,7 +18,7 @@ chrono = { version = "0.4", features = ["serde"] }
 time-test = { version = "0.2.2" }
 galvanic-test = "0.2"
 galvanic-assert = "0.8.7"
-anyhow = "*"
+anyhow = { workspace = true }
 rocket = { version = "0.5.0-rc.3", features = ["json"] }
 jwt-simple = "0.11.6"
 graphql_client = "0.12.0"
@@ -30,11 +30,15 @@ image = { version = "0.24.7" }
 image_hasher = "1.1.0"
 rand = "*"
 test-log = { version = "0.2", features = ["trace"] }
-nix = { version = "*", features = ["process", "signal"]}
+nix = { workspace = true }
 
 [lib]
 name = "integration_tests"
 
 [[bin]]
-name = "update_graphql_definitions"
+name = "update-graphql-definitions"
 path = "src/update_graphql_definitions.rs"
+
+[[bin]]
+name = "run-dev"
+path = "src/run_dev.rs"

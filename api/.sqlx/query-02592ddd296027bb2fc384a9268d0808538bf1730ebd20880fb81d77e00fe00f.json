@@ -1,0 +1,234 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nadvertiser_addr as \"advertiser_addr!: String\", \nstatus as \"status!: CampaignStatus\", \nbriefing_hash as \"briefing_hash!: String\", \nbriefing_json as \"briefing_json!: String\", \nbudget as \"budget!: String\", \nprice_per_point as \"price_per_point!: String\", \nmax_individual_reward as \"max_individual_reward!: String\", \nmin_individual_reward as \"min_individual_reward!: String\", \nvalid_until as \"valid_until!: Option < UtcDateTime >\", \nreport_hash as \"report_hash!: Option < String >\", \ncreated_at as \"created_at!: UtcDateTime\", \nforce_hydrate as \"force_hydrate!: bool\", \ntotal_collabs as \"total_collabs!: i32\", \ntotal_spent as \"total_spent!: String\", \ntotal_budget as \"total_budget!: String\", \nimpression_count as \"impression_count!: i32\", \nreply_count as \"reply_count!: i32\", \nrepost_count as \"repost_count!: i32\", \nlike_count as \"like_count!: i32\" FROM campaigns WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR advertiser_addr = $8::varchar) AND (NOT $9::boolean OR advertiser_addr LIKE $10::varchar) AND (NOT $11::boolean OR status = $12::campaign_status) AND (NOT $13::boolean OR status != $14::campaign_status) AND (NOT $15::boolean OR briefing_hash = $16::varchar) AND (NOT $17::boolean OR briefing_hash LIKE $18::varchar) AND (NOT $19::boolean OR briefing_json = $20::varchar) AND (NOT $21::boolean OR briefing_json LIKE $22::varchar) AND (NOT $23::boolean OR budget = $24::varchar) AND (NOT $25::boolean OR budget > $26::varchar) AND (NOT $27::boolean OR budget < $28::varchar) AND (NOT $29::boolean OR price_per_point = $30::varchar) AND (NOT $31::boolean OR max_individual_reward = $32::varchar) AND (NOT $33::boolean OR min_individual_reward = $34::varchar) AND (NOT $35::boolean OR valid_until = $36::timestamptz) AND (NOT $37::boolean OR report_hash = $38::varchar) AND (NOT $39::boolean OR created_at = $40::timestamptz) AND (NOT $41::boolean OR force_hydrate = $42::boolean) AND (NOT $43::boolean OR total_collabs = $44::int4) AND (NOT $45::boolean OR total_spent = $46::varchar) AND (NOT $47::boolean OR total_budget = $48::varchar) AND (NOT $49::boolean OR impression_count = $50::int4) AND (NOT $51::boolean OR reply_count = $52::int4) AND (NOT $53::boolean OR repost_count = $54::int4) AND (NOT $55::boolean OR like_count = $56::int4) ORDER BY \n      (CASE ($57 = 'Id' AND NOT $58) WHEN true THEN id ELSE NULL END),\n      (CASE ($57 = 'Id' AND $58) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'AccountId' AND NOT $58) WHEN true THEN account_id ELSE NULL END),\n      (CASE ($57 = 'AccountId' AND $58) WHEN true THEN account_id ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'AdvertiserAddr' AND NOT $58) WHEN true THEN advertiser_addr ELSE NULL END),\n      (CASE ($57 = 'AdvertiserAddr' AND $58) WHEN true THEN advertiser_addr ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'Status' AND NOT $58) WHEN true THEN status ELSE NULL END),\n      (CASE ($57 = 'Status' AND $58) WHEN true THEN status ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'BriefingHash' AND NOT $58) WHEN true THEN briefing_hash ELSE NULL END),\n      (CASE ($57 = 'BriefingHash' AND $58) WHEN true THEN briefing_hash ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'BriefingJson' AND NOT $58) WHEN true THEN briefing_json ELSE NULL END),\n      (CASE ($57 = 'BriefingJson' AND $58) WHEN true THEN briefing_json ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'Budget' AND NOT $58) WHEN true THEN budget ELSE NULL END),\n      (CASE ($57 = 'Budget' AND $58) WHEN true THEN budget ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'PricePerPoint' AND NOT $58) WHEN true THEN price_per_point ELSE NULL END),\n      (CASE ($57 = 'PricePerPoint' AND $58) WHEN true THEN price_per_point ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'MaxIndividualReward' AND NOT $58) WHEN true THEN max_individual_reward ELSE NULL END),\n      (CASE ($57 = 'MaxIndividualReward' AND $58) WHEN true THEN max_individual_reward ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'MinIndividualReward' AND NOT $58) WHEN true THEN min_individual_reward ELSE NULL END),\n      (CASE ($57 = 'MinIndividualReward' AND $58) WHEN true THEN min_individual_reward ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'ValidUntil' AND NOT $58) WHEN true THEN valid_until ELSE NULL END),\n      (CASE ($57 = 'ValidUntil' AND $58) WHEN true THEN valid_until ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'ReportHash' AND NOT $58) WHEN true THEN report_hash ELSE NULL END),\n      (CASE ($57 = 'ReportHash' AND $58) WHEN true THEN report_hash ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'CreatedAt' AND NOT $58) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($57 = 'CreatedAt' AND $58) WHEN true THEN created_at ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'ForceHydrate' AND NOT $58) WHEN true THEN force_hydrate ELSE NULL END),\n      (CASE ($57 = 'ForceHydrate' AND $58) WHEN true THEN force_hydrate ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'TotalCollabs' AND NOT $58) WHEN true THEN total_collabs ELSE NULL END),\n      (CASE ($57 = 'TotalCollabs' AND $58) WHEN true THEN total_collabs ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'TotalSpent' AND NOT $58) WHEN true THEN total_spent ELSE NULL END),\n      (CASE ($57 = 'TotalSpent' AND $58) WHEN true THEN total_spent ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'TotalBudget' AND NOT $58) WHEN true THEN total_budget ELSE NULL END),\n      (CASE ($57 = 'TotalBudget' AND $58) WHEN true THEN total_budget ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'ImpressionCount' AND NOT $58) WHEN true THEN impression_count ELSE NULL END),\n      (CASE ($57 = 'ImpressionCount' AND $58) WHEN true THEN impression_count ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'ReplyCount' AND NOT $58) WHEN true THEN reply_count ELSE NULL END),\n      (CASE ($57 = 'ReplyCount' AND $58) WHEN true THEN reply_count ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'RepostCount' AND NOT $58) WHEN true THEN repost_count ELSE NULL END),\n      (CASE ($57 = 'RepostCount' AND $58) WHEN true THEN repost_count ELSE NULL END) DESC\n    ,\n      (CASE ($57 = 'LikeCount' AND NOT $58) WHEN true THEN like_count ELSE NULL END),\n      (CASE ($57 = 'LikeCount' AND $58) WHEN true THEN like_count ELSE NULL END) DESC\n     LIMIT $59 OFFSET $60 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "advertiser_addr!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "status!: CampaignStatus",
+        "type_info": {
+          "Custom": {
+            "name": "campaign_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "submitted",
+                "published"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "briefing_hash!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "briefing_json!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "budget!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "price_per_point!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "max_individual_reward!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "min_individual_reward!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "valid_until!: Option < UtcDateTime >",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 11,
+        "name": "report_hash!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 12,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "force_hydrate!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 14,
+        "name": "total_collabs!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "total_spent!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 16,
+        "name": "total_budget!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 17,
+        "name": "impression_count!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 18,
+        "name": "reply_count!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 19,
+        "name": "repost_count!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 20,
+        "name": "like_count!: i32",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "campaign_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "submitted",
+                "published"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "campaign_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "submitted",
+                "published"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "02592ddd296027bb2fc384a9268d0808538bf1730ebd20880fb81d77e00fe00f"
+}

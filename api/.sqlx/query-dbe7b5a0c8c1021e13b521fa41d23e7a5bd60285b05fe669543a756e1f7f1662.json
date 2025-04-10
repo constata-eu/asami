@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE handles SET force_hydrate = false WHERE id = ANY($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dbe7b5a0c8c1021e13b521fa41d23e7a5bd60285b05fe669543a756e1f7f1662"
+}

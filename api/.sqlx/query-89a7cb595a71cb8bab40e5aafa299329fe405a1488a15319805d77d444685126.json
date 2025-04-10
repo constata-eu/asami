@@ -1,0 +1,106 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE audit_log_entries SET (id, \nseverity, \ncreated_at, \nkind, \nsubkind, \ncontext, \nloggable_type, \nloggable_id) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE severity END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE created_at END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE kind END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE subkind END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE context END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE loggable_type END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE loggable_id END)) WHERE id = $1 RETURNING id as \"id!: i32\", \nseverity as \"severity!: AuditLogSeverity\", \ncreated_at as \"created_at!: UtcDateTime\", \nkind as \"kind!: String\", \nsubkind as \"subkind!: String\", \ncontext as \"context!: String\", \nloggable_type as \"loggable_type!: Option < String >\", \nloggable_id as \"loggable_id!: Option < String >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "severity!: AuditLogSeverity",
+        "type_info": {
+          "Custom": {
+            "name": "audit_log_severity",
+            "kind": {
+              "Enum": [
+                "trace",
+                "debug",
+                "info",
+                "warn",
+                "fail"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "kind!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "subkind!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "context!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "loggable_type!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "loggable_id!: Option < String >",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        {
+          "Custom": {
+            "name": "audit_log_severity",
+            "kind": {
+              "Enum": [
+                "trace",
+                "debug",
+                "info",
+                "warn",
+                "fail"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Text",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "89a7cb595a71cb8bab40e5aafa299329fe405a1488a15319805d77d444685126"
+}

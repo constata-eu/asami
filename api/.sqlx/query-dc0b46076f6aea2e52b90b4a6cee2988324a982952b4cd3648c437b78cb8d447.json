@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE users SET (id, \nname, \ncreated_at, \nupdated_at) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE name END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE created_at END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE updated_at END)) WHERE id = $1 RETURNING id as \"id!: i32\", \nname as \"name!: String\", \ncreated_at as \"created_at!: UtcDateTime\", \nupdated_at as \"updated_at!: Option < UtcDateTime >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 3,
+        "name": "updated_at!: Option < UtcDateTime >",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamp",
+        "Bool",
+        "Timestamp"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "dc0b46076f6aea2e52b90b4a6cee2988324a982952b4cd3648c437b78cb8d447"
+}

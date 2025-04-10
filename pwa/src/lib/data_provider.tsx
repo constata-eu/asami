@@ -118,14 +118,12 @@ export const createSessionDataProvider = async (keys, authMethodKind, authData, 
       const response = (await fetch(url, req, ...more));
 
       if (response.status < 200 || response.status >= 300) {
-        let json;
+        let json = null;
         try {
           json = await response.json();
-        } catch (e) {
-          json = "";
-        }
+        } catch {}
         return Promise.reject(
-          new HttpError(json?.errors[0]?.message || response?.statusText, response.status, json));
+          new HttpError(json?.authError || json?.errors[0]?.message || response?.statusText, response.status, json));
       }
       
       return response;

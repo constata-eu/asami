@@ -1,0 +1,51 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \nx_handle_verification_checkpoint as \"x_handle_verification_checkpoint!: i64\", \nsuggested_price_per_point as \"suggested_price_per_point!: String\", \nlast_synced_block as \"last_synced_block!: Decimal\" FROM indexer_states WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR x_handle_verification_checkpoint = $4::int8) AND (NOT $5::boolean OR suggested_price_per_point = $6::varchar) AND (NOT $7::boolean OR last_synced_block = $8::decimal) ORDER BY \n      (CASE ($9 = 'Id' AND NOT $10) WHEN true THEN id ELSE NULL END),\n      (CASE ($9 = 'Id' AND $10) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'XHandleVerificationCheckpoint' AND NOT $10) WHEN true THEN x_handle_verification_checkpoint ELSE NULL END),\n      (CASE ($9 = 'XHandleVerificationCheckpoint' AND $10) WHEN true THEN x_handle_verification_checkpoint ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'SuggestedPricePerPoint' AND NOT $10) WHEN true THEN suggested_price_per_point ELSE NULL END),\n      (CASE ($9 = 'SuggestedPricePerPoint' AND $10) WHEN true THEN suggested_price_per_point ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'LastSyncedBlock' AND NOT $10) WHEN true THEN last_synced_block ELSE NULL END),\n      (CASE ($9 = 'LastSyncedBlock' AND $10) WHEN true THEN last_synced_block ELSE NULL END) DESC\n     LIMIT $11 OFFSET $12 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "x_handle_verification_checkpoint!: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "suggested_price_per_point!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_synced_block!: Decimal",
+        "type_info": "Numeric"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int8",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Numeric",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "31331969c3901347c1598f681dfcd707db1c8edce7ea5ef5d0ffa8bb51fec70d"
+}

@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO on_chain_job_accounts (job_id, \naccount_id) VALUES ($1, $2) RETURNING id as \"id!: i32\", \njob_id as \"job_id!: i32\", \naccount_id as \"account_id!: String\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "job_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "cf8d99a8bc5e3ee013ba03e11bd717259bf8ace4eb714dcd38e0603754fb8393"
+}

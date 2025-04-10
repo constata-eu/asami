@@ -1,0 +1,75 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO sessions (id, \nuser_id, \naccount_id, \nauth_method_id, \npubkey, \nnonce) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id as \"id!: String\", \nuser_id as \"user_id!: i32\", \naccount_id as \"account_id!: String\", \nauth_method_id as \"auth_method_id!: i32\", \npubkey as \"pubkey!: String\", \nnonce as \"nonce!: i64\", \ncreated_at as \"created_at!: UtcDateTime\", \nupdated_at as \"updated_at!: Option < UtcDateTime >\", \ndeletion_id as \"deletion_id!: Option < i32 >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "auth_method_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "pubkey!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "nonce!: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 7,
+        "name": "updated_at!: Option < UtcDateTime >",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 8,
+        "name": "deletion_id!: Option < i32 >",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int4",
+        "Varchar",
+        "Int4",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "b45eb858cec2dce855aa43a58507b3fb01865fa06038712edb99768cccc1c540"
+}

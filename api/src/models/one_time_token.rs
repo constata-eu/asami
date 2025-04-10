@@ -30,9 +30,9 @@ model! {
     user_id: Option<i32>,
     #[sqlx_model_hints(timestamptz, default)]
     expires_at: DateTime<Utc>,
-    #[sqlx_model_hints(timestamptz, default)]
+    #[sqlx_model_hints(timestamptz, default, op_is_set)]
     sent_at: Option<DateTime<Utc>>,
-    #[sqlx_model_hints(text)]
+    #[sqlx_model_hints(text, op_is_set)]
     email: Option<String>,
     #[sqlx_model_hints(language)]
     lang: lang::Lang,

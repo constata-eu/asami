@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE on_chain_job_accounts SET (id, \njob_id, \naccount_id) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE job_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE account_id END)) WHERE id = $1 RETURNING id as \"id!: i32\", \njob_id as \"job_id!: i32\", \naccount_id as \"account_id!: String\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "job_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e2edf7600da5d2b98a4f1a3c2cf77bd5a664f36a7264f7a3a64fba2cde7a64ae"
+}

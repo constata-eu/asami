@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nuser_id as \"user_id!: i32\" FROM account_users WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR account_id = $4::varchar) AND (NOT $5::boolean OR user_id = $6::int4) ORDER BY \n      (CASE ($7 = 'Id' AND NOT $8) WHEN true THEN id ELSE NULL END),\n      (CASE ($7 = 'Id' AND $8) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($7 = 'AccountId' AND NOT $8) WHEN true THEN account_id ELSE NULL END),\n      (CASE ($7 = 'AccountId' AND $8) WHEN true THEN account_id ELSE NULL END) DESC\n    ,\n      (CASE ($7 = 'UserId' AND NOT $8) WHEN true THEN user_id ELSE NULL END),\n      (CASE ($7 = 'UserId' AND $8) WHEN true THEN user_id ELSE NULL END) DESC\n     LIMIT $9 OFFSET $10",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "user_id!: i32",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "ec350eb0364d3480a77c8eef07d82d627e83ff56320d3116e84b271e6e9957b7"
+}

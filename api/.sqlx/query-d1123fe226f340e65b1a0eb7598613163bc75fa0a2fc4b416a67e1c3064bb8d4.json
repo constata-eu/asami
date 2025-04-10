@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \nhandle_id as \"handle_id!: i32\", \ntopic_id as \"topic_id!: i32\" FROM handle_topics WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR handle_id = $4::int4) AND (NOT $5::boolean OR topic_id = $6::int4) ORDER BY \n      (CASE ($7 = 'Id' AND NOT $8) WHEN true THEN id ELSE NULL END),\n      (CASE ($7 = 'Id' AND $8) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($7 = 'HandleId' AND NOT $8) WHEN true THEN handle_id ELSE NULL END),\n      (CASE ($7 = 'HandleId' AND $8) WHEN true THEN handle_id ELSE NULL END) DESC\n    ,\n      (CASE ($7 = 'TopicId' AND NOT $8) WHEN true THEN topic_id ELSE NULL END),\n      (CASE ($7 = 'TopicId' AND $8) WHEN true THEN topic_id ELSE NULL END) DESC\n     LIMIT $9 OFFSET $10",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "handle_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "topic_id!: i32",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d1123fe226f340e65b1a0eb7598613163bc75fa0a2fc4b416a67e1c3064bb8d4"
+}

@@ -1,0 +1,95 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO audit_log_entries (severity, \nkind, \nsubkind, \ncontext, \nloggable_type, \nloggable_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id as \"id!: i32\", \nseverity as \"severity!: AuditLogSeverity\", \ncreated_at as \"created_at!: UtcDateTime\", \nkind as \"kind!: String\", \nsubkind as \"subkind!: String\", \ncontext as \"context!: String\", \nloggable_type as \"loggable_type!: Option < String >\", \nloggable_id as \"loggable_id!: Option < String >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "severity!: AuditLogSeverity",
+        "type_info": {
+          "Custom": {
+            "name": "audit_log_severity",
+            "kind": {
+              "Enum": [
+                "trace",
+                "debug",
+                "info",
+                "warn",
+                "fail"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "kind!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "subkind!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "context!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "loggable_type!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "loggable_id!: Option < String >",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "audit_log_severity",
+            "kind": {
+              "Enum": [
+                "trace",
+                "debug",
+                "info",
+                "warn",
+                "fail"
+              ]
+            }
+          }
+        },
+        "Varchar",
+        "Varchar",
+        "Text",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "738a6164bfe2490d741caa8b65796416a94df3e460d7c53e65467f8ea7a90687"
+}

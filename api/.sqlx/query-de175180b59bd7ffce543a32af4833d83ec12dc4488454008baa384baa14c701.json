@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO campaign_topics (campaign_id, \ntopic_id) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET id = campaign_topics.id RETURNING id as \"id!: i32\", \ncampaign_id as \"campaign_id!: i32\", \ntopic_id as \"topic_id!: i32\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "campaign_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "topic_id!: i32",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "de175180b59bd7ffce543a32af4833d83ec12dc4488454008baa384baa14c701"
+}

@@ -4,7 +4,7 @@ model! {
   state: App,
   table: audit_log_entries,
   struct AuditLogEntry {
-    #[sqlx_model_hints(int4, default)]
+    #[sqlx_model_hints(int4, default, op_in)]
     id: i32,
     #[sqlx_model_hints(audit_log_severity)]
     severity: AuditLogSeverity,

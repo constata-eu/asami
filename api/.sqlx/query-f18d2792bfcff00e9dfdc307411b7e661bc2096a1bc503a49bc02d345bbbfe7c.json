@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM campaign_topics WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR campaign_id = $4::int4) AND (NOT $5::boolean OR topic_id = $6::int4)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f18d2792bfcff00e9dfdc307411b7e661bc2096a1bc503a49bc02d345bbbfe7c"
+}

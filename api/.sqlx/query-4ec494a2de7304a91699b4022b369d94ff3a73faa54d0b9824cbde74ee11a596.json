@@ -1,0 +1,49 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO campaign_preferences (account_id, \ncampaign_id, \nnot_interested_on, \nattempted_on) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET id = campaign_preferences.id RETURNING id as \"id!: i32\", \naccount_id as \"account_id!: String\", \ncampaign_id as \"campaign_id!: i32\", \nnot_interested_on as \"not_interested_on!: Option < UtcDateTime >\", \nattempted_on as \"attempted_on!: Option < UtcDateTime >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "campaign_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "not_interested_on!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "attempted_on!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int4",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "4ec494a2de7304a91699b4022b369d94ff3a73faa54d0b9824cbde74ee11a596"
+}

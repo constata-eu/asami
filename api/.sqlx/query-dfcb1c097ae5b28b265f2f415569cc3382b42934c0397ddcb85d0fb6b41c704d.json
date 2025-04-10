@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE synced_events SET (id, \naddress, \nblock_number, \nblock_hash, \ntx_hash, \ntx_index, \nlog_index, \ndata, \ncreated_at) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE address END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE block_number END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE block_hash END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE tx_hash END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE tx_index END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE log_index END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE data END), (CASE $18::boolean WHEN TRUE THEN $19 ELSE created_at END)) WHERE id = $1 RETURNING id as \"id!: i32\", \naddress as \"address!: String\", \nblock_number as \"block_number!: Decimal\", \nblock_hash as \"block_hash!: String\", \ntx_hash as \"tx_hash!: String\", \ntx_index as \"tx_index!: Decimal\", \nlog_index as \"log_index!: String\", \ndata as \"data!: String\", \ncreated_at as \"created_at!: UtcDateTime\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "address!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "block_number!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 3,
+        "name": "block_hash!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "tx_hash!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "tx_index!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 6,
+        "name": "log_index!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "data!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Text",
+        "Bool",
+        "Timestamp"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "dfcb1c097ae5b28b265f2f415569cc3382b42934c0397ddcb85d0fb6b41c704d"
+}

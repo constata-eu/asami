@@ -8,13 +8,13 @@ model! {
   state: App,
   table: accounts,
   struct Account {
-    #[sqlx_model_hints(varchar, default)]
+    #[sqlx_model_hints(varchar, default, op_in)]
     id: String,
-    #[sqlx_model_hints(varchar)]
+    #[sqlx_model_hints(varchar, op_like)]
     name: Option<String>,
-    #[sqlx_model_hints(account_status, default)]
+    #[sqlx_model_hints(account_status, default, op_in)]
     status: AccountStatus,
-    #[sqlx_model_hints(varchar)]
+    #[sqlx_model_hints(varchar, op_like, op_is_set)]
     addr: Option<String>,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
@@ -48,7 +48,7 @@ model! {
     doc_balance: String,
     #[sqlx_model_hints(varchar, default)]
     rbtc_balance: String,
-    #[sqlx_model_hints(timestamptz, default)]
+    #[sqlx_model_hints(timestamptz, default, op_lt)]
     last_on_chain_sync: UtcDateTime,
 
     // These columns are part of the account activity report
@@ -317,15 +317,29 @@ impl Account {
         }
 
         if let Some(user) = self.account_user_scope().optional().await? {
-            self.state.auth_method()
-                .insert(InsertAuthMethod {
-                    user_id: user.attrs.id,
-                    lookup_key: addr.clone(),
-                    kind: AuthMethodKind::Eip712
-                })
-                .save()
-                .await
-                .map_err(|_| Error::validation("addr", "address_already_in_use") )?;
+            let already_used = self.state.auth_method()
+                .select()
+                .lookup_key_eq(&addr)
+                .kind_eq(AuthMethodKind::Eip712)
+                .optional()
+                .await?;
+
+            match already_used {
+                None => {
+                    self.state.auth_method()
+                        .insert(InsertAuthMethod {
+                            user_id: user.attrs.id,
+                            lookup_key: addr.clone(),
+                            kind: AuthMethodKind::Eip712
+                        })
+                        .save()
+                        .await?;
+                }
+                Some(x) if x.attrs.user_id != user.attrs.id => {
+                    return Err(Error::validation("addr", "address_in_use_by_another_user"));
+                } 
+                _ => {} // Auth method already exists, and is owned by this user.
+            }
         };
 
         Ok(self

@@ -12,3 +12,4 @@ api/Rocket.toml.development
 api/Rocket.toml.staging_real
 ganache_data
 ganache_data_copy
+Rocket.toml

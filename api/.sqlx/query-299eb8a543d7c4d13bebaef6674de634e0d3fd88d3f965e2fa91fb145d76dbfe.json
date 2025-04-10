@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO campaign_topics (campaign_id, \ntopic_id) VALUES ($1, $2) RETURNING id as \"id!: i32\", \ncampaign_id as \"campaign_id!: i32\", \ntopic_id as \"topic_id!: i32\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "campaign_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "topic_id!: i32",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "299eb8a543d7c4d13bebaef6674de634e0d3fd88d3f965e2fa91fb145d76dbfe"
+}

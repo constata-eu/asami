@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE sessions SET (id, \nuser_id, \naccount_id, \nauth_method_id, \npubkey, \nnonce, \ncreated_at, \nupdated_at, \ndeletion_id) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE user_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE account_id END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE auth_method_id END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE pubkey END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE nonce END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE created_at END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE updated_at END), (CASE $18::boolean WHEN TRUE THEN $19 ELSE deletion_id END)) WHERE id = $1 RETURNING id as \"id!: String\", \nuser_id as \"user_id!: i32\", \naccount_id as \"account_id!: String\", \nauth_method_id as \"auth_method_id!: i32\", \npubkey as \"pubkey!: String\", \nnonce as \"nonce!: i64\", \ncreated_at as \"created_at!: UtcDateTime\", \nupdated_at as \"updated_at!: Option < UtcDateTime >\", \ndeletion_id as \"deletion_id!: Option < i32 >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "auth_method_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "pubkey!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "nonce!: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 7,
+        "name": "updated_at!: Option < UtcDateTime >",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 8,
+        "name": "deletion_id!: Option < i32 >",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Text",
+        "Bool",
+        "Int8",
+        "Bool",
+        "Timestamp",
+        "Bool",
+        "Timestamp",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "f1b99931b5650e032da49129558b3c38c9b4c01d03ea34bbc96970d11d3051d6"
+}

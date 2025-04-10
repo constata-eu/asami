@@ -3,6 +3,7 @@ import { useTranslate } from 'react-admin';
 import { green } from '../components/theme';
 import AsamiLogo from '../assets/logo.svg?react';
 import { messages, browserLocale } from '../i18n';
+import whitepaper from '../generated/whitepaper.json';
 
 const LongText = ({title, lines}) => {
   const html = lines.map((l) => `<p>${l}</p>`).join("");
@@ -20,6 +21,8 @@ const About = () => {
   
   return (
     <Box sx={{ py:"2em", columnCount: { xs: 1, md: 2}, columnRule: `1px solid ${green}`, columnGap:"2em"}}>
+      <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: about.html }}/>
+
       <Box maxWidth="250px" mb="2em">
         <AsamiLogo width="100%" height="100%"/>
       </Box>

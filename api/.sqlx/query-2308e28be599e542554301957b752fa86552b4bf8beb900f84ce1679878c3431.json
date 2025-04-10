@@ -1,0 +1,162 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE on_chain_jobs SET (id, \nstatus, \nkind, \ntx_hash, \ngas_used, \nnonce, \nblock, \nstatus_line, \nsleep_until, \ncreated_at) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE status END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE kind END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE tx_hash END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE gas_used END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE nonce END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE block END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE status_line END), (CASE $18::boolean WHEN TRUE THEN $19 ELSE sleep_until END), (CASE $20::boolean WHEN TRUE THEN $21 ELSE created_at END)) WHERE id = $1 RETURNING id as \"id!: i32\", \nstatus as \"status!: OnChainJobStatus\", \nkind as \"kind!: OnChainJobKind\", \ntx_hash as \"tx_hash!: Option < String >\", \ngas_used as \"gas_used!: Option < String >\", \nnonce as \"nonce!: Option < String >\", \nblock as \"block!: Option < Decimal >\", \nstatus_line as \"status_line!: Option < String >\", \nsleep_until as \"sleep_until!: UtcDateTime\", \ncreated_at as \"created_at!: UtcDateTime\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "status!: OnChainJobStatus",
+        "type_info": {
+          "Custom": {
+            "name": "on_chain_job_status",
+            "kind": {
+              "Enum": [
+                "scheduled",
+                "skipped",
+                "reverted",
+                "submitted",
+                "failed",
+                "confirmed",
+                "settled"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "kind!: OnChainJobKind",
+        "type_info": {
+          "Custom": {
+            "name": "on_chain_job_kind",
+            "kind": {
+              "Enum": [
+                "promote_sub_accounts",
+                "admin_legacy_claim_account",
+                "admin_claim_balances_free",
+                "gasless_claim_balances",
+                "reimburse_campaigns",
+                "submit_reports",
+                "make_collabs",
+                "make_sub_account_collabs",
+                "claim_fee_pool_share",
+                "apply_voted_fee_rate"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "tx_hash!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "gas_used!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "nonce!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "block!: Option < Decimal >",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 7,
+        "name": "status_line!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "sleep_until!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        {
+          "Custom": {
+            "name": "on_chain_job_status",
+            "kind": {
+              "Enum": [
+                "scheduled",
+                "skipped",
+                "reverted",
+                "submitted",
+                "failed",
+                "confirmed",
+                "settled"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "on_chain_job_kind",
+            "kind": {
+              "Enum": [
+                "promote_sub_accounts",
+                "admin_legacy_claim_account",
+                "admin_claim_balances_free",
+                "gasless_claim_balances",
+                "reimburse_campaigns",
+                "submit_reports",
+                "make_collabs",
+                "make_sub_account_collabs",
+                "claim_fee_pool_share",
+                "apply_voted_fee_rate"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Text",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "2308e28be599e542554301957b752fa86552b4bf8beb900f84ce1679878c3431"
+}

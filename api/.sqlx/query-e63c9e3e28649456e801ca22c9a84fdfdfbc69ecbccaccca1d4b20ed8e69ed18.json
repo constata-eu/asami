@@ -1,0 +1,167 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \nstatus as \"status!: OnChainJobStatus\", \nkind as \"kind!: OnChainJobKind\", \ntx_hash as \"tx_hash!: Option < String >\", \ngas_used as \"gas_used!: Option < String >\", \nnonce as \"nonce!: Option < String >\", \nblock as \"block!: Option < Decimal >\", \nstatus_line as \"status_line!: Option < String >\", \nsleep_until as \"sleep_until!: UtcDateTime\", \ncreated_at as \"created_at!: UtcDateTime\" FROM on_chain_jobs WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR status = $6::on_chain_job_status) AND (NOT $7::boolean OR kind = $8::on_chain_job_kind) AND (NOT $9::boolean OR tx_hash = $10::varchar) AND (NOT $11::boolean OR gas_used = $12::varchar) AND (NOT $13::boolean OR nonce = $14::varchar) AND (NOT $15::boolean OR block = $16::numeric) AND (NOT $17::boolean OR status_line = $18::varchar) AND (NOT $19::boolean OR sleep_until = $20::timestamptz) AND (NOT $21::boolean OR created_at = $22::timestamptz) ORDER BY \n      (CASE ($23 = 'Id' AND NOT $24) WHEN true THEN id ELSE NULL END),\n      (CASE ($23 = 'Id' AND $24) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($23 = 'Status' AND NOT $24) WHEN true THEN status ELSE NULL END),\n      (CASE ($23 = 'Status' AND $24) WHEN true THEN status ELSE NULL END) DESC\n    ,\n      (CASE ($23 = 'Kind' AND NOT $24) WHEN true THEN kind ELSE NULL END),\n      (CASE ($23 = 'Kind' AND $24) WHEN true THEN kind ELSE NULL END) DESC\n    ,\n      (CASE ($23 = 'TxHash' AND NOT $24) WHEN true THEN tx_hash ELSE NULL END),\n      (CASE ($23 = 'TxHash' AND $24) WHEN true THEN tx_hash ELSE NULL END) DESC\n    ,\n      (CASE ($23 = 'GasUsed' AND NOT $24) WHEN true THEN gas_used ELSE NULL END),\n      (CASE ($23 = 'GasUsed' AND $24) WHEN true THEN gas_used ELSE NULL END) DESC\n    ,\n      (CASE ($23 = 'Nonce' AND NOT $24) WHEN true THEN nonce ELSE NULL END),\n      (CASE ($23 = 'Nonce' AND $24) WHEN true THEN nonce ELSE NULL END) DESC\n    ,\n      (CASE ($23 = 'Block' AND NOT $24) WHEN true THEN block ELSE NULL END),\n      (CASE ($23 = 'Block' AND $24) WHEN true THEN block ELSE NULL END) DESC\n    ,\n      (CASE ($23 = 'StatusLine' AND NOT $24) WHEN true THEN status_line ELSE NULL END),\n      (CASE ($23 = 'StatusLine' AND $24) WHEN true THEN status_line ELSE NULL END) DESC\n    ,\n      (CASE ($23 = 'SleepUntil' AND NOT $24) WHEN true THEN sleep_until ELSE NULL END),\n      (CASE ($23 = 'SleepUntil' AND $24) WHEN true THEN sleep_until ELSE NULL END) DESC\n    ,\n      (CASE ($23 = 'CreatedAt' AND NOT $24) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($23 = 'CreatedAt' AND $24) WHEN true THEN created_at ELSE NULL END) DESC\n     LIMIT $25 OFFSET $26 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "status!: OnChainJobStatus",
+        "type_info": {
+          "Custom": {
+            "name": "on_chain_job_status",
+            "kind": {
+              "Enum": [
+                "scheduled",
+                "skipped",
+                "reverted",
+                "submitted",
+                "failed",
+                "confirmed",
+                "settled"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "kind!: OnChainJobKind",
+        "type_info": {
+          "Custom": {
+            "name": "on_chain_job_kind",
+            "kind": {
+              "Enum": [
+                "promote_sub_accounts",
+                "admin_legacy_claim_account",
+                "admin_claim_balances_free",
+                "gasless_claim_balances",
+                "reimburse_campaigns",
+                "submit_reports",
+                "make_collabs",
+                "make_sub_account_collabs",
+                "claim_fee_pool_share",
+                "apply_voted_fee_rate"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "tx_hash!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "gas_used!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "nonce!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "block!: Option < Decimal >",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 7,
+        "name": "status_line!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "sleep_until!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        {
+          "Custom": {
+            "name": "on_chain_job_status",
+            "kind": {
+              "Enum": [
+                "scheduled",
+                "skipped",
+                "reverted",
+                "submitted",
+                "failed",
+                "confirmed",
+                "settled"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "on_chain_job_kind",
+            "kind": {
+              "Enum": [
+                "promote_sub_accounts",
+                "admin_legacy_claim_account",
+                "admin_claim_balances_free",
+                "gasless_claim_balances",
+                "reimburse_campaigns",
+                "submit_reports",
+                "make_collabs",
+                "make_sub_account_collabs",
+                "claim_fee_pool_share",
+                "apply_voted_fee_rate"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "e63c9e3e28649456e801ca22c9a84fdfdfbc69ecbccaccca1d4b20ed8e69ed18"
+}

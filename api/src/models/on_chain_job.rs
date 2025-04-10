@@ -26,7 +26,7 @@ model! {
   state: App,
   table: on_chain_jobs,
   struct OnChainJob {
-    #[sqlx_model_hints(int4, default)]
+    #[sqlx_model_hints(int4, default, op_in)]
     id: i32,
     #[sqlx_model_hints(on_chain_job_status, default)]
     status: OnChainJobStatus,

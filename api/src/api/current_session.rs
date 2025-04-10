@@ -8,11 +8,9 @@ use serde::de::DeserializeOwned;
 use validators::traits::ValidateString;
 
 use rocket::{
-    self,
-    data::{self, Data, FromData, Limits},
-    http::Status,
-    request::{FromRequest, Outcome, Request},
+    self, data::{self, Data, FromData, Limits}, http::Status,
 };
+use rocket::request::{FromRequest, Outcome, Request};
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct ApiRequestMetadata {
@@ -33,7 +31,7 @@ pub enum ApiAuthError {
 impl From<Error> for ApiAuthError {
     fn from(err: Error) -> ApiAuthError {
         match err {
-            Error::Validation(field, message) => ApiAuthError::Fail(format!("{field}{message}")),
+            Error::Validation(field, message) => ApiAuthError::Fail(format!("{field}: {message}")),
             _ => ApiAuthError::Unexpected("some_base_error"),
         }
     }
@@ -78,13 +76,17 @@ pub struct CurrentSession(pub Session);
 
 impl CurrentSession {
     async fn build(req: &Request<'_>, body: Option<&[u8]>) -> Result<Self, ApiAuthError> {
-        let app = req.rocket().state::<App>().ok_or(ApiAuthError::Unexpected("rocket_error"))?;
+        let app = req.rocket().state::<App>()
+            .ok_or(ApiAuthError::Unexpected("could_not_make_app_on_current_session"))?
+            .transactional().await?;
         let jwt = auth_some!(req.headers().get_one("Authentication"), "no_authentication_header").to_string();
 
         let session = match req.headers().get_one("Auth-Action") {
-            Some("Login") => Self::login(app, &jwt, req, body).await?,
-            _ => Self::identify(app, &jwt, req, body).await?,
+            Some("Login") => Self::login(&app, &jwt, req, body).await?,
+            _ => Self::identify(&app, &jwt, req, body).await?,
         };
+
+        app.commit().await?;
 
         Ok(Self(session))
     }
@@ -370,7 +372,23 @@ impl<'r, T: DeserializeOwned + std::marker::Send> FromData<'r> for CurrentSessio
 
         match serde_json::from_str(&String::from_utf8_lossy(&body_bytes)) {
             Ok(value) => {
-                let session = CurrentSession::build(req, Some(&body_bytes)).await.ok();
+                let session = if req.headers().get_one("Authentication").is_some() {
+                    match CurrentSession::build(req, Some(&body_bytes)).await {
+                        Ok(session) => Some(session),
+                        Err(e) => {
+                            let Some(app) = req.rocket().state::<App>() else {
+                                return Outcome::Error((
+                                    Status::InternalServerError,
+                                    ApiAuthError::Unexpected("could_not_make_app_on_current_session")
+                                ));
+                            };
+                            app.info("authentication", "authentication", &e).await;
+                            return Outcome::Error((Status::Unauthorized, e));
+                        }
+                    }
+                } else {
+                    None
+                };
                 Outcome::Success(CurrentSessionAndJson { session, json: value })
             }
             Err(_) => Outcome::Error((Status::BadRequest, ApiAuthError::Unexpected("invalid_body_json"))),

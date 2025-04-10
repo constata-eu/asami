@@ -1,0 +1,113 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \nvalue as \"value!: String\", \nlookup_key as \"lookup_key!: String\", \nused as \"used!: bool\", \nuser_id as \"user_id!: Option < i32 >\", \nexpires_at as \"expires_at!: DateTime < Utc >\", \nsent_at as \"sent_at!: Option < DateTime < Utc > >\", \nemail as \"email!: Option < String >\", \nlang as \"lang!: lang :: Lang\" FROM one_time_tokens WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR value = $4::varchar) AND (NOT $5::boolean OR lookup_key = $6::varchar) AND (NOT $7::boolean OR used = $8::boolean) AND (NOT $9::boolean OR user_id = $10::int4) AND (NOT $11::boolean OR expires_at = $12::timestamptz) AND (NOT $13::boolean OR sent_at = $14::timestamptz) AND ($15::boolean IS NULL OR (($15::boolean AND sent_at IS NOT NULL) OR (NOT $15::boolean AND sent_at IS NULL))) AND (NOT $16::boolean OR email = $17::text) AND ($18::boolean IS NULL OR (($18::boolean AND email IS NOT NULL) OR (NOT $18::boolean AND email IS NULL))) AND (NOT $19::boolean OR lang = $20::language) ORDER BY \n      (CASE ($21 = 'Id' AND NOT $22) WHEN true THEN id ELSE NULL END),\n      (CASE ($21 = 'Id' AND $22) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'Value' AND NOT $22) WHEN true THEN value ELSE NULL END),\n      (CASE ($21 = 'Value' AND $22) WHEN true THEN value ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'LookupKey' AND NOT $22) WHEN true THEN lookup_key ELSE NULL END),\n      (CASE ($21 = 'LookupKey' AND $22) WHEN true THEN lookup_key ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'Used' AND NOT $22) WHEN true THEN used ELSE NULL END),\n      (CASE ($21 = 'Used' AND $22) WHEN true THEN used ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'UserId' AND NOT $22) WHEN true THEN user_id ELSE NULL END),\n      (CASE ($21 = 'UserId' AND $22) WHEN true THEN user_id ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'ExpiresAt' AND NOT $22) WHEN true THEN expires_at ELSE NULL END),\n      (CASE ($21 = 'ExpiresAt' AND $22) WHEN true THEN expires_at ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'SentAt' AND NOT $22) WHEN true THEN sent_at ELSE NULL END),\n      (CASE ($21 = 'SentAt' AND $22) WHEN true THEN sent_at ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'Email' AND NOT $22) WHEN true THEN email ELSE NULL END),\n      (CASE ($21 = 'Email' AND $22) WHEN true THEN email ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'Lang' AND NOT $22) WHEN true THEN lang ELSE NULL END),\n      (CASE ($21 = 'Lang' AND $22) WHEN true THEN lang ELSE NULL END) DESC\n     LIMIT $23 OFFSET $24 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "value!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "lookup_key!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "used!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "user_id!: Option < i32 >",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "expires_at!: DateTime < Utc >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "sent_at!: Option < DateTime < Utc > >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "email!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "lang!: lang :: Lang",
+        "type_info": {
+          "Custom": {
+            "name": "language",
+            "kind": {
+              "Enum": [
+                "en",
+                "es"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Text",
+        "Bool",
+        "Bool",
+        {
+          "Custom": {
+            "name": "language",
+            "kind": {
+              "Enum": [
+                "en",
+                "es"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "bc4313c3bc3be3f69c65e409636eb9de742eb18f4cbda383a5620eba4201ed94"
+}

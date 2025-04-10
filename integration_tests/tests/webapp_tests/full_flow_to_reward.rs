@@ -29,7 +29,6 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
         h.verify((1000 + i).to_string()).await?.update().score(Some(weihex("1234"))).status(HandleStatus::Active).save().await?;
     }
 
-    wait_here();
     d.wait_for("#existing-x-handle-stats").await;
 
     for h in d.app().handle().select().all().await? {
@@ -64,8 +63,6 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
         x_campaign.make_collab(&h, u("20"), &format!("{}-2", h.attrs.username)).await?;
     }
     d.test_app().wait_for_job("Account collabs", OnChainJobKind::MakeCollabs, OnChainJobStatus::Settled).await;
-
-    wait_here();
 
     d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "2400.0 ASAMI").await;
     d.click("#claim-balances-button").await;

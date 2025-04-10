@@ -4,7 +4,7 @@ model! {
   state: App,
   table: sessions,
   struct Session {
-    #[sqlx_model_hints(varchar)]
+    #[sqlx_model_hints(varchar, op_in)]
     id: String,
     #[sqlx_model_hints(int4)]
     user_id: i32,

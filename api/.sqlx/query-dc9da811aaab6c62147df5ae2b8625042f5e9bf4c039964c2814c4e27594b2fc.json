@@ -1,0 +1,94 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO one_time_tokens (value, \nlookup_key, \nuser_id, \nemail, \nlang) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET id = one_time_tokens.id RETURNING id as \"id!: i32\", \nvalue as \"value!: String\", \nlookup_key as \"lookup_key!: String\", \nused as \"used!: bool\", \nuser_id as \"user_id!: Option < i32 >\", \nexpires_at as \"expires_at!: DateTime < Utc >\", \nsent_at as \"sent_at!: Option < DateTime < Utc > >\", \nemail as \"email!: Option < String >\", \nlang as \"lang!: lang :: Lang\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "value!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "lookup_key!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "used!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "user_id!: Option < i32 >",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "expires_at!: DateTime < Utc >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "sent_at!: Option < DateTime < Utc > >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "email!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "lang!: lang :: Lang",
+        "type_info": {
+          "Custom": {
+            "name": "language",
+            "kind": {
+              "Enum": [
+                "en",
+                "es"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Int4",
+        "Text",
+        {
+          "Custom": {
+            "name": "language",
+            "kind": {
+              "Enum": [
+                "en",
+                "es"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "dc9da811aaab6c62147df5ae2b8625042f5e9bf4c039964c2814c4e27594b2fc"
+}

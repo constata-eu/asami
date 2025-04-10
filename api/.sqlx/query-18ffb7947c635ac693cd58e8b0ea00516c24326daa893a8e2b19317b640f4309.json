@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO on_chain_job_holders (job_id, \nholder_id) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET id = on_chain_job_holders.id RETURNING id as \"id!: i32\", \njob_id as \"job_id!: i32\", \nholder_id as \"holder_id!: i32\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "job_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "holder_id!: i32",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "18ffb7947c635ac693cd58e8b0ea00516c24326daa893a8e2b19317b640f4309"
+}

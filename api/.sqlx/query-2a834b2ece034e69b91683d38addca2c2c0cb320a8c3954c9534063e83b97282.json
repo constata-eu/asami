@@ -1,0 +1,62 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \naccount_id as \"account_id!: String\", \ncampaign_id as \"campaign_id!: i32\", \nnot_interested_on as \"not_interested_on!: Option < UtcDateTime >\", \nattempted_on as \"attempted_on!: Option < UtcDateTime >\" FROM campaign_preferences WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR campaign_id = $8::int4) AND (NOT $9::boolean OR not_interested_on = $10::timestamptz) AND ($11::boolean IS NULL OR (($11::boolean AND not_interested_on IS NOT NULL) OR (NOT $11::boolean AND not_interested_on IS NULL))) AND (NOT $12::boolean OR attempted_on = $13::timestamptz) ORDER BY \n      (CASE ($14 = 'Id' AND NOT $15) WHEN true THEN id ELSE NULL END),\n      (CASE ($14 = 'Id' AND $15) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($14 = 'AccountId' AND NOT $15) WHEN true THEN account_id ELSE NULL END),\n      (CASE ($14 = 'AccountId' AND $15) WHEN true THEN account_id ELSE NULL END) DESC\n    ,\n      (CASE ($14 = 'CampaignId' AND NOT $15) WHEN true THEN campaign_id ELSE NULL END),\n      (CASE ($14 = 'CampaignId' AND $15) WHEN true THEN campaign_id ELSE NULL END) DESC\n    ,\n      (CASE ($14 = 'NotInterestedOn' AND NOT $15) WHEN true THEN not_interested_on ELSE NULL END),\n      (CASE ($14 = 'NotInterestedOn' AND $15) WHEN true THEN not_interested_on ELSE NULL END) DESC\n    ,\n      (CASE ($14 = 'AttemptedOn' AND NOT $15) WHEN true THEN attempted_on ELSE NULL END),\n      (CASE ($14 = 'AttemptedOn' AND $15) WHEN true THEN attempted_on ELSE NULL END) DESC\n     LIMIT $16 OFFSET $17",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "campaign_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "not_interested_on!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "attempted_on!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Timestamptz",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "2a834b2ece034e69b91683d38addca2c2c0cb320a8c3954c9534063e83b97282"
+}

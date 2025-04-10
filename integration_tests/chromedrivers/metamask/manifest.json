@@ -1,10 +1,5 @@
 {
-   "author": "https://metamask.io",
-   "background": {
-      "page": "background.html",
-      "persistent": true
-   },
-   "browser_action": {
+   "action": {
       "default_icon": {
          "128": "images/icon-128.png",
          "16": "images/icon-16.png",
@@ -14,8 +9,12 @@
          "512": "images/icon-512.png",
          "64": "images/icon-64.png"
       },
-      "default_popup": "popup.html",
+      "default_popup": "popup-init.html",
       "default_title": "MetaMask"
+   },
+   "author": "https://metamask.io",
+   "background": {
+      "service_worker": "scripts/app-init.js"
    },
    "commands": {
       "_execute_browser_action": {
@@ -29,21 +28,24 @@
    },
    "content_scripts": [ {
       "all_frames": true,
-      "js": [ "disable-console.js", "globalthis.js", "lockdown-install.js", "lockdown-run.js", "lockdown-more.js", "contentscript.js" ],
+      "js": [ "scripts/disable-console.js", "scripts/lockdown-install.js", "scripts/lockdown-run.js", "scripts/lockdown-more.js", "scripts/contentscript.js" ],
       "matches": [ "file://*/*", "http://*/*", "https://*/*" ],
       "run_at": "document_start"
    }, {
       "js": [ "vendor/trezor/content-script.js" ],
-      "matches": [ "*://connect.trezor.io/*/popup.html" ]
+      "matches": [ "*://connect.trezor.io/*/popup.html*" ]
    } ],
-   "content_security_policy": "frame-ancestors 'none'; script-src 'self' 'wasm-unsafe-eval'; object-src 'none'",
+   "content_security_policy": {
+      "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; frame-ancestors 'none'; font-src 'self';",
+      "sandbox": "sandbox allow-scripts; script-src 'self' 'unsafe-inline' 'unsafe-eval'; object-src 'none'; default-src 'none'; connect-src *; font-src 'self';"
+   },
    "default_locale": "en",
    "description": "__MSG_appDescription__",
-   "differential_fingerprint": "1.bd14fdcdfe3f40ba184cdbf546cc392d791fe4c96d862e283f06871393303800",
    "externally_connectable": {
       "ids": [ "*" ],
       "matches": [ "https://metamask.io/*" ]
    },
+   "host_permissions": [ "http://localhost:8545/", "file://*/*", "http://*/*", "https://*/*", "ws://*/*", "wss://*/*" ],
    "icons": {
       "128": "images/icon-128.png",
       "16": "images/icon-16.png",
@@ -55,11 +57,14 @@
       "64": "images/icon-64.png"
    },
    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlcgI4VVL4JUvo6hlSgeCZp9mGltZrzFvc2Asqzb1dDGO9baoYOe+QRoh27/YyVXugxni480Q/R147INhBOyQZVMhZOD5pFMVutia9MHMaZhgRXzrK3BHtNSkKLL1c5mhutQNwiLqLtFkMSGvka91LoMEC8WTI0wi4tACnJ5FyFZQYzvtqy5sXo3VS3gzfOBluLKi7BxYcaUJjNrhOIxl1xL2qgK5lDrDOLKcbaurDiwqofVtAFOL5sM3uJ6D8nOO9tG+T7hoobRFN+nxk43PHgCv4poicOv+NMZQEk3da1m/xfuzXV88NcE/YRbRLwAS82m3gsJZKc6mLqm4wZHzBwIDAQAB",
-   "manifest_version": 2,
+   "manifest_version": 3,
    "minimum_chrome_version": "89",
    "name": "__MSG_appName__",
-   "permissions": [ "storage", "unlimitedStorage", "clipboardWrite", "http://localhost:8545/", "https://*.infura.io/", "https://*.codefi.network/", "https://chainid.network/chains.json", "https://lattice.gridplus.io/*", "activeTab", "webRequest", "*://*.eth/", "notifications" ],
+   "permissions": [ "activeTab", "alarms", "clipboardWrite", "notifications", "scripting", "storage", "unlimitedStorage", "webRequest", "offscreen" ],
+   "sandbox": {
+      "pages": [ "snaps/index.html" ]
+   },
    "short_name": "__MSG_appName__",
    "update_url": "https://clients2.google.com/service/update2/crx",
-   "version": "11.10.1"
+   "version": "12.15.2"
 }

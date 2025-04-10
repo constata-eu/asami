@@ -50,12 +50,6 @@ macro_rules! make_sql_enum {
     #[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize, sqlx::Type, GraphQLEnum, strum_macros::EnumIter)]
     #[sqlx(type_name = $sql_name, rename_all = "snake_case")]
     pub enum $name { $($variants),* }
-
-    impl sqlx::postgres::PgHasArrayType for $name {
-      fn array_type_info() -> sqlx::postgres::PgTypeInfo {
-        sqlx::postgres::PgTypeInfo::with_name(concat!("_", $sql_name))
-      }
-    }
   )
 }
 

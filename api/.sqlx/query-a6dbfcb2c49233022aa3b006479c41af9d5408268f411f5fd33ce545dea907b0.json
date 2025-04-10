@@ -1,0 +1,39 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM synced_events WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR address = $4::varchar) AND (NOT $5::boolean OR block_number = $6::decimal) AND (NOT $7::boolean OR block_hash = $8::varchar) AND (NOT $9::boolean OR tx_hash = $10::varchar) AND (NOT $11::boolean OR tx_index = $12::decimal) AND (NOT $13::boolean OR log_index = $14::varchar) AND (NOT $15::boolean OR data = $16::varchar) AND (NOT $17::boolean OR created_at = $18::timestamptz)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "a6dbfcb2c49233022aa3b006479c41af9d5408268f411f5fd33ce545dea907b0"
+}

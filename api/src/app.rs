@@ -47,6 +47,19 @@ impl App {
     pub async fn fail<S: serde::Serialize>(&self, kind: &str, subkind: &str, context: S) {
         let _ = self.audit_log_entry().fail(kind, subkind, context).await;
     }
+
+    pub async fn transactional(&self) -> sqlx::Result<Self> {
+        sqlx::Result::Ok(Self {
+            db: self.db.transaction().await?,
+            settings: self.settings.clone(),
+            on_chain: self.on_chain.clone(),
+        })
+    }
+
+    pub async fn commit(&self) -> sqlx::Result<()> {
+        self.db.commit().await?;
+        sqlx::Result::Ok(())
+    }
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -65,8 +78,7 @@ impl AppConfig {
     }
 
     pub async fn db(&self) -> AsamiResult<Db> {
-        let mut options = PgConnectOptions::from_str(&self.database_uri)?;
-        options.disable_statement_logging();
+        let options = PgConnectOptions::from_str(&self.database_uri)?.disable_statement_logging();
         let pool_options = PgPoolOptions::new().max_connections(50);
         let pool = pool_options.connect_with(options).await?;
         Ok(Db {

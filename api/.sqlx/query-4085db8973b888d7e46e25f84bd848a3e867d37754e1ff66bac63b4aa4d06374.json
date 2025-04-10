@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM on_chain_job_campaigns WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR job_id = $4::int4) AND (NOT $5::boolean OR campaign_id = $6::int4)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "4085db8973b888d7e46e25f84bd848a3e867d37754e1ff66bac63b4aa4d06374"
+}

@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \njob_id as \"job_id!: i32\", \naccount_id as \"account_id!: String\" FROM on_chain_job_accounts WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR job_id = $4::int4) AND (NOT $5::boolean OR account_id = $6::varchar) ORDER BY \n      (CASE ($7 = 'Id' AND NOT $8) WHEN true THEN id ELSE NULL END),\n      (CASE ($7 = 'Id' AND $8) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($7 = 'JobId' AND NOT $8) WHEN true THEN job_id ELSE NULL END),\n      (CASE ($7 = 'JobId' AND $8) WHEN true THEN job_id ELSE NULL END) DESC\n    ,\n      (CASE ($7 = 'AccountId' AND NOT $8) WHEN true THEN account_id ELSE NULL END),\n      (CASE ($7 = 'AccountId' AND $8) WHEN true THEN account_id ELSE NULL END) DESC\n     LIMIT $9 OFFSET $10",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "job_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9310d52e070c56a425db92cf77cbf1ee3e299b747f9567bfb58de7932d75e5d0"
+}

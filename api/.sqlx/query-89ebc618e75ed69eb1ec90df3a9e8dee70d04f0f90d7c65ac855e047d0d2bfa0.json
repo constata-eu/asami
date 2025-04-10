@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE on_chain_job_campaigns SET (id, \njob_id, \ncampaign_id) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE job_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE campaign_id END)) WHERE id = $1 RETURNING id as \"id!: i32\", \njob_id as \"job_id!: i32\", \ncampaign_id as \"campaign_id!: i32\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "job_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "campaign_id!: i32",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "89ebc618e75ed69eb1ec90df3a9e8dee70d04f0f90d7c65ac855e047d0d2bfa0"
+}

@@ -1,0 +1,107 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM accounts WHERE (NOT $1::boolean OR id = $2::varchar) AND (NOT $3::boolean OR id = ANY(CAST($4 as varchar[])) ) AND (NOT $5::boolean OR name = $6::varchar) AND (NOT $7::boolean OR name LIKE $8::varchar) AND (NOT $9::boolean OR status = $10::account_status) AND (NOT $11::boolean OR status = ANY(CAST($12 as account_status[])) ) AND (NOT $13::boolean OR addr = $14::varchar) AND (NOT $15::boolean OR addr LIKE $16::varchar) AND ($17::boolean IS NULL OR (($17::boolean AND addr IS NOT NULL) OR (NOT $17::boolean AND addr IS NULL))) AND (NOT $18::boolean OR created_at = $19::timestamptz) AND (NOT $20::boolean OR updated_at = $21::timestamptz) AND (NOT $22::boolean OR claim_signature = $23::varchar) AND (NOT $24::boolean OR claim_session_id = $25::varchar) AND (NOT $26::boolean OR processed_for_legacy_claim = $27::boolean) AND (NOT $28::boolean OR allows_gasless = $29::boolean) AND (NOT $30::boolean OR unclaimed_asami_balance = $31::varchar) AND (NOT $32::boolean OR unclaimed_doc_balance = $33::varchar) AND (NOT $34::boolean OR asami_balance = $35::varchar) AND (NOT $36::boolean OR doc_balance = $37::varchar) AND (NOT $38::boolean OR rbtc_balance = $39::varchar) AND (NOT $40::boolean OR last_on_chain_sync = $41::timestamptz) AND (NOT $42::boolean OR last_on_chain_sync < $43::timestamptz) AND (NOT $44::boolean OR force_hydrate = $45::boolean) AND (NOT $46::boolean OR total_collabs = $47::int4) AND (NOT $48::boolean OR total_collab_rewards = $49::varchar) AND (NOT $50::boolean OR total_campaigns = $51::int4) AND (NOT $52::boolean OR total_collabs_received = $53::int4) AND (NOT $54::boolean OR total_spent = $55::varchar)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Varchar",
+        "Bool",
+        "VarcharArray",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "account_status",
+            "kind": {
+              "Enum": [
+                "managed",
+                "claiming",
+                "claimed",
+                "banned"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "account_status[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "account_status",
+                  "kind": {
+                    "Enum": [
+                      "managed",
+                      "claiming",
+                      "claimed",
+                      "banned"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "812222ee63a4caa74b19432983507c58ee221d16049af45087b647e7c95e1038"
+}

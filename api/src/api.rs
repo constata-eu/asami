@@ -97,14 +97,23 @@ pub async fn in_transaction(
     GraphQLResponse(status, json)
 }
 
-#[rocket::post("/", data = "<current>")]
+#[rocket::post("/", data = "<session_and_json>")]
 pub async fn post_handler(
     app: &State<App>,
-    current: CurrentSessionAndJson<juniper::http::GraphQLBatchRequest>,
+    session_and_json: Result<CurrentSessionAndJson<juniper::http::GraphQLBatchRequest>, ApiAuthError>,
     schema: &State<Schema>,
     lang: lang::Lang,
 ) -> GraphQLResponse {
-    in_transaction(app.inner(), current.json, current.session, schema, lang).await
+    match session_and_json {
+        Ok(current) => in_transaction(app.inner(), current.json, current.session, schema, lang).await,
+        Err(auth_error) => {
+            let (msg, status) = match &auth_error {
+                ApiAuthError::Fail(msg) => (msg.as_str(), Status::Unauthorized),
+                ApiAuthError::Unexpected(msg) => (*msg, Status::InternalServerError),
+            };
+            GraphQLResponse(status, serde_json::json!({"authError": msg}).to_string())
+        }
+    }
 }
 
 #[rocket::get("/introspect")]
@@ -114,6 +123,7 @@ pub async fn introspect(app: &State<App>, schema: &State<Schema>) -> JsonResult<
         app: app.inner().clone(),
         lang: lang::Lang::En,
     };
+
     let (res, _errors) = juniper::introspect(schema, &ctx, IntrospectionFormat::default())
         .map_err(|_| Error::Precondition("Invalid GraphQL schema for introspection".to_string()))?;
     Ok(Json(res))
@@ -127,7 +137,7 @@ pub struct Context {
 
 impl Context {
     pub fn current_session(&self) -> AsamiResult<CurrentSession> {
-        self.current_session.clone().ok_or(Error::service("authentication", "authentication_needed"))
+        self.current_session.clone().ok_or(Error::service("authentication", "asami_authentication_needed"))
     }
 
     pub fn user_id(&self) -> AsamiResult<i32> {

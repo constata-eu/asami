@@ -11,12 +11,6 @@ pub enum Lang {
     En,
 }
 
-impl sqlx::postgres::PgHasArrayType for Lang {
-    fn array_type_info() -> sqlx::postgres::PgTypeInfo {
-        sqlx::postgres::PgTypeInfo::with_name("_language")
-    }
-}
-
 impl Lang {
     pub fn code(&self) -> &'static str {
         match self {

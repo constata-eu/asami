@@ -1,0 +1,51 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \naddress as \"address!: String\", \nbalance as \"balance!: String\", \nlast_fee_pool_share as \"last_fee_pool_share!: Option < String >\" FROM holders WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR address = $4::varchar) AND (NOT $5::boolean OR balance = $6::varchar) AND (NOT $7::boolean OR last_fee_pool_share = $8::varchar) ORDER BY \n      (CASE ($9 = 'Id' AND NOT $10) WHEN true THEN id ELSE NULL END),\n      (CASE ($9 = 'Id' AND $10) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'Address' AND NOT $10) WHEN true THEN address ELSE NULL END),\n      (CASE ($9 = 'Address' AND $10) WHEN true THEN address ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'Balance' AND NOT $10) WHEN true THEN balance ELSE NULL END),\n      (CASE ($9 = 'Balance' AND $10) WHEN true THEN balance ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'LastFeePoolShare' AND NOT $10) WHEN true THEN last_fee_pool_share ELSE NULL END),\n      (CASE ($9 = 'LastFeePoolShare' AND $10) WHEN true THEN last_fee_pool_share ELSE NULL END) DESC\n     LIMIT $11 OFFSET $12",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "address!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "balance!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_fee_pool_share!: Option < String >",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "eadeaefa4fbc15d63b27caed5401b34d7b968152c14823b0502ae89d14cff07c"
+}

@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM audit_log_entries WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR severity = $6::audit_log_severity) AND (NOT $7::boolean OR created_at = $8::timestamptz) AND (NOT $9::boolean OR kind = $10::varchar) AND (NOT $11::boolean OR subkind = $12::varchar) AND (NOT $13::boolean OR context = $14::text) AND (NOT $15::boolean OR loggable_type = $16::varchar) AND (NOT $17::boolean OR loggable_id = $18::varchar)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        {
+          "Custom": {
+            "name": "audit_log_severity",
+            "kind": {
+              "Enum": [
+                "trace",
+                "debug",
+                "info",
+                "warn",
+                "fail"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Text",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "95f744e81d2cbeba4786feb7a03267a88778b04a7ed2f6ad561472b41f50f6c6"
+}

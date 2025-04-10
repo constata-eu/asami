@@ -4,17 +4,17 @@ model! {
   state: App,
   table: collabs,
   struct Collab {
-    #[sqlx_model_hints(int4, default)]
+    #[sqlx_model_hints(int4, default, op_in)]
     id: i32,
-    #[sqlx_model_hints(int4)]
+    #[sqlx_model_hints(int4, op_in)]
     campaign_id: i32,
-    #[sqlx_model_hints(varchar)]
+    #[sqlx_model_hints(varchar, op_in)]
     advertiser_id: String,
-    #[sqlx_model_hints(varchar)]
+    #[sqlx_model_hints(varchar, op_in)]
     member_id: String,
     #[sqlx_model_hints(varchar)]
     collab_trigger_unique_id: String,
-    #[sqlx_model_hints(int4)]
+    #[sqlx_model_hints(int4, op_in)]
     handle_id: i32,
     #[sqlx_model_hints(collab_status)]
     status: CollabStatus,

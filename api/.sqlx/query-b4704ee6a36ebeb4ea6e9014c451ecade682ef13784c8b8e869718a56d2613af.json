@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \njob_id as \"job_id!: i32\", \nholder_id as \"holder_id!: i32\" FROM on_chain_job_holders WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR job_id = $4::int4) AND (NOT $5::boolean OR holder_id = $6::int4) ORDER BY \n      (CASE ($7 = 'Id' AND NOT $8) WHEN true THEN id ELSE NULL END),\n      (CASE ($7 = 'Id' AND $8) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($7 = 'JobId' AND NOT $8) WHEN true THEN job_id ELSE NULL END),\n      (CASE ($7 = 'JobId' AND $8) WHEN true THEN job_id ELSE NULL END) DESC\n    ,\n      (CASE ($7 = 'HolderId' AND NOT $8) WHEN true THEN holder_id ELSE NULL END),\n      (CASE ($7 = 'HolderId' AND $8) WHEN true THEN holder_id ELSE NULL END) DESC\n     LIMIT $9 OFFSET $10",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "job_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "holder_id!: i32",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b4704ee6a36ebeb4ea6e9014c451ecade682ef13784c8b8e869718a56d2613af"
+}

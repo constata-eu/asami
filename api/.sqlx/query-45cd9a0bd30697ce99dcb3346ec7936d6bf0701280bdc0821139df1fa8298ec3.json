@@ -1,0 +1,75 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \nuser_id as \"user_id!: i32\", \nkind as \"kind!: AuthMethodKind\", \nlookup_key as \"lookup_key!: String\" FROM auth_methods WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR user_id = $4::int4) AND (NOT $5::boolean OR kind = $6::auth_method_kind) AND (NOT $7::boolean OR lookup_key = $8::Varchar) ORDER BY \n      (CASE ($9 = 'Id' AND NOT $10) WHEN true THEN id ELSE NULL END),\n      (CASE ($9 = 'Id' AND $10) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'UserId' AND NOT $10) WHEN true THEN user_id ELSE NULL END),\n      (CASE ($9 = 'UserId' AND $10) WHEN true THEN user_id ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'Kind' AND NOT $10) WHEN true THEN kind ELSE NULL END),\n      (CASE ($9 = 'Kind' AND $10) WHEN true THEN kind ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'LookupKey' AND NOT $10) WHEN true THEN lookup_key ELSE NULL END),\n      (CASE ($9 = 'LookupKey' AND $10) WHEN true THEN lookup_key ELSE NULL END) DESC\n     LIMIT $11 OFFSET $12",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "kind!: AuthMethodKind",
+        "type_info": {
+          "Custom": {
+            "name": "auth_method_kind",
+            "kind": {
+              "Enum": [
+                "x",
+                "facebook",
+                "eip712",
+                "one_time_token"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "lookup_key!: String",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        {
+          "Custom": {
+            "name": "auth_method_kind",
+            "kind": {
+              "Enum": [
+                "x",
+                "facebook",
+                "eip712",
+                "one_time_token"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "45cd9a0bd30697ce99dcb3346ec7936d6bf0701280bdc0821139df1fa8298ec3"
+}
