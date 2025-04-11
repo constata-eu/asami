@@ -35,7 +35,10 @@ impl Showable<models::AuditLogEntry, AuditLogEntryFilter> for AuditLogEntry {
         }
     }
 
-    fn filter_to_select(_context: &Context, filter: Option<AuditLogEntryFilter>) -> FieldResult<models::SelectAuditLogEntry> {
+    fn filter_to_select(
+        _context: &Context,
+        filter: Option<AuditLogEntryFilter>,
+    ) -> FieldResult<models::SelectAuditLogEntry> {
         if let Some(f) = filter {
             Ok(models::SelectAuditLogEntry {
                 id_in: f.ids,

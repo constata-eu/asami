@@ -16,7 +16,7 @@ model! {
     collab_trigger_unique_id: String,
     #[sqlx_model_hints(int4, op_in)]
     handle_id: i32,
-    #[sqlx_model_hints(collab_status)]
+    #[sqlx_model_hints(collab_status, op_ne)]
     status: CollabStatus,
     #[sqlx_model_hints(varchar)]
     dispute_reason: Option<String>,

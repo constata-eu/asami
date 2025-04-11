@@ -15,10 +15,7 @@ impl TestApiServer {
             }
             std::thread::sleep(std::time::Duration::from_millis(50));
             if i == 99 && std::env::var("CI").is_err() {
-                assert!(
-                    false,
-                    "Public api server is taking too long. Maybe it errored out when launching?."
-                );
+                panic!("Public api server is taking too long. Maybe it errored out when launching?.");
             }
         }
 

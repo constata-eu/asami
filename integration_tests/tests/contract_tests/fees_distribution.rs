@@ -1,10 +1,14 @@
-/// This module tests the contract's fees distribution mechanism
-/// with a simulation of fees to be distributed, focusing on the amounts
-/// for each user and the smart contract validations themselves.
-/// There's another test module in models which only tests how the admin process
-/// interacts with these calls, and the client side validation it does before
-/// hitting the contract with invalid data.
-use ::api::on_chain::*;
+use api::on_chain::PromoteSubAccountsParam;
+
+/**
+This module tests the contract's fees distribution mechanism
+with a simulation of fees to be distributed, focusing on the amounts
+for each user and the smart contract validations themselves.
+There's another test module in models which only tests how the admin process
+interacts with these calls, and the client side validation it does before
+hitting the contract with invalid data.
+*/
+use super::*;
 
 app_test! { distributes_fees_to_holders (a)
   a.send_revert_tx(

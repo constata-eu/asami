@@ -73,7 +73,7 @@ impl Showable<models::Account, AccountFilter> for Account {
     fn filter_to_select(_context: &Context, filter: Option<AccountFilter>) -> FieldResult<models::SelectAccount> {
         if let Some(f) = filter {
             Ok(models::SelectAccount {
-                id_in: f.ids.map(|ids| ids.into_iter().map(i32_to_hex).collect() ),
+                id_in: f.ids.map(|ids| ids.into_iter().map(i32_to_hex).collect()),
                 id_eq: f.id_eq.map(i32_to_hex),
                 addr_like: into_like_search(f.addr_like),
                 ..Default::default()

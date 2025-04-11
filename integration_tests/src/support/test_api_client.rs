@@ -1,4 +1,3 @@
-use super::TestApp;
 pub use api::{
     lang,
     models::{self, hasher, milli, u, u256, wei, Utc, U256},
@@ -19,6 +18,8 @@ pub use graphql_client::{self, GraphQLQuery};
 use jwt_simple::{algorithms::*, prelude::*};
 use rocket::{http::Header, local::asynchronous::LocalResponse};
 pub use serde::{de::DeserializeOwned, Deserialize, Serialize};
+
+use super::TestApp;
 
 #[derive(Deserialize)]
 pub struct ApiError {
@@ -64,7 +65,7 @@ impl<'b> ApiClient<'b> {
     }
 
     pub fn account_id(&self) -> U256 {
-        self.account_id.clone().unwrap()
+        self.account_id.unwrap()
     }
 
     pub async fn account(&self) -> models::Account {
@@ -156,12 +157,7 @@ impl<'b> ApiClient<'b> {
         self.session = Some(session);
     }
 
-    pub async fn create_handle(
-        &self,
-        username: &str,
-        user_id: &str,
-        score: U256,
-    ) -> models::Handle {
+    pub async fn create_handle(&self, username: &str, user_id: &str, score: U256) -> models::Handle {
         use ethers::abi::AbiEncode;
         use gql::create_handle::*;
 
@@ -232,7 +228,7 @@ impl<'b> ApiClient<'b> {
         // As a side effect, this will create the advertiser's local wallet.
         self.submit_claim_account_request().await;
 
-        self.test_app.send_doc_to(self.address(), amount.clone()).await;
+        self.test_app.send_doc_to(self.address(), amount).await;
 
         self.setup_trusted_admin(message).await;
 
@@ -240,7 +236,7 @@ impl<'b> ApiClient<'b> {
             .send_tx(
                 &format!("Approving spending for setting up as advertiser: {message}"),
                 "46296",
-                self.doc_contract().approve(self.test_app.asami_contract().address(), amount.clone()),
+                self.doc_contract().approve(self.test_app.asami_contract().address(), amount),
             )
             .await;
     }
@@ -352,7 +348,7 @@ impl<'b> ApiClient<'b> {
 
     pub async fn submit_claim_account_request(&mut self) {
         self.make_client_wallet().await;
-        self.gql_claim_account_request(&self.local_wallet()).await;
+        self.gql_claim_account_request(self.local_wallet()).await;
     }
 
     pub async fn claim_account(&mut self) {
@@ -360,37 +356,39 @@ impl<'b> ApiClient<'b> {
 
         self.account().await.update().allows_gasless(true).save().await.unwrap();
 
-        self.test_app.wait_for_job(
-            &format!("Claming account {:?}", self.account_id()),
-            models::OnChainJobKind::PromoteSubAccounts,
-            models::OnChainJobStatus::Settled
-        ).await;
+        self.test_app
+            .wait_for_job(
+                &format!("Claming account {:?}", self.account_id()),
+                models::OnChainJobKind::PromoteSubAccounts,
+                models::OnChainJobStatus::Settled,
+            )
+            .await;
     }
 
-    pub async fn gql<'a, T: core::fmt::Debug, Q>(&'a self, query: Q, extra_headers: Vec<Header<'static>>) -> T
+    pub async fn gql<'a, T, Q>(&'a self, query: Q, extra_headers: Vec<Header<'static>>) -> T
     where
         Q: Serialize,
-        T: DeserializeOwned,
+        T: DeserializeOwned + core::fmt::Debug,
     {
         let response = self.gql_response(query, extra_headers).await;
-        response.data.expect(&format!("No gql response. Error was {:?}", response.errors))
+        response.data.unwrap_or_else(|| panic!("No gql response. Error was {:?}", response.errors))
     }
 
-    pub async fn gql_response<'a, T: core::fmt::Debug, Q>(
+    pub async fn gql_response<'a, T, Q>(
         &'a self,
         query: Q,
         extra_headers: Vec<Header<'static>>,
     ) -> graphql_client::Response<T>
     where
         Q: Serialize,
-        T: DeserializeOwned,
+        T: DeserializeOwned + core::fmt::Debug,
     {
         let query_str = serde_json::to_string(&query).expect("gql query was not JSON");
         self.post::<graphql_client::Response<T>, _>("/graphql/", query_str, extra_headers).await
     }
 
-    pub fn make_auth_header<'a>(
-        &'a self,
+    pub fn make_auth_header(
+        &self,
         path: &str,
         method: &str,
         nonce: i64,
@@ -460,28 +458,31 @@ impl<'b> ApiClient<'b> {
     }
 
     pub async fn get_campaign_offers(&self) -> gql::all_campaigns::ResponseData {
-      self.gql(
-        &gql::AllCampaigns::build_query(gql::all_campaigns::Variables{
-          filter: Some(gql::all_campaigns::CampaignFilter {
-            available_to_account_id: Some(api::models::hex_to_i32(&self.account().await.attrs.id).unwrap().into()),
-            ids: None,
-            id_eq: None,
-            account_id_eq: None,
-            briefing_hash_like: None,
-            briefing_json_like: None,
-            status_eq: None,
-            budget_eq: None,
-            budget_gt: None,
-            budget_lt: None,
-            status_ne: None,
-          }),
-          page: None,
-          per_page: None,
-          sort_field: None,
-          sort_order: None,
-        }),
-        vec![]
-      ).await
+        self.gql(
+            &gql::AllCampaigns::build_query(gql::all_campaigns::Variables {
+                filter: Some(gql::all_campaigns::CampaignFilter {
+                    available_to_account_id: Some(
+                        api::models::hex_to_i32(&self.account().await.attrs.id).unwrap().into(),
+                    ),
+                    ids: None,
+                    id_eq: None,
+                    account_id_eq: None,
+                    briefing_hash_like: None,
+                    briefing_json_like: None,
+                    status_eq: None,
+                    budget_eq: None,
+                    budget_gt: None,
+                    budget_lt: None,
+                    status_ne: None,
+                }),
+                page: None,
+                per_page: None,
+                sort_field: None,
+                sort_order: None,
+            }),
+            vec![],
+        )
+        .await
     }
 }
 

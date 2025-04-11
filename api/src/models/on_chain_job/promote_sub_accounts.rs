@@ -35,9 +35,10 @@ impl OnChainJob {
             for link in self.on_chain_job_account_vec().await? {
                 link.account().await?.update().status(AccountStatus::Claimed).save().await?;
             }
-            self.state.account().hydrate_on_chain_columns_for(
-                self.on_chain_job_account_vec().await?.iter().map(|i| i.account_id() )
-            ).await?;
+            self.state
+                .account()
+                .hydrate_on_chain_columns_for(self.on_chain_job_account_vec().await?.iter().map(|i| i.account_id()))
+                .await?;
         }
 
         Ok(self)

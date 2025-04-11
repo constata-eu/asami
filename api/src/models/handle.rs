@@ -1,5 +1,6 @@
-use super::*;
 use serde_json::json;
+
+use super::*;
 
 model! {
   state: App,
@@ -56,16 +57,24 @@ model! {
 
 impl HandleHub {
     pub async fn force_hydrate(&self) -> AsamiResult<()> {
-        let ids = self.state.db.fetch_all_scalar(
-            sqlx::query_scalar!("SELECT id FROM handles WHERE force_hydrate = true LIMIT 50")
-        ).await?;
+        let ids = self
+            .state
+            .db
+            .fetch_all_scalar(sqlx::query_scalar!(
+                "SELECT id FROM handles WHERE force_hydrate = true LIMIT 50"
+            ))
+            .await?;
         if ids.is_empty() {
-            return Ok(())
+            return Ok(());
         }
         self.hydrate_report_columns_for(ids.iter().copied()).await?;
-        self.state.db.execute(
-            sqlx::query!("UPDATE handles SET force_hydrate = false WHERE id = ANY($1)", &ids)
-        ).await?;
+        self.state
+            .db
+            .execute(sqlx::query!(
+                "UPDATE handles SET force_hydrate = false WHERE id = ANY($1)",
+                &ids
+            ))
+            .await?;
         Ok(())
     }
 
@@ -197,17 +206,11 @@ impl HandleHub {
 
         if *indexer_state.x_handle_verification_checkpoint() < checkpoint {
             indexer_state.update().x_handle_verification_checkpoint(checkpoint).save().await?;
-            self.state
-                .info(
-                    "verify_pending",
-                    "done_processing_updating_indexer_state",
-                    &checkpoint,
-                )
-                .await;
+            self.state.info("verify_pending", "done_processing_updating_indexer_state", &checkpoint).await;
         }
         Ok(handles)
     }
-    
+
     pub async fn score_pending(&self) -> AsamiResult<Vec<Handle>> {
         use twitter_v2::{authorization::BearerToken, query::*, TwitterApi};
         let now = Utc::now();
@@ -215,19 +218,13 @@ impl HandleHub {
         // The window to score is one month starting a week ago.
         // Se we don't count old tweets, but we also give recent
         // tweets a week to gain impressions.
-        let start_time = time::OffsetDateTime::from_unix_timestamp(
-            (now - chrono::Duration::days(37)).timestamp()
-        )?
-        .to_offset(time::UtcOffset::UTC);
+        let start_time = time::OffsetDateTime::from_unix_timestamp((now - chrono::Duration::days(37)).timestamp())?
+            .to_offset(time::UtcOffset::UTC);
 
-        let end_time = time::OffsetDateTime::from_unix_timestamp(
-            (now - chrono::Duration::days(7)).timestamp()
-        )?
-        .to_offset(time::UtcOffset::UTC);
+        let end_time = time::OffsetDateTime::from_unix_timestamp((now - chrono::Duration::days(7)).timestamp())?
+            .to_offset(time::UtcOffset::UTC);
 
-        let pending = self.need_scoring(now - chrono::Duration::days(7))
-            .all()
-            .await?;
+        let pending = self.need_scoring(now - chrono::Duration::days(7)).all().await?;
 
         if pending.is_empty() {
             self.state.info("score_pending", "no_handles_pending_scoring", ()).await;
@@ -242,13 +239,13 @@ impl HandleHub {
 
         for handle in pending {
             self.state.info("score_pending", "scoring_handle", json![{"handle": &handle}]).await;
-            let Some(user_id) = handle.user_id().as_ref().and_then(|x| x.parse::<u64>().ok() ) else {
+            let Some(user_id) = handle.user_id().as_ref().and_then(|x| x.parse::<u64>().ok()) else {
                 self.state.info("score_pending", "handle_has_no_user_id", &handle).await;
                 continue;
-            
             };
 
-            let response = api.get_user_tweets(user_id)
+            let response = api
+                .get_user_tweets(user_id)
                 .max_results(75)
                 .start_time(start_time)
                 .end_time(end_time)
@@ -260,18 +257,27 @@ impl HandleHub {
             tokio::time::sleep(tokio::time::Duration::from_millis(3 * 60 * 1000)).await;
 
             let Some(tweets) = response.data() else {
-                self.state.info("score_pending", "could_not_get_tweets_for", json![{"handle":handle.id(), "response":&response}]).await;
-                handles.push(handle.update()
-                    .avg_impression_count(0)
-                    .avg_reply_count(0)
-                    .avg_repost_count(0)
-                    .avg_like_count(0)
-                    .scored_tweet_count(0)
-                    .last_scoring(Some(now))
-                    .status(HandleStatus::Active)
-                    .score(Some(u("0").encode_hex()))
-                    .save()
-                    .await?);
+                self.state
+                    .info(
+                        "score_pending",
+                        "could_not_get_tweets_for",
+                        json![{"handle":handle.id(), "response":&response}],
+                    )
+                    .await;
+                handles.push(
+                    handle
+                        .update()
+                        .avg_impression_count(0)
+                        .avg_reply_count(0)
+                        .avg_repost_count(0)
+                        .avg_like_count(0)
+                        .scored_tweet_count(0)
+                        .last_scoring(Some(now))
+                        .status(HandleStatus::Active)
+                        .score(Some(u("0").encode_hex()))
+                        .save()
+                        .await?,
+                );
                 continue;
             };
 
@@ -282,10 +288,22 @@ impl HandleHub {
             let mut tweet_count = 0_i32;
             for tweet in tweets {
                 let Some(m) = tweet.public_metrics.as_ref() else {
-                    self.state.info("score_pending", "no_tweet_metrics_for", json![{"handle":handle.id(), "tweet":tweet.id}]).await;
+                    self.state
+                        .info(
+                            "score_pending",
+                            "no_tweet_metrics_for",
+                            json![{"handle":handle.id(), "tweet":tweet.id}],
+                        )
+                        .await;
                     continue;
                 };
-                self.state.info("score_pending", "got_tweet_metrics", json![{"handle":handle.id(), "metrics":m, "tweet":tweet.id}]).await;
+                self.state
+                    .info(
+                        "score_pending",
+                        "got_tweet_metrics",
+                        json![{"handle":handle.id(), "metrics":m, "tweet":tweet.id}],
+                    )
+                    .await;
                 // We estimate the impression count from public metrics
                 // until we change the system to request access to private impression metrics.
                 let estimated_impression_count: usize = vec![
@@ -293,7 +311,10 @@ impl HandleHub {
                     (m.reply_count * 300),
                     (m.retweet_count * 30),
                     m.quote_count.map(|q| q * 60).unwrap_or(0),
-                ].into_iter().max().unwrap_or(0);
+                ]
+                .into_iter()
+                .max()
+                .unwrap_or(0);
 
                 impression_count += estimated_impression_count as i32;
                 reply_count += m.reply_count as i32;
@@ -307,43 +328,44 @@ impl HandleHub {
             let score_result = 10_000.0 * (1.0 - (-0.0001 * avg_impression_count).exp());
             let score = Some(U256::from(score_result.floor() as u64).encode_hex());
 
-            handles.push(handle.update()
-                .avg_impression_count(impression_count / divisor)
-                .avg_reply_count(reply_count / divisor)
-                .avg_repost_count(repost_count / divisor)
-                .avg_like_count(like_count / divisor)
-                .scored_tweet_count(tweet_count)
-                .last_scoring(Some(now))
-                .score(score)
-                .status(HandleStatus::Active)
-                .save()
-                .await?);
+            handles.push(
+                handle
+                    .update()
+                    .avg_impression_count(impression_count / divisor)
+                    .avg_reply_count(reply_count / divisor)
+                    .avg_repost_count(repost_count / divisor)
+                    .avg_like_count(like_count / divisor)
+                    .scored_tweet_count(tweet_count)
+                    .last_scoring(Some(now))
+                    .score(score)
+                    .status(HandleStatus::Active)
+                    .save()
+                    .await?,
+            );
         }
 
         Ok(handles)
     }
 }
 
-
 impl Handle {
     pub async fn verify(self, user_id: String) -> sqlx::Result<Self> {
-        let existing = self.state
-            .auth_method()
-            .select()
-            .kind_eq(AuthMethodKind::X)
-            .lookup_key_eq(&user_id)
-            .count()
-            .await? > 0;
+        let existing =
+            self.state.auth_method().select().kind_eq(AuthMethodKind::X).lookup_key_eq(&user_id).count().await? > 0;
 
         if !existing {
             let user = self.state.account_user().select().account_id_eq(self.account_id()).one().await?;
-            self.state.auth_method().insert(InsertAuthMethod {
-                user_id: *user.user_id(),
-                lookup_key: user_id.clone(),
-                kind: AuthMethodKind::X
-            }).save().await?;
+            self.state
+                .auth_method()
+                .insert(InsertAuthMethod {
+                    user_id: *user.user_id(),
+                    lookup_key: user_id.clone(),
+                    kind: AuthMethodKind::X,
+                })
+                .save()
+                .await?;
         }
-        
+
         self.update().user_id(Some(user_id)).status(HandleStatus::Verified).save().await
     }
 

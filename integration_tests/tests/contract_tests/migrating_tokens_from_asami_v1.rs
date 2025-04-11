@@ -1,10 +1,11 @@
-use crate::support::TestApp;
+/*
+use super::*;
 use api::{
     models::U256,
     on_chain::{self, *},
 };
 
-/*
+
 TODO: This test started failing when migrating from truffle to hardhat
 It cannot create a campaign in the old contract, for a yet unknown reason.
 

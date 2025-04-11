@@ -1,4 +1,4 @@
-use super::*;
+use std::sync::Arc;
 
 pub use ethers::{
     prelude::{abigen, LogMeta, Middleware, SignerMiddleware},
@@ -6,7 +6,8 @@ pub use ethers::{
     signers::{coins_bip39::English, LocalWallet, MnemonicBuilder, Signer},
     types::{Address, U256, U64},
 };
-use std::sync::Arc;
+
+use super::*;
 
 abigen!(
     LegacyContractCode,

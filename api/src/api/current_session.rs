@@ -1,16 +1,18 @@
+use base64::{engine::general_purpose, Engine as _};
+use jwt_simple::prelude::*;
+use rocket::{
+    self,
+    data::{self, Data, FromData, Limits},
+    http::Status,
+    request::{FromRequest, Outcome, Request},
+};
+use serde::de::DeserializeOwned;
+use validators::traits::ValidateString;
+
 use super::{
     models::{Session, *},
     *,
 };
-use base64::{engine::general_purpose, Engine as _};
-use jwt_simple::prelude::*;
-use serde::de::DeserializeOwned;
-use validators::traits::ValidateString;
-
-use rocket::{
-    self, data::{self, Data, FromData, Limits}, http::Status,
-};
-use rocket::request::{FromRequest, Outcome, Request};
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct ApiRequestMetadata {
@@ -76,9 +78,12 @@ pub struct CurrentSession(pub Session);
 
 impl CurrentSession {
     async fn build(req: &Request<'_>, body: Option<&[u8]>) -> Result<Self, ApiAuthError> {
-        let app = req.rocket().state::<App>()
+        let app = req
+            .rocket()
+            .state::<App>()
             .ok_or(ApiAuthError::Unexpected("could_not_make_app_on_current_session"))?
-            .transactional().await?;
+            .transactional()
+            .await?;
         let jwt = auth_some!(req.headers().get_one("Authentication"), "no_authentication_header").to_string();
 
         let session = match req.headers().get_one("Auth-Action") {
@@ -175,12 +180,12 @@ impl CurrentSession {
             match kind {
                 AuthMethodKind::Eip712 => {
                     account.create_claim_account_request(lookup_key, auth_data, session.attrs.id.clone()).await?;
-                },
+                }
                 AuthMethodKind::X => {
                     if let Some(username) = x_username {
                         account.create_handle(&username).await?;
                     }
-                },
+                }
                 _ => {}
             }
         }
@@ -223,7 +228,13 @@ impl CurrentSession {
                 let key = auth_try!(
                     app.one_time_token().select().used_eq(false).value_eq(auth_data.to_string()).one().await,
                     "invalid_one_time_token"
-                ).update().used(true).save().await?.attrs.lookup_key;
+                )
+                .update()
+                .used(true)
+                .save()
+                .await?
+                .attrs
+                .lookup_key;
 
                 (key, None)
             }
@@ -379,7 +390,7 @@ impl<'r, T: DeserializeOwned + std::marker::Send> FromData<'r> for CurrentSessio
                             let Some(app) = req.rocket().state::<App>() else {
                                 return Outcome::Error((
                                     Status::InternalServerError,
-                                    ApiAuthError::Unexpected("could_not_make_app_on_current_session")
+                                    ApiAuthError::Unexpected("could_not_make_app_on_current_session"),
                                 ));
                             };
                             app.info("authentication", "authentication", &e).await;

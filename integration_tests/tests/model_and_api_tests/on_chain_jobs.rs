@@ -1,5 +1,9 @@
-use ::api::on_chain::{self, *};
-use api::models::*;
+use api::{
+    models::*,
+    on_chain::{self, *},
+};
+
+use super::*;
 
 app_test! { basic_workflow_with_claim_account_example (a)
   assert_eq!(a.app.on_chain_job().select().count().await?, 0);

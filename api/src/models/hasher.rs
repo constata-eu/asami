@@ -1,5 +1,6 @@
-use super::U256;
 use sha2::{Digest, Sha256};
+
+use super::U256;
 
 pub fn u256digest(bytes: &[u8]) -> anyhow::Result<U256> {
     Ok(U256::from_str_radix(&hexdigest(bytes), 16)?)

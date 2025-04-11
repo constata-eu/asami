@@ -1,12 +1,14 @@
-use super::*;
+use std::sync::Arc;
+
 use ethers::{
     middleware::{contract::FunctionCall, Middleware, MiddlewareError},
     prelude::{ContractError, SignerMiddleware, Wallet},
     providers::{Http, Provider},
     signers::LocalWallet,
 };
-use std::sync::Arc;
 use strum::IntoEnumIterator;
+
+use super::*;
 
 mod admin_claim_balances_free;
 mod admin_legacy_claim_account;
@@ -172,8 +174,7 @@ impl OnChainJob {
             Failed
         };
 
-        self
-            .update()
+        self.update()
             .status(status)
             .gas_used(receipt.gas_used.map(|x| x.encode_hex()))
             .nonce(Some(original_tx.nonce.encode_hex()))

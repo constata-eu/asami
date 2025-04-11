@@ -1,8 +1,9 @@
-use super::*;
 use rocket::{
     self,
     request::{self, FromRequest, Outcome, Request},
 };
+
+use super::*;
 
 #[derive(sqlx::Type, Copy, Clone, Debug, serde::Deserialize, PartialEq, serde::Serialize)]
 #[sqlx(type_name = "language", rename_all = "lowercase")]

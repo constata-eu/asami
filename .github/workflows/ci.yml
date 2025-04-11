@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: asami
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: asami_development
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U asami"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+          override: true
+
+      - name: Install Node and Yarn
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'yarn'
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install frontend deps
+        working-directory: ./frontend
+        run: yarn install
+
+      - name: Start Hardhat node
+        run: |
+          nohup npx hardhat node > hardhat.log 2>&1 &
+          sleep 5
+
+      - name: Prepare database
+        run: |
+          sudo apt-get install -y libpq-dev
+          cd api
+          sqlx database reset -y
+
+      - name: Run cargo fmt
+        run: cargo fmt -- --check
+
+      - name: Run cargo clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: Run tests
+        run: |
+          cd integration_tests
+          ./run webapp adds_tokens_to_wallet
+

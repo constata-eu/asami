@@ -1,4 +1,5 @@
 max_width = 120
 chain_width = 100
 imports_granularity="Crate"
+group_imports="StdExternalCrate"
 

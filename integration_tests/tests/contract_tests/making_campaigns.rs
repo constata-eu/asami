@@ -1,4 +1,6 @@
-use api::on_chain::*;
+use api::on_chain::{MakeCollabsParam, MakeCollabsParamItem, SubmitReportsParam};
+
+use super::*;
 
 app_test! { full_campaign_workflow_until_reimbursed (a)
     let mut advertiser = a.client().await;

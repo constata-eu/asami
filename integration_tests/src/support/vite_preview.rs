@@ -4,10 +4,10 @@ pub struct VitePreview(Child);
 
 impl VitePreview {
     pub fn start() -> Self {
-        Command::new("killall").args(&["-9", "yarn"]).output().expect("Could not kill previous server");
+        Command::new("killall").args(["-9", "yarn"]).output().expect("Could not kill previous server");
 
         let path_to_log = "/tmp/asami_vite.log";
-        Command::new("rm").args(&["-rf", path_to_log]).output().expect("Could not remove previous log");
+        Command::new("rm").args(["-rf", path_to_log]).output().expect("Could not remove previous log");
 
         let output_file = std::fs::File::create(path_to_log).unwrap();
 
@@ -26,7 +26,7 @@ impl VitePreview {
             }
             std::thread::sleep(std::time::Duration::from_millis(500));
             if i == 99 && std::env::var("CI").is_err() {
-                assert!(false, "Vite dev server is taking too long.");
+                panic!("Vite dev server is taking too long.");
             }
         }
 

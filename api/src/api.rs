@@ -1,15 +1,14 @@
-use crate::models::{CampaignStatus, CollabStatus};
-
-use super::{error::Error, models, *};
 use ethers::{abi::AbiEncode, types::U256};
 use juniper::{
     graphql_object, graphql_value, EmptySubscription, FieldError, FieldResult, GraphQLInputObject, GraphQLObject,
     IntrospectionFormat,
 };
-use sqlx_models_orm::*;
-
 use juniper_rocket::{graphiql_source, GraphQLResponse};
 use rocket::{http::Status, serde::json::Json, State};
+use sqlx_models_orm::*;
+
+use super::{error::Error, models, *};
+use crate::models::{CampaignStatus, CollabStatus};
 
 mod current_session;
 use current_session::*;
@@ -387,7 +386,13 @@ impl Mutation {
 
     pub async fn create_email_login_link(context: &Context, email: String) -> FieldResult<EmailLoginLink> {
         Ok(EmailLoginLink {
-            id: context.app.one_time_token().create_for_email(email.to_lowercase(), context.lang, None).await?.attrs.id,
+            id: context
+                .app
+                .one_time_token()
+                .create_for_email(email.to_lowercase(), context.lang, None)
+                .await?
+                .attrs
+                .id,
         })
     }
 }
@@ -418,7 +423,5 @@ fn into_like_search(i: Option<String>) -> Option<String> {
 
 fn parse_u256(fieldname: &str, value: &str) -> FieldResult<U256> {
     use ethers::abi::AbiDecode;
-    Ok(U256::decode_hex(value).map_err(|_e|
-        Error::validation(fieldname, "invalid_hex_encoded_u256_value")
-    )?)
-} 
+    Ok(U256::decode_hex(value).map_err(|_e| Error::validation(fieldname, "invalid_hex_encoded_u256_value"))?)
+}

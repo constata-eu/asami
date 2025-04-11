@@ -1,19 +1,20 @@
+use std::collections::{HashMap, HashSet};
+
 use super::*;
 use crate::on_chain::{
     MakeCollabsParam, MakeCollabsParamItem, MakeSubAccountCollabsParam, MakeSubAccountCollabsParamItem,
 };
-use std::collections::{HashMap, HashSet};
 
 impl OnChainJob {
     pub async fn admin_make_collabs_make_call(&self) -> anyhow::Result<Option<AsamiFunctionCall>> {
         let by_campaign = self
             .group_and_filter_collabs(|collab| async move {
-                Ok(collab.account().await?.decoded_addr()?.map(|account_addr|{
-                    MakeCollabsParamItem {
+                Ok(
+                    collab.account().await?.decoded_addr()?.map(|account_addr| MakeCollabsParamItem {
                         account_addr,
                         doc_reward: collab.reward_u256(),
-                    }
-                }))
+                    }),
+                )
             })
             .await?;
 
@@ -81,8 +82,7 @@ impl OnChainJob {
             // All collabs, by definition, are made by our own admin address, so it's easy
             // to know the admin fee. We still check it on-chain for that block to avoid
             // race conditions.
-            let admin_fee_rate =
-                contract.accounts(self.state.settings.rsk.admin_address).block(block).call().await?.5; // In this position is for feeRateWhenAdmin
+            let admin_fee_rate = contract.accounts(self.state.settings.rsk.admin_address).block(block).call().await?.5; // In this position is for feeRateWhenAdmin
 
             // After a number of collabs have been made, and before we make the collabs cleared,
             // we first update the campaign budgets, to prevent new collabs coming in racey.
@@ -94,7 +94,7 @@ impl OnChainJob {
                 campaigns.insert(campaign.attrs.id, campaign);
             }
 
-            for (_, campaign) in &mut campaigns {
+            for campaign in campaigns.values_mut() {
                 let budget = contract
                     .get_campaign(campaign.decoded_advertiser_addr()?, campaign.decoded_briefing_hash())
                     .block(block)
@@ -111,7 +111,7 @@ impl OnChainJob {
                 let collab = link.collab().await?;
                 account_ids.insert(collab.attrs.member_id.clone());
                 account_ids.insert(collab.attrs.advertiser_id.clone());
-                handle_ids.insert(collab.attrs.handle_id); 
+                handle_ids.insert(collab.attrs.handle_id);
 
                 // We do this exactly as it's done in the contract to have the same
                 // precision loss the contract may have.
@@ -163,13 +163,17 @@ impl OnChainJob {
                 Some(x) => x,
                 None => {
                     let campaign = collab.campaign().await?;
-                    let budget = self.state.on_chain.asami_contract.get_campaign(
-                        campaign.decoded_advertiser_addr()?,
-                        campaign.decoded_briefing_hash()
-                    ).call().await?.budget;
+                    let budget = self
+                        .state
+                        .on_chain
+                        .asami_contract
+                        .get_campaign(campaign.decoded_advertiser_addr()?, campaign.decoded_briefing_hash())
+                        .call()
+                        .await?
+                        .budget;
 
                     let value = if campaign.we_are_trusted_admin().await? {
-                        Some((budget,campaign))
+                        Some((budget, campaign))
                     } else {
                         None
                     };
@@ -201,7 +205,7 @@ impl OnChainJob {
                         continue;
                     }
 
-                    *budget -= collab.reward_u256(); 
+                    *budget -= collab.reward_u256();
 
                     let insert = InsertOnChainJobCollab {
                         job_id: self.attrs.id,

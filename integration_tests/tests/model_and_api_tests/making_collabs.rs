@@ -1,10 +1,12 @@
+use models::{CollabStatus, InsertTopic, OnChainJobKind, OnChainJobStatus};
+
 // This module tests how collabs are made for accounts and sub accounts.
-use api::models::*;
+use super::*;
 
 app_test! { sends_collabs_for_accounts_and_sub_accounts(a)
     let mut campaign = a.quick_campaign(u("100"), 30, &[]).await;
 
-    let claimed = a.quick_handle("alice_on_x", "11111", Site::X, u("5000")).await;
+    let claimed = a.quick_handle("alice_on_x", "11111", u("5000")).await;
     let mut first_collab = campaign.make_x_collab_with_user_id(claimed.user_id().as_ref().unwrap()).await?.unwrap();
 
     a.wait_for_job("Account collab", OnChainJobKind::MakeCollabs, OnChainJobStatus::Settled).await;
@@ -12,7 +14,7 @@ app_test! { sends_collabs_for_accounts_and_sub_accounts(a)
     assert_eq!(claimed.collab_scope().status_eq(CollabStatus::Cleared).all().await?.len(), 1);
 
     let unclaimed_client = a.client().await;
-    let unclaimed = unclaimed_client.create_handle("bob_on_x", "12121", Site::X, u("5000")).await;
+    let unclaimed = unclaimed_client.create_handle("bob_on_x", "12121", u("5000")).await;
     let mut second_collab = campaign.make_x_collab_with_user_id(unclaimed.user_id().as_ref().unwrap()).await?.unwrap();
 
     a.wait_for_job("Subaccount collabs", OnChainJobKind::MakeSubAccountCollabs, OnChainJobStatus::Settled).await;
@@ -44,7 +46,7 @@ app_test! { skips_if_we_are_no_longer_campaign_admins(a)
     advertiser.setup_as_advertiser("test main advertiser").await;
     let mut campaign = advertiser.start_and_pay_campaign("https://x.com/somebody/status/1716421161867710954", u("100"), 30, &[]).await;
 
-    let handle = a.quick_handle("alice_on_x", "11111", Site::X, u("5000")).await;
+    let handle = a.quick_handle("alice_on_x", "11111", u("5000")).await;
     campaign.make_x_collab_with_user_id(handle.user_id().as_ref().unwrap()).await?;
 
     a.send_tx(
@@ -61,7 +63,7 @@ app_test! { skips_if_we_are_no_longer_campaign_admins(a)
 
     let unclaimed_client = a.client().await;
     let unclaimed = unclaimed_client
-        .create_handle("bob_on_x", "12121", Site::X, u("5000"))
+        .create_handle("bob_on_x", "12121", u("5000"))
         .await;
     campaign.make_x_collab_with_user_id(unclaimed.user_id().as_ref().unwrap()).await?;
     a.wait_for_job(
@@ -73,7 +75,7 @@ app_test! { skips_if_we_are_no_longer_campaign_admins(a)
 
 app_test! { prevents_race_conditions_using_available_budget (a)
     let mut campaign = a.quick_campaign(u("100"), 30, &[]).await;
-    let handle = a.quick_handle("alice_on_x", "11111", Site::X, u("5000")).await;
+    let handle = a.quick_handle("alice_on_x", "11111", u("5000")).await;
     campaign.make_collab(&handle, u("10"), "first_post_trigger").await?;
     campaign.reload().await?;
     assert_eq!(campaign.available_budget().await?, u("90"));
@@ -92,7 +94,7 @@ app_test! { fails_when_handle_is_missing_topics (a)
     let crypto = a.app.topic().find(2).await?;
     let beauty = a.app.topic().find(3).await?;
 
-    let handle = a.quick_handle("bob_on_x", "11111", Site::X, u("5000")).await;
+    let handle = a.quick_handle("bob_on_x", "11111", u("5000")).await;
     handle.add_topic(&sports).await?;
     handle.add_topic(&beauty).await?;
 
@@ -119,19 +121,19 @@ app_test! { registers_collab_for_last_accepted_handle(a)
 
     let global_user_id = "11111";
 
-    let old_handle = a.quick_handle("bob_on_x", global_user_id, Site::X, u("5000")).await;
+    let old_handle = a.quick_handle("bob_on_x", global_user_id, u("5000")).await;
 
-    campaign.make_x_collab_with_user_id(&global_user_id).await?;
+    campaign.make_x_collab_with_user_id(global_user_id).await?;
     assert_eq!(old_handle.collab_vec().await?.len(), 1);
 
-    let new_handle = a.quick_handle("bob_on_x", global_user_id, Site::X, u("5000")).await;
-    assert!(campaign.make_x_collab_with_user_id(&global_user_id).await?.is_none());
+    let new_handle = a.quick_handle("bob_on_x", global_user_id, u("5000")).await;
+    assert!(campaign.make_x_collab_with_user_id(global_user_id).await?.is_none());
 
     assert_eq!(old_handle.collab_vec().await?.len(), 1);
     assert_eq!(new_handle.collab_vec().await?.len(), 0);
 
     let mut second_campaign = a.quick_campaign(u("100"), 30, &[]).await;
-    assert!(second_campaign.make_x_collab_with_user_id(&global_user_id).await?.is_some());
+    assert!(second_campaign.make_x_collab_with_user_id(global_user_id).await?.is_some());
 
     assert_eq!(old_handle.collab_vec().await?.len(), 1);
     assert_eq!(new_handle.collab_vec().await?.len(), 1);
@@ -139,8 +141,8 @@ app_test! { registers_collab_for_last_accepted_handle(a)
 
 app_test! { handle_has_a_max_reward_for_campaign(a)
     let campaign = a.quick_campaign(u("100"), 30, &[]).await;
-    let small = a.quick_handle("small_on_x", "11111", Site::X, wei("5000")).await;
-    let big = a.quick_handle("big_on_x", "22222", Site::X, wei("15000")).await;
+    let small = a.quick_handle("small_on_x", "11111", wei("5000")).await;
+    let big = a.quick_handle("big_on_x", "22222", wei("15000")).await;
 
     assert_eq!(small.reward_for(&campaign).unwrap(), u("5"));
     assert_eq!(big.reward_for(&campaign).unwrap(), milli("9999"));

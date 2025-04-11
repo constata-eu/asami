@@ -1,7 +1,8 @@
+use ::api::models::{u, U256};
+
 /// This module tests the token issuance algorithm and targetting,
 /// and also the way tokens can be used to vote the base fee rate.
-use crate::support::TestApp;
-use ::api::models::{u, U256};
+use super::*;
 
 app_test! { has_an_adaptable_schedule_with_a_target_per_cycle (a)
   let budget = u("42000000");

@@ -1,5 +1,7 @@
+use models::{OnChainJobKind, OnChainJobStatus};
+
 // This module tests how collabs are made for accounts and sub accounts.
-use api::models::*;
+use super::*;
 
 app_test! { makes_gasless_claims_as_soon_as_possible(a)
     let mut campaign = a.quick_campaign(u("2000"), 30, &[]).await;
@@ -7,34 +9,34 @@ app_test! { makes_gasless_claims_as_soon_as_possible(a)
     // Alice and bob will collab and get some pending balance.
     let mut alice = a.client().await;
     alice.claim_account().await;
-    let alice_x = alice.create_handle("alice_on_x", "11111", Site::X, wei("10000")).await;
+    let alice_x = alice.create_handle("alice_on_x", "11111", wei("10000")).await;
 
     let mut bob = a.client().await;
     bob.claim_account().await;
-    let bob_x = bob.create_handle("bob_on_x", "22222", Site::X, wei("10000")).await;
+    let bob_x = bob.create_handle("bob_on_x", "22222", wei("10000")).await;
 
     // Carl won't have enough money for gasless withdrawal yet, so will be skipped.
     let mut carl = a.client().await;
     carl.claim_account().await;
-    let carl_x = carl.create_handle("carl_on_x", "33333", Site::X, wei("50")).await;
+    let carl_x = carl.create_handle("carl_on_x", "33333", wei("50")).await;
 
     // Stranger will set himself up as his own trusted admin, so will be skipped.
     let mut stranger = a.client().await;
     stranger.claim_account().await;
     let stranger_x = stranger
-        .create_handle("stranger_on_x", "55555", Site::X, wei("10000"))
+        .create_handle("stranger_on_x", "55555", wei("10000"))
         .await;
 
     // Susan has not claimed her account so no gasless claim is possible.
     let susan = a.client().await;
-    let susan_x = susan.create_handle("susan_on_x", "44444", Site::X, wei("10000")).await;
+    let susan_x = susan.create_handle("susan_on_x", "44444", wei("10000")).await;
 
     // Eve has not allowed gasless claims so we honour it.
     let mut eve = a.client().await;
     eve.claim_account().await;
     eve.account().await.disallow_gasless().await?;
 
-    let eve_x = eve.create_handle("eve_on_x", "88888", Site::X, wei("10000")).await;
+    let eve_x = eve.create_handle("eve_on_x", "88888", wei("10000")).await;
 
     for user in [&alice_x, &bob_x, &carl_x, &stranger_x, &susan_x, &eve_x] {
         campaign.make_x_collab_with_user_id(user.user_id().as_ref().unwrap()).await?;
@@ -115,7 +117,7 @@ app_test! { makes_admin_claim(a)
         "https://x.com/somebody/status/1716421161867710954",
         u("20000"), 30, &[]).await;
 
-    let alice = a.quick_handle("alice_on_x", "11111", Site::X, wei("10000")).await;
+    let alice = a.quick_handle("alice_on_x", "11111", wei("10000")).await;
 
     a.wait_for_job(
         "Claiming admin's own balances",

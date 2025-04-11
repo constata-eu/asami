@@ -1,9 +1,10 @@
+use std::str::FromStr;
+
 use ethers::{
     core::types::{GethDebugTracingOptions, H256},
     providers::Middleware,
     types::{GethDebugBuiltInTracerType, GethDebugTracerType},
 };
-use std::str::FromStr;
 
 /// use `debug_traceTransaction` to fetch traces
 /// requires, a valid endpoint in `RPC_URL` env var that supports `debug_traceTransaction`

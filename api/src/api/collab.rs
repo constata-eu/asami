@@ -65,11 +65,11 @@ impl Showable<models::Collab, CollabFilter> for Collab {
                 campaign_id_eq: f.campaign_id_eq,
                 campaign_id_in: f.campaign_id_in,
                 advertiser_id_eq: f.advertiser_id_eq.map(i32_to_hex),
-                advertiser_id_in: f.advertiser_id_in.map(|ids| ids.into_iter().map(i32_to_hex).collect() ),
+                advertiser_id_in: f.advertiser_id_in.map(|ids| ids.into_iter().map(i32_to_hex).collect()),
                 handle_id_eq: f.handle_id_eq,
                 handle_id_in: f.handle_id_in,
                 member_id_eq: f.member_id_eq.map(i32_to_hex),
-                member_id_in: f.member_id_in.map(|ids| ids.into_iter().map(i32_to_hex).collect() ),
+                member_id_in: f.member_id_in.map(|ids| ids.into_iter().map(i32_to_hex).collect()),
                 id_eq: f.id_eq,
                 ..Default::default()
             })

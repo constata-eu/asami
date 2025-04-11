@@ -63,7 +63,9 @@ impl OnChainJob {
         let total_rbtc = U256::from(addresses.len()) * rbtc_per_user;
 
         return Ok(Some(
-            self.contract().gasless_claim_balances(doc_fee, rbtc_per_user, Vec::from_iter(addresses)).value(total_rbtc),
+            self.contract()
+                .gasless_claim_balances(doc_fee, rbtc_per_user, Vec::from_iter(addresses))
+                .value(total_rbtc),
         ));
     }
 
@@ -71,9 +73,10 @@ impl OnChainJob {
     /// state from the blockchain. We do not rely on events for this checks.
     pub async fn gasless_claim_balances_on_state_change(self) -> anyhow::Result<Self> {
         if *self.status() == OnChainJobStatus::Settled {
-            self.state.account().hydrate_on_chain_columns_for(
-                self.on_chain_job_account_vec().await?.iter().map(|i| i.account_id() )
-            ).await?;
+            self.state
+                .account()
+                .hydrate_on_chain_columns_for(self.on_chain_job_account_vec().await?.iter().map(|i| i.account_id()))
+                .await?;
         }
 
         Ok(self)

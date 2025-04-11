@@ -10,11 +10,8 @@ impl OnChainJob {
             return Ok(None);
         }
 
-        Ok(Some(
-            self.state
-                .on_chain
-                .asami_contract
-                .admin_claim_balances_free(vec![self.state.settings.rsk.admin_address]),
-        ))
+        Ok(Some(self.state.on_chain.asami_contract.admin_claim_balances_free(
+            vec![self.state.settings.rsk.admin_address],
+        )))
     }
 }

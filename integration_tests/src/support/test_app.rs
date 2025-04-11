@@ -1,5 +1,5 @@
-use super::*;
-use crate::support::{ApiClient, Truffle};
+use std::process::Command;
+
 use api::{
     models::{self, on_chain_job::AsamiFunctionCall, u, U256},
     on_chain, App, AppConfig,
@@ -14,7 +14,9 @@ pub use ethers::{
 use jwt_simple::algorithms::*;
 use rand::thread_rng;
 use rocket::{config::LogLevel, local::asynchronous::Client as RocketClient, Config};
-use std::process::Command;
+
+use super::*;
+use crate::support::{ApiClient, Truffle};
 
 pub struct TestApp {
     pub app: App,
@@ -58,7 +60,12 @@ impl TestApp {
     }
 
     pub async fn evm_increase_time(&self, seconds: U256) -> u64 {
-        self.provider.request::<_, String>("evm_increaseTime", vec![seconds.encode_hex()]).await.unwrap().parse().unwrap()
+        self.provider
+            .request::<_, String>("evm_increaseTime", vec![seconds.encode_hex()])
+            .await
+            .unwrap()
+            .parse()
+            .unwrap()
     }
 
     pub async fn evm_forward_to_next_cycle(&self) {
@@ -94,7 +101,14 @@ impl TestApp {
     pub async fn quick_campaign(&self, budget: U256, duration: i64, topic_ids: &[i32]) -> models::Campaign {
         let mut client = self.client().await;
         client.setup_as_advertiser("test main advertiser").await;
-        client.start_and_pay_campaign( "https://x.com/somebody/status/1716421161867710954", budget, duration, topic_ids).await
+        client
+            .start_and_pay_campaign(
+                "https://x.com/somebody/status/1716421161867710954",
+                budget,
+                duration,
+                topic_ids,
+            )
+            .await
     }
 
     pub async fn quick_handle(&self, username: &str, user_id: &str, score: U256) -> models::Handle {
@@ -152,15 +166,21 @@ impl TestApp {
             .client()
             .get_balance(*addr, None)
             .await
-            .expect(&format!("getting RBTC balance of {addr}"))
+            .unwrap_or_else(|_| panic!("getting RBTC balance of {addr}"))
     }
 
     pub async fn doc_balance_of(&self, addr: &Address) -> U256 {
-        self.doc_contract().balance_of(*addr).await.expect(&format!("getting DOC balance of {addr}"))
+        self.doc_contract()
+            .balance_of(*addr)
+            .await
+            .unwrap_or_else(|_| panic!("getting DOC balance of {addr}"))
     }
 
     pub async fn asami_balance_of(&self, addr: &Address) -> U256 {
-        self.asami_contract().balance_of(*addr).await.expect(&format!("getting ASAMI balance of {addr}"))
+        self.asami_contract()
+            .balance_of(*addr)
+            .await
+            .unwrap_or_else(|_| panic!("getting ASAMI balance of {addr}"))
     }
 
     pub async fn assert_sub_account_balances_of(
@@ -175,7 +195,7 @@ impl TestApp {
             .get_sub_account(self.client_admin_address(), sub_account)
             .call()
             .await
-            .expect(&format!("Cannot find sub account balances for {sub_account}"));
+            .unwrap_or_else(|_| panic!("Cannot find sub account balances for {sub_account}"));
 
         assert_eq!(
             sub.unclaimed_doc_balance, expected_unclaimed_doc,
@@ -187,6 +207,7 @@ impl TestApp {
         );
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn assert_balances_of(
         &self,
         reference: &str,
@@ -202,7 +223,7 @@ impl TestApp {
             .accounts(account)
             .call()
             .await
-            .expect(&format!("Cannot find account balances for {account}"));
+            .unwrap_or_else(|_| panic!("Cannot find account balances for {account}"));
         assert_eq!(
             self.rbtc_balance_of(&account).await / wei("100000000000"),
             expected_rbtc / wei("100000000000"),
@@ -260,6 +281,7 @@ impl TestApp {
         self.asami_balance_of(&self.admin_treasury_address().await).await
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn assert_admin_balances(
         &self,
         reference: &str,
@@ -415,13 +437,12 @@ impl TestApp {
             OnChainJobKind::MakeSubAccountCollabs
         };
 
-        self
-            .wait_for_job(
-                &format!("Waiting for old job to be skipped in context {context}"),
-                job_kind,
-                OnChainJobStatus::Skipped,
-            )
-            .await;
+        self.wait_for_job(
+            &format!("Waiting for old job to be skipped in context {context}"),
+            job_kind,
+            OnChainJobStatus::Skipped,
+        )
+        .await;
 
         let collab = campaign
             .make_collab(handle, reward, trigger)
@@ -465,22 +486,17 @@ impl TestApp {
         })
         .await;
 
-        let jobs_query = self.app
-            .on_chain_job()
-            .select()
-            .kind_eq(kind)
-            .order_by(models::OnChainJobOrderBy::Id)
-            .desc(true);
+        let jobs_query =
+            self.app.on_chain_job().select().kind_eq(kind).order_by(models::OnChainJobOrderBy::Id).desc(true);
 
         if !found {
-            panic!("Could not find job '{context}'. Jobs where {:#?}", jobs_query.all().await.unwrap());
+            panic!(
+                "Could not find job '{context}'. Jobs where {:#?}",
+                jobs_query.all().await.unwrap()
+            );
         }
 
-        jobs_query
-            .status_eq(status)
-            .one()
-            .await
-            .unwrap()
+        jobs_query.status_eq(status).one().await.unwrap()
     }
 
     pub async fn wait_for_job_status(
@@ -507,7 +523,7 @@ impl TestApp {
         let key = ES256KeyPair::from_pem(
       "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg626FUHw6lA0eAlYl\nqT0TI8m/JAWj+H497JAKfoTUrkmhRANCAARJPbG33RdPLOxXXbc390w00YaFAbh8\n0Hv44ScjS0UMB6/ZjjkIs5fV1gRK1IBF1JMnxM6qWjWUBlu/z9ZjvA0b\n-----END PRIVATE KEY-----\n"
     ).unwrap();
-        let id = api::models::hasher::hexdigest(&key.public_key().to_pem().unwrap().as_bytes());
+        let id = api::models::hasher::hexdigest(key.public_key().to_pem().unwrap().as_bytes());
         key.with_key_id(&id)
     }
 
@@ -520,7 +536,7 @@ impl TestApp {
             .get_campaign(advertiser_addr, briefing_id)
             .call()
             .await
-            .expect(&format!("no campaign {advertiser_addr}-{briefing_id}"))
+            .unwrap_or_else(|_| panic!("no campaign {advertiser_addr}-{briefing_id}"))
     }
 
     pub async fn send_tx<B, M, D>(
@@ -583,7 +599,7 @@ impl TestApp {
     {
         match fn_call.send().await {
             Err(e) => {
-                let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error"));
+                let desc = e.decode_revert::<String>().unwrap_or_else(|| "no_revert_error".to_string());
                 assert_eq!(&desc, expected_message, "Wrong revert message on '{reference}'");
             }
             Ok(_pending_tx) => {
@@ -607,7 +623,7 @@ impl TestApp {
         for (i, fn_call) in fn_calls.into_iter().enumerate() {
             match fn_call.gas(1000000).nonce(nonce + U256::from(i)).send().await {
                 Err(e) => {
-                    let desc = e.decode_revert::<String>().unwrap_or_else(|| format!("no_revert_error"));
+                    let desc = e.decode_revert::<String>().unwrap_or_else(|| "no_revert_error".to_string());
                     panic!("Sending tx with reference '{reference}' failed with: {desc}");
                 }
                 Ok(pending_tx) => {
@@ -629,14 +645,14 @@ impl TestApp {
         let receipt = client
             .get_transaction_receipt(*tx_hash)
             .await
-            .expect(&format!("Receipt query failed when found before in '{reference}'"))
-            .expect(&format!("Receipt query returned None in '{reference}'"));
+            .unwrap_or_else(|_| panic!("Receipt query failed when found before in '{reference}'"))
+            .unwrap_or_else(|| panic!("Receipt query returned None in '{reference}'"));
 
         let original_tx = client
             .get_transaction(*tx_hash)
             .await
-            .expect(&format!("Original tx query failed on '{reference}'"))
-            .expect(&format!("Original query was None in '{reference}'"));
+            .unwrap_or_else(|_| panic!("Original tx query failed on '{reference}'"))
+            .unwrap_or_else(|| panic!("Original query was None in '{reference}'"));
 
         if receipt.status.unwrap_or(U64::zero()) == U64::one() {
             panic!("Transaction succeeded '{reference}' but we expected error {expected_message}");
@@ -646,7 +662,7 @@ impl TestApp {
         let msg = match client.call(&typed, None).await {
             Err(e) => api::models::AsamiContractError::from_middleware_error(e)
                 .decode_revert::<String>()
-                .unwrap_or_else(|| format!("non_revert_error")),
+                .unwrap_or_else(|| "non_revert_error".to_string()),
             _ => "no_failure_reason_wtf".to_string(),
         };
         assert_eq!(&msg, expected_message, "Wrong revert message on '{reference}'");
@@ -668,21 +684,21 @@ impl TestApp {
         let receipt = client
             .get_transaction_receipt(*tx_hash)
             .await
-            .expect(&format!("Receipt query failed when found before in '{reference}'"))
-            .expect(&format!("Receipt query returned None in '{reference}'"));
+            .unwrap_or_else(|_| panic!("Receipt query failed when found before in '{reference}'"))
+            .unwrap_or_else(|| panic!("Receipt query returned None in '{reference}'"));
 
         let original_tx = client
             .get_transaction(*tx_hash)
             .await
-            .expect(&format!("Original tx query failed on '{reference}'"))
-            .expect(&format!("Original query was None in '{reference}'"));
+            .unwrap_or_else(|_| panic!("Original tx query failed on '{reference}'"))
+            .unwrap_or_else(|| panic!("Original query was None in '{reference}'"));
 
         if receipt.status.unwrap_or(U64::zero()) == U64::zero() {
             let typed: ethers::types::transaction::eip2718::TypedTransaction = (&original_tx).into();
             let msg = match client.call(&typed, None).await {
                 Err(e) => api::models::AsamiContractError::from_middleware_error(e)
                     .decode_revert::<String>()
-                    .unwrap_or_else(|| format!("non_revert_error")),
+                    .unwrap_or_else(|| "non_revert_error".to_string()),
                 _ => "no_failure_reason_wtf".to_string(),
             };
             panic!("Tx failed but expected success on '{reference}'. Error was: {msg}");

@@ -1,9 +1,11 @@
-use super::ApiClient;
-use crate::support::try_until;
+use std::process::{Child, Command, Stdio};
+
 use api::{lang, models};
 use chrono::Utc;
-use std::process::{Child, Command, Stdio};
 use thirtyfour::prelude::*;
+
+use super::ApiClient;
+use crate::support::try_until;
 
 pub struct Selenium<'a> {
     pub driver: WebDriver,
@@ -14,22 +16,21 @@ pub struct Selenium<'a> {
 pub const DOWNLOADS: &str = "/tmp/asami_tests_downloads";
 
 impl Selenium<'_> {
-    pub async fn start<'a>(api: ApiClient<'a>) -> Selenium<'a> {
+    pub async fn start(api: ApiClient<'_>) -> Selenium<'_> {
         Command::new("rm")
-            .args(&["-r", "-f", "/tmp/asami_browser_datadir"])
+            .args(["-r", "-f", "/tmp/asami_browser_datadir"])
             .output()
             .expect("Could not delete downloads link");
         Command::new("cp")
-            .args(&["-r", "chromedrivers/profile", "/tmp/asami_browser_datadir"])
+            .args(["-r", "chromedrivers/profile", "/tmp/asami_browser_datadir"])
             .output()
             .expect("Could not copy profile folder to temp location");
 
-        Command::new("rm").args(&["-r", "-f", DOWNLOADS]).output().expect("Could not delete downloads link");
-        Command::new("mkdir").args(&["-p", DOWNLOADS]).output().expect("Could not create downloads dir");
+        Command::new("rm").args(["-r", "-f", DOWNLOADS]).output().expect("Could not delete downloads link");
+        Command::new("mkdir").args(["-p", DOWNLOADS]).output().expect("Could not create downloads dir");
 
         let mut caps = DesiredCapabilities::chrome();
         caps.set_binary("chromedrivers/chrome-linux/chrome").unwrap();
-        //caps.add_extension(std::path::Path::new("chromedrivers/metamask.crx")).unwrap();
         caps.add_chrome_option(
             "prefs",
             serde_json::json![{
@@ -58,13 +59,10 @@ impl Selenium<'_> {
         )
         .unwrap();
 
-        Command::new("killall")
-            .args(&["-9", &driver_path])
-            .output()
-            .expect("Could not kill previous server");
+        Command::new("killall").args(["-9", &driver_path]).output().expect("Could not kill previous server");
 
         let start_driver =
-            |path| Command::new(&path).stderr(Stdio::null()).stdout(Stdio::null()).args(&["--port=4444"]).spawn();
+            |path| Command::new(path).stderr(Stdio::null()).stdout(Stdio::null()).args(["--port=4444"]).spawn();
 
         let child = if let Ok(child) = start_driver(&driver_path) {
             child
@@ -99,7 +97,7 @@ impl Selenium<'_> {
             .and_displayed()
             .first()
             .await
-            .expect(&format!("{selector} not found"));
+            .unwrap_or_else(|_| panic!("{selector} not found"));
 
         elem.handle
             .execute(
@@ -107,19 +105,19 @@ impl Selenium<'_> {
                 vec![elem.to_json().unwrap()],
             )
             .await
-            .expect(&format!("{selector} not scrolled into view"));
+            .unwrap_or_else(|_| panic!("{selector} not scrolled into view"));
         elem
     }
 
     pub async fn wait_for_text(&self, selector: &str, regex: &str) -> WebElement {
-        let re = regex::Regex::new(regex).expect(&format!("invalid regex {regex}"));
+        let re = regex::Regex::new(regex).unwrap_or_else(|_| panic!("invalid regex {regex}"));
         self.driver
             .query(By::Css(selector))
             .with_text(re)
             .and_displayed()
             .first()
             .await
-            .expect(&format!("Expecting selector {selector} with text {regex}"))
+            .unwrap_or_else(|_| panic!("Expecting selector {selector} with text {regex}"))
     }
 
     pub async fn wait_until_gone(&self, selector: &str) {
@@ -143,20 +141,25 @@ impl Selenium<'_> {
             let target = format!("artifacts/{selector}_{time}");
             self.driver.screenshot(std::path::Path::new(&target)).await.expect("to save screenshot");
         }
-        gone.expect(&format!("{selector} was still displayed"));
+        gone.unwrap_or_else(|_| panic!("{selector} was still displayed"));
     }
 
     pub async fn click(&self, selector: &str) {
         let elem = self.wait_for(selector).await;
-        elem.wait_until().enabled().await.expect(&format!("{selector} not clickable"));
-        elem.wait_until().clickable().await.expect(&format!("{selector} not clickable"));
-        elem.click().await.expect(&format!("{selector} clickable but not clicked, wtf."));
+        elem.wait_until().enabled().await.unwrap_or_else(|_| panic!("{selector} not clickable"));
+        elem.wait_until().clickable().await.unwrap_or_else(|_| panic!("{selector} not clickable"));
+        elem.click().await.unwrap_or_else(|_| panic!("{selector} clickable but not clicked, wtf."));
     }
 
     pub async fn fill_in(&self, selector: &str, value: &str) {
-        let elem = self.driver.query(By::Css(selector)).first().await.expect(&format!("{selector} not found"));
-        elem.wait_until().enabled().await.expect(&format!("{selector} was not enabled"));
-        elem.send_keys(value).await.expect(&format!("Error sending {value} to {selector}"));
+        let elem = self
+            .driver
+            .query(By::Css(selector))
+            .first()
+            .await
+            .unwrap_or_else(|_| panic!("{selector} not found"));
+        elem.wait_until().enabled().await.unwrap_or_else(|_| panic!("{selector} was not enabled"));
+        elem.send_keys(value).await.unwrap_or_else(|_| panic!("Error sending {value} to {selector}"));
     }
 
     pub async fn open_metamask(&self) {
@@ -164,7 +167,7 @@ impl Selenium<'_> {
     }
 
     pub async fn goto(&self, url: &str) {
-        self.driver.goto(url).await.expect(&format!("Could not visit {url}"));
+        self.driver.goto(url).await.unwrap_or_else(|_| panic!("Could not visit {url}"));
     }
 
     pub async fn stop(mut self) {
@@ -189,8 +192,6 @@ impl Selenium<'_> {
             .unwrap();
 
         self.goto("http://127.0.0.1:5173/#/one_time_token_login?token=advertiser-token").await;
-        //self.wait_for("#member-dashboard").await;
-        //self.goto("http://127.0.0.1:5173/#/?role=advertiser").await;
         self.wait_for("#advertiser-dashboard").await;
     }
 
@@ -228,7 +229,7 @@ impl Selenium<'_> {
             .await
             .unwrap();
 
-        self.goto(&format!("http://127.0.0.1:5173/")).await;
+        self.goto("http://127.0.0.1:5173/").await;
         self.goto(&format!("http://127.0.0.1:5173/#/one_time_token_login?token={token}")).await;
         self.wait_for("#advertiser-dashboard").await;
     }

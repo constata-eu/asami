@@ -36,7 +36,7 @@ async fn main() {
         run!("Sync on-chain events" { s.synced_event().sync_on_chain_events().await });
     }];
 
-    every![10000, |s| { 
+    every![10000, |s| {
         run!("Force account hydrations" { s.account().force_hydrate().await });
         run!("Force handle hydrations" { s.handle().force_hydrate().await });
         run!("Force campaign hydrations" { s.campaign().force_hydrate().await });

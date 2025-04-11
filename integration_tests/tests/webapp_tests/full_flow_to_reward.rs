@@ -1,5 +1,7 @@
 use api::models::*;
 
+use super::*;
+
 browser_test! { full_flow_to_reward_for_web2 (mut d)
     let mut advertiser = d.test_app().client().await;
     advertiser.setup_as_advertiser("test main advertiser").await;
@@ -25,7 +27,7 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
         d.test_app().app.handle_topic().insert(InsertHandleTopic{
             handle_id: h.attrs.id,
             topic_id: 2
-        });
+        }).save().await.unwrap();
         h.verify((1000 + i).to_string()).await?.update().score(Some(weihex("1234"))).status(HandleStatus::Active).save().await?;
     }
 

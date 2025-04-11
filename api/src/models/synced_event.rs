@@ -1,3 +1,7 @@
+use std::{collections::HashSet, sync::Arc};
+
+use ethers::prelude::{EthLogDecode, Event};
+
 use super::*;
 use crate::{
     models::on_chain_job::AsamiSigner,
@@ -5,8 +9,6 @@ use crate::{
         AsamiContract, CampaignCreatedFilter, CampaignExtendedFilter, CampaignReimbursedFilter, CampaignToppedUpFilter,
     },
 };
-use ethers::prelude::{EthLogDecode, Event};
-use std::{collections::HashSet, sync::Arc};
 
 pub type AsamiEvent<D> = Event<Arc<AsamiSigner>, AsamiSigner, D>;
 
@@ -107,7 +109,7 @@ impl SyncedEventHub {
                 Some(onchain.report_hash.encode_hex())
             };
 
-            campaign_ids.push(*campaign.id()); 
+            campaign_ids.push(*campaign.id());
             account_ids.insert(campaign.account_id().clone());
 
             campaign
@@ -120,10 +122,10 @@ impl SyncedEventHub {
                 .await
                 .context(format!("Syncing event {}", synced_event.id()))?;
         }
-            
-        self.state.campaign().hydrate_report_columns_for( campaign_ids.into_iter() ).await?;
-        self.state.account().hydrate_report_columns_for( account_ids.iter() ).await?;
-        self.state.account().hydrate_on_chain_columns_for( account_ids.iter() ).await?;
+
+        self.state.campaign().hydrate_report_columns_for(campaign_ids.into_iter()).await?;
+        self.state.account().hydrate_report_columns_for(account_ids.iter()).await?;
+        self.state.account().hydrate_on_chain_columns_for(account_ids.iter()).await?;
 
         Ok(())
     }

@@ -91,7 +91,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
         sort_order: Option<String>,
         filter: Option<CampaignFilter>,
     ) -> FieldResult<Vec<Self>> {
-        if let Some(account_id) = filter.as_ref().and_then(|f| f.available_to_account_id.clone()) {
+        if let Some(account_id) = filter.as_ref().and_then(|f| f.available_to_account_id) {
             let id_filter = make_available_to_account_id_filter(context, account_id).await?;
             Self::base_collection(context, page, per_page, sort_field, sort_order, Some(id_filter)).await
         } else {
@@ -173,14 +173,18 @@ pub struct CreateCampaignFromLinkInput {
 impl CreateCampaignFromLinkInput {
     pub async fn process(self, context: &Context) -> FieldResult<Campaign> {
         let topics = context.app.topic().select().id_in(&self.topic_ids).all().await?;
-        let campaign = context.app.campaign().create_from_link(
-            &context.account().await?,
-            &self.link,
-            &topics,
-            parse_u256("price_per_point", &self.price_per_point)?,
-            parse_u256("max_individual_reward", &self.max_individual_reward)?,
-            parse_u256("min_individual_reward", &self.min_individual_reward)?,
-        ).await?;
+        let campaign = context
+            .app
+            .campaign()
+            .create_from_link(
+                &context.account().await?,
+                &self.link,
+                &topics,
+                parse_u256("price_per_point", &self.price_per_point)?,
+                parse_u256("max_individual_reward", &self.max_individual_reward)?,
+                parse_u256("min_individual_reward", &self.min_individual_reward)?,
+            )
+            .await?;
 
         Ok(Campaign::db_to_graphql(context, campaign).await?)
     }

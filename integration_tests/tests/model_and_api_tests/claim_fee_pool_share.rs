@@ -1,9 +1,11 @@
-use api::models::*;
+use models::{OnChainJobKind, OnChainJobStatus};
+
+use super::*;
 
 app_test! { claims_fee_pool_share_as_soon_as_possible(a)
     /* Calls and settles, then it is skipped, then next month it calls it again */
     let mut campaign = a.quick_campaign(u("2000"), 60, &[]).await;
-    let handle = a.quick_handle("alice_on_x", "11111", Site::X, wei("10000")).await;
+    let handle = a.quick_handle("alice_on_x", "11111", wei("10000")).await;
     campaign.make_collab(&handle, u("100"), "first_collab").await?;
 
     a.wait_for_job(

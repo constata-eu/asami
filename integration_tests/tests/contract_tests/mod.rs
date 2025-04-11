@@ -1,3 +1,8 @@
+pub use integration_tests::{
+    api_test, app_test, browser_test,
+    support::{self, *},
+    test,
+};
 pub mod fees_distribution;
 pub mod making_campaigns;
 pub mod making_collabs_claiming_accounts_and_rewards;

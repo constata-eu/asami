@@ -1,5 +1,6 @@
 use ::api::models::*;
-use crate::support::TestApp;
+
+use super::*;
 
 app_test! { creates_campaign_register_collabs_and_reimburses(a)
     let mut advertiser = a.client().await;
@@ -9,7 +10,7 @@ app_test! { creates_campaign_register_collabs_and_reimburses(a)
 
     let mut alice = a.client().await;
     alice.claim_account().await;
-    let handle = alice.create_handle("alice_on_x", "11111", Site::X, u("5000")).await;
+    let handle = alice.create_handle("alice_on_x", "11111", u("5000")).await;
 
     a.register_collab("collab for alice", &mut campaign, &handle, u("10"), "unique_post_trigger").await;
 
@@ -32,14 +33,14 @@ app_test! { creates_campaign_register_collabs_and_reimburses(a)
         campaign.reloaded().await.unwrap().budget_u256() == u("15")
     }).await;
 
-    let original_valid_until = campaign.valid_until().clone();
+    let original_valid_until = campaign.valid_until();
 
     a.send_tx("Advertiser extends", "35000",
         advertiser.extend_campaign_contract_call(campaign.decoded_briefing_hash(), 40)
     ).await;
 
     a.sync_events_until("Campaign is extended", || async {
-        *campaign.reloaded().await.unwrap().valid_until() > original_valid_until
+        campaign.reloaded().await.unwrap().valid_until() > original_valid_until
     }).await;
 
     campaign.reload().await?;
@@ -75,7 +76,7 @@ app_test! { campaign_submit_report_tests(a)
 
     let mut alice = a.client().await;
     alice.claim_account().await;
-    let handle = alice.create_handle("alice_on_x", "11111", Site::X, u("5000")).await;
+    let handle = alice.create_handle("alice_on_x", "11111", u("5000")).await;
     a.register_collab("collab for alice", &mut campaign, &handle, u("10"), "unique_post_trigger").await;
 
     let second_hash = campaign.build_report_hash().await?.encode_hex();
@@ -86,7 +87,7 @@ app_test! { campaign_submit_report_tests(a)
         OnChainJobKind::SubmitReports,
         OnChainJobStatus::Skipped
     ).await;
-    
+
     expire_campaign(&a, &campaign).await;
 
     let job = a.wait_for_job(
@@ -115,7 +116,7 @@ app_test! { checks_if_still_admin_before_sending_report (a)
     let mut advertiser = a.client().await;
     advertiser.setup_as_advertiser("test main advertiser").await;
     let campaign = advertiser.start_and_pay_campaign("https://x.com/somebody/status/1716421161867710954", u("100"), 30, &[]).await;
-    
+
     expire_campaign(&a, &campaign).await;
 
     a.send_tx(
@@ -135,7 +136,7 @@ app_test! { reduce_race_condition_risk_submitting_report(a)
     let mut advertiser = a.client().await;
     advertiser.setup_as_advertiser("test main advertiser").await;
     let campaign = advertiser.start_and_pay_campaign("https://x.com/somebody/status/1716421161867710954", u("100"), 30, &[]).await;
-    
+
     expire_campaign(&a, &campaign).await;
 
     /* The campaign is extended, but the model doesn't know it because we don't sync the event */
@@ -158,13 +159,13 @@ app_test! { rejects_collabs_if_registered_over_budget(a)
 
     let mut alice = a.client().await;
     alice.claim_account().await;
-    let handle = alice.create_handle("alice_on_x", "11111", Site::X, u("5000")).await;
-    
+    let handle = alice.create_handle("alice_on_x", "11111", u("5000")).await;
+
     let one = campaign.make_collab(&handle, u("95"), "trigger_one").await.unwrap();
     let mut two = campaign.make_collab(&handle, u("5"), "trigger_two").await.unwrap();
 
     assert!(campaign.make_collab(&handle, u("10"), "trigger_two").await.is_err());
-    
+
     // This update corrupts data, making the collab be registered for more than it could.
     two = two.update().reward(u("50").encode_hex()).save().await.unwrap();
 
@@ -211,7 +212,13 @@ app_test! { reduce_race_condition_risk_with_reimbursements(a)
 }
 
 async fn expire_campaign(a: &TestApp, campaign: &Campaign) {
-    campaign.clone().update().valid_until(Some(Utc::now() - chrono::Duration::days(30))).save().await.unwrap();
+    campaign
+        .clone()
+        .update()
+        .valid_until(Some(Utc::now() - chrono::Duration::days(30)))
+        .save()
+        .await
+        .unwrap();
     a.evm_forward_to_next_cycle().await;
     a.evm_forward_to_next_cycle().await;
     a.evm_forward_to_next_cycle().await;

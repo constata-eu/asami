@@ -1,16 +1,18 @@
-use super::{on_chain::LogMeta, *};
 pub use chrono::{DateTime, Datelike, Duration, TimeZone, Utc};
 pub use serde::{Deserialize, Serialize};
 pub use sqlx::{self, types::Decimal};
 use sqlx_models_orm::model;
+
+use super::{on_chain::LogMeta, *};
 pub type UtcDateTime = DateTime<Utc>;
+use std::str::FromStr;
+
 pub use ethers::{
     abi::{AbiDecode, AbiEncode},
     middleware::Middleware,
     types::{transaction::eip712::TypedData, Address, Signature, H160, H256, U256, U64},
 };
 pub use juniper::GraphQLEnum;
-use std::str::FromStr;
 
 pub mod hasher;
 pub mod user;

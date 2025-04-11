@@ -1,4 +1,6 @@
-use api::models::*;
+use models::{OnChainJobKind, OnChainJobStatus};
+
+use super::*;
 
 app_test! { applies_voted_fee_rate_as_soon_as_possible(a)
     /* Calls and settles, then it is skipped, then next month it calls it again */
@@ -6,7 +8,7 @@ app_test! { applies_voted_fee_rate_as_soon_as_possible(a)
 
     let mut alice = a.client().await;
     alice.claim_account().await;
-    let handle = alice.create_handle("alice_on_x", "11111", Site::X, wei("100")).await;
+    let handle = alice.create_handle("alice_on_x", "11111", wei("100")).await;
     campaign.make_collab(&handle, u("100"), "first_collab").await?;
 
     a.wait_for_job(

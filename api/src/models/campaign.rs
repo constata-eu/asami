@@ -97,16 +97,24 @@ make_sql_enum![
 
 impl CampaignHub {
     pub async fn force_hydrate(&self) -> AsamiResult<()> {
-        let ids = self.state.db.fetch_all_scalar(
-            sqlx::query_scalar!("SELECT id FROM campaigns WHERE force_hydrate = true LIMIT 50")
-        ).await?;
+        let ids = self
+            .state
+            .db
+            .fetch_all_scalar(sqlx::query_scalar!(
+                "SELECT id FROM campaigns WHERE force_hydrate = true LIMIT 50"
+            ))
+            .await?;
         if ids.is_empty() {
-            return Ok(())
+            return Ok(());
         }
         self.hydrate_report_columns_for(ids.iter().copied()).await?;
-        self.state.db.execute(
-            sqlx::query!("UPDATE campaigns SET force_hydrate = false WHERE id = ANY($1)", &ids)
-        ).await?;
+        self.state
+            .db
+            .execute(sqlx::query!(
+                "UPDATE campaigns SET force_hydrate = false WHERE id = ANY($1)",
+                &ids
+            ))
+            .await?;
         Ok(())
     }
 
@@ -231,7 +239,9 @@ impl CampaignHub {
                 .map_err(|_| Error::Validation("content_id".into(), "was stored in the db not as u64".into()))?;
 
             self.state.info("sync_x_collabs", "fetching_retweets", &post_id).await;
-            if let Some(metrics) = api.get_tweet(post_id).send().await?.data.as_ref().and_then(|o| o.public_metrics.as_ref()) {
+            if let Some(metrics) =
+                api.get_tweet(post_id).send().await?.data.as_ref().and_then(|o| o.public_metrics.as_ref())
+            {
                 campaign
                     .clone()
                     .update()
@@ -240,9 +250,9 @@ impl CampaignHub {
                     .like_count(metrics.like_count as i32)
                     .save()
                     .await?;
-           } else {
+            } else {
                 self.state.info("sync_x_collabs", "no_organic_metrics_for", &post_id).await;
-           }
+            }
 
             let reposts = api.get_tweet_retweeted_by(post_id).send().await?;
             self.state.info("sync_x_collabs", "got_reposts", ()).await;
@@ -328,7 +338,7 @@ impl Campaign {
             .all()
             .await?
             .iter()
-            .map(|x| x.reward_u256() )
+            .map(|x| x.reward_u256())
             .fold(U256::zero(), |acc, x| acc + x);
 
         Ok(self.budget_u256().checked_sub(from_registered).unwrap_or(U256::zero()))

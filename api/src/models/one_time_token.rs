@@ -7,10 +7,10 @@
  * the old one will be removed.
  */
 
-use super::*;
 use chbs::{config::BasicConfig, prelude::*};
-use validators::models::Host;
-use validators::prelude::*;
+use validators::{models::Host, prelude::*};
+
+use super::*;
 
 model! {
   state: App,
@@ -62,7 +62,7 @@ impl OneTimeTokenHub {
     ) -> AsamiResult<OneTimeToken> {
         let canonical = email.to_lowercase();
         Email::parse_string(&canonical)?;
-        let config = BasicConfig{
+        let config = BasicConfig {
             separator: "-".into(),
             capitalize_first: false.into(),
             ..Default::default()

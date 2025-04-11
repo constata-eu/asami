@@ -1,3 +1,5 @@
+use super::*;
+
 app_test! { sends_one_time_tokens (a)
     // Creates a new one time token and someone uses it to log in.
     a.app.one_time_token().create_for_email(

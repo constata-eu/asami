@@ -1,4 +1,9 @@
-use api::on_chain::*;
+use api::on_chain::{
+    MakeCollabsParam, MakeCollabsParamItem, MakeSubAccountCollabsParam, MakeSubAccountCollabsParamItem,
+    PromoteSubAccountsParam,
+};
+
+use super::*;
 
 app_test! { full_contract_workflow_from_collabs_to_balance_claims(a)
   let mut advertiser = a.client().await;

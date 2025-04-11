@@ -1,9 +1,14 @@
+use std::{
+    fs::File,
+    os::unix::process::CommandExt,
+    process::{Child, Command, Stdio},
+};
+
 use api::AppConfig;
-use nix::sys::signal::{killpg, Signal};
-use nix::unistd::Pid;
-use std::fs::File;
-use std::os::unix::process::CommandExt;
-use std::process::{Child, Command, Stdio};
+use nix::{
+    sys::signal::{killpg, Signal},
+    unistd::Pid,
+};
 
 pub struct Truffle {
     pub child: Child,
@@ -80,23 +85,14 @@ impl Truffle {
                 "localhost",
             ])
             .current_dir(&dir)
-            .env(
-                "ADMIN_ADDRESS",
-                ethers::utils::hex::encode(config.rsk.admin_address),
-            )
-            .env(
-                "MEMBER_ADDRESS",
-                "0xbe992ec27E90c07caDE70c6C3CD26eECC8CadCfE",
-            )
+            .env("ADMIN_ADDRESS", ethers::utils::hex::encode(config.rsk.admin_address))
+            .env("MEMBER_ADDRESS", "0xbe992ec27E90c07caDE70c6C3CD26eECC8CadCfE")
             .output()
             .unwrap();
 
-        let json = std::fs::read_to_string(
-            "../contract/ignition/deployments/chain-31337/deployed_addresses.json",
-        )
-        .expect("cannot read deployed_addresses.json");
-        let addresses: Addresses =
-            serde_json::from_str(&json).expect("Wrong addresses.json file contents");
+        let json = std::fs::read_to_string("../contract/ignition/deployments/chain-31337/deployed_addresses.json")
+            .expect("cannot read deployed_addresses.json");
+        let addresses: Addresses = serde_json::from_str(&json).expect("Wrong addresses.json file contents");
 
         let deployer = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 

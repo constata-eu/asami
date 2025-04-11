@@ -1,5 +1,6 @@
-use super::*;
 use ethers::types::Address;
+
+use super::*;
 
 // This is an account that maps with the smart contract accounts.
 // They may have several auth methods at first,
@@ -79,17 +80,25 @@ model! {
 
 impl AccountHub {
     pub async fn force_hydrate(&self) -> AsamiResult<()> {
-        let ids = self.state.db.fetch_all_scalar(
-            sqlx::query_scalar!("SELECT id FROM accounts WHERE force_hydrate = true LIMIT 50")
-        ).await?;
+        let ids = self
+            .state
+            .db
+            .fetch_all_scalar(sqlx::query_scalar!(
+                "SELECT id FROM accounts WHERE force_hydrate = true LIMIT 50"
+            ))
+            .await?;
         if ids.is_empty() {
-            return Ok(())
+            return Ok(());
         }
         self.hydrate_report_columns_for(ids.iter()).await?;
         self.hydrate_on_chain_columns_for(ids.iter()).await?;
-        self.state.db.execute(
-            sqlx::query!("UPDATE accounts SET force_hydrate = false WHERE id = ANY($1)", &ids)
-        ).await?;
+        self.state
+            .db
+            .execute(sqlx::query!(
+                "UPDATE accounts SET force_hydrate = false WHERE id = ANY($1)",
+                &ids
+            ))
+            .await?;
         Ok(())
     }
 
@@ -103,7 +112,7 @@ impl AccountHub {
                 total_collab_rewards += collab.reward_u256();
             }
 
-            let total_campaigns = account.campaign_scope().status_eq(CampaignStatus::Published).count().await?;  
+            let total_campaigns = account.campaign_scope().status_eq(CampaignStatus::Published).count().await?;
 
             let mut total_collabs_received = 0;
             let mut total_spent = u("0");
@@ -139,18 +148,12 @@ impl AccountHub {
                 Some(address) => {
                     let on_chain = asami.accounts(address).call().await?;
                     updater
-                        .doc_balance(
-                            chain.doc_contract.balance_of(address).call().await?.encode_hex()
-                        )
-                        .asami_balance(
-                            asami.balance_of(address).call().await?.encode_hex()
-                        )
-                        .rbtc_balance(
-                            asami.client().get_balance(address, None).await?.encode_hex()
-                        )
+                        .doc_balance(chain.doc_contract.balance_of(address).call().await?.encode_hex())
+                        .asami_balance(asami.balance_of(address).call().await?.encode_hex())
+                        .rbtc_balance(asami.client().get_balance(address, None).await?.encode_hex())
                         .unclaimed_doc_balance(on_chain.4.encode_hex())
                         .unclaimed_asami_balance(on_chain.3.encode_hex())
-                },
+                }
                 None => {
                     let admin = self.state.settings.rsk.admin_address;
                     let (docs, asamis) = asami
@@ -165,9 +168,7 @@ impl AccountHub {
                         })
                         .unwrap_or_else(|_| (weihex("0"), weihex("0")));
 
-                    updater
-                        .unclaimed_asami_balance(asamis)
-                        .unclaimed_doc_balance(docs)
+                    updater.unclaimed_asami_balance(asamis).unclaimed_doc_balance(docs)
                 }
             };
 
@@ -180,18 +181,13 @@ impl AccountHub {
     pub async fn hydrate_on_chain_values_just_in_case(&self) -> AsamiResult<()> {
         let now = Utc::now();
 
-        let items = self
-            .select()
-            .last_on_chain_sync_lt(now - Duration::minutes(60))
-            .limit(50)
-            .all()
-            .await?;
+        let items = self.select().last_on_chain_sync_lt(now - Duration::minutes(60)).limit(50).all().await?;
 
         if items.is_empty() {
             return Ok(());
         }
 
-        self.hydrate_on_chain_columns_for(items.iter().map(|i| i.id()) ).await?;
+        self.hydrate_on_chain_columns_for(items.iter().map(|i| i.id())).await?;
 
         for i in items {
             i.update().last_on_chain_sync(now).save().await?;
@@ -290,13 +286,15 @@ impl Account {
             .username_ilike(username)
             .status_in(vec![HandleStatus::Verified, HandleStatus::Active])
             .count()
-            .await? > 0;
+            .await?
+            > 0;
 
         if existing {
             return Err(Error::validation("handle", "handle_already_in_use_by_someone_else"));
         }
 
-        Ok(self.state
+        Ok(self
+            .state
             .handle()
             .insert(InsertHandle {
                 account_id: self.attrs.id.clone(),
@@ -317,7 +315,9 @@ impl Account {
         }
 
         if let Some(user) = self.account_user_scope().optional().await? {
-            let already_used = self.state.auth_method()
+            let already_used = self
+                .state
+                .auth_method()
                 .select()
                 .lookup_key_eq(&addr)
                 .kind_eq(AuthMethodKind::Eip712)
@@ -326,18 +326,19 @@ impl Account {
 
             match already_used {
                 None => {
-                    self.state.auth_method()
+                    self.state
+                        .auth_method()
                         .insert(InsertAuthMethod {
                             user_id: user.attrs.id,
                             lookup_key: addr.clone(),
-                            kind: AuthMethodKind::Eip712
+                            kind: AuthMethodKind::Eip712,
                         })
                         .save()
                         .await?;
                 }
                 Some(x) if x.attrs.user_id != user.attrs.id => {
                     return Err(Error::validation("addr", "address_in_use_by_another_user"));
-                } 
+                }
                 _ => {} // Auth method already exists, and is owned by this user.
             }
         };

@@ -1,5 +1,7 @@
 use api::models::*;
 
+use super::*;
+
 browser_test! { adds_tokens_to_wallet (mut d)
     d.goto("http://127.0.0.1:5173").await;
     d.click("#button-login-as-member").await;
