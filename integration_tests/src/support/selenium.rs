@@ -1,6 +1,6 @@
 use std::{
     path::Path,
-    process::{Child, Command},
+    process::{Child, Command}, time::Duration,
 };
 
 use api::{lang, models};
@@ -44,14 +44,6 @@ impl Selenium<'_> {
         )
         .unwrap();
 
-        caps.add_chrome_option(
-            "goog:loggingPrefs",
-            serde_json::json!({
-                "browser": "ALL"
-            }),
-        )
-        .unwrap();
-
         let driver_path = "chromedrivers/chromedriver_linux";
 
         let opts = vec![
@@ -92,6 +84,8 @@ impl Selenium<'_> {
 
         let driver = WebDriver::new("http://localhost:4444", caps).await.expect("Webdriver init");
         driver.maximize_window().await.expect("to maximize window");
+        driver.goto("chrome://newtab").await.unwrap();
+        Self::open_metamask_tab(&driver).await.unwrap();
         Selenium { child, driver, api }
     }
 
@@ -308,5 +302,36 @@ impl Selenium<'_> {
         self.driver.screenshot(Path::new(&filename)).await?;
         println!("Saved screenshot to: {}", filename);
         Ok(())
+    }
+
+    /// Opens the MetaMask extension in a new tab and switches to it.
+    /// You can call this whenever you want to interact with MetaMask UI.
+    pub async fn open_metamask_tab(driver: &WebDriver) -> WebDriverResult<()> {
+        let extension_id = "nkbihfbeogaeaoehlefnkodbefgpgknn";
+        let extension_url = format!("chrome-extension://{}/home.html", extension_id);
+
+        // Save the current tab so you can switch back later if needed
+        let original_tab = driver.window().await?;
+        tokio::time::sleep(Duration::from_millis(2500)).await;
+
+        // Open a new tab to the extension's UI
+        driver.execute(&format!("window.open('{}')", extension_url), Vec::new()).await?;
+
+        // Wait for new tab to appear
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        let handles = driver.windows().await?;
+
+        // Find and switch to the extension tab
+        for handle in handles {
+            driver.switch_to_window(handle).await?;
+            let url = driver.current_url().await?;
+            if url.to_string().contains(&extension_url) {
+                println!("✅ Switched to MetaMask tab at {}", url);
+                driver.close_window().await?;
+                driver.switch_to_window(original_tab).await?;
+                return Ok(());
+            }
+        }
+        panic!("Could not find metamask tab")
     }
 }
