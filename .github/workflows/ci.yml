@@ -40,9 +40,9 @@ jobs:
           integration_tests/chromedrivers/chrome-linux/chrome --version
 
       - name: Install xvfb + gtk deps
-        run: sudo apt-get install -y \ 
-          xvfb libnss3 libxss1 libasound2 libatk-bridge2.0-0 libgtk-3-0 \
-          libgbm1 libdrm2 x11-utils fonts-liberation
+        run: |
+          sudo apt-get install -y xvfb libnss3 libxss1 libasound2 libatk-bridge2.0-0
+          sudo apt-get install -y libgtk-3-0 libgbm1 libdrm2 x11-utils fonts-liberation
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
@@ -123,4 +123,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-artifacts
-          path: test-artifacts/
+          path: tests-artifacts/
