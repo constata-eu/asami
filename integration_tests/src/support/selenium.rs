@@ -56,6 +56,7 @@ impl Selenium<'_> {
         if std::env::var("CI").is_ok() {
             opts.push("--disable-dev-shm-usage");
             opts.push("--disable-software-rasterizer");
+            opts.push("--disable-site-isolation-trials");
             opts.push("--remote-debugging-port=9222");
         }
 
@@ -244,8 +245,15 @@ impl Selenium<'_> {
     pub async fn link_wallet_and_sign_login(&self) -> anyhow::Result<()> {
         self.click(".rlogin-provider-icon img[alt=MetaMask]").await;
 
-        try_until(10, 200, "No other window opened", || async {
-            self.driver.windows().await.unwrap().len() == 3
+        try_until(10, 200, "No other window opened in link wallet", || async {
+            let windows = self.driver.windows().await.unwrap();
+            let len = windows.len();
+            for handle in windows {
+                self.driver.switch_to_window(handle).await.unwrap();
+                let url = self.driver.current_url().await.unwrap();
+                println!("Opened window: {}", url);
+            }
+            len == 3
         })
         .await;
 
@@ -262,8 +270,15 @@ impl Selenium<'_> {
     }
 
     pub async fn login_with_wallet(&self) -> anyhow::Result<()> {
-        try_until(10, 200, "No other window opened", || async {
-            self.driver.windows().await.unwrap().len() == 3
+        try_until(10, 200, "No other window opened in login wallet", || async {
+            let windows = self.driver.windows().await.unwrap();
+            let len = windows.len();
+            for handle in windows {
+                self.driver.switch_to_window(handle).await.unwrap();
+                let url = self.driver.current_url().await.unwrap();
+                println!("Opened window: {}", url);
+            }
+            len == 3
         })
         .await;
 

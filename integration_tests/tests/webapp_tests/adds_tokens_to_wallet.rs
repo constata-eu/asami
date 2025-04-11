@@ -12,8 +12,15 @@ browser_test! { adds_tokens_to_wallet (mut d)
 
     d.click("#add-to-wallet-DOC").await;
 
-    try_until(10, 200, "No other window opened", || async {
-        d.driver.windows().await.unwrap().len() == 3
+    try_until(10, 200, "No other window opened to add token", || async {
+        let windows = d.driver.windows().await.unwrap();
+        let len = windows.len();
+        for handle in windows {
+            d.driver.switch_to_window(handle).await.unwrap();
+            let url = d.driver.current_url().await.unwrap();
+            println!("Opened window: {}", url);
+        }
+        len == 3
     }).await;
 
     let handles = d.driver.windows().await.unwrap();
