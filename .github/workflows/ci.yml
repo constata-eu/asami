@@ -10,12 +10,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      CI: 1
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       ROCKET_RECAPTCHA: ${{ secrets.ROCKET_RECAPTCHA }}
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:17
         env:
           POSTGRES_USER: asami
           POSTGRES_PASSWORD: password
@@ -34,7 +35,8 @@ jobs:
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: 1.81.0
+          target: x86_64-unknown-linux-gnu
           components: rustfmt, clippy
           override: true
 

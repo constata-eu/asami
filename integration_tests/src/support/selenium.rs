@@ -43,21 +43,21 @@ impl Selenium<'_> {
         let local_driver_path = format!("chromedrivers/chromedriver_{}", std::env::consts::OS);
         let driver_path = local_driver_path.clone();
 
-        caps.add_chrome_option(
-            "args",
-            serde_json::to_value(vec![
-                "--user-data-dir=/tmp/asami_browser_datadir",
-                "--no-default-browser-check",
-                "--disable-component-update",
-                //"--headless",
-                "--no-sandbox",
-                "--disable-gpu",
-                //"--disable-dev-shm-usage",
-                "--window-size=1920,1080",
-            ])
-            .unwrap(),
-        )
-        .unwrap();
+        let mut opts = vec![
+            "--user-data-dir=/tmp/asami_browser_datadir",
+            "--no-default-browser-check",
+            "--disable-component-update",
+            "--no-sandbox",
+            "--disable-gpu",
+            "--window-size=1920,1080",
+        ];
+
+        if std::env::var("CI").is_ok() {
+            opts.push("--headless");
+            opts.push("--disable-dev-shm-usage");
+        }
+
+        caps.add_chrome_option("args", serde_json::to_value(opts).unwrap()).unwrap();
 
         Command::new("killall").args(["-9", &driver_path]).output().expect("Could not kill previous server");
 
