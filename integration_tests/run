@@ -4,10 +4,6 @@ set -a
 [ -f ../.env_local ] && . ../.env_local
 set +a
 
-docker stop asami_test_db
-docker wait asami_test_db
-docker run --name asami_test_db --rm -e POSTGRES_USER=asami -e POSTGRES_PASSWORD=password -e POSTGRES_DB=asami_development -p 5432:5432 -d postgres
-timeout 90s bash -c "until docker exec asami_test_db pg_isready ; do sleep 1 ; done"
 pgrep -f "hardhat node" | xargs -r kill -9
 cd ../api && sqlx database reset -y && cd -
 pgrep -f "integration_tests/target/debug/deps" | xargs -r kill -9
