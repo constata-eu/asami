@@ -1,6 +1,6 @@
 use std::{
     path::Path,
-    process::{Child, Command, Stdio},
+    process::{Child, Command},
 };
 
 use api::{lang, models};
@@ -44,8 +44,7 @@ impl Selenium<'_> {
         )
         .unwrap();
 
-        let local_driver_path = format!("chromedrivers/chromedriver_{}", std::env::consts::OS);
-        let driver_path = local_driver_path.clone();
+        let driver_path = "chromedrivers/chromedriver_linux";
 
         let opts = vec![
             "--user-data-dir=/tmp/asami_browser_datadir",
@@ -70,16 +69,12 @@ impl Selenium<'_> {
 
         caps.add_chrome_option("args", serde_json::to_value(opts).unwrap()).unwrap();
 
-        Command::new("killall").args(["-9", &driver_path]).output().expect("Could not kill previous server");
+        Command::new("killall").args(["-9", driver_path]).output().expect("Could not kill previous server");
 
-        let start_driver =
-            |path| Command::new(path).stderr(Stdio::null()).stdout(Stdio::null()).args(["--port=4444"]).spawn();
-
-        let child = if let Ok(child) = start_driver(&driver_path) {
-            child
-        } else {
-            start_driver(&local_driver_path).expect("At least local driver to exist in CI mode")
-        };
+        let child = Command::new(driver_path)
+            .args(["--port=4444", "--verbose", "--log-path=/tmp/test-artifacts/chrome.log"])
+            .spawn()
+            .expect("chromedriver to have started");
 
         loop {
             if ureq::get("http://localhost:4444/status").call().is_ok() {
