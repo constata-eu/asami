@@ -44,6 +44,14 @@ impl Selenium<'_> {
         )
         .unwrap();
 
+        caps.add_chrome_option(
+            "goog:loggingPrefs",
+            serde_json::json!({
+                "browser": "ALL"
+            }),
+        )
+        .unwrap();
+
         let driver_path = "chromedrivers/chromedriver_linux";
 
         let opts = vec![
