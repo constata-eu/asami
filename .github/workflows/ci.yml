@@ -51,10 +51,9 @@ jobs:
         working-directory: ./pwa
         run: yarn install
 
-      - name: Start Hardhat node
-        run: |
-          nohup npx hardhat node > hardhat.log 2>&1 &
-          sleep 5
+      - name: Install contract deps
+        working-directory: ./contract
+        run: yarn install
 
       - name: Install sqlx-cli
         run: cargo install sqlx-cli --no-default-features --features postgres
