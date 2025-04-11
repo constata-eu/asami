@@ -24,7 +24,7 @@ impl Selenium<'_> {
             .args(["-r", "-f", "/tmp/asami_browser_datadir"])
             .output()
             .expect("Could not delete downloads link");
-        std::fs::create_dir_all("test-artifacts").unwrap();
+        std::fs::create_dir_all("/tmp/test-artifacts").unwrap();
         Command::new("cp")
             .args(["-r", "chromedrivers/profile", "/tmp/asami_browser_datadir"])
             .output()
@@ -47,7 +47,7 @@ impl Selenium<'_> {
         let local_driver_path = format!("chromedrivers/chromedriver_{}", std::env::consts::OS);
         let driver_path = local_driver_path.clone();
 
-        let mut opts = vec![
+        let opts = vec![
             "--user-data-dir=/tmp/asami_browser_datadir",
             "--no-default-browser-check",
             "--disable-component-update",
@@ -57,14 +57,16 @@ impl Selenium<'_> {
             "--disable-popup-blocking",
             "--enable-logging",
             "--v=1",
+            "--log-path=/tmp/test-artifacts/chrome.log",
+            "--disable-features=IsolateOrigins,site-per-process",
+            "--disable-dev-shm-usage",
+            "--disable-software-rasterizer",
+            "--disable-site-isolation-trials",
+            "--remote-debugging-port=9222",
+            "--allow-insecure-localhost",
+            "--ignore-certificate-errors",
+            "--allow-file-access-from-files",
         ];
-
-        if std::env::var("CI").is_ok() {
-            opts.push("--disable-dev-shm-usage");
-            opts.push("--disable-software-rasterizer");
-            opts.push("--disable-site-isolation-trials");
-            opts.push("--remote-debugging-port=9222");
-        }
 
         caps.add_chrome_option("args", serde_json::to_value(opts).unwrap()).unwrap();
 
@@ -147,7 +149,7 @@ impl Selenium<'_> {
 
         if gone.is_err() {
             let time = Utc::now();
-            let target = format!("test-artifacts/{selector}_{time}.png");
+            let target = format!("/tmp/test-artifacts/{selector}_{time}.png");
             self.save_screenshot(&target).await.unwrap();
         }
         gone.unwrap_or_else(|_| panic!("{selector} was still displayed"));
@@ -299,7 +301,7 @@ impl Selenium<'_> {
 
     pub async fn save_screenshot(&self, name: &str) -> WebDriverResult<()> {
         let timestamp = Utc::now().format("%Y%m%dT%H%M%S");
-        let filename = format!("test-artifacts/{}-{}.png", name, timestamp);
+        let filename = format!("/tmp/test-artifacts/{}-{}.png", name, timestamp);
         self.driver.screenshot(Path::new(&filename)).await?;
         println!("Saved screenshot to: {}", filename);
         Ok(())

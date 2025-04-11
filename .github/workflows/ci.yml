@@ -39,10 +39,8 @@ jobs:
           chmod +x integration_tests/chromedrivers/chrome-linux/chrome
           integration_tests/chromedrivers/chrome-linux/chrome --version
 
-      - name: Install xvfb + gtk deps
-        run: |
-          sudo apt-get install -y xvfb libnss3 libxss1 libatk-bridge2.0-0
-          sudo apt-get install -y libgtk-3-0 libgbm1 libdrm2 x11-utils fonts-liberation
+      - name: Install xvfb
+        run: sudo apt-get install -y xvfb
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
@@ -120,7 +118,7 @@ jobs:
 
       - name: Upload artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: test-artifacts
-          path: tests-artifacts/
+          path: /tmp/tests-artifacts/
