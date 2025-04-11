@@ -1,6 +1,7 @@
 use std::{
     path::Path,
-    process::{Child, Command}, time::Duration,
+    process::{Child, Command},
+    time::Duration,
 };
 
 use api::{lang, models};
