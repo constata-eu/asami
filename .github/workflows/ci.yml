@@ -41,7 +41,7 @@ jobs:
 
       - name: Install xvfb + gtk deps
         run: |
-          sudo apt-get install -y xvfb libnss3 libxss1 libasound2 libatk-bridge2.0-0
+          sudo apt-get install -y xvfb libnss3 libxss1 libatk-bridge2.0-0
           sudo apt-get install -y libgtk-3-0 libgbm1 libdrm2 x11-utils fonts-liberation
 
       - name: Set up Rust
