@@ -50,7 +50,7 @@ impl Selenium<'_> {
             "--no-sandbox",
             "--disable-gpu",
             "--window-size=1920,1080",
-            "--disable-popup-blocking"
+            "--disable-popup-blocking",
         ];
 
         if std::env::var("CI").is_ok() {
