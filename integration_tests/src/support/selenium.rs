@@ -1,4 +1,7 @@
-use std::process::{Child, Command, Stdio};
+use std::{
+    path::Path,
+    process::{Child, Command, Stdio},
+};
 
 use api::{lang, models};
 use chrono::Utc;
@@ -21,6 +24,7 @@ impl Selenium<'_> {
             .args(["-r", "-f", "/tmp/asami_browser_datadir"])
             .output()
             .expect("Could not delete downloads link");
+        std::fs::create_dir_all("test-artifacts").unwrap();
         Command::new("cp")
             .args(["-r", "chromedrivers/profile", "/tmp/asami_browser_datadir"])
             .output()
@@ -51,6 +55,8 @@ impl Selenium<'_> {
             "--disable-gpu",
             "--window-size=1920,1080",
             "--disable-popup-blocking",
+            "--enable-logging",
+            "--v=1",
         ];
 
         if std::env::var("CI").is_ok() {
@@ -141,8 +147,8 @@ impl Selenium<'_> {
 
         if gone.is_err() {
             let time = Utc::now();
-            let target = format!("artifacts/{selector}_{time}");
-            self.driver.screenshot(std::path::Path::new(&target)).await.expect("to save screenshot");
+            let target = format!("test-artifacts/{selector}_{time}.png");
+            self.save_screenshot(&target).await.unwrap();
         }
         gone.unwrap_or_else(|_| panic!("{selector} was still displayed"));
     }
@@ -288,6 +294,14 @@ impl Selenium<'_> {
         self.click("button[data-testid=confirm-footer-button]").await;
 
         self.driver.switch_to_window(handles[0].clone()).await.unwrap();
+        Ok(())
+    }
+
+    pub async fn save_screenshot(&self, name: &str) -> WebDriverResult<()> {
+        let timestamp = Utc::now().format("%Y%m%dT%H%M%S");
+        let filename = format!("test-artifacts/{}-{}.png", name, timestamp);
+        self.driver.screenshot(Path::new(&filename)).await?;
+        println!("Saved screenshot to: {}", filename);
         Ok(())
     }
 }

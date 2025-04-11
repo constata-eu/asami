@@ -39,8 +39,10 @@ jobs:
           chmod +x integration_tests/chromedrivers/chrome-linux/chrome
           integration_tests/chromedrivers/chrome-linux/chrome --version
 
-      - name: Install xvfb
-        run: sudo apt-get install -y xvfb
+      - name: Install xvfb + gtk deps
+        run: sudo apt-get install -y \ 
+          xvfb libnss3 libxss1 libasound2 libatk-bridge2.0-0 libgtk-3-0 \
+          libgbm1 libdrm2 x11-utils fonts-liberation
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
@@ -59,6 +61,7 @@ jobs:
 
       - name: Cache PWA dependencies
         uses: actions/cache@v3
+        if: always()
         with:
           path: |
             pwa/node_modules
@@ -72,6 +75,7 @@ jobs:
 
       - name: Cache PWA dependencies
         uses: actions/cache@v3
+        if: always()
         with:
           path: |
             contract/node_modules
@@ -85,6 +89,7 @@ jobs:
 
       - name: Cache Rust
         uses: actions/cache@v3
+        if: always()
         with:
           path: |
             ~/.cargo/registry
@@ -113,3 +118,9 @@ jobs:
           cd integration_tests
           xvfb-run -a ./run webapp adds_tokens_to_wallet
 
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-artifacts
+          path: tests-artifacts/
