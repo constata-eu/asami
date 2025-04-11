@@ -50,11 +50,13 @@ impl Selenium<'_> {
             "--no-sandbox",
             "--disable-gpu",
             "--window-size=1920,1080",
+            "--disable-popup-blocking"
         ];
 
         if std::env::var("CI").is_ok() {
-            opts.push("--headless");
             opts.push("--disable-dev-shm-usage");
+            opts.push("--disable-software-rasterizer");
+            opts.push("--remote-debugging-port=9222");
         }
 
         caps.add_chrome_option("args", serde_json::to_value(opts).unwrap()).unwrap();
