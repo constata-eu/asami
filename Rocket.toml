@@ -1,0 +1,36 @@
+# This is an example rocket config file
+[default]
+pwa_host="http://127.0.0.1:5173"
+url = "http://localhost:8000"
+address="0.0.0.0"
+limits = { json = "50MB", graphql = "50MB" }
+database_uri = "postgres://asami:password@localhost/asami_development"
+recaptcha_threshold=0.0
+sendgrid_api_key="same_sendgrid_api_key"
+
+[default.x]
+client_id="some_client_id"
+client_secret="some_client_secret"
+redirect_uri = "http://127.0.0.1:8000/x_login"
+bearer_token = "some_bearer_token"
+asami_user_id = 1688942981573685248
+crawl_cooldown_minutes = 10
+
+[default.recaptcha.v3]
+html_key="6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX"
+secret_key="some_secret_key"
+
+[default.rsk]
+chain_id=31337
+start_sync_from_block=0
+wallet_mnemonic="work man father plunge mystery proud hollow address reunion sauce theory bonus"
+admin_address="0xed4e67213c7a375af60893fe8e0852d0f7040913"
+legacy_contract_address="unknown"
+asami_contract_address="unknown"
+doc_contract_address="unknown"
+rpc_url="http://127.0.0.1:8545"
+reorg_protection_padding="0x0000"
+blockchain_sync_cooldown=0
+gasless_rbtc_per_user="0x574FBDE6000" # 6e12 This is the contract's default so we're using it.
+gasless_fee="0xDE0B6B3A7640000" # 1 DOC, this is a contract default.
+admin_claim_trigger="0x2A5A058FC295EC000000" # When the admin has this many asami tokens, it will claim.

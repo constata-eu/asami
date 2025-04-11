@@ -9,6 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      ROCKET_RECAPTCHA: ${{ secrets.ROCKET_RECAPTCHA }}
 
     services:
       postgres:
