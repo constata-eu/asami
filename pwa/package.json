@@ -2,7 +2,7 @@
   "name": "pwa",
   "private": true,
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host 0.0.0.0",
     "prebuild": "node scripts/build-md.js",
     "build": "vite build",
     "serve": "vite preview",
