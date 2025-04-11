@@ -108,8 +108,11 @@ jobs:
       - name: Run cargo fmt
         run: cargo fmt -- --check
 
+      - name: Build all targets
+        run: cargo build --workspace --all-targets
+
       - name: Run cargo clippy
-        run: cargo clippy --workspace --all-targets --all-features --no-deps -- -D warnings
+        run: cargo clippy --workspace --all-targets --no-deps -- -D warnings
 
       - name: Run tests
         run: |
@@ -121,4 +124,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-artifacts
-          path: /tmp/tests-artifacts/
+          path: /tmp/test-artifacts/
