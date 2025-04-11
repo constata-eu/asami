@@ -30,10 +30,11 @@ jobs:
           --health-retries=5
 
     steps:
-      - name: Check out with LFS
+      - name: Check out
         uses: actions/checkout@v3
-        with:
-          lfs: true
+
+      - name: Download fixed chrome version for tests
+        run: curl -L https://asami.ams3.digitaloceanspaces.com/chrome -o integration_tests/chromedrivers/chrome-linux/chrome
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
