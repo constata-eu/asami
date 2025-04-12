@@ -1,3 +1,3 @@
-2025/04/08-00:52:45.733 324bb Reusing MANIFEST /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Sync Data/LevelDB/MANIFEST-000001
-2025/04/08-00:52:45.734 324bb Recovering log #3
-2025/04/08-00:52:45.734 324bb Reusing old log /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Sync Data/LevelDB/000003.log 
+2025/04/12-11:17:30.902 1f5168 Reusing MANIFEST /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Sync Data/LevelDB/MANIFEST-000001
+2025/04/12-11:17:30.903 1f5168 Recovering log #3
+2025/04/12-11:17:30.903 1f5168 Reusing old log /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Sync Data/LevelDB/000003.log 

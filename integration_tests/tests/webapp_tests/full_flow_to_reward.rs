@@ -44,7 +44,7 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
 
     d.wait_for("#help-card-no-campaigns").await;
     d.click("#balance-card-claim-account-button").await;
-    d.link_wallet_and_sign_login().await?;
+    d.link_wallet_and_sign_login().await;
     d.wait_for(".MuiSnackbarContent-message").await;
     d.wait_until_gone(".MuiSnackbarContent-message").await;
     d.wait_for("#account-summary-claim-pending").await;

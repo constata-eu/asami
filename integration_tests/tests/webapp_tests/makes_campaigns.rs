@@ -8,7 +8,7 @@ browser_test! { makes_campaign (mut d)
     d.goto("http://127.0.0.1:5173").await;
     d.click("#button-login-as-member").await;
     d.click("#wallet-login-button").await;
-    d.link_wallet_and_sign_login().await?;
+    d.link_wallet_and_sign_login().await;
     d.wait_for("#member-dashboard").await;
     d.click("#button-pay-to-amplify").await;
     d.wait_for("#advertiser-dashboard").await;
@@ -80,7 +80,7 @@ browser_test! { makes_campaign (mut d)
 browser_test! { advertiser_always_needs_a_wallet (mut d)
     d.signup_with_one_time_token().await;
     d.click("#balance-card-claim-account-button").await;
-    d.link_wallet_and_sign_login().await?;
+    d.link_wallet_and_sign_login().await;
     d.wait_for(".MuiSnackbarContent-message").await;
     d.wait_for("#advertiser-claim-account-pending").await;
     d.test_app().wait_for_job(

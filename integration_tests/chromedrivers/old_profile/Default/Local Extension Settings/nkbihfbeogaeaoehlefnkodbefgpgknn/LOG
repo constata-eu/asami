@@ -1,5 +1,8 @@
-2025/04/08-01:06:07.489 333b8 Creating DB /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn since it was missing.
-2025/04/08-01:06:07.521 333b8 Reusing MANIFEST /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn/MANIFEST-000001
-2025/04/08-01:07:12.548 333b9 Level-0 table #5: started
-2025/04/08-01:07:12.640 333b9 Level-0 table #5: 13214309 bytes OK
-2025/04/08-01:07:12.652 333b9 Delete type=0 #3
+2025/04/12-13:49:52.611 20195a Reusing MANIFEST /tmp/asami-browser-datadir/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn/MANIFEST-000001
+2025/04/12-13:49:52.611 20195a Recovering log #41
+2025/04/12-13:49:52.657 20195a Level-0 table #44: started
+2025/04/12-13:49:52.747 20195a Level-0 table #44: 11315946 bytes OK
+2025/04/12-13:49:52.768 20195a Delete type=0 #41
+2025/04/12-13:50:14.033 20195b Level-0 table #47: started
+2025/04/12-13:50:14.115 20195b Level-0 table #47: 11276082 bytes OK
+2025/04/12-13:50:14.128 20195b Delete type=0 #45

@@ -1,55 +1,64 @@
-2025/04/09-22:45:13.798 df19d Reusing MANIFEST /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn/MANIFEST-000001
-2025/04/09-22:45:13.798 df19d Recovering log #23
-2025/04/09-22:45:13.836 df19d Level-0 table #27: started
-2025/04/09-22:45:13.918 df19d Level-0 table #27: 10800633 bytes OK
-2025/04/09-22:45:13.932 df19d Delete type=0 #23
-2025/04/09-22:45:19.578 df19e Level-0 table #30: started
-2025/04/09-22:45:19.662 df19e Level-0 table #30: 10808103 bytes OK
-2025/04/09-22:45:19.674 df19e Delete type=0 #28
-2025/04/09-22:45:24.696 df19e Level-0 table #32: started
-2025/04/09-22:45:24.774 df19e Level-0 table #32: 10843710 bytes OK
-2025/04/09-22:45:24.786 df19e Delete type=0 #29
-2025/04/09-22:45:27.303 df19e Level-0 table #34: started
-2025/04/09-22:45:27.378 df19e Level-0 table #34: 10814555 bytes OK
-2025/04/09-22:45:27.389 df19e Delete type=0 #31
-2025/04/09-22:45:27.393 df19d Compacting 4@0 + 0@1 files
-2025/04/09-22:45:27.508 df19d Generated table #35@0: 1 keys, 10814555 bytes
-2025/04/09-22:45:27.512 df19d Compacted 4@0 + 0@1 files => 10814555 bytes
-2025/04/09-22:45:27.522 df19d compacted to: files[ 0 1 2 0 0 0 0 ]
-2025/04/09-22:45:27.522 df19d Delete type=2 #32
-2025/04/09-22:45:27.522 df19d Delete type=2 #34
-2025/04/09-22:45:27.522 df19d Delete type=2 #27
-2025/04/09-22:45:27.522 df19d Delete type=2 #30
-2025/04/09-22:45:27.530 df19d Compacting 1@1 + 1@2 files
-2025/04/09-22:45:27.612 df19d Generated table #36@1: 1 keys, 10814555 bytes
-2025/04/09-22:45:27.614 df19d Compacted 1@1 + 1@2 files => 10814555 bytes
-2025/04/09-22:45:27.623 df19d compacted to: files[ 0 0 2 0 0 0 0 ]
-2025/04/09-22:45:27.624 df19d Delete type=2 #35
-2025/04/09-22:45:27.624 df19d Delete type=2 #25
-2025/04/09-22:45:29.093 df19e Level-0 table #38: started
-2025/04/09-22:45:29.173 df19e Level-0 table #38: 10853746 bytes OK
-2025/04/09-22:45:29.185 df19e Delete type=0 #33
-2025/04/09-22:45:29.189 df19e Compacting 1@1 + 1@2 files
-2025/04/09-22:45:29.287 df19e Generated table #39@1: 1 keys, 10853746 bytes
-2025/04/09-22:45:29.290 df19e Compacted 1@1 + 1@2 files => 10853746 bytes
-2025/04/09-22:45:29.299 df19e compacted to: files[ 0 0 2 0 0 0 0 ]
-2025/04/09-22:45:29.300 df19e Delete type=2 #36
-2025/04/09-22:45:29.300 df19e Delete type=2 #38
-2025/04/09-22:45:32.824 df19e Level-0 table #41: started
-2025/04/09-22:45:32.901 df19e Level-0 table #41: 10853656 bytes OK
-2025/04/09-22:45:32.913 df19e Delete type=0 #37
-2025/04/09-22:45:32.917 df19e Compacting 1@1 + 1@2 files
-2025/04/09-22:45:33.013 df19e Generated table #42@1: 1 keys, 10853656 bytes
-2025/04/09-22:45:33.016 df19e Compacted 1@1 + 1@2 files => 10853656 bytes
-2025/04/09-22:45:33.026 df19e compacted to: files[ 0 0 2 0 0 0 0 ]
-2025/04/09-22:45:33.026 df19e Delete type=2 #41
-2025/04/09-22:45:33.026 df19e Delete type=2 #39
-2025/04/09-22:45:56.340 df19e Level-0 table #44: started
-2025/04/09-22:45:56.424 df19e Level-0 table #44: 10835959 bytes OK
-2025/04/09-22:45:56.437 df19e Delete type=0 #40
-2025/04/09-22:45:56.441 df19e Compacting 1@1 + 1@2 files
-2025/04/09-22:45:56.542 df19e Generated table #45@1: 1 keys, 10835959 bytes
-2025/04/09-22:45:56.545 df19e Compacted 1@1 + 1@2 files => 10835959 bytes
-2025/04/09-22:45:56.555 df19e compacted to: files[ 0 0 2 0 0 0 0 ]
-2025/04/09-22:45:56.556 df19e Delete type=2 #44
-2025/04/09-22:45:56.556 df19e Delete type=2 #42
+2025/04/12-13:52:13.580 202337 Reusing MANIFEST /tmp/asami-browser-datadir/Default/Local Extension Settings/nkbihfbeogaeaoehlefnkodbefgpgknn/MANIFEST-000001
+2025/04/12-13:52:13.581 202337 Recovering log #46
+2025/04/12-13:52:13.621 202337 Level-0 table #49: started
+2025/04/12-13:52:13.700 202337 Level-0 table #49: 11271275 bytes OK
+2025/04/12-13:52:13.720 202337 Delete type=0 #46
+2025/04/12-13:52:13.724 202338 Compacting 4@0 + 0@1 files
+2025/04/12-13:52:13.881 202338 Generated table #51@0: 1 keys, 11271275 bytes
+2025/04/12-13:52:13.886 202338 Compacted 4@0 + 0@1 files => 11271275 bytes
+2025/04/12-13:52:13.896 202338 compacted to: files[ 0 1 2 0 0 0 0 ]
+2025/04/12-13:52:13.896 202338 Compacting 1@1 + 1@2 files
+2025/04/12-13:52:13.992 202338 Generated table #52@1: 1 keys, 11271275 bytes
+2025/04/12-13:52:13.994 202338 Compacted 1@1 + 1@2 files => 11271275 bytes
+2025/04/12-13:52:14.004 202338 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/04/12-13:52:14.004 202338 Delete type=2 #47
+2025/04/12-13:52:14.004 202338 Delete type=2 #40
+2025/04/12-13:52:14.004 202338 Delete type=2 #49
+2025/04/12-13:52:14.004 202338 Delete type=2 #44
+2025/04/12-13:52:14.004 202338 Delete type=2 #51
+2025/04/12-13:52:14.004 202338 Delete type=2 #42
+2025/04/12-13:52:28.178 202338 Level-0 table #54: started
+2025/04/12-13:52:28.253 202338 Level-0 table #54: 11273790 bytes OK
+2025/04/12-13:52:28.267 202338 Delete type=0 #50
+2025/04/12-13:52:28.271 202338 Compacting 1@1 + 1@2 files
+2025/04/12-13:52:28.358 202338 Generated table #55@1: 1 keys, 11273790 bytes
+2025/04/12-13:52:28.359 202338 Compacted 1@1 + 1@2 files => 11273790 bytes
+2025/04/12-13:52:28.369 202338 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/04/12-13:52:28.370 202338 Delete type=2 #52
+2025/04/12-13:52:28.370 202338 Delete type=2 #54
+2025/04/12-13:52:30.148 202338 Level-0 table #57: started
+2025/04/12-13:52:30.221 202338 Level-0 table #57: 10792770 bytes OK
+2025/04/12-13:52:30.235 202338 Delete type=0 #53
+2025/04/12-13:52:30.238 202337 Compacting 1@1 + 1@2 files
+2025/04/12-13:52:30.341 202337 Generated table #58@1: 1 keys, 10792770 bytes
+2025/04/12-13:52:30.344 202337 Compacted 1@1 + 1@2 files => 10792770 bytes
+2025/04/12-13:52:30.354 202337 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/04/12-13:52:30.355 202337 Delete type=2 #55
+2025/04/12-13:52:30.355 202337 Delete type=2 #57
+2025/04/12-13:52:35.208 202338 Level-0 table #60: started
+2025/04/12-13:52:38.279 202338 Level-0 table #60: 10817220 bytes OK
+2025/04/12-13:52:38.304 202338 Delete type=0 #56
+2025/04/12-13:52:38.308 202338 Compacting 1@1 + 1@2 files
+2025/04/12-13:52:38.409 202338 Generated table #61@1: 1 keys, 10817220 bytes
+2025/04/12-13:52:38.412 202338 Compacted 1@1 + 1@2 files => 10817220 bytes
+2025/04/12-13:52:38.422 202338 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/04/12-13:52:38.422 202338 Delete type=2 #60
+2025/04/12-13:52:38.422 202338 Delete type=2 #58
+2025/04/12-13:52:40.142 202338 Level-0 table #63: started
+2025/04/12-13:52:40.243 202338 Level-0 table #63: 10796027 bytes OK
+2025/04/12-13:52:40.259 202338 Delete type=0 #59
+2025/04/12-13:52:40.262 202338 Compacting 1@1 + 1@2 files
+2025/04/12-13:52:40.372 202338 Generated table #64@1: 1 keys, 10796027 bytes
+2025/04/12-13:52:40.374 202338 Compacted 1@1 + 1@2 files => 10796027 bytes
+2025/04/12-13:52:40.388 202338 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/04/12-13:52:40.389 202338 Delete type=2 #61
+2025/04/12-13:52:40.389 202338 Delete type=2 #63
+2025/04/12-13:52:47.149 202338 Level-0 table #66: started
+2025/04/12-13:52:47.276 202338 Level-0 table #66: 10836545 bytes OK
+2025/04/12-13:52:47.291 202338 Delete type=0 #62
+2025/04/12-13:52:47.294 202338 Compacting 1@1 + 1@2 files
+2025/04/12-13:52:47.435 202338 Generated table #67@1: 1 keys, 10836545 bytes
+2025/04/12-13:52:47.438 202338 Compacted 1@1 + 1@2 files => 10836545 bytes
+2025/04/12-13:52:47.451 202338 compacted to: files[ 0 0 2 0 0 0 0 ]
+2025/04/12-13:52:47.451 202338 Delete type=2 #66
+2025/04/12-13:52:47.451 202338 Delete type=2 #64

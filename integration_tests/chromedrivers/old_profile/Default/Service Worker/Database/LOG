@@ -1,3 +1,3 @@
-2025/04/08-01:00:26.590 333b8 Reusing MANIFEST /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Service Worker/Database/MANIFEST-000001
-2025/04/08-01:00:26.590 333b8 Recovering log #3
-2025/04/08-01:00:26.591 333b8 Reusing old log /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Service Worker/Database/000003.log 
+2025/04/12-13:49:51.196 20195a Reusing MANIFEST /tmp/asami-browser-datadir/Default/Service Worker/Database/MANIFEST-000001
+2025/04/12-13:49:51.196 20195a Recovering log #3
+2025/04/12-13:49:51.196 20195a Reusing old log /tmp/asami-browser-datadir/Default/Service Worker/Database/000003.log 

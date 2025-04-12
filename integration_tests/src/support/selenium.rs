@@ -1,7 +1,6 @@
 use std::{
     path::Path,
     process::{Child, Command},
-    time::Duration,
 };
 
 use api::{lang, models};
@@ -9,7 +8,6 @@ use chrono::Utc;
 use thirtyfour::prelude::*;
 
 use super::ApiClient;
-use crate::support::try_until;
 
 pub struct Selenium<'a> {
     pub driver: WebDriver,
@@ -17,22 +15,27 @@ pub struct Selenium<'a> {
     child: Child,
 }
 
-pub const DOWNLOADS: &str = "/tmp/asami_tests_downloads";
+pub const DOWNLOADS: &str = "/tmp/asami-tests-downloads";
+pub const DATA_DIR: &str = "/tmp/asami-browser-datadir";
+pub const ARTIFACTS: &str = "/tmp/test-artifacts";
+pub const METAMASK: &str = "/tmp/asami-test-metamask";
+pub const EXTENSION_ID: &str = "nkbihfbeogaeaoehlefnkodbefgpgknn";
+//pub const SEED: &str = "clay useful lion spawn drift census subway require small matrix guess away";
+//pub const MEMBER_ADDR: "0xbe992ec27E90c07caDE70c6C3CD26eECC8CadCfE"
 
 impl Selenium<'_> {
     pub async fn start(api: ApiClient<'_>) -> Selenium<'_> {
-        Command::new("rm")
-            .args(["-r", "-f", "/tmp/asami_browser_datadir"])
-            .output()
-            .expect("Could not delete downloads link");
-        std::fs::create_dir_all("/tmp/test-artifacts").unwrap();
-        Command::new("cp")
-            .args(["-r", "chromedrivers/profile", "/tmp/asami_browser_datadir"])
-            .output()
-            .expect("Could not copy profile folder to temp location");
+        Command::new("rm").args(["-r", "-f", DATA_DIR]).output().unwrap();
+        Command::new("cp").args(["-r", "chromedrivers/profile", DATA_DIR]).output().unwrap();
 
-        Command::new("rm").args(["-r", "-f", DOWNLOADS]).output().expect("Could not delete downloads link");
-        Command::new("mkdir").args(["-p", DOWNLOADS]).output().expect("Could not create downloads dir");
+        Command::new("rm").args(["-r", "-f", METAMASK]).output().unwrap();
+        Command::new("cp").args(["-r", "chromedrivers/metamask", METAMASK]).output().unwrap();
+
+        Command::new("rm").args(["-r", "-f", ARTIFACTS]).output().unwrap();
+        std::fs::create_dir_all(ARTIFACTS).unwrap();
+
+        Command::new("rm").args(["-r", "-f", DOWNLOADS]).output().unwrap();
+        Command::new("mkdir").args(["-p", DOWNLOADS]).output().unwrap();
 
         let mut caps = DesiredCapabilities::chrome();
         caps.set_binary("chromedrivers/chrome-linux/chrome").unwrap();
@@ -47,8 +50,12 @@ impl Selenium<'_> {
 
         let driver_path = "chromedrivers/chromedriver_linux";
 
+        let data_dir_opt = format!("--user-data-dir={DATA_DIR}");
+        let metamask_opt = format!("--load-extension={METAMASK}");
+        let log_opt = format!("--log-path={ARTIFACTS}/chrome.log");
         let opts = vec![
-            "--user-data-dir=/tmp/asami_browser_datadir",
+            &data_dir_opt,
+            &metamask_opt,
             "--no-default-browser-check",
             "--disable-component-update",
             "--no-sandbox",
@@ -57,7 +64,7 @@ impl Selenium<'_> {
             "--disable-popup-blocking",
             "--enable-logging",
             "--v=1",
-            "--log-path=/tmp/test-artifacts/chrome.log",
+            &log_opt,
             "--disable-features=IsolateOrigins,site-per-process",
             "--disable-dev-shm-usage",
             "--disable-software-rasterizer",
@@ -73,9 +80,9 @@ impl Selenium<'_> {
         Command::new("killall").args(["-9", driver_path]).output().expect("Could not kill previous server");
 
         let child = Command::new(driver_path)
-            .args(["--port=4444", "--verbose", "--log-path=/tmp/test-artifacts/chrome.log"])
+            .args(["--port=4444", "--verbose", &log_opt])
             .spawn()
-            .expect("chromedriver to have started");
+            .expect("chromedriver did not start");
 
         loop {
             if ureq::get("http://localhost:4444/status").call().is_ok() {
@@ -85,9 +92,12 @@ impl Selenium<'_> {
 
         let driver = WebDriver::new("http://localhost:4444", caps).await.expect("Webdriver init");
         driver.maximize_window().await.expect("to maximize window");
-        driver.goto("chrome://newtab").await.unwrap();
-        Self::open_metamask_tab(&driver).await.unwrap();
-        Selenium { child, driver, api }
+        let selenium = Selenium { child, driver, api };
+
+        selenium.go_to_extension_window("home.html").await;
+        selenium.driver.close_window().await.unwrap();
+        selenium.go_to_window("chrome://new-tab-page").await;
+        selenium
     }
 
     pub fn app(&self) -> api::App {
@@ -147,7 +157,7 @@ impl Selenium<'_> {
 
         if gone.is_err() {
             let time = Utc::now();
-            let target = format!("/tmp/test-artifacts/{selector}_{time}.png");
+            let target = format!("{ARTIFACTS}/{selector}_{time}.png");
             self.save_screenshot(&target).await.unwrap();
         }
         gone.unwrap_or_else(|_| panic!("{selector} was still displayed"));
@@ -169,10 +179,6 @@ impl Selenium<'_> {
             .unwrap_or_else(|_| panic!("{selector} not found"));
         elem.wait_until().enabled().await.unwrap_or_else(|_| panic!("{selector} was not enabled"));
         elem.send_keys(value).await.unwrap_or_else(|_| panic!("Error sending {value} to {selector}"));
-    }
-
-    pub async fn open_metamask(&self) {
-        self.goto("chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn/popup.html").await;
     }
 
     pub async fn goto(&self, url: &str) {
@@ -248,91 +254,69 @@ impl Selenium<'_> {
         self.wait_for("#member-dashboard").await;
     }
 
-    pub async fn link_wallet_and_sign_login(&self) -> anyhow::Result<()> {
+    pub async fn link_wallet_and_sign_login(&self) {
         self.click(".rlogin-provider-icon img[alt=MetaMask]").await;
 
-        try_until(10, 200, "No other window opened in link wallet", || async {
-            let windows = self.driver.windows().await.unwrap();
-            let len = windows.len();
-            for handle in windows {
-                self.driver.switch_to_window(handle).await.unwrap();
-                let url = self.driver.current_url().await.unwrap();
-                println!("Opened window: {}", url);
-            }
-            len == 3
-        })
-        .await;
-
-        let handles = self.driver.windows().await.unwrap();
-        self.driver.switch_to_window(handles[2].clone()).await.expect("to switch window zero");
+        self.go_to_extension_notification().await;
 
         self.fill_in("input[data-testid=unlock-password]", "password").await;
         self.click("button[data-testid=unlock-submit]").await;
-        self.driver.switch_to_window(handles[0].clone()).await.unwrap();
+
+        self.go_to_app_window().await;
         self.click("button.rlogin-button.confirm").await;
 
-        self.login_with_wallet().await.unwrap();
-        Ok(())
+        self.confirm_wallet_action().await;
     }
 
-    pub async fn login_with_wallet(&self) -> anyhow::Result<()> {
-        try_until(10, 200, "No other window opened in login wallet", || async {
-            let windows = self.driver.windows().await.unwrap();
-            let len = windows.len();
-            for handle in windows {
-                self.driver.switch_to_window(handle).await.unwrap();
-                let url = self.driver.current_url().await.unwrap();
-                println!("Opened window: {}", url);
-            }
-            len == 3
-        })
-        .await;
-
-        let handles = self.driver.windows().await.unwrap();
-        self.driver.switch_to_window(handles[2].clone()).await.expect("to switch window to one");
-
+    pub async fn confirm_wallet_action(&self) {
+        self.go_to_extension_notification().await;
         self.click("button[data-testid=confirm-footer-button]").await;
+        self.go_to_app_window().await;
+    }
 
-        self.driver.switch_to_window(handles[0].clone()).await.unwrap();
-        Ok(())
+    pub async fn go_to_window(&self, prefix: &str) {
+        use std::{thread, time};
+        let millis = time::Duration::from_millis(100);
+        let mut windows = vec![];
+        for _i in 0..20 {
+            windows = self.driver.windows().await.unwrap();
+            for handle in &windows {
+                self.driver.switch_to_window(handle.clone()).await.unwrap();
+                let url = self.driver.current_url().await.unwrap();
+                if url.to_string().starts_with(prefix) {
+                    println!("Entering window {url}");
+                    return;
+                }
+            }
+            thread::sleep(millis);
+        }
+
+        println!("Open browser windows are:");
+        for handle in windows {
+            self.driver.switch_to_window(handle).await.unwrap();
+            let url = self.driver.current_url().await.unwrap();
+            println!("{url}");
+        }
+        panic!("Could not find {prefix}");
+    }
+
+    pub async fn go_to_extension_window(&self, page: &str) {
+        self.go_to_window(&format!("chrome-extension://{EXTENSION_ID}/{page}")).await
+    }
+
+    pub async fn go_to_extension_notification(&self) {
+        self.go_to_extension_window("notification").await
+    }
+
+    pub async fn go_to_app_window(&self) {
+        self.go_to_window("http://127.0.0.1").await
     }
 
     pub async fn save_screenshot(&self, name: &str) -> WebDriverResult<()> {
         let timestamp = Utc::now().format("%Y%m%dT%H%M%S");
-        let filename = format!("/tmp/test-artifacts/{}-{}.png", name, timestamp);
+        let filename = format!("{ARTIFACTS}/{}-{}.png", name, timestamp);
         self.driver.screenshot(Path::new(&filename)).await?;
         println!("Saved screenshot to: {}", filename);
         Ok(())
-    }
-
-    /// Opens the MetaMask extension in a new tab and switches to it.
-    /// You can call this whenever you want to interact with MetaMask UI.
-    pub async fn open_metamask_tab(driver: &WebDriver) -> WebDriverResult<()> {
-        let extension_id = "nkbihfbeogaeaoehlefnkodbefgpgknn";
-        let extension_url = format!("chrome-extension://{}/home.html", extension_id);
-
-        // Save the current tab so you can switch back later if needed
-        let original_tab = driver.window().await?;
-        tokio::time::sleep(Duration::from_millis(2500)).await;
-
-        // Open a new tab to the extension's UI
-        driver.execute(&format!("window.open('{}')", extension_url), Vec::new()).await?;
-
-        // Wait for new tab to appear
-        tokio::time::sleep(Duration::from_millis(500)).await;
-        let handles = driver.windows().await?;
-
-        // Find and switch to the extension tab
-        for handle in handles {
-            driver.switch_to_window(handle).await?;
-            let url = driver.current_url().await?;
-            if url.to_string().contains(&extension_url) {
-                println!("✅ Switched to MetaMask tab at {}", url);
-                driver.close_window().await?;
-                driver.switch_to_window(original_tab).await?;
-                return Ok(());
-            }
-        }
-        panic!("Could not find metamask tab")
     }
 }
