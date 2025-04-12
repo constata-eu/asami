@@ -59,7 +59,6 @@ jobs:
 
       - name: Cache PWA dependencies
         uses: actions/cache@v3
-        if: always()
         with:
           path: |
             pwa/node_modules
@@ -73,7 +72,6 @@ jobs:
 
       - name: Cache PWA dependencies
         uses: actions/cache@v3
-        if: always()
         with:
           path: |
             contract/node_modules
@@ -87,7 +85,6 @@ jobs:
 
       - name: Cache Rust
         uses: actions/cache@v3
-        if: always()
         with:
           path: |
             ~/.cargo/registry
@@ -105,22 +102,22 @@ jobs:
           cd api
           sqlx database reset -y
 
-      #- name: Run cargo fmt
-      #  run: cargo fmt -- --check
+      - name: Run cargo fmt
+        run: cargo fmt -- --check
 
-      #- name: Build all targets
-      #  run: cargo build --workspace --all-targets
+      - name: Build all targets
+        run: cargo build --workspace --all-targets
 
-      #- name: Run cargo clippy
-      #  run: cargo clippy --workspace --all-targets --no-deps -- -D warnings
+      - name: Run cargo clippy
+        run: cargo clippy --workspace --all-targets --no-deps -- -D warnings
 
-      - name: Set up tmate for SSH debugging
-        uses: mxschmitt/action-tmate@v3
+      #- name: Set up tmate for SSH debugging
+      #  uses: mxschmitt/action-tmate@v3
 
-      #- name: Run tests
-      #  run: |
-      #    cd integration_tests
-      #    xvfb-run -a ./run webapp adds_tokens_to_wallet
+      - name: Run tests
+        run: |
+          cd integration_tests
+          xvfb-run -a ./run webapp adds_tokens_to_wallet
 
       - name: Upload artifacts
         if: always()
