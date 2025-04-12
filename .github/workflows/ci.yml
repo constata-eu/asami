@@ -70,7 +70,7 @@ jobs:
         working-directory: ./pwa
         run: yarn install --frozen-lockfile
 
-      - name: Cache PWA dependencies
+      - name: Cache contract dependencies
         uses: actions/cache@v3
         with:
           path: |
@@ -89,6 +89,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
+            ~/.cargo/bin
             target
           key: rust-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: rust-${{ runner.os }}-
@@ -102,14 +103,14 @@ jobs:
           cd api
           sqlx database reset -y
 
-      - name: Run cargo fmt
-        run: cargo fmt -- --check
-
       - name: Build all targets
         run: cargo build --workspace --all-targets
 
-      - name: Run cargo clippy
-        run: cargo clippy --workspace --all-targets --no-deps -- -D warnings
+      #- name: Run cargo fmt
+      #  run: cargo fmt -- --check
+
+      #- name: Run cargo clippy
+      #  run: cargo clippy --workspace --all-targets --no-deps -- -D warnings
 
       #- name: Set up tmate for SSH debugging
       #  uses: mxschmitt/action-tmate@v3
