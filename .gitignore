@@ -15,4 +15,4 @@ ganache_data
 ganache_data_copy
 .env_local
 contract/cache/*
-contract/ignition/*
+contract/ignition/deployments/chain-31337/journal.jsonl
