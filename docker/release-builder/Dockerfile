@@ -39,7 +39,7 @@ CMD /bin/bash -c "\
   && cd /work/api && sqlx database reset -y \
   && cd /work/api && cargo build --release --bin migrator --bin api --bin worker \
   && mkdir -p /host_workspace/release \
-  && cp /work/api/target/release/{migrator,api,worker} /host_workspace/release \
+  && cp /work/target/release/{migrator,api,worker} /host_workspace/release \
   && chown -R $HOST_UID:$HOST_UID /host_workspace/release \
 "
 
