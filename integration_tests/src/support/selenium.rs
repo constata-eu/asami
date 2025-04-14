@@ -25,11 +25,13 @@ pub const EXTENSION_ID: &str = "nkbihfbeogaeaoehlefnkodbefgpgknn";
 
 impl Selenium<'_> {
     pub async fn start(api: ApiClient<'_>) -> Selenium<'_> {
+        let dir = std::fs::canonicalize(format!("{}/../integration_tests/chromedrivers", env!("CARGO_MANIFEST_DIR"))).unwrap();
+
         Command::new("rm").args(["-r", "-f", DATA_DIR]).output().unwrap();
-        Command::new("cp").args(["-r", "chromedrivers/profile", DATA_DIR]).output().unwrap();
+        Command::new("cp").args(["-r", &format!("{}/profile", dir.display()), DATA_DIR]).output().unwrap();
 
         Command::new("rm").args(["-r", "-f", METAMASK]).output().unwrap();
-        Command::new("cp").args(["-r", "chromedrivers/metamask", METAMASK]).output().unwrap();
+        Command::new("cp").args(["-r", &format!("{}/metamask", dir.display()), METAMASK]).output().unwrap();
 
         Command::new("rm").args(["-r", "-f", ARTIFACTS]).output().unwrap();
         std::fs::create_dir_all(ARTIFACTS).unwrap();
@@ -38,7 +40,7 @@ impl Selenium<'_> {
         Command::new("mkdir").args(["-p", DOWNLOADS]).output().unwrap();
 
         let mut caps = DesiredCapabilities::chrome();
-        caps.set_binary("chromedrivers/chrome-linux/chrome").unwrap();
+        caps.set_binary(&format!("{}/chrome-linux/chrome", dir.display())).unwrap();
         caps.add_chrome_option(
             "prefs",
             serde_json::json![{
@@ -48,7 +50,7 @@ impl Selenium<'_> {
         )
         .unwrap();
 
-        let driver_path = "chromedrivers/chromedriver_linux";
+        let driver_path = format!("{}/chromedriver_linux", dir.display());
 
         let data_dir_opt = format!("--user-data-dir={DATA_DIR}");
         let metamask_opt = format!("--load-extension={METAMASK}");
@@ -77,7 +79,7 @@ impl Selenium<'_> {
 
         caps.add_chrome_option("args", serde_json::to_value(opts).unwrap()).unwrap();
 
-        Command::new("killall").args(["-9", driver_path]).output().expect("Could not kill previous server");
+        Command::new("killall").args(["-9", &driver_path]).output().expect("Could not kill previous server");
 
         let child = Command::new(driver_path)
             .args(["--port=4444", "--verbose", &log_opt])
@@ -246,7 +248,7 @@ impl Selenium<'_> {
 
         self.goto("http://127.0.0.1:5173/").await;
         self.goto(&format!("http://127.0.0.1:5173/#/one_time_token_login?token={token}")).await;
-        self.wait_for("#advertiser-dashboard").await;
+        self.wait_for("#member-dashboard").await;
     }
 
     pub async fn goto_member_dashboard(&self) {

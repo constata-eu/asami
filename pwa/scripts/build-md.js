@@ -1,7 +1,7 @@
 // scripts/build-md.js
 import fs from 'fs-extra';
 import path from 'path';
-import globby from 'globby';
+import {globby} from 'globby';
 import MarkdownIt from 'markdown-it';
 
 const md = new MarkdownIt({

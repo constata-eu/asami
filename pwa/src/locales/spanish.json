@@ -381,17 +381,6 @@
   },
   "about_us": {
     "go_back_button": "Volver",
-    "club_title": "Realmente es un club, y te invitamos a unirte!",
-    "club_description": [
-      "Somos un club en donde nos pagamos por repostear contenido en redes sociales.",
-      "Nuestro objetivo es medir la influencia genuina de cada uno, y recompensar la participación en la creación de tendencias.",
-      "Asami no es exclusivo para creadores de contenido, cualquiera puede participar creando tendencias, con cualquier audencia.",
-      "Cuando se registre un repost, recibirás DOC, y el club cobrará una comisión.",
-      "DOC &ndash;<i>Dollar on Chain</i>&ndash; es una criptomoneda con un valor estable atado al US$.",
-      "Como miembro fundador, también se te emitirán tokens ASAMI, que te permitirán votar en temas como las comisiones, el rol del administrador, y te distribuirán ingresos de las comisiones.",
-      "<a href='https://asami.ams3.digitaloceanspaces.com/ASAMI%20WHITEPAPER%20ES.pdf' target='_blank'>MIRA EL WHITEPAPER</a> para enterarte más sobre nuestra misión y el funcionamiento del club.",
-      "Asami es un <i>Contrato inteligente</i> en la blockchain de Rootstock, <a href='https://explorer.rootstock.io/address/0x16039ab4e9b0bf3b79f9a221898d152151026034'>puedes verlo aquí.</a>."
-    ],
     "privacy_statement_title": "Tenemos una importante declaración de privacidad que hacer.",
     "privacy_statement": [
       "Como parte de nuestro compromiso con fomentar una comunidad transparente, confiable y justa, tenemos políticas específicas respecto a los datos de los miembros que deberías conocer antes de unirte.",

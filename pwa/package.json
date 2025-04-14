@@ -1,10 +1,12 @@
 {
   "name": "pwa",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "prebuild": "node scripts/build-md.js",
     "build": "vite build",
+    "build:md": "node scripts/build-md.js",
     "serve": "vite preview",
     "type-check": "tsc --noEmit",
     "lint": "eslint --fix --ext .js,.jsx,.ts,.tsx ./src",

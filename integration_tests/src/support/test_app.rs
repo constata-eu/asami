@@ -1,5 +1,3 @@
-use std::process::Command;
-
 use api::{
     models::{self, on_chain_job::AsamiFunctionCall, u, U256},
     on_chain, App, AppConfig,
@@ -24,17 +22,25 @@ pub struct TestApp {
     pub provider: Provider<Http>,
     pub rocket_client: RocketClient,
 }
+use sqlx_cli::*;
+use clap_builder::Parser;
 
 impl TestApp {
     pub async fn init() -> Self {
         let mut config = AppConfig::default_figment().expect("config to exist");
 
-        Command::new("sqlx")
-            .current_dir("../api")
-            .env("DATABASE_URL", &config.database_uri)
-            .args(["database", "reset", "-y"])
-            .output()
-            .expect("SQLX not available.");
+        run(Opt::parse_from(vec![
+            "sqlx",
+            "database",
+            "reset",
+            "-y",
+            "--database-url",
+            &config.database_uri,
+            "--source",
+            &format!( "{}/../api/migrations", env!("CARGO_MANIFEST_DIR") ),
+        ]))
+        .await
+        .unwrap();
 
         let truffle = Truffle::start();
         config.rsk.legacy_contract_address.clone_from(&truffle.addresses.legacy);

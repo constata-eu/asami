@@ -30,7 +30,7 @@ pub struct Addresses {
 impl Truffle {
     pub fn start() -> Self {
         let config = AppConfig::default_figment().expect("config to exist");
-        let dir = std::fs::canonicalize("../contract").unwrap();
+        let dir = std::fs::canonicalize(format!("{}/../contract", env!("CARGO_MANIFEST_DIR"))).unwrap();
         Command::new("yarn")
             .args(["hardhat", "clean"])
             .current_dir(&dir)
@@ -90,8 +90,11 @@ impl Truffle {
             .output()
             .unwrap();
 
-        let json = std::fs::read_to_string("../contract/ignition/deployments/chain-31337/deployed_addresses.json")
-            .expect("cannot read deployed_addresses.json");
+        let json = std::fs::read_to_string(format!(
+            "{}/ignition/deployments/chain-31337/deployed_addresses.json",
+            dir.display()
+        ))
+        .expect("cannot read deployed_addresses.json");
         let addresses: Addresses = serde_json::from_str(&json).expect("Wrong addresses.json file contents");
 
         let deployer = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";

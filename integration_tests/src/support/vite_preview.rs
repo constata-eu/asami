@@ -11,8 +11,10 @@ impl VitePreview {
 
         let output_file = std::fs::File::create(path_to_log).unwrap();
 
+        let current_dir = std::fs::canonicalize(format!("{}/../pwa", env!("CARGO_MANIFEST_DIR"))).unwrap();
+
         let child = Command::new("yarn")
-            .current_dir(std::fs::canonicalize("../pwa").unwrap())
+            .current_dir(current_dir)
             .stdout(Stdio::from(output_file.try_clone().unwrap()))
             .stderr(Stdio::from(output_file))
             .args(["dev"])

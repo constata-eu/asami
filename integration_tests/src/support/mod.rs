@@ -4,9 +4,13 @@ pub mod test_app;
 pub mod truffle;
 pub mod vite_preview;
 
+use std::{io::{self, BufRead, Write}, os::fd::AsRawFd};
+
+use nix::unistd::isatty;
 pub use selenium::Selenium;
 pub use test_api_server::*;
 pub use test_app::*;
+use tokio::task;
 pub use truffle::*;
 pub use vite_preview::*;
 
@@ -28,6 +32,27 @@ pub fn wait_here() {
     loop {
         thread::sleep(ten_millis);
     }
+}
+
+#[allow(dead_code)]
+pub async fn wait_for_enter() {
+    task::spawn_blocking(|| {
+        if !isatty(io::stdin().as_raw_fd()).unwrap_or(false) {
+            println!("[Skipping pause — not a TTY]");
+            return
+        }
+
+        let stdin = io::stdin();
+        let mut stdout = io::stdout();
+        let mut handle = stdin.lock();
+        let mut buf = String::new();
+
+        write!(stdout, "Press Enter to continue...").unwrap();
+        stdout.flush().unwrap();
+        handle.read_line(&mut buf).unwrap();
+    })
+    .await
+    .unwrap();
 }
 
 pub async fn try_until<T: std::future::Future<Output = bool>>(times: i32, sleep: u64, err: &str, call: impl Fn() -> T) {

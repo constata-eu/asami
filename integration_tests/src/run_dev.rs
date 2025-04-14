@@ -1,16 +1,8 @@
-use std::{
-    io::{self, BufRead, Write},
-    os::fd::AsRawFd,
-};
-
 use api::models::*;
 use integration_tests::support::*;
-use nix::unistd::isatty;
-use tokio::task;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    wait_for_enter().await?;
     let test_app = TestApp::init().await;
     let server = TestApiServer::start(test_app.app.clone()).await;
     let mut vite_preview = VitePreview::start();
@@ -118,21 +110,16 @@ async fn main() -> anyhow::Result<()> {
     d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "2400 ASAMI").await;
 
     d.click("#claim-balances-button").await;
+    
+    d.confirm_wallet_action().await;
 
-    try_until(10, 200, "No other window opened", || async {
-        d.driver.windows().await.unwrap().len() == 3
-    })
-    .await;
-    let handles = d.driver.windows().await.unwrap();
-    d.driver.switch_to_window(handles[2].clone()).await.expect("to switch window zero");
-    d.click("button[data-testid=confirm-footer-button]").await;
-
-    d.driver.switch_to_window(handles[0].clone()).await.unwrap();
     d.wait_until_gone(".MuiSnackbarContent-message").await;
 
     // TODO: Make the website balances reload for the user who claimed when we detect a claim (?)
     // Or put a button there or something.
     // d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "^0 ASAMI").await;
+
+    wait_for_enter().await;
 
     d.test_app().stop_mining().await;
     server.abort();
@@ -143,24 +130,3 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Safe to call from async main!
-pub async fn wait_for_enter() -> io::Result<()> {
-    task::spawn_blocking(|| {
-        if !isatty(io::stdin().as_raw_fd()).unwrap_or(false) {
-            println!("[Skipping pause — not a TTY]");
-            return Ok(());
-        }
-
-        let stdin = io::stdin();
-        let mut stdout = io::stdout();
-        let mut handle = stdin.lock();
-        let mut buf = String::new();
-
-        write!(stdout, "Press Enter to continue...")?;
-        stdout.flush()?;
-        handle.read_line(&mut buf)?;
-        Ok(())
-    })
-    .await
-    .unwrap()
-}
