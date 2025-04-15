@@ -7,6 +7,7 @@ limits = { json = "50MB", graphql = "50MB" }
 database_uri = "postgres://asami:password@localhost/asami_development"
 recaptcha_threshold=0.0
 sendgrid_api_key="same_sendgrid_api_key"
+internal_alerts_email="nubis@constata.eu"
 
 [default.x]
 client_id="some_client_id"

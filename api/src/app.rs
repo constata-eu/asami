@@ -62,6 +62,32 @@ impl App {
         self.db.commit().await?;
         sqlx::Result::Ok(())
     }
+
+    pub async fn send_mail(&self, to: &str, subject: &str, content: &str) -> AsamiResult<()> {
+        // Create the JSON body
+        let body = serde_json::json!({
+            "personalizations": [{
+                "to": [{ "email": to }]
+            }],
+            "from": { "email": "asami@asami.club" },
+            "subject": subject,
+            "content": [{
+                "type": "text/html",
+                "value": content,
+            }]
+        });
+
+        // Perform the POST request
+        ureq::post("https://api.sendgrid.com/v3/mail/send")
+            .set(
+                "Authorization",
+                &format!("Bearer {}", self.settings.sendgrid_api_key),
+            )
+            .set("Content-Type", "application/json")
+            .send_json(body)?;
+
+        Ok(())
+    }
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -72,6 +98,7 @@ pub struct AppConfig {
     pub rsk: Rsk,
     pub x: XConfig,
     pub sendgrid_api_key: String,
+    pub internal_alerts_email: String,
 }
 
 impl AppConfig {

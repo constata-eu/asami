@@ -61,7 +61,7 @@ model! {
     like_count: i32,
   },
   queries {
-      needing_report("valid_until IS NOT NULL AND valid_until < now() AND report_hash IS NULL"),
+      needing_report("valid_until IS NOT NULL AND valid_until < now() AND report_hash IS NULL LIMIT 10"),
       needing_reimburse("valid_until IS NOT NULL AND valid_until < now() AND budget > to_u256(0)")
   },
   has_many {

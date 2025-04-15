@@ -224,7 +224,7 @@ impl HandleHub {
         let end_time = time::OffsetDateTime::from_unix_timestamp((now - chrono::Duration::days(7)).timestamp())?
             .to_offset(time::UtcOffset::UTC);
 
-        let pending = self.need_scoring(now - chrono::Duration::days(7)).all().await?;
+        let pending = self.need_scoring(now - chrono::Duration::days(20)).all().await?;
 
         if pending.is_empty() {
             self.state.info("score_pending", "no_handles_pending_scoring", ()).await;

@@ -98,27 +98,7 @@ impl OneTimeTokenHub {
                 _ => format!("<a href=\"{}/#/one_time_token_login?token={}\">Visit this link</a> to log-in to asami.club. If you're not trying to log-in, you can ignore this email.", self.state.settings.pwa_host, token.value()),
             };
 
-            // Create the JSON body
-            let body = serde_json::json!({
-                "personalizations": [{
-                    "to": [{ "email": email }]
-                }],
-                "from": { "email": "asami@asami.club" },
-                "subject": subject,
-                "content": [{
-                    "type": "text/html",
-                    "value": content,
-                }]
-            });
-
-            // Perform the POST request
-            ureq::post("https://api.sendgrid.com/v3/mail/send")
-                .set(
-                    "Authorization",
-                    &format!("Bearer {}", self.state.settings.sendgrid_api_key),
-                )
-                .set("Content-Type", "application/json")
-                .send_json(body)?;
+            self.state.send_mail(email, subject, &content).await?;
 
             token.update().sent_at(Some(Utc::now())).save().await?;
         }
