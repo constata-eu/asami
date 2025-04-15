@@ -46,6 +46,7 @@ anyhow = "*"
 url = "*"
 strum = { version = "0.26.2", features = ["derive"] }
 strum_macros = { version = "0.26.2" }
+lingua = { version = "1.7.1", default-features = false, features = ["spanish"] }
 
 [dev-dependencies]
 galvanic-test = "0.2"

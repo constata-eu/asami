@@ -24,7 +24,7 @@ impl OnChainJob {
             if c.trusted_admin_addr().await? != self.state.settings.rsk.admin_address {
                 continue;
             }
-            self.info("adding_campaign", (&c, &on_chain)).await;
+            let _ = self.info("adding_campaign", (&c, &on_chain)).await;
 
             self.state
                 .on_chain_job_campaign()

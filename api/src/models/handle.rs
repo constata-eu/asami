@@ -433,6 +433,32 @@ impl Handle {
     pub async fn topic_ids(&self) -> sqlx::Result<Vec<i32>> {
         Ok(self.handle_topic_vec().await?.into_iter().map(|t| t.attrs.topic_id).collect())
     }
+
+    pub async fn update_language_topics(&self, corpus: &str) -> anyhow::Result<()> {
+        let detector = lingua::LanguageDetectorBuilder::from_languages(&[lingua::Language::Spanish]).build();
+
+        let Some(es) = self.state.topic().select().name_eq("speaks_spanish".to_string()).optional().await? else {
+            return Ok(()); // No topic for speaks spanish
+        };
+
+        let Some(en) = self.state.topic().select().name_eq("speaks_english".to_string()).optional().await? else {
+            return Ok(()); // No topic for speaks spanish
+        };
+
+        for topic in self.handle_topic_scope().topic_id_in(vec![*es.id(), *en.id()]).all().await? {
+            topic.delete().await?;
+        }
+        
+        let topic = if detector.detect_language_of(corpus).is_none() {
+            es
+        } else {
+            en
+        };
+
+        self.add_topic(&topic).await?;
+
+        Ok(())
+    }
 }
 
 model! {
@@ -443,7 +469,7 @@ model! {
     id: i32,
     #[sqlx_model_hints(int4)]
     handle_id: i32,
-    #[sqlx_model_hints(int4)]
+    #[sqlx_model_hints(int4, op_in)]
     topic_id: i32,
   }
 }
