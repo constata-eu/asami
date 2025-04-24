@@ -11,6 +11,7 @@ use sqlx::{
     ConnectOptions,
 };
 use sqlx_models_orm::Db;
+use twitter_v2::authorization::Oauth2Client;
 
 use super::{models::*, on_chain::OnChain, *};
 
@@ -79,10 +80,7 @@ impl App {
 
         // Perform the POST request
         ureq::post("https://api.sendgrid.com/v3/mail/send")
-            .set(
-                "Authorization",
-                &format!("Bearer {}", self.settings.sendgrid_api_key),
-            )
+            .set("Authorization", &format!("Bearer {}", self.settings.sendgrid_api_key))
             .set("Content-Type", "application/json")
             .send_json(body)?;
 
@@ -125,6 +123,21 @@ pub struct XConfig {
     pub bearer_token: String,
     pub asami_user_id: u64,
     pub crawl_cooldown_minutes: u64,
+    pub score_cooldown_seconds: u64,
+}
+
+impl XConfig {
+    pub fn oauth_client(&self, redirect_path: &str) -> AsamiResult<Oauth2Client> {
+        let url = format!("{}{}", self.redirect_uri, redirect_path)
+            .parse()
+            .map_err(|_| Error::precondition("x_redirect_url_cannot_be_parsed"))?;
+
+        Ok(Oauth2Client::new(
+            self.client_id.clone(),
+            self.client_secret.clone(),
+            url,
+        ))
+    }
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]

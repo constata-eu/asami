@@ -9,9 +9,9 @@ use thirtyfour::prelude::*;
 
 use super::ApiClient;
 
-pub struct Selenium<'a> {
+pub struct Selenium {
     pub driver: WebDriver,
-    pub api: ApiClient<'a>,
+    pub api: ApiClient,
     child: Child,
 }
 
@@ -23,9 +23,13 @@ pub const EXTENSION_ID: &str = "nkbihfbeogaeaoehlefnkodbefgpgknn";
 //pub const SEED: &str = "clay useful lion spawn drift census subway require small matrix guess away";
 //pub const MEMBER_ADDR: "0xbe992ec27E90c07caDE70c6C3CD26eECC8CadCfE"
 
-impl Selenium<'_> {
-    pub async fn start(api: ApiClient<'_>) -> Selenium<'_> {
-        let dir = std::fs::canonicalize(format!("{}/../integration_tests/chromedrivers", env!("CARGO_MANIFEST_DIR"))).unwrap();
+impl Selenium {
+    pub async fn start(api: ApiClient) -> Selenium {
+        let dir = std::fs::canonicalize(format!(
+            "{}/../integration_tests/chromedrivers",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .unwrap();
 
         Command::new("rm").args(["-r", "-f", DATA_DIR]).output().unwrap();
         Command::new("cp").args(["-r", &format!("{}/profile", dir.display()), DATA_DIR]).output().unwrap();
@@ -107,7 +111,7 @@ impl Selenium<'_> {
     }
 
     pub fn test_app(&self) -> &super::TestApp {
-        self.api.test_app
+        self.api.test_app.as_ref()
     }
 
     pub async fn wait_for(&self, selector: &str) -> WebElement {
@@ -173,6 +177,10 @@ impl Selenium<'_> {
     }
 
     pub async fn fill_in(&self, selector: &str, value: &str) {
+        self.fill_in_with_enter(selector, value, false).await
+    }
+
+    pub async fn fill_in_with_enter(&self, selector: &str, value: &str, send_enter: bool) {
         let elem = self
             .driver
             .query(By::Css(selector))
@@ -181,6 +189,11 @@ impl Selenium<'_> {
             .unwrap_or_else(|_| panic!("{selector} not found"));
         elem.wait_until().enabled().await.unwrap_or_else(|_| panic!("{selector} was not enabled"));
         elem.send_keys(value).await.unwrap_or_else(|_| panic!("Error sending {value} to {selector}"));
+        if send_enter {
+            elem.send_keys(Key::Enter.to_string())
+                .await
+                .unwrap_or_else(|_| panic!("Error sending enter to {selector}"));
+        }
     }
 
     pub async fn goto(&self, url: &str) {
@@ -198,7 +211,7 @@ impl Selenium<'_> {
             .app
             .one_time_token()
             .insert(models::InsertOneTimeToken {
-                value: "advertiser-token".to_string(),
+                value: "user-token-1".to_string(),
                 lang: lang::Lang::Es,
                 lookup_key: "one_time_token".to_string(),
                 email: None,
@@ -208,13 +221,11 @@ impl Selenium<'_> {
             .await
             .unwrap();
 
-        self.goto("http://127.0.0.1:5173/#/one_time_token_login?token=advertiser-token").await;
-        self.wait_for("#advertiser-dashboard").await;
+        self.goto("http://127.0.0.1:5173/#/one_time_token_login?token=user-token-1").await;
+        self.wait_for("#member-dashboard").await;
     }
 
-    pub async fn login(&mut self) {
-        self.api.login().await;
-
+    pub async fn login(&self) {
         let token = format!("web-login-{}", Utc::now().timestamp());
 
         let one_time_token = self

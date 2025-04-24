@@ -3,19 +3,16 @@ use integration_tests::support::*;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let test_app = TestApp::init().await;
-    let server = TestApiServer::start(test_app.app.clone()).await;
-    let mut vite_preview = VitePreview::start();
-    let api = test_app.client().await;
-    let mut d = Selenium::start(api).await;
+    let h = TestHelper::for_web().await;
 
-    let mut advertiser = d.test_app().client().await;
+    let mut advertiser = h.make_api_client().await;
     advertiser.setup_as_advertiser("test main advertiser").await;
 
     let mut x_campaign = advertiser
         .start_and_pay_campaign("https://x.com/somebody/status/1758116416606163059", u("100"), 20, &[])
         .await;
 
+    let d = h.web();
     d.goto("http://127.0.0.1:5173").await;
 
     d.login().await;
@@ -28,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
     d.wait_for(".MuiSnackbarContent-message").await;
     d.wait_until_gone(".MuiSnackbarContent-message").await;
 
-    for (i, h) in d.app().handle().select().all().await?.into_iter().enumerate() {
+    for h in d.app().handle().select().all().await?.into_iter() {
         d.test_app()
             .app
             .handle_topic()
@@ -38,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
             })
             .save()
             .await?;
-        h.verify((1000 + i).to_string())
+        h.verify("poll_id_test".to_string())
             .await?
             .update()
             .score(Some(weihex("1234")))
@@ -110,7 +107,7 @@ async fn main() -> anyhow::Result<()> {
     d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "2400 ASAMI").await;
 
     d.click("#claim-balances-button").await;
-    
+
     d.confirm_wallet_action().await;
 
     d.wait_until_gone(".MuiSnackbarContent-message").await;
@@ -119,14 +116,8 @@ async fn main() -> anyhow::Result<()> {
     // Or put a button there or something.
     // d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "^0 ASAMI").await;
 
-    wait_for_enter().await;
-
-    d.test_app().stop_mining().await;
-    server.abort();
-    assert!(server.await.unwrap_err().is_cancelled());
-    vite_preview.stop();
-    d.stop().await;
+    h.app.stop_mining().await;
+    h.stop().await;
 
     Ok(())
 }
-

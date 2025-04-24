@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 pub use api::{
     lang,
     models::{self, hasher, milli, u, u256, wei, Utc, U256},
@@ -27,8 +29,8 @@ pub struct ApiError {
 }
 
 #[allow(dead_code)]
-pub struct ApiClient<'a> {
-    pub test_app: &'a TestApp,
+pub struct ApiClient {
+    pub test_app: Arc<TestApp>,
     pub session_key: Option<ES256KeyPair>,
     pub session: Option<models::Session>,
     pub local_wallet: Option<LocalWallet>,
@@ -46,8 +48,8 @@ pub struct BaseLineScenario {
     pub low_budget_campaign: models::Campaign,
 }
 
-impl<'b> ApiClient<'b> {
-    pub async fn new(test_app: &'b TestApp) -> ApiClient<'b> {
+impl ApiClient {
+    pub async fn new(test_app: Arc<TestApp>) -> ApiClient {
         Self {
             test_app,
             local_wallet: None,
@@ -155,40 +157,6 @@ impl<'b> ApiClient<'b> {
         let session = self.test_app.app.session().find(&result.create_session.id).await.unwrap();
         self.account_id = Some(u256(session.account_id()));
         self.session = Some(session);
-    }
-
-    pub async fn create_handle(&self, username: &str, user_id: &str, score: U256) -> models::Handle {
-        use ethers::abi::AbiEncode;
-        use gql::create_handle::*;
-
-        let response: graphql_client::Response<ResponseData> = self
-            .gql_response(
-                &gql::CreateHandle::build_query(Variables {
-                    input: CreateHandleInput {
-                        username: username.to_string(),
-                    },
-                }),
-                vec![],
-            )
-            .await;
-
-        let gql_handle = response.data.unwrap().create_handle;
-
-        // This code is stubbing the actual IG or X code that does
-        // verification and scoring.
-        self.app()
-            .handle()
-            .find(i32::try_from(gql_handle.id).unwrap())
-            .await
-            .unwrap()
-            .verify(user_id.into())
-            .await
-            .unwrap()
-            .update()
-            .score(Some(score.encode_hex()))
-            .save()
-            .await
-            .unwrap()
     }
 
     pub async fn gql_claim_account_request(
@@ -516,10 +484,10 @@ pub mod gql {
         AllCampaignPreferences,
         AllCampaignPreferencesMeta,
         CreateCampaignPreference,
-        CreateHandle,
         AllHandles,
         AllHandlesMeta,
         AllCollabs,
         AllCollabsMeta,
+        CreateXRefreshToken,
     ];
 }

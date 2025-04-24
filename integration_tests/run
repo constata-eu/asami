@@ -7,4 +7,4 @@ set +a
 pgrep -f "hardhat node" | xargs -r kill -9
 cd ../api && sqlx database reset -y && cd -
 pgrep -f "integration_tests/target/debug/deps" | xargs -r kill -9
-RUST_BACKTRACE=1 cargo test --color always --test $1 $2 -- --test-threads 1 --nocapture 2>&1
+RUST_BACKTRACE=1 cargo test --color always --test $1 $2 -- --nocapture 2>&1

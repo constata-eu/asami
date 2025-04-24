@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nadvertiser_addr as \"advertiser_addr!: String\", \nstatus as \"status!: CampaignStatus\", \nbriefing_hash as \"briefing_hash!: String\", \nbriefing_json as \"briefing_json!: String\", \nbudget as \"budget!: String\", \nprice_per_point as \"price_per_point!: String\", \nmax_individual_reward as \"max_individual_reward!: String\", \nmin_individual_reward as \"min_individual_reward!: String\", \nvalid_until as \"valid_until!: Option < UtcDateTime >\", \nreport_hash as \"report_hash!: Option < String >\", \ncreated_at as \"created_at!: UtcDateTime\", \nforce_hydrate as \"force_hydrate!: bool\", \ntotal_collabs as \"total_collabs!: i32\", \ntotal_spent as \"total_spent!: String\", \ntotal_budget as \"total_budget!: String\", \nimpression_count as \"impression_count!: i32\", \nreply_count as \"reply_count!: i32\", \nrepost_count as \"repost_count!: i32\", \nlike_count as \"like_count!: i32\" FROM campaigns WHERE valid_until IS NOT NULL AND valid_until < now() AND report_hash IS NULL",
+  "query": "SELECT id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nadvertiser_addr as \"advertiser_addr!: String\", \nstatus as \"status!: CampaignStatus\", \nbriefing_hash as \"briefing_hash!: String\", \nbriefing_json as \"briefing_json!: String\", \nbudget as \"budget!: String\", \nprice_per_point as \"price_per_point!: String\", \nmax_individual_reward as \"max_individual_reward!: String\", \nmin_individual_reward as \"min_individual_reward!: String\", \nvalid_until as \"valid_until!: Option < UtcDateTime >\", \nreport_hash as \"report_hash!: Option < String >\", \ncreated_at as \"created_at!: UtcDateTime\", \nforce_hydrate as \"force_hydrate!: bool\", \ntotal_collabs as \"total_collabs!: i32\", \ntotal_spent as \"total_spent!: String\", \ntotal_budget as \"total_budget!: String\", \nimpression_count as \"impression_count!: i32\", \nreply_count as \"reply_count!: i32\", \nrepost_count as \"repost_count!: i32\", \nlike_count as \"like_count!: i32\" FROM campaigns WHERE valid_until IS NOT NULL AND valid_until < now() AND report_hash IS NULL LIMIT 20",
   "describe": {
     "columns": [
       {
@@ -147,5 +147,5 @@
       false
     ]
   },
-  "hash": "5308f5ba67aedd8b6ba09dc96c357534de827347d88f4eb4b5d8ac5561b20b1d"
+  "hash": "8ca409145036e1a6d73192561f32425f025c9d59714e7b11ea0ac36ae880a0fa"
 }

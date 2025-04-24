@@ -12,10 +12,12 @@ internal_alerts_email="nubis@constata.eu"
 [default.x]
 client_id="some_client_id"
 client_secret="some_client_secret"
-redirect_uri = "http://127.0.0.1:8000/x_login"
+redirect_uri = "http://127.0.0.1:8000"
 bearer_token = "some_bearer_token"
 asami_user_id = 1688942981573685248
+score_cooldown_seconds = 0  # 180
 crawl_cooldown_minutes = 10
+
 
 [default.recaptcha.v3]
 html_key="6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX"

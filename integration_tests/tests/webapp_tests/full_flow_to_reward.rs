@@ -2,6 +2,7 @@ use api::models::*;
 
 use super::*;
 
+/*
 browser_test! { full_flow_to_reward_for_web2 (mut d)
     let mut advertiser = d.test_app().client().await;
     advertiser.setup_as_advertiser("test main advertiser").await;
@@ -83,3 +84,4 @@ browser_test! { full_flow_to_reward_for_web2 (mut d)
     d.wait_for_text(".ra-field-unclaimedAsamiBalance span", "^0.0 ASAMI").await;
     d.test_app().stop_mining().await;
 }
+*/

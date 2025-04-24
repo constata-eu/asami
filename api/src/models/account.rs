@@ -265,10 +265,7 @@ impl Account {
             };
 
             for h in &handles {
-                let Some(trigger) = h.user_id() else {
-                    continue;
-                };
-                if h.validate_collaboration(&c, h.reward_for(&c).unwrap_or_default(), trigger).await.is_ok() {
+                if h.validate_collaboration(&c, h.reward_for(&c).unwrap_or_default(), h.user_id()).await.is_ok() {
                     campaigns.push(c);
                     break;
                 }
@@ -276,32 +273,6 @@ impl Account {
         }
 
         Ok(campaigns)
-    }
-
-    pub async fn create_handle(&self, username: &str) -> AsamiResult<Handle> {
-        let existing = self
-            .state
-            .handle()
-            .select()
-            .username_ilike(username)
-            .status_in(vec![HandleStatus::Verified, HandleStatus::Active])
-            .count()
-            .await?
-            > 0;
-
-        if existing {
-            return Err(Error::validation("handle", "handle_already_in_use_by_someone_else"));
-        }
-
-        Ok(self
-            .state
-            .handle()
-            .insert(InsertHandle {
-                account_id: self.attrs.id.clone(),
-                username: username.to_string(),
-            })
-            .save()
-            .await?)
     }
 
     pub async fn create_claim_account_request(

@@ -46,20 +46,6 @@ mutation UpdateCampaign($id: Int!) {
     __typename
   }
 }
-mutation CreateHandle($input: CreateHandleInput!) {
-  createHandle(input: $input) {
-    id
-    accountId
-    username
-    userId
-    score
-    topicIds
-    status
-    totalCollabs
-    totalCollabRewards
-    __typename
-  }
-}
 mutation CreateGaslessAllowance {
   createGaslessAllowance {
     id
@@ -112,6 +98,21 @@ mutation CreateCampaignPreference($input: CreateCampaignPreferenceInput!) {
 mutation CreateEmailLoginLink($email: String!) {
   createEmailLoginLink(email: $email) {
     id
+    __typename
+  }
+}
+mutation CreateXRefreshToken($token: String!, $verifier: String!) {
+  createXRefreshToken(token: $token, verifier: $verifier) {
+    id
+    accountId
+    username
+    userId
+    needsRefreshToken
+    score
+    topicIds
+    status
+    totalCollabs
+    totalCollabRewards
     __typename
   }
 }
@@ -209,6 +210,7 @@ query Handle($id: Int!) {
     accountId
     username
     userId
+    needsRefreshToken
     score
     topicIds
     status
@@ -223,6 +225,7 @@ query AllHandles($page: Int, $perPage: Int, $sortField: String, $sortOrder: Stri
     accountId
     username
     userId
+    needsRefreshToken
     score
     topicIds
     status

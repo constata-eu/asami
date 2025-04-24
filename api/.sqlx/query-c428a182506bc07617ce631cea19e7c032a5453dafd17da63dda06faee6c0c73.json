@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT count(*) as \"count!\" FROM (SELECT 1 FROM campaigns WHERE valid_until IS NOT NULL AND valid_until < now() AND report_hash IS NULL)",
+  "query": "SELECT count(*) as \"count!\" FROM (SELECT 1 FROM campaigns WHERE valid_until IS NOT NULL AND valid_until < now() AND report_hash IS NULL LIMIT 20)",
   "describe": {
     "columns": [
       {
@@ -16,5 +16,5 @@
       null
     ]
   },
-  "hash": "02d00b9903c13176970cb9eb69a2782227204cdff956da24243c1e9f9dab09c7"
+  "hash": "c428a182506bc07617ce631cea19e7c032a5453dafd17da63dda06faee6c0c73"
 }

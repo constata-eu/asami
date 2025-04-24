@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM handle_topics WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR handle_id = $4::int4) AND (NOT $5::boolean OR topic_id = $6::int4) AND (NOT $7::boolean OR topic_id = ANY(CAST($8 as int4[])) )",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "210924112948c05035032dac517befe3128524c6807fe4ca5d44e5ba4d3e7af2"
+}

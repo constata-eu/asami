@@ -183,7 +183,15 @@ impl CurrentSession {
                 }
                 AuthMethodKind::X => {
                     if let Some(username) = x_username {
-                        account.create_handle(&username).await?;
+                        app.handle()
+                            .insert(InsertHandle {
+                                account_id: account.id().clone(),
+                                username,
+                                user_id: auth_method.lookup_key().clone(),
+                                x_refresh_token: None,
+                            })
+                            .save()
+                            .await?;
                     }
                 }
                 _ => {}

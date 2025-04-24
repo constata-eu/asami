@@ -362,10 +362,6 @@ impl Mutation {
         Ok(Campaign::db_to_graphql(context, campaign).await?)
     }
 
-    pub async fn create_handle(context: &Context, input: CreateHandleInput) -> FieldResult<Handle> {
-        input.process(context).await
-    }
-
     pub async fn create_gasless_allowance(context: &Context) -> FieldResult<Account> {
         Ok(Account::db_to_graphql(context, context.account().await?.allow_gasless().await?).await?)
     }
@@ -394,6 +390,15 @@ impl Mutation {
                 .attrs
                 .id,
         })
+    }
+
+    pub async fn create_x_refresh_token(context: &Context, token: String, verifier: String) -> FieldResult<Handle> {
+        let handle = context
+            .app
+            .handle()
+            .create_or_update_from_refresh_token(context.account_id()?, token, verifier)
+            .await?;
+        Ok(Handle::db_to_graphql(context, handle).await?)
     }
 }
 

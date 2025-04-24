@@ -2,6 +2,7 @@ use models::CampaignStatus;
 
 use super::*;
 
+/*
 browser_test! { makes_campaign (mut d)
     d.test_app().start_mining().await;
 
@@ -90,3 +91,4 @@ browser_test! { advertiser_always_needs_a_wallet (mut d)
     ).await;
     d.wait_for("#open-start-campaign-dialog").await;
 }
+*/

@@ -26,9 +26,13 @@ pub async fn x_login(app: &State<App>, code: &str, state: &str) -> rocket::respo
     rocket::response::Redirect::permanent(uri)
 }
 
-#[rocket::get("/facebook_login?<code>")]
-pub async fn facebook_login(app: &State<App>, code: &str) -> rocket::response::Redirect {
-    let uri = format!("{host}/#/facebook_login?code={code}", host = app.settings.pwa_host);
+#[rocket::get("/x_grant_access?<code>&<state>")]
+pub async fn x_grant_access(app: &State<App>, code: &str, state: &str) -> rocket::response::Redirect {
+    let uri = format!(
+        "{host}/#/x_grant_access?code={code}&state={state}",
+        host = app.settings.pwa_host,
+        state = state.replace(' ', "+"),
+    );
     rocket::response::Redirect::permanent(uri)
 }
 
@@ -78,6 +82,6 @@ pub fn custom_server(app: App, fig: figment::Figment) -> rocket::Rocket<rocket::
         .attach(ReCaptcha::fairing())
         .manage(new_graphql_schema())
         .attach(cors)
-        .mount("/", routes![x_login, facebook_login, config])
+        .mount("/", routes![x_login, x_grant_access, config])
         .mount("/graphql", routes![graphiql, post_handler, introspect, options])
 }

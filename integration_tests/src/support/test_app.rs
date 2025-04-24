@@ -1,5 +1,7 @@
 use api::{
-    models::{self, on_chain_job::AsamiFunctionCall, u, U256},
+    models::{
+        self, on_chain_job::AsamiFunctionCall, u, InsertAccount, InsertAccountUser, InsertHandle, InsertUser, U256,
+    },
     on_chain, App, AppConfig,
 };
 pub use ethers::{
@@ -22,8 +24,8 @@ pub struct TestApp {
     pub provider: Provider<Http>,
     pub rocket_client: RocketClient,
 }
-use sqlx_cli::*;
 use clap_builder::Parser;
+use sqlx_cli::*;
 
 impl TestApp {
     pub async fn init() -> Self {
@@ -37,7 +39,7 @@ impl TestApp {
             "--database-url",
             &config.database_uri,
             "--source",
-            &format!( "{}/../api/migrations", env!("CARGO_MANIFEST_DIR") ),
+            &format!("{}/../api/migrations", env!("CARGO_MANIFEST_DIR")),
         ]))
         .await
         .unwrap();
@@ -98,12 +100,63 @@ impl TestApp {
         self.provider.get_transaction_count(self.client_admin_address(), None).await.unwrap()
     }
 
-    pub async fn client(&self) -> ApiClient {
-        let mut client = ApiClient::new(self).await;
-        client.login().await;
-        client
+    pub async fn create_account(&self) -> models::Account {
+        let account = self
+            .app
+            .account()
+            .insert(InsertAccount {
+                name: Some("account".to_string()),
+                addr: None,
+            })
+            .save()
+            .await
+            .unwrap();
+        let user = self
+            .app
+            .user()
+            .insert(InsertUser {
+                name: "user".to_string(),
+            })
+            .save()
+            .await
+            .unwrap();
+
+        self.app
+            .account_user()
+            .insert(InsertAccountUser {
+                account_id: account.attrs.id.clone(),
+                user_id: user.attrs.id,
+            })
+            .save()
+            .await
+            .unwrap();
+
+        account
     }
 
+    pub async fn create_handle(&self, account_id: &str, username: &str, user_id: &str, score: U256) -> models::Handle {
+        self.app
+            .handle()
+            .insert(InsertHandle {
+                account_id: account_id.to_string(),
+                username: username.to_string(),
+                user_id: user_id.to_string(),
+                x_refresh_token: Some("invalid_refresh_token".to_string()),
+            })
+            .save()
+            .await
+            .expect("could not save handle")
+            .verify("poll_id_test".to_string())
+            .await
+            .expect("could not verify handle")
+            .update()
+            .score(Some(score.encode_hex()))
+            .save()
+            .await
+            .expect("could not score handle")
+    }
+
+    /*
     pub async fn quick_campaign(&self, budget: U256, duration: i64, topic_ids: &[i32]) -> models::Campaign {
         let mut client = self.client().await;
         client.setup_as_advertiser("test main advertiser").await;
@@ -122,6 +175,7 @@ impl TestApp {
         client.claim_account().await;
         client.create_handle(username, user_id, score).await
     }
+    */
 
     pub fn make_random_local_wallet(&self) -> LocalWallet {
         LocalWallet::new(&mut thread_rng()).with_chain_id(self.app.settings.rsk.chain_id)
@@ -384,9 +438,9 @@ impl TestApp {
         &self,
         reference: &str,
         max_gas: &str,
-        advertiser: &ApiClient<'_>,
+        advertiser: &ApiClient,
         briefing_hash: U256,
-        member: &ApiClient<'_>,
+        member: &ApiClient,
         doc_reward: U256,
     ) {
         self.send_tx(
@@ -408,9 +462,9 @@ impl TestApp {
         &self,
         reference: &str,
         max_gas: &str,
-        advertiser: &ApiClient<'_>,
+        advertiser: &ApiClient,
         briefing_hash: U256,
-        member: &ApiClient<'_>,
+        member: &ApiClient,
         doc_reward: U256,
     ) {
         self.send_tx(

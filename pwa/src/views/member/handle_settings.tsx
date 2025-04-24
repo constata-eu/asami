@@ -1,121 +1,200 @@
-import { useTranslate, ReferenceArrayField, SingleFieldList } from "react-admin";
-import { DeckCard } from '../layout';
-import { Box, Chip, CardContent, Skeleton, Typography } from "@mui/material";
-import { formatEther } from "ethers";
-import { Head2 } from '../../components/theme';
-import { SimpleForm, CreateBase, TextInput, SaveButton, useNotify } from 'react-admin';
-import { FunctionField, SimpleShowLayout} from 'react-admin';
-import { Stack } from '@mui/material';
+import {
+  useTranslate,
+  ReferenceArrayField,
+  SingleFieldList,
+  FunctionField,
+  SimpleShowLayout,
+} from "react-admin";
+import { DeckCard } from "../layout";
+import {
+  Button,
+  Box,
+  Chip,
+  CardContent,
+  Skeleton,
+  Typography,
+  Stack,
+} from "@mui/material";
 
-export const HandleSettings = ({handles, namespace, handleMinLength, handleMaxLength, icon, verificationPost}) => {
+import { Head2 } from "../../components/theme";
+import XIcon from "@mui/icons-material/X";
+import { makeXAuthorize } from "../../lib/auth_provider";
+
+export const HandleSettings = ({ handles }) => {
   const translate = useTranslate();
-  let content;
+
+  return (
+    <Box>
+      <DeckCard id={`configure-x-handle-card`}>
+        <CardContent>
+          <Stack direction="row" gap="1em" mb="1em">
+            <XIcon />
+            <Head2>{translate("handle_settings.title")}</Head2>
+          </Stack>
+          <HandleSettingsContent handles={handles} />
+        </CardContent>
+      </DeckCard>
+    </Box>
+  );
+};
+
+const HandleSettingsContent = ({ handles }) => {
   const handle = handles.data?.[0];
 
-  if (handles.isLoading){
-    content = (<>
-      <Skeleton />
-      <Skeleton />
-    </>);
-  } else if (handle?.status == "ACTIVE") {
-    content = <HandleStats handle={handle} id={`existing-${namespace}-handle-stats`} />;
-  } else if (handle?.status == "UNVERIFIED") {
-    content = verificationPost;
-  } else if (handle?.status == "VERIFIED") {
-    content = <HandleSubmissionInProgress handle={handle} namespace={namespace} />;
-  } else {
-		content = <CreateHandle
-			onSave={handles.refetch}
-			namespace={namespace}
-			handleMinLength={handleMinLength}
-			handleMaxLength={handleMaxLength}
-		/>;
+  if (handles.isLoading) {
+    return (
+      <>
+        <Skeleton />
+        <Skeleton />
+      </>
+    );
   }
 
-  return (<Box>
-    <DeckCard id={`configure-${namespace}-handle-card`}>
-      <CardContent>
-        <Stack direction="row" gap="1em" mb="1em">
-          { icon }
-          <Head2>{ translate("handle_settings.title") }</Head2>
-        </Stack>
-        { content }
-      </CardContent>
-    </DeckCard>
-  </Box>);
-}
-
-export const HandleStats = ({handle, id}) => {
-  const translate = useTranslate();
-
-  return <Box id={id}>
-    <SimpleShowLayout record={handle} sx={{ p: 0, mt: 1}}>
-      <FunctionField label={ translate("handle_settings.stats.username")}
-        render={ (x) => <>{x.username} <Typography variant="span" sx={{fontSize: "0.8em", lineHeight: "1em" }}>[{x.userId}]</Typography></> }
-      />
-      <FunctionField label={ translate("handle_settings.stats.score") } render={ h => `${BigInt(h.score)} 力` }  />
-      <ReferenceArrayField label={ translate("resources.Handle.fields.topic")} reference="Topic" source="topicIds">
-        <SingleFieldList empty={<>-</>} linkType={false}>
-            <FunctionField render={ h => <Chip size="small" variant="outlined" label={translate(`resources.Topic.names.${h.name}`)} /> } />
-        </SingleFieldList>
-      </ReferenceArrayField>
-    </SimpleShowLayout>
-  </Box>;
-}
-
-export const CreateHandle = ({onSave, namespace, handleMinLength, handleMaxLength }) => {
-  const translate = useTranslate();
-  const notify = useNotify();
-
-  const transformIt = async (values) => {
-    return { input: values.handleRequestInput };
+  if (!handle) {
+    return <GrantPermissionsAndMakePost />;
   }
 
-  const onSuccess = () => {
-    notify(`handle_settings.${namespace}.create_request.success`);
-    onSave();
+  if (handle.status == "INACTIVE") {
+    return <HandleInactive handle={handle} />;
   }
 
-  const validate = (values) => {
-    let errors = {};
-    let input = {};
-
-    if ( values.username.match(new RegExp(`^@?(\\w){${handleMinLength},${handleMaxLength}}$`) )) {
-      input.username = values.username.replace("@","");
+  if (handle.needsRefreshToken) {
+    if (handle.status == "UNVERIFIED") {
+      return <GrantPermissionsAndMakePost />;
     } else {
-      errors.username = translate(`handle_settings.${namespace}.create_request.username_error`);
+      return <GrantPermissionsAgain />;
     }
-
-    values.handleRequestInput = input;
-    return errors;
   }
 
-  return <CreateBase resource="Handle" transform={transformIt} mutationOptions={{ onSuccess }} >
-    <SimpleForm id={`${namespace}-handle-request-form`} sx={{ p: "0 !important", m: "0" }} sanitizeEmptyValues validate={validate} toolbar={false}>
-      <Typography mb="1em" variant="body2">
-        { translate(`handle_settings.${namespace}.create_request.text`) }
-      </Typography>
-      <TextInput sx={{mb: "1em" }} fullWidth required={true} size="large" variant="filled" source="username"
-        id="username"
-        label={ translate(`handle_settings.${namespace}.create_request.username_label`) }
-        helperText={ translate(`handle_settings.${namespace}.create_request.username_help`) }
-      />
-      <SaveButton
-        fullWidth
-        id={`submit-${namespace}-handle-request-form`}
-        label={ translate(`handle_settings.${namespace}.create_request.save`) }
-        icon={<></>}
-      />
-    </SimpleForm>
-  </CreateBase>;
-}
+  if (handle.status == "ACTIVE") {
+    return <HandleStats handle={handle} id={`existing-x-handle-stats`} />;
+  }
 
-const HandleSubmissionInProgress = ({handle, namespace}) => {
+  return <HandleSubmissionInProgress handle={handle} />;
+};
+
+export const HandleStats = ({ handle, id }) => {
   const translate = useTranslate();
-  
-  return <Box id={`handle-${namespace}-submission-in-progress-message`}>
-    <Typography variant="body2">
-      { translate(`handle_settings.${namespace}.in_progress.text`, {username: handle.username}) }
-    </Typography>
-  </Box>;
-}
+
+  return (
+    <Box id={id}>
+      <SimpleShowLayout record={handle} sx={{ p: 0, mt: 1 }}>
+        <FunctionField
+          label={translate("handle_settings.stats.username")}
+          render={(x) => (
+            <>
+              {x.username}{" "}
+              <Typography
+                variant="span"
+                sx={{ fontSize: "0.8em", lineHeight: "1em" }}
+              >
+                [{x.userId}]
+              </Typography>
+            </>
+          )}
+        />
+        <FunctionField
+          label={translate("handle_settings.stats.score")}
+          render={(h) => `${BigInt(h.score)} 力`}
+        />
+        <ReferenceArrayField
+          label={translate("resources.Handle.fields.topic")}
+          reference="Topic"
+          source="topicIds"
+        >
+          <SingleFieldList empty={<>-</>} linkType={false}>
+            <FunctionField
+              render={(h) => (
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={translate(`resources.Topic.names.${h.name}`)}
+                />
+              )}
+            />
+          </SingleFieldList>
+        </ReferenceArrayField>
+      </SimpleShowLayout>
+    </Box>
+  );
+};
+
+const HandleInactive = ({ handle }) => {
+  const translate = useTranslate();
+
+  return (
+    <Box id={`handle-x-inactive`}>
+      <Typography variant="body2">
+        TODO: Your handle has been deactivated.
+        {translate(`handle_settings.x.in_progress.text`, {
+          username: handle.username,
+        })}
+      </Typography>
+    </Box>
+  );
+};
+
+const HandleSubmissionInProgress = ({ handle }) => {
+  const translate = useTranslate();
+
+  return (
+    <Box id={`handle-x-submission-in-progress-message`}>
+      <Typography variant="body2">
+        {translate(`handle_settings.x.in_progress.text`, {
+          username: handle.username,
+        })}
+      </Typography>
+    </Box>
+  );
+};
+
+const GrantPermissionsAndMakePost = () => {
+  const startXLogin = async () => {
+    const { url, verifier } = await makeXAuthorize();
+    localStorage.setItem("grantAccessOauthVerifier", verifier);
+    document.location.href = url;
+  };
+
+  return (
+    <Box>
+      <Typography>
+        Link your account, we will create a poll on your behalf.
+      </Typography>
+      <Button
+        id="button-grant-permission-and-make-post"
+        fullWidth
+        variant="contained"
+        onClick={startXLogin}
+      >
+        Link account <XIcon sx={{ ml: "5px" }} />
+      </Button>
+    </Box>
+  );
+};
+
+const GrantPermissionsAgain = () => {
+  const startXLogin = async () => {
+    const { url, verifier } = await makeXAuthorize();
+    localStorage.setItem("grantAccessOauthVerifier", verifier);
+    document.location.href = url;
+  };
+
+  return (
+    <Box id="grant-x-permission-again">
+      <Typography>
+        We can't access your X account. We need your permission again, otherwise
+        we won't be able to score your influence level and you won't be able to
+        participate in campaigns.
+      </Typography>
+      <Button
+        id="button-grant-x-permission-again"
+        fullWidth
+        variant="contained"
+        onClick={startXLogin}
+      >
+        Link account <XIcon sx={{ ml: "5px" }} />
+      </Button>
+      ;
+    </Box>
+  );
+};

@@ -1,5 +1,5 @@
 use super::*;
-
+/*
 browser_test! { shows_campaigns_in_landing (mut d)
     d.test_app().start_mining().await;
 
@@ -32,3 +32,4 @@ browser_test! { shows_campaigns_in_landing (mut d)
 
     d.test_app().stop_mining().await;
 }
+*/

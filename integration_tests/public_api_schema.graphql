@@ -127,11 +127,6 @@ input CreateClaimAccountRequestInput {
   signature: String!
 }
 
-"The input for creating a new Handle."
-input CreateHandleInput {
-  username: String!
-}
-
 input HandleFilter {
   ids: [Int!]
   idEq: Int
@@ -312,7 +307,9 @@ type Handle {
   "The username on the given social network. This may change by the user, it may not be a unique id."
   username: String!
   "The unique user_id in the given social network. This never changes."
-  userId: String
+  userId: String!
+  "The campaign manager has no refres token to score this account"
+  needsRefreshToken: Boolean!
   "The score given to this handle by Asami's admin."
   score: String
   "Topics assigned to this handle"
@@ -333,11 +330,11 @@ type Mutation {
   createSession: Session!
   createCampaignFromLink(input: CreateCampaignFromLinkInput!): Campaign!
   updateCampaign(id: Int!): Campaign!
-  createHandle(input: CreateHandleInput!): Handle!
   createGaslessAllowance: Account!
   createClaimAccountRequest(input: CreateClaimAccountRequestInput!): Account!
   createCampaignPreference(input: CreateCampaignPreferenceInput!): CampaignPreference!
   createEmailLoginLink(email: String!): EmailLoginLink!
+  createXRefreshToken(token: String!, verifier: String!): Handle!
 }
 
 "A contract call made by the campaign manager or oracle."

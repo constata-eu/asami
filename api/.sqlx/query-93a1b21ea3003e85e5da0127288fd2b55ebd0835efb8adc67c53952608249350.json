@@ -1,0 +1,202 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM handle_scorings WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR handle_id = $6::int4) AND (NOT $7::boolean OR status = $8::handle_scoring_status) AND (NOT $9::boolean OR created_at = $10::timestamptz) AND (NOT $11::boolean OR me_json = $12::text) AND (NOT $13::boolean OR tweets_json = $14::text) AND (NOT $15::boolean OR mentions_json = $16::text) AND (NOT $17::boolean OR post_count = $18::int4) AND (NOT $19::boolean OR impression_count = $20::int4) AND (NOT $21::boolean OR ghost_account = $22::boolean) AND (NOT $23::boolean OR inflated_audience = $24::boolean) AND (NOT $25::boolean OR followed = $26::boolean) AND (NOT $27::boolean OR liked = $28::boolean) AND (NOT $29::boolean OR replied = $30::boolean) AND (NOT $31::boolean OR reposted = $32::boolean) AND (NOT $33::boolean OR mentioned = $34::boolean) AND (NOT $35::boolean OR online_engagement_score = $36::engagement_score) AND (NOT $37::boolean OR online_engagement_override = $38::engagement_score) AND (NOT $39::boolean OR online_engagement_override_reason = $40::text) AND (NOT $41::boolean OR offline_engagement_score = $42::engagement_score) AND (NOT $43::boolean OR offline_engagement_description = $44::text) AND (NOT $45::boolean OR poll_id = $46::varchar) AND (NOT $47::boolean OR poll_ends_at = $48::timestamptz) AND (NOT $49::boolean OR poll_votes_updated_at = $50::timestamptz) AND (NOT $51::boolean OR poll_none_votes = $52::int4) AND (NOT $53::boolean OR poll_average_votes = $54::int4) AND (NOT $55::boolean OR poll_high_votes = $56::int4) AND (NOT $57::boolean OR poll_reverse_votes = $58::int4) AND (NOT $59::boolean OR poll_score = $60::poll_score) AND (NOT $61::boolean OR poll_override = $62::poll_score) AND (NOT $63::boolean OR poll_override_reason = $64::varchar) AND (NOT $65::boolean OR operational_status_score = $66::operational_status) AND (NOT $67::boolean OR operational_status_override = $68::operational_status) AND (NOT $69::boolean OR operational_status_override_reason = $70::text) AND (NOT $71::boolean OR referrer_score = $72::boolean) AND (NOT $73::boolean OR referrer_score_override = $74::boolean) AND (NOT $75::boolean OR referrer_score_override_reason = $76::text) AND (NOT $77::boolean OR holder_score = $78::boolean) AND (NOT $79::boolean OR holder_score_override = $80::boolean) AND (NOT $81::boolean OR holder_score_override_reason = $82::text) AND (NOT $83::boolean OR audience_size = $84::int4) AND (NOT $85::boolean OR audience_size_override = $86::int4) AND (NOT $87::boolean OR audience_size_override_reason = $88::text)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Int4",
+        "Bool",
+        {
+          "Custom": {
+            "name": "handle_scoring_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "ingested",
+                "applied",
+                "discarded"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        {
+          "Custom": {
+            "name": "engagement_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "engagement_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Text",
+        "Bool",
+        {
+          "Custom": {
+            "name": "engagement_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Text",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        {
+          "Custom": {
+            "name": "poll_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high",
+                "reverse"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "poll_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high",
+                "reverse"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "operational_status",
+            "kind": {
+              "Enum": [
+                "banned",
+                "shadowbanned",
+                "normal",
+                "enhanced"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "operational_status",
+            "kind": {
+              "Enum": [
+                "banned",
+                "shadowbanned",
+                "normal",
+                "enhanced"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Text",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Text",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Text",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "93a1b21ea3003e85e5da0127288fd2b55ebd0835efb8adc67c53952608249350"
+}

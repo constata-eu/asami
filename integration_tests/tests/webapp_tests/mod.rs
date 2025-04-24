@@ -5,6 +5,7 @@ pub use integration_tests::{
 };
 pub mod adds_tokens_to_wallet;
 pub mod full_flow_to_reward;
+pub mod grant_x_access;
 pub mod landing;
 pub mod login_flows;
 pub mod makes_campaigns;

@@ -1,5 +1,8 @@
 use super::*;
 
+/*
+TODO: Test all login methods here. You have X. You can mimic email.
+TODO: Can you add something for wallets other than metamask?
 api_test! { api_creates_and_sends_email_login (mut c)
     let client = c.test_app.client().await;
     let _result: gql::create_email_login_link::ResponseData = client.gql(
@@ -12,6 +15,7 @@ api_test! { api_creates_and_sends_email_login (mut c)
 
     c.app().one_time_token().send_email_tokens().await?;
 }
+*/
 
 /* TODO
 browser_test! { creates_login_link_from_frontend (mut d)

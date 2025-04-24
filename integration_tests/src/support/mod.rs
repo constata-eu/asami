@@ -4,13 +4,18 @@ pub mod test_app;
 pub mod truffle;
 pub mod vite_preview;
 
-use std::{io::{self, BufRead, Write}, os::fd::AsRawFd};
+use std::{
+    io::{self, BufRead, Write},
+    os::fd::AsRawFd,
+    sync::Arc,
+};
 
 use nix::unistd::isatty;
 pub use selenium::Selenium;
+pub use test_api_client::{ApiClient, ApiError};
 pub use test_api_server::*;
 pub use test_app::*;
-use tokio::task;
+use tokio::task::{self, JoinHandle};
 pub use truffle::*;
 pub use vite_preview::*;
 
@@ -35,11 +40,11 @@ pub fn wait_here() {
 }
 
 #[allow(dead_code)]
-pub async fn wait_for_enter() {
-    task::spawn_blocking(|| {
+pub async fn wait_for_enter(msg: &'static str) {
+    task::spawn_blocking(move || {
         if !isatty(io::stdin().as_raw_fd()).unwrap_or(false) {
             println!("[Skipping pause — not a TTY]");
-            return
+            return;
         }
 
         let stdin = io::stdin();
@@ -47,7 +52,7 @@ pub async fn wait_for_enter() {
         let mut handle = stdin.lock();
         let mut buf = String::new();
 
-        write!(stdout, "Press Enter to continue...").unwrap();
+        write!(stdout, "[{msg}] Press Enter to continue...").unwrap();
         stdout.flush().unwrap();
         handle.read_line(&mut buf).unwrap();
     })
@@ -161,4 +166,68 @@ macro_rules! app_test {
       {$($e)*};
     }
   }
+}
+
+pub struct TestHelper {
+    pub app: Arc<TestApp>,
+    pub api_server: Option<JoinHandle<()>>,
+    pub vite_preview: Option<VitePreview>,
+    pub api: Option<ApiClient>,
+    pub web: Option<Selenium>,
+}
+
+impl TestHelper {
+    pub async fn for_web() -> Self {
+        let app = Arc::new(TestApp::init().await);
+        let api_server = TestApiServer::start(app.app.clone()).await;
+        let vite_preview = VitePreview::start();
+
+        let mut this = Self {
+            api_server: Some(api_server),
+            vite_preview: Some(vite_preview),
+            app,
+            api: None,
+            web: None,
+        };
+
+        let api = this.make_api_client().await;
+        this.web = Some(Selenium::start(api).await);
+
+        this
+    }
+
+    pub async fn for_model() -> Self {
+        let app = Arc::new(TestApp::init().await);
+
+        Self {
+            api_server: None,
+            vite_preview: None,
+            app,
+            api: None,
+            web: None,
+        }
+    }
+
+    pub async fn make_api_client(&self) -> ApiClient {
+        let mut api = ApiClient::new(self.app.clone()).await;
+        api.login().await;
+        api
+    }
+
+    pub fn web(&self) -> &Selenium {
+        self.web.as_ref().unwrap()
+    }
+
+    pub async fn stop(self) {
+        if let Some(mut x) = self.vite_preview {
+            x.stop();
+        }
+        if let Some(x) = self.web {
+            x.stop().await;
+        }
+        if let Some(x) = self.api_server {
+            x.abort();
+            assert!(x.await.unwrap_err().is_cancelled());
+        }
+    }
 }

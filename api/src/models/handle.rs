@@ -1,4 +1,5 @@
-use serde_json::json;
+use rocket::serde::json;
+use twitter_v2::{authorization::Oauth2Token, oauth2::*, TwitterApi};
 
 use super::*;
 
@@ -12,10 +13,8 @@ model! {
     account_id: String,
     #[sqlx_model_hints(varchar, op_like, op_ilike)]
     username: String,
-    #[sqlx_model_hints(varchar, default, op_like)]
-    user_id: Option<String>,
-    #[sqlx_model_hints(varchar, default)]
-    score: Option<String>,
+    #[sqlx_model_hints(varchar, op_like)]
+    user_id: String,
     #[sqlx_model_hints(handle_status, default, op_in)]
     status: HandleStatus,
 
@@ -29,19 +28,56 @@ model! {
     #[sqlx_model_hints(varchar, default)]
     total_collab_rewards: String,
 
-    // These columns are the raw values updated for the new scoring algorithm
+    #[sqlx_model_hints(varchar, op_is_set)]
+    x_refresh_token: Option<String>,
+
+    #[sqlx_model_hints(varchar, default)]
+    score: Option<String>,
     #[sqlx_model_hints(timestamptz, default)]
     last_scoring: Option<UtcDateTime>,
     #[sqlx_model_hints(int4, default)]
-    avg_impression_count: i32,
+    current_scoring_id: Option<i32>,
+
+    // These are overrides for all the areas of the algorithm
+    // where issues may arise.
+    #[sqlx_model_hints(engagement_score, default)]
+    online_engagement_override: Option<EngagementScore>,
+    #[sqlx_model_hints(text, default)]
+    online_engagement_override_reason: Option<String>,
+
+    #[sqlx_model_hints(engagement_score, default)]
+    offline_engagement_score: EngagementScore,
+    #[sqlx_model_hints(text, default)]
+    offline_engagement_description: Option<String>,
+
+    #[sqlx_model_hints(varchar, default)]
+    poll_id: Option<String>,
+    #[sqlx_model_hints(timestamptz, default)]
+    poll_ends_at: Option<DateTime<Utc>>,
+    #[sqlx_model_hints(poll_score, default)]
+    poll_override: Option<PollScore>,
+    #[sqlx_model_hints(varchar, default)]
+    poll_override_reason: Option<String>,
+
+    #[sqlx_model_hints(operational_status, default)]
+    operational_status_override: Option<OperationalStatus>,
+    #[sqlx_model_hints(text, default)]
+    operational_status_override_reason: Option<String>,
+
+    #[sqlx_model_hints(boolean, default)]
+    referrer_score_override: bool,
+    #[sqlx_model_hints(text, default)]
+    referrer_score_override_reason: Option<String>,
+
+    #[sqlx_model_hints(boolean, default)]
+    holder_score_override: bool,
+    #[sqlx_model_hints(text, default)]
+    holder_score_override_reason: Option<String>,
+
     #[sqlx_model_hints(int4, default)]
-    avg_reply_count: i32,
-    #[sqlx_model_hints(int4, default)]
-    avg_repost_count: i32,
-    #[sqlx_model_hints(int4, default)]
-    avg_like_count: i32,
-    #[sqlx_model_hints(int4, default)]
-    scored_tweet_count: i32,
+    audience_size_override: Option<i32>,
+    #[sqlx_model_hints(text, default)]
+    audience_size_override_reason: Option<String>,
   },
   queries {
       need_scoring("status IN ('verified', 'active') AND (last_scoring IS NULL OR last_scoring < $1)", date: UtcDateTime)
@@ -49,11 +85,15 @@ model! {
   has_many {
     HandleTopic(handle_id),
     Collab(handle_id),
+    HandleScoring(handle_id),
   },
   belongs_to {
     Account(account_id),
+    HandleScoring(current_scoring_id),
   }
 }
+
+impl_loggable!(Handle);
 
 impl HandleHub {
     pub async fn force_hydrate(&self) -> AsamiResult<()> {
@@ -98,260 +138,211 @@ impl HandleHub {
         Ok(())
     }
 
-    pub async fn verify_pending(&self) -> AsamiResult<Vec<Handle>> {
-        use rust_decimal::prelude::*;
-        use tokio::time::*;
-        use twitter_v2::{api_result::*, authorization::BearerToken, query::*, TwitterApi};
+    pub async fn create_or_update_from_refresh_token(
+        &self,
+        account_id: String,
+        raw_auth_code: String,
+        raw_verifier: String,
+    ) -> AsamiResult<Handle> {
+        let client = self.state.settings.x.oauth_client("/x_grant_access")?;
 
-        if self.select().status_eq(HandleStatus::Unverified).count().await? == 0 {
+        let auth_code = AuthorizationCode::new(raw_auth_code.clone());
+        let verifier = PkceCodeVerifier::new(raw_verifier.clone());
+
+        let token = match client.request_token(auth_code, verifier).await {
+            Ok(x) => x,
+            Err(e) => {
+                self.state
+                    .fail(
+                        "private",
+                        "create_or_update_from_refresh_token",
+                        json::json!({
+                            "code": "error_requesting_token",
+                            "account": &account_id,
+                            "raw_auth_code": &raw_auth_code,
+                            "raw_verifier": &raw_verifier,
+                            "description": format!("{e:?}"),
+                        }),
+                    )
+                    .await;
+                return Err(Error::validation("auth_code", "error_requesting_token"));
+            }
+        };
+
+        let Some(refresh_token) = token.refresh_token().map(|t| t.secret().clone()) else {
+            self.state
+                .fail(
+                    "private",
+                    "create_or_update_from_refresh_token",
+                    json::json!({
+                        "code": "no_refresh_token_found",
+                        "account": &account_id,
+                        "raw_auth_code": &raw_auth_code,
+                        "raw_verifier": &raw_verifier,
+                        "description": ""
+                    }),
+                )
+                .await;
+            return Err(Error::service("x", "no_refresh_token_found"));
+        };
+
+        let twitter = TwitterApi::new(token);
+
+        let me = match twitter.get_users_me().send().await {
+            Ok(x) => x,
+            Err(e) => {
+                self.state
+                    .fail(
+                        "private",
+                        "no_response_for_users_me",
+                        json::json!({
+                            "code": "no_re",
+                            "account": &account_id,
+                            "raw_auth_code": &raw_auth_code,
+                            "raw_verifier": &raw_verifier,
+                            "description": e.to_string(),
+                        }),
+                    )
+                    .await;
+
+                return Err(Error::service("x", "no_response_for_users_me"));
+            }
+        };
+
+        let Some(user_details) = me.payload().data.as_ref() else {
+            return Err(Error::service("x", "no_details_from_x"));
+        };
+
+        let tx = self.state.handle().transactional().await?;
+
+        let existing = tx.select().user_id_eq(user_details.id.to_string()).optional().await?;
+
+        let handle = if let Some(h) = existing {
+            if h.account_id() != &account_id {
+                return Err(Error::validation("x", "x_account_already_registered"));
+            }
+            h.update().x_refresh_token(Some(refresh_token)).save().await?
+        } else {
+            tx.insert(InsertHandle {
+                account_id,
+                username: user_details.username.to_string(),
+                user_id: user_details.id.to_string(),
+                x_refresh_token: Some(refresh_token),
+            })
+            .save()
+            .await?
+        };
+
+        tx.commit().await?;
+
+        Ok(handle)
+    }
+
+    pub async fn verify_pending(&self) -> AsamiResult<Vec<Handle>> {
+        let scope = self.select().x_refresh_token_is_set(true).status_eq(HandleStatus::Unverified);
+
+        if scope.count().await? == 0 {
             self.state.info("verify_pending", "no_unverified_handles_found_skipping", ()).await;
-            return Ok(vec![]);
         }
 
         let mut handles = vec![];
 
-        let msg_regex = regex::Regex::new(r#"\@asami_club \[(\d*)\]"#)?;
-        let conf = &self.state.settings.x;
-        let auth = BearerToken::new(&conf.bearer_token);
-        let api = TwitterApi::new(auth);
-        let indexer_state = self.state.indexer_state().get().await?;
+        for handle in scope.all().await? {
+            let Ok(twitter) = handle.clone().x_api_client().await else {
+                continue;
+            };
 
-        let mentions = api
-            .get_user_mentions(conf.asami_user_id)
-            .since_id(indexer_state.attrs.x_handle_verification_checkpoint.to_u64().unwrap_or(0))
-            .max_results(100)
-            .user_fields(vec![UserField::Id, UserField::Username, UserField::PublicMetrics])
-            .tweet_fields(vec![TweetField::NoteTweet])
-            .expansions(vec![TweetExpansion::AuthorId])
-            .send()
-            .await?;
+            let post_result = twitter
+                .post_tweet()
+                .text("What would you do".to_string())
+                .poll(
+                    vec!["option1", "option2", "option3", "option4"],
+                    std::time::Duration::from_secs(60 * 60 * 24 * 7),
+                )
+                .send()
+                .await;
 
-        let checkpoint: i64 =
-            mentions.meta().and_then(|m| m.newest_id.clone()).and_then(|i| i.parse().ok()).unwrap_or(0);
-
-        let mut page = Some(mentions);
-        let mut pages = 0;
-
-        while let Some(mentions) = page {
-            let payload = mentions.payload();
-            let Some(data) = payload.data() else { break };
-
-            for post in data {
-                self.state.info("verify_pending", "mention_post", &post).await;
-                let Some(author_id) = post.author_id else { continue };
-                let Some(author) = payload
-                    .includes()
-                    .and_then(|i| i.users.as_ref())
-                    .and_then(|i| i.iter().find(|x| x.id == author_id))
-                else {
-                    self.state.info("verify_pending", "skipped_post_no_author", &post.id).await;
-                    continue;
-                };
-
-                let text: &String = post.note_tweet.as_ref().and_then(|n| n.text.as_ref()).unwrap_or(&post.text);
-
-                let Some(capture) = msg_regex.captures(text) else {
-                    self.state.info("verify_pending", "skipped_post_no_regex_capture", &post.text).await;
-                    continue;
-                };
-
-                let Ok(account_id_str) = capture[1].parse::<String>() else {
-                    self.state
-                        .info(
-                            "verify_pending",
-                            "skipped_post_no_account_id_str",
-                            format!("{capture:?}"),
-                        )
-                        .await;
-                    continue;
-                };
-
-                let Ok(account_id) = U256::from_dec_str(&account_id_str).map(U256::encode_hex) else {
-                    self.state.info("verify_pending", "skipped_post_no_account_id_dec", &account_id_str).await;
-                    continue;
-                };
-
-                let Some(req) = self
-                    .state
-                    .handle()
-                    .select()
-                    .status_eq(HandleStatus::Unverified)
-                    .username_ilike(&author.username)
-                    .account_id_eq(&account_id)
-                    .optional()
-                    .await?
-                else {
-                    self.state
-                        .info(
-                            "verify_pending",
-                            "skipped_post_no_pending_request",
-                            (&author.username, &account_id),
-                        )
-                        .await;
-                    continue;
-                };
-
-                handles.push(req.verify(author_id.to_string()).await?);
+            match post_result {
+                Ok(post) => {
+                    if let Some(poll_id) = post.into_data().map(|t| t.id.to_string()) {
+                        handles.push(handle.verify(poll_id).await?);
+                    } else {
+                        let _ = handle.fail("creating_poll", "no_poll_id_returned").await;
+                    }
+                }
+                Err(e) => {
+                    let _ = handle.fail("creating_poll", e.to_string()).await;
+                }
             }
-
-            // We only fetch a backlog of 700 tweets.
-            // Older mentions are dropped and should be tried again by the users.
-            pages += 1;
-            if pages == 5 {
-                break;
-            }
-            tokio::time::sleep(Duration::from_millis(3 * 60 * 1000)).await;
-            page = mentions.next_page().await?;
         }
 
-        if *indexer_state.x_handle_verification_checkpoint() < checkpoint {
-            indexer_state.update().x_handle_verification_checkpoint(checkpoint).save().await?;
-            self.state.info("verify_pending", "done_processing_updating_indexer_state", &checkpoint).await;
-        }
         Ok(handles)
     }
 
     pub async fn score_pending(&self) -> AsamiResult<Vec<Handle>> {
-        use twitter_v2::{authorization::BearerToken, query::*, TwitterApi};
-        let now = Utc::now();
-
-        // The window to score is one month starting a week ago.
-        // Se we don't count old tweets, but we also give recent
-        // tweets a week to gain impressions.
-        let start_time = time::OffsetDateTime::from_unix_timestamp((now - chrono::Duration::days(37)).timestamp())?
-            .to_offset(time::UtcOffset::UTC);
-
-        let end_time = time::OffsetDateTime::from_unix_timestamp((now - chrono::Duration::days(7)).timestamp())?
-            .to_offset(time::UtcOffset::UTC);
-
-        let pending = self.need_scoring(now - chrono::Duration::days(20)).all().await?;
+        let pending = self.need_scoring(Utc::now() - chrono::Duration::days(20)).all().await?;
 
         if pending.is_empty() {
             self.state.info("score_pending", "no_handles_pending_scoring", ()).await;
             return Ok(vec![]);
         }
 
-        let mut handles = vec![];
+        for handle in pending.clone() {
+            let _ = handle.info("starting_to_score_handle", ()).await;
 
-        let conf = &self.state.settings.x;
-        let auth = BearerToken::new(&conf.bearer_token);
-        let api = TwitterApi::new(auth);
-
-        for handle in pending {
-            self.state.info("score_pending", "scoring_handle", json![{"handle": &handle}]).await;
-            let Some(user_id) = handle.user_id().as_ref().and_then(|x| x.parse::<u64>().ok()) else {
-                self.state.info("score_pending", "handle_has_no_user_id", &handle).await;
-                continue;
-            };
-
-            let response = api
-                .get_user_tweets(user_id)
-                .max_results(75)
-                .start_time(start_time)
-                .end_time(end_time)
-                .exclude(vec![Exclude::Retweets, Exclude::Replies])
-                .tweet_fields(vec![TweetField::AuthorId, TweetField::PublicMetrics])
-                .send()
-                .await?;
-
-            tokio::time::sleep(tokio::time::Duration::from_millis(3 * 60 * 1000)).await;
-
-            let Some(tweets) = response.data() else {
-                self.state
-                    .info(
-                        "score_pending",
-                        "could_not_get_tweets_for",
-                        json![{"handle":handle.id(), "response":&response}],
-                    )
-                    .await;
-                handles.push(
-                    handle
-                        .update()
-                        .avg_impression_count(0)
-                        .avg_reply_count(0)
-                        .avg_repost_count(0)
-                        .avg_like_count(0)
-                        .scored_tweet_count(0)
-                        .last_scoring(Some(now))
-                        .status(HandleStatus::Active)
-                        .score(Some(u("0").encode_hex()))
-                        .save()
-                        .await?,
-                );
-                continue;
-            };
-
-            let mut impression_count = 0_i32;
-            let mut reply_count = 0_i32;
-            let mut repost_count = 0_i32;
-            let mut like_count = 0_i32;
-            let mut tweet_count = 0_i32;
-            for tweet in tweets {
-                let Some(m) = tweet.public_metrics.as_ref() else {
-                    self.state
-                        .info(
-                            "score_pending",
-                            "no_tweet_metrics_for",
-                            json![{"handle":handle.id(), "tweet":tweet.id}],
-                        )
-                        .await;
-                    continue;
-                };
-                self.state
-                    .info(
-                        "score_pending",
-                        "got_tweet_metrics",
-                        json![{"handle":handle.id(), "metrics":m, "tweet":tweet.id}],
-                    )
-                    .await;
-                // We estimate the impression count from public metrics
-                // until we change the system to request access to private impression metrics.
-                let estimated_impression_count: usize = vec![
-                    (m.like_count * 45),
-                    (m.reply_count * 300),
-                    (m.retweet_count * 30),
-                    m.quote_count.map(|q| q * 60).unwrap_or(0),
-                ]
-                .into_iter()
-                .max()
-                .unwrap_or(0);
-
-                impression_count += estimated_impression_count as i32;
-                reply_count += m.reply_count as i32;
-                repost_count += m.retweet_count as i32;
-                like_count += m.like_count as i32;
-                tweet_count += 1;
-            }
-
-            let divisor = std::cmp::max(tweet_count, 10_i32);
-            let avg_impression_count = f64::from(impression_count) / f64::from(divisor);
-            let score_result = 10_000.0 * (1.0 - (-0.0001 * avg_impression_count).exp());
-            let score = Some(U256::from(score_result.floor() as u64).encode_hex());
-
-            handles.push(
-                handle
-                    .update()
-                    .avg_impression_count(impression_count / divisor)
-                    .avg_reply_count(reply_count / divisor)
-                    .avg_repost_count(repost_count / divisor)
-                    .avg_like_count(like_count / divisor)
-                    .scored_tweet_count(tweet_count)
-                    .last_scoring(Some(now))
-                    .score(score)
-                    .status(HandleStatus::Active)
-                    .save()
-                    .await?,
-            );
+            handle.state.handle_scoring().create_and_apply(handle).await?;
+            let cooldown = tokio::time::Duration::from_secs(self.state.settings.x.score_cooldown_seconds * 1000);
+            tokio::time::sleep(cooldown).await;
         }
 
-        Ok(handles)
+        Ok(pending)
     }
 }
 
 impl Handle {
-    pub async fn verify(self, user_id: String) -> sqlx::Result<Self> {
-        let existing =
-            self.state.auth_method().select().kind_eq(AuthMethodKind::X).lookup_key_eq(&user_id).count().await? > 0;
+    pub async fn x_api_client(self) -> AsamiResult<TwitterApi<Oauth2Token>> {
+        use twitter_v2::oauth2::RequestTokenError::*;
+        use twitter_v2::Error::*;
+
+        let client = self.state.settings.x.oauth_client("/x_grant_access")?;
+
+        let Some(refresh_token) = self.x_refresh_token() else {
+            return Err(Error::validation(
+                "x_refresh_token",
+                "is_missing_to_create_x_api_client",
+            ));
+        };
+
+        match client.refresh_token(&RefreshToken::new(refresh_token.clone())).await {
+            Ok(token) => {
+                self.update().x_refresh_token(token.refresh_token().map(|t| t.secret().clone())).save().await?;
+                Ok(TwitterApi::new(token))
+            }
+            e @ Err(Oauth2TokenError(ServerResponse(_)) | Oauth2RevocationError(ServerResponse(_))) => {
+                // These two scenarios seem to indicate we have a bad refresh token
+                // So we need to obtain a new one, we force this by deleting the refresh
+                // token which will prompt users to do this next time they log in.
+                let _ = self.fail("refresh_token_invalidated", format!("{e:?}")).await;
+                self.update().x_refresh_token(None).save().await?;
+                Err(Error::validation("x_refresh_token", "failed_to_obtain_token"))
+            }
+            Err(e) => {
+                let _ = self.fail("error_building_twitter_client", e.to_string()).await;
+                Err(Error::validation("twitter_client", "could_not_build_client"))
+            }
+        }
+    }
+
+    pub async fn verify(self, poll_id: String) -> sqlx::Result<Self> {
+        let existing = self
+            .state
+            .auth_method()
+            .select()
+            .kind_eq(AuthMethodKind::X)
+            .lookup_key_eq(self.user_id())
+            .count()
+            .await?
+            > 0;
 
         if !existing {
             let user = self.state.account_user().select().account_id_eq(self.account_id()).one().await?;
@@ -359,14 +350,14 @@ impl Handle {
                 .auth_method()
                 .insert(InsertAuthMethod {
                     user_id: *user.user_id(),
-                    lookup_key: user_id.clone(),
+                    lookup_key: self.attrs.user_id.clone(),
                     kind: AuthMethodKind::X,
                 })
                 .save()
                 .await?;
         }
 
-        self.update().user_id(Some(user_id)).status(HandleStatus::Verified).save().await
+        self.update().poll_id(Some(poll_id)).status(HandleStatus::Verified).save().await
     }
 
     pub async fn validate_collaboration(&self, campaign: &Campaign, reward: U256, trigger: &str) -> AsamiResult<()> {
@@ -438,17 +429,17 @@ impl Handle {
         let detector = lingua::LanguageDetectorBuilder::from_languages(&[lingua::Language::Spanish]).build();
 
         let Some(es) = self.state.topic().select().name_eq("speaks_spanish".to_string()).optional().await? else {
-            return Ok(()); // No topic for speaks spanish
+            return Ok(());
         };
 
         let Some(en) = self.state.topic().select().name_eq("speaks_english".to_string()).optional().await? else {
-            return Ok(()); // No topic for speaks spanish
+            return Ok(());
         };
 
         for topic in self.handle_topic_scope().topic_id_in(vec![*es.id(), *en.id()]).all().await? {
             topic.delete().await?;
         }
-        
+
         let topic = if detector.detect_language_of(corpus).is_none() {
             es
         } else {

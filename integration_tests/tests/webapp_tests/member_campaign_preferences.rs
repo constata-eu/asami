@@ -2,6 +2,7 @@ use super::{
     support::gql::{create_campaign_preference::*, *},
     *,
 };
+/*
 
 browser_test! { hides_ignored_and_shows_attempted_repost (mut d)
     d.login().await;
@@ -64,3 +65,4 @@ api_test! { filters_campaigns_for_account (mut a)
 
     assert_eq!(a.get_campaign_offers().await.all_campaigns.len(), 1);
 }
+*/

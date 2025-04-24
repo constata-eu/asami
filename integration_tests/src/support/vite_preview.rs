@@ -15,6 +15,7 @@ impl VitePreview {
 
         let child = Command::new("yarn")
             .current_dir(current_dir)
+            .stdin(Stdio::null())
             .stdout(Stdio::from(output_file.try_clone().unwrap()))
             .stderr(Stdio::from(output_file))
             .args(["dev"])

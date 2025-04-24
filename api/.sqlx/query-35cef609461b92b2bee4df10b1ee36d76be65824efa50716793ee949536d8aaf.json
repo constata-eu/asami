@@ -1,0 +1,551 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \nhandle_id as \"handle_id!: i32\", \nstatus as \"status!: HandleScoringStatus\", \ncreated_at as \"created_at!: DateTime < Utc >\", \nme_json as \"me_json!: Option < String >\", \ntweets_json as \"tweets_json!: Option < String >\", \nmentions_json as \"mentions_json!: Option < String >\", \npost_count as \"post_count!: i32\", \nimpression_count as \"impression_count!: i32\", \nghost_account as \"ghost_account!: bool\", \ninflated_audience as \"inflated_audience!: bool\", \nfollowed as \"followed!: bool\", \nliked as \"liked!: bool\", \nreplied as \"replied!: bool\", \nreposted as \"reposted!: bool\", \nmentioned as \"mentioned!: bool\", \nonline_engagement_score as \"online_engagement_score!: EngagementScore\", \nonline_engagement_override as \"online_engagement_override!: Option < EngagementScore >\", \nonline_engagement_override_reason as \"online_engagement_override_reason!: Option < String >\", \noffline_engagement_score as \"offline_engagement_score!: EngagementScore\", \noffline_engagement_description as \"offline_engagement_description!: Option < String >\", \npoll_id as \"poll_id!: Option < String >\", \npoll_ends_at as \"poll_ends_at!: Option < DateTime < Utc > >\", \npoll_votes_updated_at as \"poll_votes_updated_at!: Option < DateTime < Utc > >\", \npoll_none_votes as \"poll_none_votes!: i32\", \npoll_average_votes as \"poll_average_votes!: i32\", \npoll_high_votes as \"poll_high_votes!: i32\", \npoll_reverse_votes as \"poll_reverse_votes!: i32\", \npoll_score as \"poll_score!: Option < PollScore >\", \npoll_override as \"poll_override!: Option < PollScore >\", \npoll_override_reason as \"poll_override_reason!: Option < String >\", \noperational_status_score as \"operational_status_score!: OperationalStatus\", \noperational_status_override as \"operational_status_override!: Option < OperationalStatus >\", \noperational_status_override_reason as \"operational_status_override_reason!: Option < String >\", \nreferrer_score as \"referrer_score!: bool\", \nreferrer_score_override as \"referrer_score_override!: bool\", \nreferrer_score_override_reason as \"referrer_score_override_reason!: Option < String >\", \nholder_score as \"holder_score!: bool\", \nholder_score_override as \"holder_score_override!: bool\", \nholder_score_override_reason as \"holder_score_override_reason!: Option < String >\", \naudience_size as \"audience_size!: i32\", \naudience_size_override as \"audience_size_override!: Option < i32 >\", \naudience_size_override_reason as \"audience_size_override_reason!: Option < String >\" FROM handle_scorings WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR handle_id = $6::int4) AND (NOT $7::boolean OR status = $8::handle_scoring_status) AND (NOT $9::boolean OR created_at = $10::timestamptz) AND (NOT $11::boolean OR me_json = $12::text) AND (NOT $13::boolean OR tweets_json = $14::text) AND (NOT $15::boolean OR mentions_json = $16::text) AND (NOT $17::boolean OR post_count = $18::int4) AND (NOT $19::boolean OR impression_count = $20::int4) AND (NOT $21::boolean OR ghost_account = $22::boolean) AND (NOT $23::boolean OR inflated_audience = $24::boolean) AND (NOT $25::boolean OR followed = $26::boolean) AND (NOT $27::boolean OR liked = $28::boolean) AND (NOT $29::boolean OR replied = $30::boolean) AND (NOT $31::boolean OR reposted = $32::boolean) AND (NOT $33::boolean OR mentioned = $34::boolean) AND (NOT $35::boolean OR online_engagement_score = $36::engagement_score) AND (NOT $37::boolean OR online_engagement_override = $38::engagement_score) AND (NOT $39::boolean OR online_engagement_override_reason = $40::text) AND (NOT $41::boolean OR offline_engagement_score = $42::engagement_score) AND (NOT $43::boolean OR offline_engagement_description = $44::text) AND (NOT $45::boolean OR poll_id = $46::varchar) AND (NOT $47::boolean OR poll_ends_at = $48::timestamptz) AND (NOT $49::boolean OR poll_votes_updated_at = $50::timestamptz) AND (NOT $51::boolean OR poll_none_votes = $52::int4) AND (NOT $53::boolean OR poll_average_votes = $54::int4) AND (NOT $55::boolean OR poll_high_votes = $56::int4) AND (NOT $57::boolean OR poll_reverse_votes = $58::int4) AND (NOT $59::boolean OR poll_score = $60::poll_score) AND (NOT $61::boolean OR poll_override = $62::poll_score) AND (NOT $63::boolean OR poll_override_reason = $64::varchar) AND (NOT $65::boolean OR operational_status_score = $66::operational_status) AND (NOT $67::boolean OR operational_status_override = $68::operational_status) AND (NOT $69::boolean OR operational_status_override_reason = $70::text) AND (NOT $71::boolean OR referrer_score = $72::boolean) AND (NOT $73::boolean OR referrer_score_override = $74::boolean) AND (NOT $75::boolean OR referrer_score_override_reason = $76::text) AND (NOT $77::boolean OR holder_score = $78::boolean) AND (NOT $79::boolean OR holder_score_override = $80::boolean) AND (NOT $81::boolean OR holder_score_override_reason = $82::text) AND (NOT $83::boolean OR audience_size = $84::int4) AND (NOT $85::boolean OR audience_size_override = $86::int4) AND (NOT $87::boolean OR audience_size_override_reason = $88::text) ORDER BY \n      (CASE ($89 = 'Id' AND NOT $90) WHEN true THEN id ELSE NULL END),\n      (CASE ($89 = 'Id' AND $90) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'HandleId' AND NOT $90) WHEN true THEN handle_id ELSE NULL END),\n      (CASE ($89 = 'HandleId' AND $90) WHEN true THEN handle_id ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'Status' AND NOT $90) WHEN true THEN status ELSE NULL END),\n      (CASE ($89 = 'Status' AND $90) WHEN true THEN status ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'CreatedAt' AND NOT $90) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($89 = 'CreatedAt' AND $90) WHEN true THEN created_at ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'MeJson' AND NOT $90) WHEN true THEN me_json ELSE NULL END),\n      (CASE ($89 = 'MeJson' AND $90) WHEN true THEN me_json ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'TweetsJson' AND NOT $90) WHEN true THEN tweets_json ELSE NULL END),\n      (CASE ($89 = 'TweetsJson' AND $90) WHEN true THEN tweets_json ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'MentionsJson' AND NOT $90) WHEN true THEN mentions_json ELSE NULL END),\n      (CASE ($89 = 'MentionsJson' AND $90) WHEN true THEN mentions_json ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'PostCount' AND NOT $90) WHEN true THEN post_count ELSE NULL END),\n      (CASE ($89 = 'PostCount' AND $90) WHEN true THEN post_count ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'ImpressionCount' AND NOT $90) WHEN true THEN impression_count ELSE NULL END),\n      (CASE ($89 = 'ImpressionCount' AND $90) WHEN true THEN impression_count ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'GhostAccount' AND NOT $90) WHEN true THEN ghost_account ELSE NULL END),\n      (CASE ($89 = 'GhostAccount' AND $90) WHEN true THEN ghost_account ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'InflatedAudience' AND NOT $90) WHEN true THEN inflated_audience ELSE NULL END),\n      (CASE ($89 = 'InflatedAudience' AND $90) WHEN true THEN inflated_audience ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'Followed' AND NOT $90) WHEN true THEN followed ELSE NULL END),\n      (CASE ($89 = 'Followed' AND $90) WHEN true THEN followed ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'Liked' AND NOT $90) WHEN true THEN liked ELSE NULL END),\n      (CASE ($89 = 'Liked' AND $90) WHEN true THEN liked ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'Replied' AND NOT $90) WHEN true THEN replied ELSE NULL END),\n      (CASE ($89 = 'Replied' AND $90) WHEN true THEN replied ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'Reposted' AND NOT $90) WHEN true THEN reposted ELSE NULL END),\n      (CASE ($89 = 'Reposted' AND $90) WHEN true THEN reposted ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'Mentioned' AND NOT $90) WHEN true THEN mentioned ELSE NULL END),\n      (CASE ($89 = 'Mentioned' AND $90) WHEN true THEN mentioned ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'OnlineEngagementScore' AND NOT $90) WHEN true THEN online_engagement_score ELSE NULL END),\n      (CASE ($89 = 'OnlineEngagementScore' AND $90) WHEN true THEN online_engagement_score ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'OnlineEngagementOverride' AND NOT $90) WHEN true THEN online_engagement_override ELSE NULL END),\n      (CASE ($89 = 'OnlineEngagementOverride' AND $90) WHEN true THEN online_engagement_override ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'OnlineEngagementOverrideReason' AND NOT $90) WHEN true THEN online_engagement_override_reason ELSE NULL END),\n      (CASE ($89 = 'OnlineEngagementOverrideReason' AND $90) WHEN true THEN online_engagement_override_reason ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'OfflineEngagementScore' AND NOT $90) WHEN true THEN offline_engagement_score ELSE NULL END),\n      (CASE ($89 = 'OfflineEngagementScore' AND $90) WHEN true THEN offline_engagement_score ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'OfflineEngagementDescription' AND NOT $90) WHEN true THEN offline_engagement_description ELSE NULL END),\n      (CASE ($89 = 'OfflineEngagementDescription' AND $90) WHEN true THEN offline_engagement_description ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'PollId' AND NOT $90) WHEN true THEN poll_id ELSE NULL END),\n      (CASE ($89 = 'PollId' AND $90) WHEN true THEN poll_id ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'PollEndsAt' AND NOT $90) WHEN true THEN poll_ends_at ELSE NULL END),\n      (CASE ($89 = 'PollEndsAt' AND $90) WHEN true THEN poll_ends_at ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'PollVotesUpdatedAt' AND NOT $90) WHEN true THEN poll_votes_updated_at ELSE NULL END),\n      (CASE ($89 = 'PollVotesUpdatedAt' AND $90) WHEN true THEN poll_votes_updated_at ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'PollNoneVotes' AND NOT $90) WHEN true THEN poll_none_votes ELSE NULL END),\n      (CASE ($89 = 'PollNoneVotes' AND $90) WHEN true THEN poll_none_votes ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'PollAverageVotes' AND NOT $90) WHEN true THEN poll_average_votes ELSE NULL END),\n      (CASE ($89 = 'PollAverageVotes' AND $90) WHEN true THEN poll_average_votes ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'PollHighVotes' AND NOT $90) WHEN true THEN poll_high_votes ELSE NULL END),\n      (CASE ($89 = 'PollHighVotes' AND $90) WHEN true THEN poll_high_votes ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'PollReverseVotes' AND NOT $90) WHEN true THEN poll_reverse_votes ELSE NULL END),\n      (CASE ($89 = 'PollReverseVotes' AND $90) WHEN true THEN poll_reverse_votes ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'PollScore' AND NOT $90) WHEN true THEN poll_score ELSE NULL END),\n      (CASE ($89 = 'PollScore' AND $90) WHEN true THEN poll_score ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'PollOverride' AND NOT $90) WHEN true THEN poll_override ELSE NULL END),\n      (CASE ($89 = 'PollOverride' AND $90) WHEN true THEN poll_override ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'PollOverrideReason' AND NOT $90) WHEN true THEN poll_override_reason ELSE NULL END),\n      (CASE ($89 = 'PollOverrideReason' AND $90) WHEN true THEN poll_override_reason ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'OperationalStatusScore' AND NOT $90) WHEN true THEN operational_status_score ELSE NULL END),\n      (CASE ($89 = 'OperationalStatusScore' AND $90) WHEN true THEN operational_status_score ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'OperationalStatusOverride' AND NOT $90) WHEN true THEN operational_status_override ELSE NULL END),\n      (CASE ($89 = 'OperationalStatusOverride' AND $90) WHEN true THEN operational_status_override ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'OperationalStatusOverrideReason' AND NOT $90) WHEN true THEN operational_status_override_reason ELSE NULL END),\n      (CASE ($89 = 'OperationalStatusOverrideReason' AND $90) WHEN true THEN operational_status_override_reason ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'ReferrerScore' AND NOT $90) WHEN true THEN referrer_score ELSE NULL END),\n      (CASE ($89 = 'ReferrerScore' AND $90) WHEN true THEN referrer_score ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'ReferrerScoreOverride' AND NOT $90) WHEN true THEN referrer_score_override ELSE NULL END),\n      (CASE ($89 = 'ReferrerScoreOverride' AND $90) WHEN true THEN referrer_score_override ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'ReferrerScoreOverrideReason' AND NOT $90) WHEN true THEN referrer_score_override_reason ELSE NULL END),\n      (CASE ($89 = 'ReferrerScoreOverrideReason' AND $90) WHEN true THEN referrer_score_override_reason ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'HolderScore' AND NOT $90) WHEN true THEN holder_score ELSE NULL END),\n      (CASE ($89 = 'HolderScore' AND $90) WHEN true THEN holder_score ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'HolderScoreOverride' AND NOT $90) WHEN true THEN holder_score_override ELSE NULL END),\n      (CASE ($89 = 'HolderScoreOverride' AND $90) WHEN true THEN holder_score_override ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'HolderScoreOverrideReason' AND NOT $90) WHEN true THEN holder_score_override_reason ELSE NULL END),\n      (CASE ($89 = 'HolderScoreOverrideReason' AND $90) WHEN true THEN holder_score_override_reason ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'AudienceSize' AND NOT $90) WHEN true THEN audience_size ELSE NULL END),\n      (CASE ($89 = 'AudienceSize' AND $90) WHEN true THEN audience_size ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'AudienceSizeOverride' AND NOT $90) WHEN true THEN audience_size_override ELSE NULL END),\n      (CASE ($89 = 'AudienceSizeOverride' AND $90) WHEN true THEN audience_size_override ELSE NULL END) DESC\n    ,\n      (CASE ($89 = 'AudienceSizeOverrideReason' AND NOT $90) WHEN true THEN audience_size_override_reason ELSE NULL END),\n      (CASE ($89 = 'AudienceSizeOverrideReason' AND $90) WHEN true THEN audience_size_override_reason ELSE NULL END) DESC\n     LIMIT $91 OFFSET $92 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "handle_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "status!: HandleScoringStatus",
+        "type_info": {
+          "Custom": {
+            "name": "handle_scoring_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "ingested",
+                "applied",
+                "discarded"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at!: DateTime < Utc >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "me_json!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "tweets_json!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "mentions_json!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "post_count!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "impression_count!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 9,
+        "name": "ghost_account!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "inflated_audience!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "followed!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "liked!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 13,
+        "name": "replied!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 14,
+        "name": "reposted!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 15,
+        "name": "mentioned!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 16,
+        "name": "online_engagement_score!: EngagementScore",
+        "type_info": {
+          "Custom": {
+            "name": "engagement_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "online_engagement_override!: Option < EngagementScore >",
+        "type_info": {
+          "Custom": {
+            "name": "engagement_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "online_engagement_override_reason!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 19,
+        "name": "offline_engagement_score!: EngagementScore",
+        "type_info": {
+          "Custom": {
+            "name": "engagement_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 20,
+        "name": "offline_engagement_description!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 21,
+        "name": "poll_id!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 22,
+        "name": "poll_ends_at!: Option < DateTime < Utc > >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 23,
+        "name": "poll_votes_updated_at!: Option < DateTime < Utc > >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 24,
+        "name": "poll_none_votes!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 25,
+        "name": "poll_average_votes!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 26,
+        "name": "poll_high_votes!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 27,
+        "name": "poll_reverse_votes!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 28,
+        "name": "poll_score!: Option < PollScore >",
+        "type_info": {
+          "Custom": {
+            "name": "poll_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high",
+                "reverse"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 29,
+        "name": "poll_override!: Option < PollScore >",
+        "type_info": {
+          "Custom": {
+            "name": "poll_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high",
+                "reverse"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 30,
+        "name": "poll_override_reason!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 31,
+        "name": "operational_status_score!: OperationalStatus",
+        "type_info": {
+          "Custom": {
+            "name": "operational_status",
+            "kind": {
+              "Enum": [
+                "banned",
+                "shadowbanned",
+                "normal",
+                "enhanced"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 32,
+        "name": "operational_status_override!: Option < OperationalStatus >",
+        "type_info": {
+          "Custom": {
+            "name": "operational_status",
+            "kind": {
+              "Enum": [
+                "banned",
+                "shadowbanned",
+                "normal",
+                "enhanced"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 33,
+        "name": "operational_status_override_reason!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 34,
+        "name": "referrer_score!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 35,
+        "name": "referrer_score_override!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 36,
+        "name": "referrer_score_override_reason!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 37,
+        "name": "holder_score!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 38,
+        "name": "holder_score_override!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 39,
+        "name": "holder_score_override_reason!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 40,
+        "name": "audience_size!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 41,
+        "name": "audience_size_override!: Option < i32 >",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 42,
+        "name": "audience_size_override_reason!: Option < String >",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Int4",
+        "Bool",
+        {
+          "Custom": {
+            "name": "handle_scoring_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "ingested",
+                "applied",
+                "discarded"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        {
+          "Custom": {
+            "name": "engagement_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "engagement_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Text",
+        "Bool",
+        {
+          "Custom": {
+            "name": "engagement_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Text",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        {
+          "Custom": {
+            "name": "poll_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high",
+                "reverse"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "poll_score",
+            "kind": {
+              "Enum": [
+                "none",
+                "average",
+                "high",
+                "reverse"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "operational_status",
+            "kind": {
+              "Enum": [
+                "banned",
+                "shadowbanned",
+                "normal",
+                "enhanced"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "operational_status",
+            "kind": {
+              "Enum": [
+                "banned",
+                "shadowbanned",
+                "normal",
+                "enhanced"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Text",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Text",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Text",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Text",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "35cef609461b92b2bee4df10b1ee36d76be65824efa50716793ee949536d8aaf"
+}

@@ -49,10 +49,10 @@
     "ra-language-english": "^4.16.11",
     "ra-language-spanish": "^1.0.0",
     "ra-ui-materialui": "^4.13.2",
-    "react": "^18.2.0",
+    "react": "^19.1.0",
     "react-admin": "^5.4.2",
     "react-device-detect": "^2.2.3",
-    "react-dom": "^18.2.0",
+    "react-dom": "^19.1.0",
     "react-google-recaptcha-v3": "^1.10.1",
     "react-twitter-embed": "^4.0.4",
     "rollup": "^4.12.1",
@@ -67,14 +67,15 @@
     "@typescript-eslint/eslint-plugin": "^5.60.1",
     "@typescript-eslint/parser": "^5.60.1",
     "@vitejs/plugin-react": "^4.0.1",
-    "eslint": "^8.57.0",
+    "eslint": "^9.24.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-unused-imports": "^3.1.0",
-    "prettier": "^2.8.8",
-    "typescript": "^5.1.6",
-    "vite": "^4.3.9"
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3",
+    "vite": "^4.3.9",
+    "vitest": "^3.1.1"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

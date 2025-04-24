@@ -16,7 +16,10 @@ pub struct Handle {
     )]
     username: String,
     #[graphql(description = "The unique user_id in the given social network. This never changes.")]
-    user_id: Option<String>,
+    user_id: String,
+    #[graphql(description = "The campaign manager has no refresh token to score this account")]
+    needs_refresh_token: bool,
+
     #[graphql(description = "The score given to this handle by Asami's admin.")]
     score: Option<String>,
     #[graphql(description = "Topics assigned to this handle")]
@@ -87,21 +90,7 @@ impl Showable<models::Handle, HandleFilter> for Handle {
             status: d.attrs.status,
             total_collabs: d.attrs.total_collabs,
             total_collab_rewards: d.attrs.total_collab_rewards,
+            needs_refresh_token: d.attrs.x_refresh_token.is_none(),
         })
-    }
-}
-
-#[derive(Clone, GraphQLInputObject, Serialize, Deserialize)]
-#[graphql(description = "The input for creating a new Handle.")]
-#[serde(rename_all = "camelCase")]
-pub struct CreateHandleInput {
-    pub username: String,
-}
-
-impl CreateHandleInput {
-    pub async fn process(self, context: &Context) -> FieldResult<Handle> {
-        let req = context.account().await?.create_handle(&self.username).await?;
-
-        Ok(Handle::db_to_graphql(context, req).await?)
     }
 }

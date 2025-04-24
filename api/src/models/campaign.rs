@@ -61,7 +61,7 @@ model! {
     like_count: i32,
   },
   queries {
-      needing_report("valid_until IS NOT NULL AND valid_until < now() AND report_hash IS NULL LIMIT 10"),
+      needing_report("valid_until IS NOT NULL AND valid_until < now() AND report_hash IS NULL LIMIT 20"),
       needing_reimburse("valid_until IS NOT NULL AND valid_until < now() AND budget > to_u256(0)")
   },
   has_many {
@@ -417,10 +417,7 @@ impl Campaign {
             return Ok(None);
         }
 
-        let Some(trigger) = handle.user_id().as_ref() else {
-            self.state.info("sync_x_collabs", "make_x_collab_no_trigger", log_pointer).await;
-            return Ok(None);
-        };
+        let trigger = handle.user_id();
 
         let Some(reward) = handle.reward_for(self) else {
             self.state.info("sync_x_collabs", "make_x_collab_no_reward", log_pointer).await;

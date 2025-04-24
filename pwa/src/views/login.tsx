@@ -1,49 +1,60 @@
 /// <reference types="vite-plugin-svgr/client" />
-import { useEffect, useContext } from 'react';
-import { Alert, Divider, Avatar, CardContent, CardHeader, Dialog, DialogContent, Box, Button, Typography } from '@mui/material';
-import { makeXUrl } from '../lib/auth_provider';
-import { etherToHex  } from '../lib/formatters';
+import { useEffect, useContext } from "react";
+import {
+  Alert,
+  Divider,
+  Avatar,
+  CardContent,
+  CardHeader,
+  Dialog,
+  DialogContent,
+  Box,
+  Button,
+  Typography,
+} from "@mui/material";
+import { makeXLogin } from "../lib/auth_provider";
+import { etherToHex } from "../lib/formatters";
 import { formatEther } from "ethers";
 import { publicDataProvider } from "../lib/data_provider";
 import {
-    useSafeSetState,
-    useStore,
-    useListController,
-    CoreAdminContext,
-    useGetList,
-    useTranslate,
-    I18nContext,
-    useDataProvider,
-    Form,
-    TextInput,
-    SaveButton,
-    useNotify,
-    email,
-    required
-} from 'react-admin';
+  useSafeSetState,
+  useStore,
+  useListController,
+  CoreAdminContext,
+  useGetList,
+  useTranslate,
+  I18nContext,
+  useDataProvider,
+  Form,
+  TextInput,
+  SaveButton,
+  useNotify,
+  email,
+  required,
+} from "react-admin";
 
-import { TwitterTweetEmbed } from 'react-twitter-embed';
-import { useNavigate } from 'react-router-dom';
-import { BareLayout, DeckCard } from './layout';
-import { Head2, Head3, light, green } from '../components/theme';
-import AsamiLogo from '../assets/logo.svg?react';
+import { TwitterTweetEmbed } from "react-twitter-embed";
+import { useNavigate } from "react-router-dom";
+import { BareLayout, DeckCard } from "./layout";
+import { Head2, Head3, light, green } from "../components/theme";
+import AsamiLogo from "../assets/logo.svg?react";
 import { useContracts } from "../components/contracts_context";
-import { Settings } from '../settings';
-import XIcon from '@mui/icons-material/X';
-import WalletIcon from '@mui/icons-material/Wallet';
-import CampaignIcon from '@mui/icons-material/Campaign';
-import truncate from 'lodash/truncate';
-import chunk from 'lodash/chunk';
-import flatten from 'lodash/flatten';
-import CampaignListEmpty from './campaign_list_empty';
-import {isMobile} from 'react-device-detect';
-import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
-import SendIcon from '@mui/icons-material/Send';
+import { Settings } from "../settings";
+import XIcon from "@mui/icons-material/X";
+import WalletIcon from "@mui/icons-material/Wallet";
+import CampaignIcon from "@mui/icons-material/Campaign";
+import truncate from "lodash/truncate";
+import chunk from "lodash/chunk";
+import flatten from "lodash/flatten";
+import CampaignListEmpty from "./campaign_list_empty";
+import { isMobile } from "react-device-detect";
+import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
+import SendIcon from "@mui/icons-material/Send";
 import StatsCard from "./stats_card";
 
 const Login = () => {
   const translate = useTranslate();
-  const [, setRole] = useStore('user.role', 'advertiser');
+  const [, setRole] = useStore("user.role", "advertiser");
   const [open, setOpen] = useSafeSetState(false);
   const [pubDataProvider, setPubDataProvider] = useSafeSetState();
   const i18nProvider = useContext(I18nContext);
@@ -63,17 +74,35 @@ const Login = () => {
   const loginAs = async (newRole) => {
     setRole(newRole);
     setOpen(true);
-  }
+  };
 
   return (
-    <CoreAdminContext i18nProvider={i18nProvider} dataProvider={pubDataProvider} authProvider={null}>
+    <CoreAdminContext
+      i18nProvider={i18nProvider}
+      dataProvider={pubDataProvider}
+      authProvider={null}
+    >
       <BareLayout>
         <Box p="1em" id="login-form-and-landing">
           <LoginSelector open={open} setOpen={setOpen} />
 
-          <Box sx={{columnCount: { xs: 1, sm: 2, md: 3, lg: 4, xl: 5}, columnGap:"1em"}}>
-            <Box sx={{ breakInside: "avoid", p:"1em", mb:"1em", display:"flex", flexDirection:"column", alignItems:"center" }}>
-              <AsamiLogo margin="auto" width="250px" height="100%"/>
+          <Box
+            sx={{
+              columnCount: { xs: 1, sm: 2, md: 3, lg: 4, xl: 5 },
+              columnGap: "1em",
+            }}
+          >
+            <Box
+              sx={{
+                breakInside: "avoid",
+                p: "1em",
+                mb: "1em",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <AsamiLogo margin="auto" width="250px" height="100%" />
               <Box my="1em">
                 <Button
                   color="primary"
@@ -81,44 +110,53 @@ const Login = () => {
                   fullWidth
                   id="button-login-as-member"
                 >
-                  { translate("login.login_button") }
-                </Button>
-                <Button href="/#/about" color="inverted" fullWidth id="button-about-us" >
-                  { translate("login.about_asami_button") }
-                </Button>
-                <Button href="/#/Stats/0/show" color="inverted" fullWidth id="button-stats" >
-                  { translate("explorer.menu.stats") }
+                  {translate("login.login_button")}
                 </Button>
                 <Button
-                  href={ `https://x.com/${translate("login.x_handle")}` }
+                  href="/#/about"
+                  color="inverted"
+                  fullWidth
+                  id="button-about-us"
+                >
+                  {translate("login.about_asami_button")}
+                </Button>
+                <Button
+                  href="/#/Stats/0/show"
+                  color="inverted"
+                  fullWidth
+                  id="button-stats"
+                >
+                  {translate("explorer.menu.stats")}
+                </Button>
+                <Button
+                  href={`https://x.com/${translate("login.x_handle")}`}
                   target="_blank"
-                  startIcon={ <XIcon /> }
+                  startIcon={<XIcon />}
                   color="inverted"
                   size="small"
                   fullWidth
                   id="button-visit-x"
                 >
-                  { translate("login.x_handle") }
+                  {translate("login.x_handle")}
                 </Button>
               </Box>
             </Box>
-            <JoinNow key="join-now" loginAs={loginAs}/>
+            <JoinNow key="join-now" loginAs={loginAs} />
             <PublicCampaignList loginAs={loginAs} />
             <StatsCard />
           </Box>
-
         </Box>
       </BareLayout>
     </CoreAdminContext>
   );
 };
 
-const PublicCampaignList = ({loginAs}) => {
+const PublicCampaignList = ({ loginAs }) => {
   const listContext = useListController({
     debounce: 500,
     disableSyncWithLocation: true,
     filter: { budgetGt: etherToHex("1") },
-    sort: { field: 'createdAt', order: 'DESC'},
+    sort: { field: "createdAt", order: "DESC" },
     perPage: 20,
     queryOptions: {
       refetchInterval: 100000,
@@ -126,103 +164,148 @@ const PublicCampaignList = ({loginAs}) => {
     resource: "Campaign",
   });
 
-  if (listContext.isLoading){
+  if (listContext.isLoading) {
     return <></>;
   }
 
-  if (listContext.total == 0 ) {
+  if (listContext.total == 0) {
     return <CampaignListEmpty />;
   }
 
-  const items = flatten(chunk(listContext.data, 4).map((i) => [...i, {yourPostHere: true}]));
+  const items = flatten(
+    chunk(listContext.data, 4).map((i) => [...i, { yourPostHere: true }]),
+  );
 
-  return <>
-    { items.map((item, index) => {
-      if(item.yourPostHere) {
-        return <YourPostHere key={`your-post-here-${index}`} loginAs={loginAs}/>
-      } else {
-        return <PublicXCampaign key={item.id} item={item} loginAs={loginAs}/>;
-      }
-    })}
-  </>;
-}
+  return (
+    <>
+      {items.map((item, index) => {
+        if (item.yourPostHere) {
+          return (
+            <YourPostHere key={`your-post-here-${index}`} loginAs={loginAs} />
+          );
+        } else {
+          return (
+            <PublicXCampaign key={item.id} item={item} loginAs={loginAs} />
+          );
+        }
+      })}
+    </>
+  );
+};
 
-const YourPostHere = ({loginAs}) => {
+const YourPostHere = ({ loginAs }) => {
   const translate = useTranslate();
-  
-  return (<DeckCard elevation={10} >
-    <CardContent>
-      <Head2>{ translate("your_post_here.title") }</Head2>
-      <Typography>{ translate("your_post_here.message") }</Typography>
-      <Box mt="1em" >
-        <Button onClick={() => loginAs("advertiser")} className="submit-your-post" color="inverted" fullWidth size="large" variant="outlined" >
-          <CampaignIcon sx={{mr:"5px"}}/>
-          { translate("your_post_here.button") }
-        </Button>
-      </Box>
-    </CardContent>
-  </DeckCard>);
-}
 
-const JoinNow = ({loginAs}) => {
+  return (
+    <DeckCard elevation={10}>
+      <CardContent>
+        <Head2>{translate("your_post_here.title")}</Head2>
+        <Typography>{translate("your_post_here.message")}</Typography>
+        <Box mt="1em">
+          <Button
+            onClick={() => loginAs("advertiser")}
+            className="submit-your-post"
+            color="inverted"
+            fullWidth
+            size="large"
+            variant="outlined"
+          >
+            <CampaignIcon sx={{ mr: "5px" }} />
+            {translate("your_post_here.button")}
+          </Button>
+        </Box>
+      </CardContent>
+    </DeckCard>
+  );
+};
+
+const JoinNow = ({ loginAs }) => {
   const translate = useTranslate();
-  
-  return (<DeckCard borderColor={green} elevation={10}>
-    <CardContent>
-      <Head2 sx={{ mb: "0.5em" }}>{ translate("join_now.title") }</Head2>
-      <Typography>{ translate("join_now.message") }</Typography>
-      <Head3 sx={{ mt: "1em", mb: "0.5em" }}>{ translate("join_now.no_crypto_no_problem") }</Head3>
-      <Typography>{ translate("join_now.learn_later") }</Typography>
-      <Box mt="1em" >
-        <Button onClick={() => loginAs("member")} className="get-your-sparkles" fullWidth size="large" variant="contained" >
-          { translate("join_now.button") }
-        </Button>
-      </Box>
-    </CardContent>
-  </DeckCard>);
-}
 
-const PublicCardHeader = ({loginAs, item, buttonLabel, icon}) => {
+  return (
+    <DeckCard borderColor={green} elevation={10}>
+      <CardContent>
+        <Head2 sx={{ mb: "0.5em" }}>{translate("join_now.title")}</Head2>
+        <Typography>{translate("join_now.message")}</Typography>
+        <Head3 sx={{ mt: "1em", mb: "0.5em" }}>
+          {translate("join_now.no_crypto_no_problem")}
+        </Head3>
+        <Typography>{translate("join_now.learn_later")}</Typography>
+        <Box mt="1em">
+          <Button
+            onClick={() => loginAs("member")}
+            className="get-your-sparkles"
+            fullWidth
+            size="large"
+            variant="contained"
+          >
+            {translate("join_now.button")}
+          </Button>
+        </Box>
+      </CardContent>
+    </DeckCard>
+  );
+};
+
+const PublicCardHeader = ({ loginAs, item, buttonLabel, icon }) => {
   const translate = useTranslate();
 
   return (
     <CardHeader
       sx={{ mb: "0", pb: "0.5em" }}
-      avatar={ <Avatar sx={{ bgcolor: light }} >{icon}</Avatar> }
-      title={ translate("public_card_header.title", {amount: formatEther(item.budget)}) }
+      avatar={<Avatar sx={{ bgcolor: light }}>{icon}</Avatar>}
+      title={translate("public_card_header.title", {
+        amount: formatEther(item.budget),
+      })}
       subheader={
-        <Button sx={{ mt:"0.2em" }} onClick={() => loginAs("member") } fullWidth color="inverted" size="small" variant="outlined" >
-          { buttonLabel }
+        <Button
+          sx={{ mt: "0.2em" }}
+          onClick={() => loginAs("member")}
+          fullWidth
+          color="inverted"
+          size="small"
+          variant="outlined"
+        >
+          {buttonLabel}
         </Button>
       }
     />
   );
 };
 
-
-const PublicXCampaign = ({loginAs, item}) => {
+const PublicXCampaign = ({ loginAs, item }) => {
   const translate = useTranslate();
-  return <DeckCard id={`campaign-container-${item.id}`}>
-    <PublicCardHeader
-      icon={<XIcon/>}
-      item={item}
-      loginAs={loginAs}
-      buttonLabel={ translate("public_x_campaign.main_button")}
-    />
-    <CardContent>
-      <TwitterTweetEmbed tweetId={JSON.parse(item.briefingJson)} options={{ theme: "dark", align: "center", width: "250px", conversation: "none"}} />
-    </CardContent>
-  </DeckCard>;
-}
+  return (
+    <DeckCard id={`campaign-container-${item.id}`}>
+      <PublicCardHeader
+        icon={<XIcon />}
+        item={item}
+        loginAs={loginAs}
+        buttonLabel={translate("public_x_campaign.main_button")}
+      />
+      <CardContent>
+        <TwitterTweetEmbed
+          tweetId={JSON.parse(item.briefingJson)}
+          options={{
+            theme: "dark",
+            align: "center",
+            width: "250px",
+            conversation: "none",
+          }}
+        />
+      </CardContent>
+    </DeckCard>
+  );
+};
 
-const LoginSelector = ({open, setOpen}) => {
+const LoginSelector = ({ open, setOpen }) => {
   const translate = useTranslate();
   const { signLoginMessage } = useContracts();
   const navigate = useNavigate();
 
   const startXLogin = async () => {
     setOpen(false);
-    const { url, verifier } = await makeXUrl();
+    const { url, verifier } = await makeXLogin();
     localStorage.setItem("oauthVerifier", verifier);
     document.location.href = url;
   };
@@ -233,34 +316,63 @@ const LoginSelector = ({open, setOpen}) => {
     navigate(`/eip712_login?code=${code}`);
   };
 
-  return (<Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" slotProps={{ backdrop: {sx: {background: "rgba(0,0,0,0.9)"}}}} PaperProps={ {"variant": "outlined", sx:{ borderWidth: "10px" }} }>
-    <Alert  severity="warning" icon={false}>
-      <Typography sx={{ color: "inherit" }} fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
-        { translate("login_form.disclaimer_title") }
-      </Typography>
-        { translate("login_form.disclaimer_body") }
-      <Box display="flex" gap="1em" flexWrap="wrap" mt="1em">
-        <Button sx={{ flex: "1 1 300px"}} href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32016R0679" id="no-login-button" color="warning" variant="outlined">
-          { translate("login_form.reject_button") }
-        </Button>
-        <Button sx={{ flex: "1 1 100px" }} href="/#/about" id="more-on-privacy" color="warning">
-          { translate("login_form.read_more") }
-        </Button>
-      </Box>
-    </Alert>
-    <Divider/>
-    <DialogContent>
-      <Box display="flex" gap="1em" flexDirection="column">
-        <Box>
-          <Typography mb="1em" fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
-            { translate("login_form.web2_consent_title") }
-          </Typography>
-          <Box display="flex" gap="1em" alignItems="center" mb="1em">
-            <XIcon/>
+  return (
+    <Dialog
+      open={open}
+      onClose={() => setOpen(false)}
+      fullWidth
+      maxWidth="sm"
+      slotProps={{ backdrop: { sx: { background: "rgba(0,0,0,0.9)" } } }}
+      PaperProps={{ variant: "outlined", sx: { borderWidth: "10px" } }}
+    >
+      <Alert severity="warning" icon={false}>
+        <Typography
+          sx={{ color: "inherit" }}
+          fontSize="1.2em"
+          fontFamily="LeagueSpartanBlack"
+          letterSpacing="-0.03em"
+        >
+          {translate("login_form.disclaimer_title")}
+        </Typography>
+        {translate("login_form.disclaimer_body")}
+        <Box display="flex" gap="1em" flexWrap="wrap" mt="1em">
+          <Button
+            sx={{ flex: "1 1 300px" }}
+            href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32016R0679"
+            id="no-login-button"
+            color="warning"
+            variant="outlined"
+          >
+            {translate("login_form.reject_button")}
+          </Button>
+          <Button
+            sx={{ flex: "1 1 100px" }}
+            href="/#/about"
+            id="more-on-privacy"
+            color="warning"
+          >
+            {translate("login_form.read_more")}
+          </Button>
+        </Box>
+      </Alert>
+      <Divider />
+      <DialogContent>
+        <Box display="flex" gap="1em" flexDirection="column">
+          <Box>
+            <Typography
+              mb="1em"
+              fontSize="1.2em"
+              fontFamily="LeagueSpartanBlack"
+              letterSpacing="-0.03em"
+            >
+              {translate("login_form.web2_consent_title")}
+            </Typography>
+            <Box display="flex" gap="1em" alignItems="center" mb="1em">
+              <XIcon />
 
-            { isMobile ?
+              {isMobile ? (
                 <LoginWithXMobileWarning onClick={startXLogin} />
-                :
+              ) : (
                 <Button
                   id="x-login-button"
                   fullWidth
@@ -268,69 +380,95 @@ const LoginSelector = ({open, setOpen}) => {
                   color="inverted"
                   onClick={startXLogin}
                 >
-                  { translate("login_form.consent_with_x") }
+                  {translate("login_form.consent_with_x")}
                 </Button>
-            }
+              )}
+            </Box>
+            <Box display="flex" gap="1em" alignItems="center" mb="1em">
+              <AlternateEmailIcon />
+              <LoginWithEmail />
+            </Box>
           </Box>
-          <Box display="flex" gap="1em" alignItems="center" mb="1em">
-            <AlternateEmailIcon/>
-            <LoginWithEmail/>
+          <Box>
+            <Typography
+              fontSize="1.2em"
+              fontFamily="LeagueSpartanBlack"
+              letterSpacing="-0.03em"
+            >
+              {translate("login_form.web3_consent_title")}
+            </Typography>
+            <Typography mb="1em">
+              {translate("login_form.web3_consent_body")}
+            </Typography>
+            <Box display="flex" gap="1em" alignItems="center" mb="1em">
+              <WalletIcon />
+              <Button
+                id="wallet-login-button"
+                fullWidth
+                color="inverted"
+                variant="contained"
+                onClick={startEip712Login}
+              >
+                {translate("login_form.consent_and_connect")}
+              </Button>
+            </Box>
           </Box>
         </Box>
-        <Box>
-          <Typography fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
-            { translate("login_form.web3_consent_title") }
-          </Typography>
-          <Typography mb="1em">
-            { translate("login_form.web3_consent_body") }
-          </Typography>
-          <Box display="flex" gap="1em" alignItems="center" mb="1em">
-            <WalletIcon/>
-            <Button id="wallet-login-button" fullWidth color="inverted" variant="contained" onClick={startEip712Login}>
-              { translate("login_form.consent_and_connect") }
-            </Button>
-          </Box>
-        </Box>
-      </Box>
-    </DialogContent>
-  </Dialog>);
-}
+      </DialogContent>
+    </Dialog>
+  );
+};
 
-const LoginWithXMobileWarning = ({onClick}) => {
+const LoginWithXMobileWarning = ({ onClick }) => {
   const translate = useTranslate();
   const [open, setOpen] = useSafeSetState(false);
   return (
     <Box width="100%">
-        <Button
-          id="x-login-button"
-          fullWidth
-          variant="contained"
-          color="inverted"
-          onClick={ () => setOpen(true) }
-        >
-          { translate("login_form.consent_with_x") }
-        </Button>
-        <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm" slotProps={{ backdrop: {sx: {background: "rgba(0,0,0,0.9)"}}}} PaperProps={ {"variant": "outlined", sx:{ borderWidth: "10px" }} }>
-            <DialogContent>
-                <Typography mb="1em" fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
-                    { translate("login_form.x_mobile_warning.title") }
-                </Typography>
-                <Typography mb="1em">{ translate("login_form.x_mobile_warning.text") }</Typography>
-                <Button
-                    id="x-login-button"
-                    fullWidth
-                    variant="contained"
-                    color="inverted"
-                    onClick={onClick}
-                >
-                    { translate("login_form.consent_with_x") }
-                </Button>
-            </DialogContent>
-        </Dialog>
-    </Box>);
-}
+      <Button
+        id="x-login-button"
+        fullWidth
+        variant="contained"
+        color="inverted"
+        onClick={() => setOpen(true)}
+      >
+        {translate("login_form.consent_with_x")}
+      </Button>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        slotProps={{ backdrop: { sx: { background: "rgba(0,0,0,0.9)" } } }}
+        PaperProps={{ variant: "outlined", sx: { borderWidth: "10px" } }}
+      >
+        <DialogContent>
+          <Typography
+            mb="1em"
+            fontSize="1.2em"
+            fontFamily="LeagueSpartanBlack"
+            letterSpacing="-0.03em"
+          >
+            {translate("login_form.x_mobile_warning.title")}
+          </Typography>
+          <Typography mb="1em">
+            {translate("login_form.x_mobile_warning.text")}
+          </Typography>
+          <Button
+            id="x-login-button"
+            fullWidth
+            variant="contained"
+            color="inverted"
+            onClick={onClick}
+          >
+            {translate("login_form.consent_with_x")}
+          </Button>
+        </DialogContent>
+      </Dialog>
+    </Box>
+  );
+};
 
-const LoginWithEmail = ({onClick}) => {
+const LoginWithEmail = ({ onClick }) => {
   const translate = useTranslate();
   const [open, setOpen] = useSafeSetState(false);
   const [sent, setSent] = useSafeSetState(false);
@@ -338,52 +476,85 @@ const LoginWithEmail = ({onClick}) => {
 
   const onSubmit = async (values) => {
     try {
-        await dataProvider.create('EmailLoginLink', { data: { email: values.email }});
-        setSent(true);
+      await dataProvider.create("EmailLoginLink", {
+        data: { email: values.email },
+      });
+      setSent(true);
     } catch {
-        notify("login_form.send_email_token.error", {type: "error"});
+      notify("login_form.send_email_token.error", { type: "error" });
     }
-  }
+  };
 
   const handleClose = () => {
-      setSent(false)
-      setOpen(false)
-  }
+    setSent(false);
+    setOpen(false);
+  };
 
   return (
     <Box width="100%">
-        <Button
-          id="email-login-button"
-          fullWidth
-          variant="contained"
-          color="inverted"
-          onClick={ () => setOpen(true) }
-        >
-          { translate("login_form.consent_with_email") }
-        </Button>
-        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm" slotProps={{ backdrop: {sx: {background: "rgba(0,0,0,0.9)"}}}} PaperProps={ {"variant": "outlined", sx:{ borderWidth: "10px" }} }>
-            { !sent ? 
-                <DialogContent>
-                    <Typography mb="1em" fontSize="1.2em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
-                        { translate("login_form.send_email_token.title") }
-                    </Typography>
-                    <Form sanitizeEmptyValues onSubmit={onSubmit}>
-                      <TextInput fullWidth validate={[required(), email()]} size="large" variant="filled" source="email" label="Email"/>
-                      <SaveButton fullWidth id="submit-email-for-login-link" size="large" label={ translate("login_form.send_email_token.submit") } icon={<SendIcon/>} />
-                    </Form>
-                </DialogContent>
-                :
-                <Alert  severity="success" icon={false}>
-                  <Typography sx={{ color: "inherit" }} fontSize="1.5em" fontFamily="LeagueSpartanBlack" letterSpacing="-0.03em">
-                    { translate("login_form.send_email_token.done") }
-                  </Typography>
-                  <Typography sx={{ color: "inherit" }}>
-                    { translate("login_form.send_email_token.done_contact_us") }
-                  </Typography>
-                </Alert>
-            }
-        </Dialog>
-    </Box>);
-}
+      <Button
+        id="email-login-button"
+        fullWidth
+        variant="contained"
+        color="inverted"
+        onClick={() => setOpen(true)}
+      >
+        {translate("login_form.consent_with_email")}
+      </Button>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="sm"
+        slotProps={{ backdrop: { sx: { background: "rgba(0,0,0,0.9)" } } }}
+        PaperProps={{ variant: "outlined", sx: { borderWidth: "10px" } }}
+      >
+        {!sent ? (
+          <DialogContent>
+            <Typography
+              mb="1em"
+              fontSize="1.2em"
+              fontFamily="LeagueSpartanBlack"
+              letterSpacing="-0.03em"
+            >
+              {translate("login_form.send_email_token.title")}
+            </Typography>
+            <Form sanitizeEmptyValues onSubmit={onSubmit}>
+              <TextInput
+                fullWidth
+                validate={[required(), email()]}
+                size="large"
+                variant="filled"
+                source="email"
+                label="Email"
+              />
+              <SaveButton
+                fullWidth
+                id="submit-email-for-login-link"
+                size="large"
+                label={translate("login_form.send_email_token.submit")}
+                icon={<SendIcon />}
+              />
+            </Form>
+          </DialogContent>
+        ) : (
+          <Alert severity="success" icon={false}>
+            <Typography
+              sx={{ color: "inherit" }}
+              fontSize="1.5em"
+              fontFamily="LeagueSpartanBlack"
+              letterSpacing="-0.03em"
+            >
+              {translate("login_form.send_email_token.done")}
+            </Typography>
+            <Typography sx={{ color: "inherit" }}>
+              {translate("login_form.send_email_token.done_contact_us")}
+            </Typography>
+          </Alert>
+        )}
+      </Dialog>
+    </Box>
+  );
+};
 
 export default Login;
