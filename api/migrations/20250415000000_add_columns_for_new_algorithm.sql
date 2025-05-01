@@ -30,12 +30,15 @@ CREATE TABLE handle_scorings (
     me_json TEXT,
     tweets_json TEXT,
     mentions_json TEXT,
+    reposts_json TEXT,
+    poll_json TEXT,
 
     post_count INT4 NOT NULL DEFAULT 0,
     impression_count INT4 NOT NULL DEFAULT 0,
 
+    repost_fatigue BOOLEAN NOT NULL DEFAULT FALSE,
     ghost_account BOOLEAN NOT NULL DEFAULT FALSE,
-    inflated_audience BOOLEAN NOT NULL DEFAULT FALSE,
+    indeterminate_audience BOOLEAN NOT NULL DEFAULT FALSE,
     followed BOOLEAN NOT NULL DEFAULT FALSE,
     liked BOOLEAN NOT NULL DEFAULT FALSE,
     replied BOOLEAN NOT NULL DEFAULT FALSE,
@@ -50,12 +53,6 @@ CREATE TABLE handle_scorings (
     offline_engagement_description TEXT,
 
     poll_id VARCHAR,
-    poll_ends_at TIMESTAMPTZ,
-    poll_votes_updated_at TIMESTAMPTZ,
-    poll_none_votes INT4 NOT NULL DEFAULT 0,
-    poll_average_votes INT4 NOT NULL DEFAULT 0,
-    poll_high_votes INT4 NOT NULL DEFAULT 0,
-    poll_reverse_votes INT4 NOT NULL DEFAULT 0,
     poll_score poll_score,
     poll_override poll_score,
     poll_override_reason TEXT,
@@ -65,16 +62,20 @@ CREATE TABLE handle_scorings (
     operational_status_override_reason TEXT,
 
     referrer_score boolean NOT NULL DEFAULT false,
-    referrer_score_override boolean NOT NULL DEFAULT false,
+    referrer_score_override boolean,
     referrer_score_override_reason TEXT,
 
     holder_score boolean NOT NULL DEFAULT false,
-    holder_score_override boolean NOT NULL DEFAULT false,
+    holder_score_override boolean,
     holder_score_override_reason TEXT,
+
+    authority INT4 NOT NULL DEFAULT 0,
 
     audience_size INT4 NOT NULL DEFAULT 0,
     audience_size_override INT4,
-    audience_size_override_reason TEXT
+    audience_size_override_reason TEXT,
+
+    score VARCHAR
 );
 
 CREATE INDEX idx_handle_scorings_handle_id ON handle_scorings(handle_id);
@@ -121,11 +122,11 @@ ADD COLUMN operational_status_override operational_status,
 ADD COLUMN operational_status_override_reason TEXT,
 
 -- If the account referred a number of accounts with real engagement they will a bonus.
-ADD COLUMN referrer_score_override boolean NOT NULL DEFAULT false,
+ADD COLUMN referrer_score_override boolean,
 ADD COLUMN referrer_score_override_reason TEXT,
 
 -- Accounts that hold on to their asami tokens get this score.
-ADD COLUMN holder_score_override boolean NOT NULL DEFAULT false,
+ADD COLUMN holder_score_override boolean,
 ADD COLUMN holder_score_override_reason TEXT,
 
 -- Audience size is the average impression count.

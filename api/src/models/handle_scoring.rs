@@ -1,8 +1,7 @@
+use std::collections::HashMap;
+
 use twitter_v2::{
-    authorization::Oauth2Token,
-    meta::TweetsMeta,
-    query::{MediaField, PollField, TweetField, UserField},
-    ApiPayload, Tweet, TwitterApi, User as TwitterUser,
+    authorization::Oauth2Token, data::ReferencedTweetKind, id::NumericId, meta::TweetsMeta, query::{Exclude, MediaField, PollField, TweetExpansion, TweetField, UserField}, ApiPayload, Tweet, TwitterApi, User as TwitterUser
 };
 
 use super::*;
@@ -25,16 +24,22 @@ model! {
     tweets_json: Option<String>,
     #[sqlx_model_hints(text, default)]
     mentions_json: Option<String>,
+    #[sqlx_model_hints(text, default)]
+    reposts_json: Option<String>,
+    #[sqlx_model_hints(text, default)]
+    poll_json: Option<String>,
 
     #[sqlx_model_hints(int4, default)]
-    post_count: i32, // V
+    post_count: i32,
     #[sqlx_model_hints(int4, default)]
-    impression_count: i32, // V
+    impression_count: i32,
 
     #[sqlx_model_hints(boolean, default)]
     ghost_account: bool,
     #[sqlx_model_hints(boolean, default)]
-    inflated_audience: bool,
+    repost_fatigue: bool,
+    #[sqlx_model_hints(boolean, default)]
+    indeterminate_audience: bool,
     #[sqlx_model_hints(boolean, default)]
     followed: bool,
     #[sqlx_model_hints(boolean, default)]
@@ -60,18 +65,6 @@ model! {
 
     #[sqlx_model_hints(varchar, default)]
     poll_id: Option<String>,
-    #[sqlx_model_hints(timestamptz, default)]
-    poll_ends_at: Option<DateTime<Utc>>,
-    #[sqlx_model_hints(timestamptz, default)]
-    poll_votes_updated_at: Option<DateTime<Utc>>,
-    #[sqlx_model_hints(int4, default)]
-    poll_none_votes: i32,
-    #[sqlx_model_hints(int4, default)]
-    poll_average_votes: i32,
-    #[sqlx_model_hints(int4, default)]
-    poll_high_votes: i32,
-    #[sqlx_model_hints(int4, default)]
-    poll_reverse_votes: i32,
     #[sqlx_model_hints(poll_score, default)]
     poll_score: Option<PollScore>,
     #[sqlx_model_hints(poll_score, default)]
@@ -89,16 +82,19 @@ model! {
     #[sqlx_model_hints(boolean, default)]
     referrer_score: bool,
     #[sqlx_model_hints(boolean, default)]
-    referrer_score_override: bool,
+    referrer_score_override: Option<bool>,
     #[sqlx_model_hints(text, default)]
     referrer_score_override_reason: Option<String>,
 
     #[sqlx_model_hints(boolean, default)]
     holder_score: bool,
     #[sqlx_model_hints(boolean, default)]
-    holder_score_override: bool,
+    holder_score_override: Option<bool>,
     #[sqlx_model_hints(text, default)]
     holder_score_override_reason: Option<String>,
+
+    #[sqlx_model_hints(int4, default)]
+    authority: i32,
 
     #[sqlx_model_hints(int4, default)]
     audience_size: i32,
@@ -106,11 +102,17 @@ model! {
     audience_size_override: Option<i32>,
     #[sqlx_model_hints(text, default)]
     audience_size_override_reason: Option<String>,
+
+    #[sqlx_model_hints(varchar, default)]
+    score: Option<String>,
+
   },
   belongs_to {
       Handle(handle_id)
   }
 }
+
+const NOT_ENOUGH_IMPRESSIONS: usize = 300;
 
 impl_loggable!(HandleScoring);
 
@@ -119,27 +121,29 @@ impl HandleScoringHub {
         self.create(item).await?.apply().await
     }
 
-    pub async fn create(&self, item: Handle) -> AsamiResult<HandleScoring> {
+    pub async fn create(&self, handle: Handle) -> AsamiResult<HandleScoring> {
         let scoring = self
             .insert(InsertHandleScoring {
-                handle_id: item.attrs.id,
+                handle_id: handle.attrs.id,
             })
             .save()
             .await?;
 
         let mut update = scoring.clone().update().status(HandleScoringStatus::Ingested);
 
-        match item.x_api_client().await {
+        match handle.clone().x_api_client().await {
             Ok(api) => {
-                match self.ingest(api).await {
-                    Ok((me, tweets, mentions)) => {
-                        update = update 
+                match self.ingest(api, handle.poll_id()).await {
+                    Ok((me, tweets, mentions, reposts_json, maybe_poll)) => {
+                        update = update
                             .me_json(Some(me))
                             .tweets_json(Some(tweets))
-                            .mentions_json(Some(mentions));
+                            .mentions_json(Some(mentions))
+                            .reposts_json(Some(reposts_json))
+                            .poll_json(maybe_poll);
                     }
                     Err(e) => {
-                        let _ = scoring.fail("ingestion_error", e).await;
+                        let _ = scoring.fail("ingestion_error", format!("{e:?}")).await;
                     }
                 };
             }
@@ -150,33 +154,22 @@ impl HandleScoringHub {
 
         Ok(update.save().await?)
     }
-    pub async fn ingest(&self, api: TwitterApi<Oauth2Token>) -> Result<(String, String, String), IngestError> {
+
+    pub async fn ingest(
+        &self,
+        api: TwitterApi<Oauth2Token>,
+        poll_id: &Option<String>,
+    ) -> anyhow::Result<(String, String, String, String, Option<String>)> {
         let me = api
             .get_users_me()
-            .user_fields([
-                UserField::Id,
-                UserField::Username,
-                UserField::Description,
-                UserField::PublicMetrics,
-                UserField::Withheld,
-                UserField::CreatedAt,
-                UserField::Protected,
-                UserField::Affiliation,
-                UserField::Parody,
-                UserField::VerifiedFollowersCount,
-                UserField::Verified,
-                UserField::VerifiedType,
-                UserField::Subscription,
-                UserField::SubscriptionType,
-            ])
+            .user_fields(build_user_fields())
             .send()
-            .await
-            .map_err(|e| IngestError::new(e, "getting me"))?;
+            .await?;
 
-        let me_json = serde_json::to_string(&me).map_err(|e| IngestError::new(e, &me))?;
+        let me_json = serde_json::to_string(&me)?;
 
         let Some(user_id) = me.payload().data().map(|u| u.id) else {
-            return Err(IngestError::new("user_data_was_empty", &me));
+            return Err(anyhow::anyhow!("user_data_was_empty: {me:?}"));
         };
 
         let now = Utc::now();
@@ -190,124 +183,67 @@ impl HandleScoringHub {
         let end_time = time::OffsetDateTime::from_unix_timestamp((now - chrono::Duration::days(0)).timestamp())?
             .to_offset(time::UtcOffset::UTC);
 
-        let tweets = api
+        let tweets_json = serde_json::to_string(&api
             .get_user_tweets(user_id)
             .max_results(100)
             .start_time(start_time)
             .end_time(end_time)
-            .tweet_fields([
-                TweetField::Attachments,
-                TweetField::NoteTweet,
-                TweetField::AuthorId,
-                TweetField::ReplySettings,
-                TweetField::Lang,
-                TweetField::CreatedAt,
-                TweetField::Text,
-                TweetField::Id,
-                TweetField::Entities,
-                TweetField::Geo,
-                TweetField::Withheld,
-                TweetField::PublicMetrics,
+            .exclude([Exclude::Retweets])
+            .expansions(build_expansions())
+            .user_fields(build_user_fields())
+            .tweet_fields(build_tweet_fields(&[
                 TweetField::OrganicMetrics,
                 TweetField::NonPublicMetrics,
-                TweetField::Source,
-                TweetField::PossiblySensitive,
-                TweetField::ContextAnnotations,
-                TweetField::ConversationId,
-                TweetField::InReplyToUserId,
-                TweetField::ReferencedTweets,
-            ])
-            .user_fields([
-                UserField::Affiliation,
-                UserField::ConnectionStatus,
-                UserField::Parody,
-                UserField::VerifiedFollowersCount,
-                UserField::VerifiedType,
-                UserField::Subscription,
-                UserField::SubscriptionType,
-                UserField::CreatedAt,
-                UserField::Name,
-                UserField::Id,
-                UserField::Username,
-                UserField::Verified,
-                UserField::Withheld,
-                UserField::PublicMetrics,
-                UserField::Description,
-                UserField::PinnedTweetId,
-            ])
-            .media_fields([
-                MediaField::DurationMs,
-                MediaField::MediaKey,
-                MediaField::Type,
-                MediaField::PublicMetrics,
+            ]))
+            .media_fields(build_media_fields(&[
                 MediaField::NonPublicMetrics,
                 MediaField::OrganicMetrics,
                 MediaField::PromotedMetrics,
-                MediaField::AltText,
-            ])
+            ]))
             .poll_fields([PollField::VotingStatus, PollField::Options, PollField::Id])
             .send()
-            .await
-            .map_err(|e| IngestError::new(e, &me))?;
+            .await?)?;
 
-        let tweets_json = serde_json::to_string(&tweets).map_err(|e| IngestError::new(e, &me))?;
-
-        let mentions = api
+        let mentions_json = serde_json::to_string(&api
             .get_user_mentions(user_id)
-            .max_results(100) // TODO: This can be a configuration if we get throtthled.
-            .user_fields([
-                UserField::Affiliation,
-                UserField::ConnectionStatus,
-                UserField::Parody,
-                UserField::VerifiedFollowersCount,
-                UserField::VerifiedType,
-                UserField::Subscription,
-                UserField::SubscriptionType,
-                UserField::CreatedAt,
-                UserField::Name,
-                UserField::Id,
-                UserField::Username,
-                UserField::Verified,
-                UserField::Withheld,
-                UserField::PublicMetrics,
-                UserField::Description,
-                UserField::PinnedTweetId,
-            ])
-            .tweet_fields([
-                TweetField::Attachments,
-                TweetField::NoteTweet,
-                TweetField::AuthorId,
-                TweetField::ReplySettings,
-                TweetField::PublicMetrics,
-                TweetField::Lang,
-                TweetField::CreatedAt,
-                TweetField::Id,
-                TweetField::Source,
-                TweetField::Text,
-                TweetField::PossiblySensitive,
-                TweetField::ContextAnnotations,
-                TweetField::ConversationId,
-                TweetField::Entities,
-                TweetField::Geo,
-                TweetField::InReplyToUserId,
-                TweetField::ReferencedTweets,
-                TweetField::Withheld,
-            ])
-            .media_fields([
-                MediaField::DurationMs,
-                MediaField::MediaKey,
-                MediaField::Type,
-                MediaField::PublicMetrics,
-                MediaField::AltText,
-            ])
+            .max_results(100)
+            .start_time(start_time)
+            .end_time(end_time)
+            .expansions(build_expansions())
+            .user_fields(build_user_fields())
+            .tweet_fields(build_tweet_fields(&[]))
+            .media_fields(build_media_fields(&[]))
             .poll_fields([PollField::VotingStatus, PollField::Options, PollField::Id])
             .send()
-            .await
-            .map_err(|e| IngestError::new(e, (&me, &tweets)))?;
+            .await?)?;
 
-        let mentions_json = serde_json::to_string(&mentions).map_err(|e| IngestError::new(e, (&me, &tweets)))?;
+        let reposts_json = serde_json::to_string(&api
+            .get_user_tweets(user_id)
+            .max_results(100)
+            .start_time(start_time)
+            .end_time(end_time)
+            .tweet_fields([TweetField::CreatedAt, TweetField::ReferencedTweets, TweetField::Id])
+            .send()
+            .await?)?;
 
-        Ok((me_json, tweets_json, mentions_json))
+        let maybe_poll_json = if let Some(tweet_id_string) = poll_id {
+            let tweet_id: u64 = tweet_id_string.parse()?;
+            Some(serde_json::to_string(&api
+                .get_tweet(tweet_id)
+                .expansions(build_expansions())
+                .user_fields(build_user_fields())
+                .tweet_fields(build_tweet_fields(&[
+                    TweetField::OrganicMetrics,
+                    TweetField::NonPublicMetrics,
+                ]))
+                .poll_fields([PollField::VotingStatus, PollField::Options, PollField::Id])
+                .send()
+                .await?)?)
+        } else {
+            None
+        };
+
+        Ok((me_json, tweets_json, mentions_json, reposts_json, maybe_poll_json))
     }
 }
 
@@ -315,82 +251,386 @@ impl HandleScoring {
     pub async fn apply(self) -> AsamiResult<Self> {
         let handle = self.handle().await?;
 
-        let Some(me) = self.me_payload()?.and_then(|x| x.into_data() ) else {
-            return self.discard_or_apply_empty().await
+        let Some(me) = self.me_payload()?.and_then(|x| x.into_data()) else {
+            return self.discard_or_apply_empty().await;
         };
 
-        let Some(tweets) = self.tweets_payload()?.and_then(|x| x.into_data() ) else {
-            return self.discard_or_apply_empty().await
+        let Some(tweets) = self.tweets_payload()?.and_then(|x| x.into_data()) else {
+            return self.discard_or_apply_empty().await;
         };
 
-        let Some(mentions) = self.mentions_payload()?.and_then(|x| x.into_data() ) else {
-            return self.discard_or_apply_empty().await
+        let Some(mentions) = self.mentions_payload()?.and_then(|x| x.into_data()) else {
+            return self.discard_or_apply_empty().await;
         };
 
+        let Some(reposts) = self.reposts_payload()?.and_then(|x| x.into_data()) else {
+            return self.discard_or_apply_empty().await;
+        };
 
-        /*
+        let Some(poll_score) = Self::get_poll_score(&self.poll_payload()?) else {
+            return self.discard_or_apply_empty().await;
+        };
 
-         Online engagement criteria in order of precedence
+        let referenced = Self::get_referenced_tweets(&reposts);
 
-        
-        # Ghost account:
-            Has 5 posts or less, none over 30 impressions, regardless of likes and comments.
-            Online Engagement is set to None.
+        let ghost_account = Self::is_ghost_account(&tweets);
 
-        # Inflated audience
-            When: follower_count / verified_followers > 70
-            If not 1 in 70 followers is verified, the account has a low quality audience.
-            Red flag.
-            Engagement is set to Average.
+        let repost_fatigue = Self::is_repost_fatigue(&tweets, &referenced);
 
-        # Followed:
-            When verified_follower_count / following_count > 8 and verified_follower_count > 200
-            Account with over 200 verified followers where 8 out of 10 didn't need a follow back
-            means people want to hear what hey say.
-            Contributes 1/3 towards High engagement.
+        let (indeterminate_audience, followed) = Self::is_indeterminate_audience_or_followed(&me);
 
-        # Liked:
-            70% of their posts have at least 1 like for every 150 impressions, 
-            They have at least 3 posts with more than 10 likes. 
-            for the first 30k impressions. (If impressions are over 30k we use 30k)
-            Contributes 1/3 towards High engagement.
+        let liked = Self::is_liked(&tweets);
 
-        # Replied:
-            Their posts have on average 1 comment for every 600 impressions.
-            Each post impression count is capped at 30k for this metric.
-            It's a global average.
-            Contributes 1/3 towards High engagement.
+        let replied = Self::is_replied(&tweets, &referenced);
 
-        # Reposted:
-            70% of their posts have at least 1 repost for every 400 impressions, 
-            for the first 30k impressions. (If impressions are over 30k we use 30k)
-            Contributes 1/3 towards High engagement.
+        let reposted = Self::is_reposted(&tweets, &referenced);
 
-        # Mentioned:
-            At least two tweets mentioning them had 500 impressions.
-            Contributes 1/3 towards High engagement.
+        let mentioned = Self::is_mentioned(&mentions);
 
-        */
+        let online_engagement_score = if ghost_account || repost_fatigue {
+            EngagementScore::None
+        } else if indeterminate_audience {
+            EngagementScore::Average
+        } else if [followed, liked, replied, reposted, mentioned].into_iter().filter(|x| *x).count() >= 3 {
+            EngagementScore::High
+        } else {
+            EngagementScore::Average
+        };
 
-        let mut update = self.update()
+        let operational_status_score = Self::get_operational_status_score(&me);
+
+        let (audience_size, impression_count) = Self::get_audience_and_impression_count(&tweets);
+
+        // These two are not implemented yet, so they're false unless overriden.
+        let referrer_score = false;
+        let holder_score = false;
+
+        let authority = Self::get_authority(
+            &handle,
+            online_engagement_score,
+            poll_score,
+            operational_status_score,
+            referrer_score,
+            holder_score,
+        );
+
+        let score = i32_to_hex(handle.audience_size_override().unwrap_or(audience_size) * authority / 100);
+
+        let h = handle
+            .update()
+            .current_scoring_id(Some(*self.id()))
+            .last_scoring(Some(*self.created_at()))
+            .score(Some(score.clone()))
+            .status(HandleStatus::Active)
+            .save()
+            .await?
+            .attrs;
+
+        Ok(self
+            .update()
             .status(HandleScoringStatus::Applied)
-            .post_count(tweets.len().try_into()?);
+            .post_count(tweets.len().try_into()?)
+            .impression_count(impression_count)
+            .repost_fatigue(repost_fatigue)
+            .ghost_account(ghost_account)
+            .indeterminate_audience(indeterminate_audience)
+            .followed(followed)
+            .liked(liked)
+            .replied(replied)
+            .reposted(reposted)
+            .mentioned(mentioned)
+            .online_engagement_score(online_engagement_score)
+            .online_engagement_override(h.online_engagement_override)
+            .online_engagement_override_reason(h.online_engagement_override_reason)
+            .offline_engagement_score(h.offline_engagement_score)
+            .offline_engagement_description(h.offline_engagement_description)
+            .poll_id(h.poll_id)
+            .poll_score(Some(poll_score))
+            .poll_override(h.poll_override)
+            .poll_override_reason(h.poll_override_reason)
+            .operational_status_score(operational_status_score)
+            .operational_status_override(h.operational_status_override)
+            .operational_status_override_reason(h.operational_status_override_reason)
+            .referrer_score(referrer_score)
+            .referrer_score_override(h.referrer_score_override)
+            .referrer_score_override_reason(h.referrer_score_override_reason)
+            .holder_score(holder_score)
+            .holder_score_override(h.holder_score_override)
+            .holder_score_override_reason(h.holder_score_override_reason)
+            .authority(authority)
+            .audience_size(audience_size)
+            .audience_size_override(h.audience_size_override)
+            .audience_size_override_reason(h.audience_size_override_reason)
+            .score(Some(score))
+            .save()
+            .await?)
+    }
+
+
+    fn get_referenced_tweets(reposts: &[Tweet]) -> HashMap<NumericId, ReferencedStats> {
+        let mut stats = HashMap::new();
+
+        for tweet in reposts {
+            let Some(references) = tweet.referenced_tweets.as_ref() else {
+                continue;
+            };
+
+            for reference in references {
+                let entry = stats.entry(reference.id).or_insert_with(ReferencedStats::default);
+                match reference.kind {
+                    ReferencedTweetKind::Quoted => entry.quoted += 1,
+                    ReferencedTweetKind::RepliedTo => entry.replied += 1,
+                    ReferencedTweetKind::Retweeted => entry.retweeted += 1,
+                }
+            }
+        }
+
+        stats
+    }
+
+    fn get_authority(
+        handle: &Handle,
+        online_engagement_score: EngagementScore,
+        poll_score: PollScore,
+        operational_status_score: OperationalStatus,
+        referrer_score: bool,
+        holder_score: bool,
+    ) -> i32 {
+        let mut authority = match handle.online_engagement_override().unwrap_or(online_engagement_score) {
+            EngagementScore::None => return 0,
+            EngagementScore::Average => 25,
+            EngagementScore::High => 50,
+        };
+
+        match handle.poll_override().unwrap_or(poll_score) {
+            PollScore::None => (),
+            PollScore::Average => authority += 10,
+            PollScore::High => authority += 20,
+            PollScore::Reverse => authority /= 2,
+        };
+
+        match handle.offline_engagement_score() {
+            EngagementScore::None => (),
+            EngagementScore::Average => authority += 5,
+            EngagementScore::High => authority += 10,
+        };
+
+        match handle.operational_status_override().unwrap_or(operational_status_score) {
+            OperationalStatus::Banned | OperationalStatus::Shadowbanned => return 0,
+            OperationalStatus::Enhanced => authority += 10,
+            _ => (),
+        };
+
+        if handle.referrer_score_override().unwrap_or(referrer_score) {
+            authority += 10;
+        }
+
+        if handle.holder_score_override().unwrap_or(holder_score) {
+            authority += 10;
+        }
+
+        std::cmp::min(100, authority)
+    }
+
+    // Repost fatigue occurs when an account has very little original content
+    // in comparison to their reposts. More original content should offset
+    // repost fatigue. 
+    fn is_repost_fatigue(tweets: &[Tweet], referenced: &HashMap<NumericId, ReferencedStats>) -> bool {
+        let repost_count: u64 = referenced.iter().map(|(_,r)| r.retweeted ).sum();
+
+        let good_post_count: u64 = tweets.iter().filter(|t| t.text.len() > 50 ).count().try_into().unwrap_or(0);
+
+        if repost_count == 0 { return false; }
+
+        // Reposts can't be more than 1 and 1/2 the good posts.
+        repost_count * 100 / good_post_count >= 150
+    }
+
+    // Ghost accounts tweet too little and generate no impressions.
+    fn is_ghost_account(tweets: &[Tweet]) -> bool {
+        tweets.iter().filter(|t| t.text.len() > 50 ).count() < 5 ||
+        tweets.iter().filter(|t| t.organic_metrics.as_ref().map(|m| m.impression_count > 30).unwrap_or(false)).count() < 5
+    }
+
+    fn is_indeterminate_audience_or_followed(me: &TwitterUser) -> (bool, bool) {
+        let Some(m) = me.public_metrics.as_ref() else {
+            return (true, false);
+        };
+
+        let Some(Ok(verified_count)) = me.verified_followers_count.map(usize::try_from) else {
+            return (true, false);
+        };
+
+        let is_low_verified_audience = verified_count == 0 || m.followers_count / verified_count > 70;
+
+        let is_followed = (m.following_count == 0 || verified_count / m.following_count > 8) && verified_count > 200;
+
+        (is_low_verified_audience, is_followed)
+    }
+
+    fn is_liked(tweets: &[Tweet]) -> bool {
+        let mut very_liked = 0;
+        let mut liked_enough = 0;
+
+        for t in tweets {
+            let Some(m) = t.organic_metrics.as_ref() else { continue };
+            if m.like_count == 0 || m.impression_count < NOT_ENOUGH_IMPRESSIONS {
+                continue;
+            }
+
+            if m.like_count > 10 {
+                liked_enough += 1;
+            }
+
+            if std::cmp::min(m.impression_count, 30000) / m.like_count < 150 {
+                very_liked += 1;
+            }
+        }
+
+        liked_enough > 3 && very_liked * 100 / tweets.len() > 70
+    }
+
+    fn is_replied(tweets: &[Tweet], referenced: &HashMap<NumericId, ReferencedStats>) -> bool {
+        let mut impression_count: i32 = 0;
+        let mut reply_count: i32 = 0;
         
-        Ok(update.save().await?)
+        for tweet in tweets {
+            let Some(o) = tweet.organic_metrics.as_ref() else { continue };
+            let Some(p) = tweet.public_metrics.as_ref() else { continue };
+
+            if o.impression_count < NOT_ENOUGH_IMPRESSIONS {
+                continue;
+            }
+
+            impression_count += o.impression_count.try_into().unwrap_or(0);
+
+            reply_count += (p.reply_count + p.quote_count.unwrap_or(0)).try_into().unwrap_or(0);
+
+            if let Some(r) = referenced.get(&tweet.id) {
+                reply_count -= (r.replied + r.quoted).try_into().unwrap_or(0);
+            }
+        }
+
+        if reply_count <= 0 {
+            return false;
+        }
+
+        std::cmp::min(impression_count, 30000) / reply_count < 600
+    }
+
+    // Means a number (30%) of tweets have at least 1 retweet for every 400 impressions.
+    fn is_reposted(tweets: &[Tweet], referenced: &HashMap<NumericId, ReferencedStats>) -> bool {
+        let mut reposted = 0;
+
+        for t in tweets {
+            let Some(o) = t.organic_metrics.as_ref() else { continue };
+            let Some(p) = t.public_metrics.as_ref() else { continue };
+
+            let impression_count: i32 = std::cmp::min(o.impression_count, 30000).try_into().unwrap_or(0);
+
+            let mut retweet_count = (p.retweet_count + p.quote_count.unwrap_or(0)).try_into().unwrap_or(0);
+
+            if let Some(r) = referenced.get(&t.id) {
+                retweet_count -= (r.retweeted + r.quoted).try_into().unwrap_or(0);
+            }
+
+            if retweet_count <= 0 {
+                continue;
+            }
+
+            if impression_count / retweet_count < 400 {
+                reposted += 1;
+            }
+        }
+
+        reposted * 100 / tweets.len() > 30
+    }
+
+    fn is_mentioned(tweets: &[Tweet]) -> bool {
+        tweets
+            .iter()
+            .filter(|t| t.public_metrics.as_ref().map(|m| m.retweet_count + m.like_count > 25).unwrap_or(false))
+            .count()
+            >= 2
+    }
+
+    fn get_poll_score(maybe_payload: &Option<ApiPayload<Tweet, ()>>) -> Option<PollScore> {
+        let Some(payload) = maybe_payload else {
+            return Some(PollScore::None)
+        };
+
+        let mut options = payload.includes().as_ref()?.polls.as_ref()?.first().as_ref()?.options.clone();
+        options.sort_by_key(|i| i.position );
+        let [none, average, high, reverse] = options.as_slice() else {
+            return None;
+        };
+
+        let score = if high.votes + average.votes > none.votes + reverse.votes {
+            if high.votes > average.votes {
+                PollScore::High
+            } else {
+                PollScore::Average
+            }
+        } else if none.votes > reverse.votes {
+            PollScore::None
+        } else {
+            PollScore::Reverse
+        };
+
+        Some(score)
+    }
+
+    fn get_operational_status_score(me: &TwitterUser) -> OperationalStatus {
+        if me.verified.unwrap_or(false) {
+            OperationalStatus::Enhanced
+        } else if me.protected.unwrap_or(false) {
+            OperationalStatus::Shadowbanned
+        } else {
+            OperationalStatus::Normal
+        }
+    }
+
+    fn get_audience_and_impression_count(tweets: &[Tweet]) -> (i32, i32) {
+        let mut impressions: Vec<usize> =
+            tweets.iter().map(|t| t.organic_metrics.as_ref().map(|m| m.impression_count).unwrap_or(0)).collect();
+
+        let total: usize = impressions.iter().sum();
+
+        impressions.sort();
+        let median = *impressions.get(impressions.len() / 2).unwrap_or(&0);
+        let mean = total / tweets.len();
+        let audience = i32::try_from((mean + median) / 2).unwrap_or(0);
+
+        (audience, i32::try_from(total).unwrap_or(0))
     }
 
     pub async fn discard_or_apply_empty(self) -> AsamiResult<Self> {
         /* We retry scoring 3 times, if there are 3 consecutive discarded scorings, we apply it with a 0 value */
         let handle = self.handle().await?;
 
-        let some_recently_applied = handle.handle_scoring_scope().order_by(HandleScoringOrderBy::CreatedAt).desc(true).limit(4).all().await?
-            .iter().filter(|s| *s.status() == HandleScoringStatus::Applied)
-            .count() > 0;
+        let some_recently_applied = handle
+            .handle_scoring_scope()
+            .order_by(HandleScoringOrderBy::CreatedAt)
+            .desc(true)
+            .limit(4)
+            .all()
+            .await?
+            .iter()
+            .filter(|s| *s.status() == HandleScoringStatus::Applied)
+            .count()
+            > 0;
 
-        if some_recently_applied {
+        let never_applied_any = handle
+            .handle_scoring_scope()
+            .status_eq(HandleScoringStatus::Applied)
+            .count()
+            .await? == 0;
+
+        if some_recently_applied || never_applied_any {
             Ok(self.update().status(HandleScoringStatus::Discarded).save().await?)
         } else {
-            self.handle().await?
+            self.handle()
+                .await?
                 .update()
                 .current_scoring_id(Some(*self.id()))
                 .last_scoring(Some(*self.created_at()))
@@ -413,6 +653,14 @@ impl HandleScoring {
 
     pub fn mentions_payload(&self) -> AsamiResult<Option<ApiPayload<Vec<Tweet>, TweetsMeta>>> {
         self.parse_payload(self.mentions_json(), "mentions_payload")
+    }
+
+    pub fn reposts_payload(&self) -> AsamiResult<Option<ApiPayload<Vec<Tweet>, TweetsMeta>>> {
+        self.parse_payload(self.reposts_json(), "reposts_payload")
+    }
+
+    pub fn poll_payload(&self) -> AsamiResult<Option<ApiPayload<Tweet, ()>>> {
+        self.parse_payload(self.poll_json(), "poll_payload")
     }
 
     pub fn parse_payload<T, A>(&self, json: &Option<String>, col: &str) -> AsamiResult<Option<ApiPayload<T, A>>>
@@ -466,24 +714,77 @@ make_sql_enum![
     }
 ];
 
-#[derive(Serialize)]
-pub struct IngestError {
-    error: String,
-    context: String,
+fn build_user_fields() -> Vec<UserField> {
+    vec![
+        UserField::Protected,
+        UserField::ConnectionStatus,
+        UserField::Name,
+        UserField::PinnedTweetId,
+        UserField::Affiliation,
+        UserField::Parody,
+        UserField::VerifiedFollowersCount,
+        UserField::VerifiedType,
+        UserField::Subscription,
+        UserField::SubscriptionType,
+        UserField::CreatedAt,
+        UserField::Id,
+        UserField::Username,
+        UserField::Verified,
+        UserField::Withheld,
+        UserField::PublicMetrics,
+        UserField::Description,
+    ]
 }
 
-impl IngestError {
-    fn new<E: std::fmt::Debug, S: Serialize>(e: E, c: S) -> Self {
-        let context = serde_json::to_string(&c).unwrap_or_else(|_| "unserializable_context".to_string());
-        Self {
-            error: format!("{e:?}"),
-            context,
-        }
-    }
+fn build_tweet_fields(extra: &[TweetField]) -> Vec<TweetField> {
+    let mut base = vec![
+        TweetField::Attachments,
+        TweetField::NoteTweet,
+        TweetField::AuthorId,
+        TweetField::ReplySettings,
+        TweetField::Lang,
+        TweetField::CreatedAt,
+        TweetField::Text,
+        TweetField::Id,
+        TweetField::Entities,
+        TweetField::Geo,
+        TweetField::Withheld,
+        TweetField::PublicMetrics,
+        TweetField::Source,
+        TweetField::PossiblySensitive,
+        TweetField::ContextAnnotations,
+        TweetField::ConversationId,
+        TweetField::InReplyToUserId,
+        TweetField::ReferencedTweets,
+    ];
+    base.extend_from_slice(extra);
+    base
 }
 
-impl From<time::error::ComponentRange> for IngestError {
-    fn from(e: time::error::ComponentRange) -> IngestError {
-        IngestError::new(e, "")
-    }
+fn build_expansions() -> Vec<TweetExpansion> {
+    vec![
+        TweetExpansion::AttachmentsPollIds,
+        TweetExpansion::AuthorId,
+        TweetExpansion::InReplyToUserId,
+        TweetExpansion::ReferencedTweetsIdAuthorId,
+    ]
+}
+
+fn build_media_fields(extra: &[MediaField]) -> Vec<MediaField> {
+    let mut base = vec![
+        MediaField::DurationMs,
+        MediaField::MediaKey,
+        MediaField::Type,
+        MediaField::PublicMetrics,
+        MediaField::AltText,
+    ];
+    base.extend_from_slice(extra);
+    base
+}
+
+#[derive(Debug, Default)]
+struct ReferencedStats {
+    replied: u64,
+    retweeted: u64,
+    quoted: u64,
 }

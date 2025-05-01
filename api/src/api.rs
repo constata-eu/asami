@@ -34,6 +34,8 @@ mod stats;
 use stats::*;
 mod topic;
 use topic::*;
+mod handle_scoring;
+use handle_scoring::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -311,6 +313,7 @@ make_graphql_query! {
     [Account, allAccounts, allAccountsMeta, "_allAccountsMeta", AccountFilter, String],
     [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, i32],
     [Handle, allHandles, allHandlesMeta, "_allHandlesMeta", HandleFilter, i32],
+    [HandleScoring, allHandleScorings, allHandleScoringsMeta, "_allHandleScoringsMeta", HandleScoringFilter, i32],
     [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, i32],
     [CampaignPreference, allCampaignPreferences, allCampaignPreferencesMeta, "_allCampaignPreferencesMeta", CampaignPreferenceFilter, i32],
     [OnChainJob, allOnChainJobs, allOnChainJobsMeta, "_allOnChainJobsMeta", OnChainJobFilter, i32],

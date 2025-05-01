@@ -65,12 +65,12 @@ model! {
     operational_status_override_reason: Option<String>,
 
     #[sqlx_model_hints(boolean, default)]
-    referrer_score_override: bool,
+    referrer_score_override: Option<bool>,
     #[sqlx_model_hints(text, default)]
     referrer_score_override_reason: Option<String>,
 
     #[sqlx_model_hints(boolean, default)]
-    holder_score_override: bool,
+    holder_score_override: Option<bool>,
     #[sqlx_model_hints(text, default)]
     holder_score_override_reason: Option<String>,
 

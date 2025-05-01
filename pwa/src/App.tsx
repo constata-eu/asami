@@ -1,13 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Admin,
   Resource,
   CustomRoutes,
-  useSafeSetState,
   useStore,
   Authenticated,
-  useRecordContext,
-  useTranslate,
 } from "react-admin";
 import { ContractsProvider } from "./components/contracts_context";
 import { Settings } from "./settings";
@@ -32,7 +29,7 @@ import polyglotI18nProvider from "ra-i18n-polyglot";
 import { messages, browserLocale } from "./i18n";
 import { HandleList } from "./views/explorer/handles";
 import { CampaignList } from "./views/explorer/campaigns";
-import { AccountList } from "./views/explorer/accounts";
+import { AccountList, AccountShow } from "./views/explorer/accounts";
 import { CollabList } from "./views/explorer/collabs";
 import { OnChainJobList } from "./views/explorer/on_chain_jobs";
 import { StatsShow } from "./views/explorer/stats";
@@ -49,7 +46,7 @@ const Dashboard = () => {
 };
 
 export const App = () => {
-  const [dataProvider, setDataProvider] = useSafeSetState<any>(null);
+  const [dataProvider, setDataProvider] = useState<any>(null);
 
   useEffect(() => {
     async function initApp() {
@@ -93,7 +90,7 @@ export const App = () => {
 
           <Resource name="Campaign" list={CampaignList} />
 
-          <Resource name="Account" list={AccountList} />
+          <Resource name="Account" list={AccountList} show={AccountShow} />
 
           <Resource name="Collab" list={CollabList} />
 

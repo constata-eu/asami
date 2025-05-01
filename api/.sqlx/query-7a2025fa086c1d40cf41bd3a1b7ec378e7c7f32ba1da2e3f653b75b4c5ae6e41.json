@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO handle_scorings (handle_id) VALUES ($1) RETURNING id as \"id!: i32\", \nhandle_id as \"handle_id!: i32\", \nstatus as \"status!: HandleScoringStatus\", \ncreated_at as \"created_at!: DateTime < Utc >\", \nme_json as \"me_json!: Option < String >\", \ntweets_json as \"tweets_json!: Option < String >\", \nmentions_json as \"mentions_json!: Option < String >\", \npost_count as \"post_count!: i32\", \nimpression_count as \"impression_count!: i32\", \nghost_account as \"ghost_account!: bool\", \ninflated_audience as \"inflated_audience!: bool\", \nfollowed as \"followed!: bool\", \nliked as \"liked!: bool\", \nreplied as \"replied!: bool\", \nreposted as \"reposted!: bool\", \nmentioned as \"mentioned!: bool\", \nonline_engagement_score as \"online_engagement_score!: EngagementScore\", \nonline_engagement_override as \"online_engagement_override!: Option < EngagementScore >\", \nonline_engagement_override_reason as \"online_engagement_override_reason!: Option < String >\", \noffline_engagement_score as \"offline_engagement_score!: EngagementScore\", \noffline_engagement_description as \"offline_engagement_description!: Option < String >\", \npoll_id as \"poll_id!: Option < String >\", \npoll_ends_at as \"poll_ends_at!: Option < DateTime < Utc > >\", \npoll_votes_updated_at as \"poll_votes_updated_at!: Option < DateTime < Utc > >\", \npoll_none_votes as \"poll_none_votes!: i32\", \npoll_average_votes as \"poll_average_votes!: i32\", \npoll_high_votes as \"poll_high_votes!: i32\", \npoll_reverse_votes as \"poll_reverse_votes!: i32\", \npoll_score as \"poll_score!: Option < PollScore >\", \npoll_override as \"poll_override!: Option < PollScore >\", \npoll_override_reason as \"poll_override_reason!: Option < String >\", \noperational_status_score as \"operational_status_score!: OperationalStatus\", \noperational_status_override as \"operational_status_override!: Option < OperationalStatus >\", \noperational_status_override_reason as \"operational_status_override_reason!: Option < String >\", \nreferrer_score as \"referrer_score!: bool\", \nreferrer_score_override as \"referrer_score_override!: bool\", \nreferrer_score_override_reason as \"referrer_score_override_reason!: Option < String >\", \nholder_score as \"holder_score!: bool\", \nholder_score_override as \"holder_score_override!: bool\", \nholder_score_override_reason as \"holder_score_override_reason!: Option < String >\", \naudience_size as \"audience_size!: i32\", \naudience_size_override as \"audience_size_override!: Option < i32 >\", \naudience_size_override_reason as \"audience_size_override_reason!: Option < String >\"",
+  "query": "INSERT INTO handle_scorings (handle_id) VALUES ($1) ON CONFLICT (id) DO UPDATE SET id = handle_scorings.id RETURNING id as \"id!: i32\", \nhandle_id as \"handle_id!: i32\", \nstatus as \"status!: HandleScoringStatus\", \ncreated_at as \"created_at!: DateTime < Utc >\", \nme_json as \"me_json!: Option < String >\", \ntweets_json as \"tweets_json!: Option < String >\", \nmentions_json as \"mentions_json!: Option < String >\", \nreposts_json as \"reposts_json!: Option < String >\", \npoll_json as \"poll_json!: Option < String >\", \npost_count as \"post_count!: i32\", \nimpression_count as \"impression_count!: i32\", \nghost_account as \"ghost_account!: bool\", \nrepost_fatigue as \"repost_fatigue!: bool\", \nindeterminate_audience as \"indeterminate_audience!: bool\", \nfollowed as \"followed!: bool\", \nliked as \"liked!: bool\", \nreplied as \"replied!: bool\", \nreposted as \"reposted!: bool\", \nmentioned as \"mentioned!: bool\", \nonline_engagement_score as \"online_engagement_score!: EngagementScore\", \nonline_engagement_override as \"online_engagement_override!: Option < EngagementScore >\", \nonline_engagement_override_reason as \"online_engagement_override_reason!: Option < String >\", \noffline_engagement_score as \"offline_engagement_score!: EngagementScore\", \noffline_engagement_description as \"offline_engagement_description!: Option < String >\", \npoll_id as \"poll_id!: Option < String >\", \npoll_score as \"poll_score!: Option < PollScore >\", \npoll_override as \"poll_override!: Option < PollScore >\", \npoll_override_reason as \"poll_override_reason!: Option < String >\", \noperational_status_score as \"operational_status_score!: OperationalStatus\", \noperational_status_override as \"operational_status_override!: Option < OperationalStatus >\", \noperational_status_override_reason as \"operational_status_override_reason!: Option < String >\", \nreferrer_score as \"referrer_score!: bool\", \nreferrer_score_override as \"referrer_score_override!: Option < bool >\", \nreferrer_score_override_reason as \"referrer_score_override_reason!: Option < String >\", \nholder_score as \"holder_score!: bool\", \nholder_score_override as \"holder_score_override!: Option < bool >\", \nholder_score_override_reason as \"holder_score_override_reason!: Option < String >\", \nauthority as \"authority!: i32\", \naudience_size as \"audience_size!: i32\", \naudience_size_override as \"audience_size_override!: Option < i32 >\", \naudience_size_override_reason as \"audience_size_override_reason!: Option < String >\", \nscore as \"score!: Option < String >\"",
   "describe": {
     "columns": [
       {
@@ -52,51 +52,66 @@
       },
       {
         "ordinal": 7,
+        "name": "reposts_json!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "poll_json!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
         "name": "post_count!: i32",
         "type_info": "Int4"
       },
       {
-        "ordinal": 8,
+        "ordinal": 10,
         "name": "impression_count!: i32",
         "type_info": "Int4"
       },
       {
-        "ordinal": 9,
+        "ordinal": 11,
         "name": "ghost_account!: bool",
         "type_info": "Bool"
       },
       {
-        "ordinal": 10,
-        "name": "inflated_audience!: bool",
-        "type_info": "Bool"
-      },
-      {
-        "ordinal": 11,
-        "name": "followed!: bool",
-        "type_info": "Bool"
-      },
-      {
         "ordinal": 12,
-        "name": "liked!: bool",
+        "name": "repost_fatigue!: bool",
         "type_info": "Bool"
       },
       {
         "ordinal": 13,
-        "name": "replied!: bool",
+        "name": "indeterminate_audience!: bool",
         "type_info": "Bool"
       },
       {
         "ordinal": 14,
-        "name": "reposted!: bool",
+        "name": "followed!: bool",
         "type_info": "Bool"
       },
       {
         "ordinal": 15,
-        "name": "mentioned!: bool",
+        "name": "liked!: bool",
         "type_info": "Bool"
       },
       {
         "ordinal": 16,
+        "name": "replied!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 17,
+        "name": "reposted!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 18,
+        "name": "mentioned!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 19,
         "name": "online_engagement_score!: EngagementScore",
         "type_info": {
           "Custom": {
@@ -112,7 +127,7 @@
         }
       },
       {
-        "ordinal": 17,
+        "ordinal": 20,
         "name": "online_engagement_override!: Option < EngagementScore >",
         "type_info": {
           "Custom": {
@@ -128,12 +143,12 @@
         }
       },
       {
-        "ordinal": 18,
+        "ordinal": 21,
         "name": "online_engagement_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 19,
+        "ordinal": 22,
         "name": "offline_engagement_score!: EngagementScore",
         "type_info": {
           "Custom": {
@@ -149,47 +164,17 @@
         }
       },
       {
-        "ordinal": 20,
+        "ordinal": 23,
         "name": "offline_engagement_description!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 21,
+        "ordinal": 24,
         "name": "poll_id!: Option < String >",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 22,
-        "name": "poll_ends_at!: Option < DateTime < Utc > >",
-        "type_info": "Timestamptz"
-      },
-      {
-        "ordinal": 23,
-        "name": "poll_votes_updated_at!: Option < DateTime < Utc > >",
-        "type_info": "Timestamptz"
-      },
-      {
-        "ordinal": 24,
-        "name": "poll_none_votes!: i32",
-        "type_info": "Int4"
-      },
-      {
         "ordinal": 25,
-        "name": "poll_average_votes!: i32",
-        "type_info": "Int4"
-      },
-      {
-        "ordinal": 26,
-        "name": "poll_high_votes!: i32",
-        "type_info": "Int4"
-      },
-      {
-        "ordinal": 27,
-        "name": "poll_reverse_votes!: i32",
-        "type_info": "Int4"
-      },
-      {
-        "ordinal": 28,
         "name": "poll_score!: Option < PollScore >",
         "type_info": {
           "Custom": {
@@ -206,7 +191,7 @@
         }
       },
       {
-        "ordinal": 29,
+        "ordinal": 26,
         "name": "poll_override!: Option < PollScore >",
         "type_info": {
           "Custom": {
@@ -223,12 +208,12 @@
         }
       },
       {
-        "ordinal": 30,
+        "ordinal": 27,
         "name": "poll_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 31,
+        "ordinal": 28,
         "name": "operational_status_score!: OperationalStatus",
         "type_info": {
           "Custom": {
@@ -245,7 +230,7 @@
         }
       },
       {
-        "ordinal": 32,
+        "ordinal": 29,
         "name": "operational_status_override!: Option < OperationalStatus >",
         "type_info": {
           "Custom": {
@@ -262,54 +247,64 @@
         }
       },
       {
-        "ordinal": 33,
+        "ordinal": 30,
         "name": "operational_status_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 34,
+        "ordinal": 31,
         "name": "referrer_score!: bool",
         "type_info": "Bool"
       },
       {
-        "ordinal": 35,
-        "name": "referrer_score_override!: bool",
+        "ordinal": 32,
+        "name": "referrer_score_override!: Option < bool >",
         "type_info": "Bool"
       },
       {
-        "ordinal": 36,
+        "ordinal": 33,
         "name": "referrer_score_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 37,
+        "ordinal": 34,
         "name": "holder_score!: bool",
         "type_info": "Bool"
       },
       {
-        "ordinal": 38,
-        "name": "holder_score_override!: bool",
+        "ordinal": 35,
+        "name": "holder_score_override!: Option < bool >",
         "type_info": "Bool"
       },
       {
-        "ordinal": 39,
+        "ordinal": 36,
         "name": "holder_score_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 40,
+        "ordinal": 37,
+        "name": "authority!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 38,
         "name": "audience_size!: i32",
         "type_info": "Int4"
       },
       {
-        "ordinal": 41,
+        "ordinal": 39,
         "name": "audience_size_override!: Option < i32 >",
         "type_info": "Int4"
       },
       {
-        "ordinal": 42,
+        "ordinal": 40,
         "name": "audience_size_override_reason!: Option < String >",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 41,
+        "name": "score!: Option < String >",
+        "type_info": "Varchar"
       }
     ],
     "parameters": {
@@ -325,6 +320,9 @@
       true,
       true,
       true,
+      true,
+      true,
+      false,
       false,
       false,
       false,
@@ -342,26 +340,22 @@
       true,
       true,
       true,
-      false,
-      false,
-      false,
-      false,
       true,
+      false,
       true,
       true,
       false,
       true,
       true,
       false,
-      false,
+      true,
       true,
       false,
       false,
       true,
-      false,
       true,
       true
     ]
   },
-  "hash": "aa539fc7304444350d2bccab957e00f48255a0c04baff191dc86799f24321467"
+  "hash": "7a2025fa086c1d40cf41bd3a1b7ec378e7c7f32ba1da2e3f653b75b4c5ae6e41"
 }

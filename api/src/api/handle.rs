@@ -22,8 +22,14 @@ pub struct Handle {
 
     #[graphql(description = "The score given to this handle by Asami's admin.")]
     score: Option<String>,
+    #[graphql(description = "The last scoring successfully applied to this handle.")]
+    current_scoring_id: Option<i32>,
+    #[graphql(description = "Date in which the last scoring took place.")]
+    last_scoring: Option<DateTime<Utc>>,
+
     #[graphql(description = "Topics assigned to this handle")]
     topic_ids: Vec<i32>,
+    
     #[graphql(description = "Status of this handle.")]
     status: HandleStatus,
     #[graphql(description = "Collabs made")]

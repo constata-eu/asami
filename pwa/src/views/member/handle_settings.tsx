@@ -14,11 +14,29 @@ import {
   Skeleton,
   Typography,
   Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemText,
+  Link,
+  ListItemIcon,
 } from "@mui/material";
+import { Trans } from "react-i18next";
+
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import PollIcon from "@mui/icons-material/Poll";
+import CampaignIcon from "@mui/icons-material/Campaign";
+import LockResetIcon from "@mui/icons-material/LockReset";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 import { Head2 } from "../../components/theme";
 import XIcon from "@mui/icons-material/X";
 import { makeXAuthorize } from "../../lib/auth_provider";
+import { useState } from "react";
 
 export const HandleSettings = ({ handles }) => {
   const translate = useTranslate();
@@ -125,8 +143,7 @@ const HandleInactive = ({ handle }) => {
   return (
     <Box id={`handle-x-inactive`}>
       <Typography variant="body2">
-        TODO: Your handle has been deactivated.
-        {translate(`handle_settings.x.in_progress.text`, {
+        {translate(`handle_settings.x.account_deactivated.summary`, {
           username: handle.username,
         })}
       </Typography>
@@ -135,20 +152,52 @@ const HandleInactive = ({ handle }) => {
 };
 
 const HandleSubmissionInProgress = ({ handle }) => {
+  const [open, setOpen] = useState(true);
   const translate = useTranslate();
+  const handleClose = () => setOpen(false);
 
   return (
-    <Box id={`handle-x-submission-in-progress-message`}>
-      <Typography variant="body2">
-        {translate(`handle_settings.x.in_progress.text`, {
-          username: handle.username,
-        })}
-      </Typography>
-    </Box>
+    <>
+      <Box id={`handle-x-submission-in-progress-message`}>
+        <Typography variant="body2">
+          {translate(`handle_settings.x.in_progress.summary`, {
+            username: handle.username,
+          })}
+        </Typography>
+      </Box>
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
+        <DialogTitle>
+          {translate("handle_settings.x.in_progress.dialog_title", {
+            username: handle.username,
+          })}
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Typography variant="body1" gutterBottom>
+            {translate("handle_settings.x.in_progress.may_take_up_to_an_hour")}
+          </Typography>
+          <Typography variant="body1">
+            {translate("handle_settings.x.in_progress.check_the_poll")}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={handleClose}
+          >
+            Got it
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 
 const GrantPermissionsAndMakePost = () => {
+  const [open, setOpen] = useState(true);
+  const translate = useTranslate();
+
   const startXLogin = async () => {
     const { url, verifier } = await makeXAuthorize();
     localStorage.setItem("grantAccessOauthVerifier", verifier);
@@ -156,23 +205,128 @@ const GrantPermissionsAndMakePost = () => {
   };
 
   return (
-    <Box>
-      <Typography>
-        Link your account, we will create a poll on your behalf.
-      </Typography>
-      <Button
-        id="button-grant-permission-and-make-post"
-        fullWidth
-        variant="contained"
-        onClick={startXLogin}
+    <>
+      <Box>
+        <Typography mb="1em">
+          {translate(
+            "handle_settings.x.grant_permissions_and_make_posts.summary",
+          )}
+        </Typography>
+        <Button
+          id="open-grant-permission-and-make-post-dialog"
+          fullWidth
+          variant="contained"
+          onClick={() => setOpen(true)}
+        >
+          {translate(
+            "handle_settings.x.grant_permissions_and_make_posts.get_started",
+          )}
+        </Button>
+      </Box>
+      <Dialog
+        open={open}
+        disableEscapeKeyDown
+        fullWidth={true}
+        onClose={(_event, reason) => {
+          if (reason === "backdropClick" || reason === "escapeKeyDown") {
+            // Do nothing
+            return;
+          }
+        }}
+        slotProps={{ backdrop: { sx: { background: "rgba(0,0,0,0.9)" } } }}
       >
-        Link account <XIcon sx={{ ml: "5px" }} />
-      </Button>
-    </Box>
+        <DialogTitle>
+          {translate(
+            "handle_settings.x.grant_permissions_and_make_posts.dialog_title",
+          )}
+        </DialogTitle>
+        <DialogContent>
+          <List disablePadding>
+            <ListItem>
+              <ListItemIcon>
+                <CheckCircleIcon />
+              </ListItemIcon>
+              <ListItemText
+                primary={translate(
+                  "handle_settings.x.grant_permissions_and_make_posts.we_will_check_your_activity",
+                )}
+              />
+            </ListItem>
+            <ListItem>
+              <ListItemIcon>
+                <PollIcon />
+              </ListItemIcon>
+              <ListItemText
+                primary={translate(
+                  "handle_settings.x.grant_permissions_and_make_posts.we_will_post_a_poll",
+                )}
+              />
+            </ListItem>
+            <ListItem>
+              <ListItemIcon>
+                <CampaignIcon />
+              </ListItemIcon>
+              <ListItemText
+                primary={translate(
+                  "handle_settings.x.grant_permissions_and_make_posts.you_will_earn_rewards",
+                )}
+              />
+            </ListItem>
+            <ListItem>
+              <ListItemIcon>
+                <LockResetIcon />
+              </ListItemIcon>
+              <ListItemText
+                primary={translate(
+                  "handle_settings.x.grant_permissions_and_make_posts.you_can_revoke",
+                )}
+              />
+            </ListItem>
+            <ListItem>
+              <ListItemIcon>
+                <HelpOutlineIcon />
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: translate(
+                        "handle_settings.x.grant_permissions_and_make_posts.help_text",
+                      ),
+                    }}
+                  />
+                }
+              />
+            </ListItem>
+          </List>{" "}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            id="button-cancel-grant-permission-and-make-post"
+            fullWidth
+            onClick={() => setOpen(false)}
+          >
+            I'll do this later
+          </Button>
+          <Button
+            id="button-grant-permission-and-make-post"
+            fullWidth
+            variant="contained"
+            onClick={startXLogin}
+          >
+            Let's Go
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 
 const GrantPermissionsAgain = () => {
+  const [open, setOpen] = useState(true);
+  const handleClose = () => setOpen(false);
+  const translate = useTranslate();
+
   const startXLogin = async () => {
     const { url, verifier } = await makeXAuthorize();
     localStorage.setItem("grantAccessOauthVerifier", verifier);
@@ -180,21 +334,64 @@ const GrantPermissionsAgain = () => {
   };
 
   return (
-    <Box id="grant-x-permission-again">
-      <Typography>
-        We can't access your X account. We need your permission again, otherwise
-        we won't be able to score your influence level and you won't be able to
-        participate in campaigns.
-      </Typography>
-      <Button
-        id="button-grant-x-permission-again"
-        fullWidth
-        variant="contained"
-        onClick={startXLogin}
-      >
-        Link account <XIcon sx={{ ml: "5px" }} />
-      </Button>
-      ;
-    </Box>
+    <>
+      <Box id="grant-x-permission-again">
+        <Typography mb="0.5em">
+          {translate("handle_settings.x.grant_permissions_again.summary")}
+        </Typography>
+        <Button
+          id="button-grant-x-permission-again-in-summary"
+          fullWidth
+          variant="contained"
+          onClick={startXLogin}
+        >
+          {translate("handle_settings.x.grant_permissions_again.reconnect")}
+        </Button>
+      </Box>
+
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
+        <DialogTitle>
+          <Box display="flex" alignItems="baseline" gap={1}>
+            <Typography variant="h6" component="span">
+              {translate(
+                "handle_settings.x.grant_permissions_again.dialog_title",
+              )}
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Box display="flex" flexDirection="column" gap={2} p={2}>
+            <Typography variant="body1">
+              {translate(
+                "handle_settings.x.grant_permissions_again.cant_measure",
+              )}
+            </Typography>
+            <Typography variant="body1">
+              {translate(
+                "handle_settings.x.grant_permissions_again.please_reconnect",
+              )}
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            id="button-cancel-grant-permissions-again"
+            fullWidth
+            onClick={handleClose}
+          >
+            {translate("handle_settings.x.grant_permissions_again.later")}
+          </Button>
+          <Button
+            id="button-grant-x-permission-again"
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={startXLogin}
+          >
+            {translate("handle_settings.x.grant_permissions_again.reconnect")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };

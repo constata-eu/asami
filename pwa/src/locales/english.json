@@ -14,7 +14,7 @@
         "asamiBalance": "ASAMI",
         "rbtcBalance": "RBTC",
         "docBalance": "DOC",
-        "allowsGasless": "Wants Gasless", 
+        "allowsGasless": "Wants Gasless",
         "idEq": "by ID",
         "addrLike": "by wallet address"
       }
@@ -95,10 +95,7 @@
       }
     }
   },
-	"footer": {
-    "built_with": "Built with"
-  },
-	"footer": {
+  "footer": {
     "built_with": "Bitcoiner smart-contract in",
     "tech_sponsor": "Industrial-grade tech sponsor",
     "funds_sponsor": "Campaign funding sponsor",
@@ -113,11 +110,11 @@
     "post": "Post",
     "budget": "Budget",
     "status": "Current status",
-		"statuses": {
-			"publishing": "Publishing soon.",
-			"running": "Has %{budget} DOC. Runs until: %{validUntil}.",
-			"stopped": "Not running."
-		}
+    "statuses": {
+      "publishing": "Publishing soon.",
+      "running": "Has %{budget} DOC. Runs until: %{validUntil}.",
+      "stopped": "Not running."
+    }
   },
   "claim_account": {
     "success": "The admin will hand over control of your account to you soon.",
@@ -128,7 +125,7 @@
     "CLAIMED": "You can create a campaign in X by providing a link to any post, and members will amplify it. Remember they have the last word, so make your post friendly!",
     "CLAIMING": "You'll be able to start new campaigns once the admin processes your account claim",
     "MANAGED": "You should connect your WEB3 wallet to be able to create campaigns.",
-		"BANNED": "Your account has been deactivated 😭. Your funds are still in the smart contract, and you can find them there, but you cannot longer use this website."
+    "BANNED": "Your account has been deactivated 😭. Your funds are still in the smart contract, and you can find them there, but you cannot longer use this website."
   },
   "campaign_request_list": {
     "title": "Requested campaigns",
@@ -146,20 +143,20 @@
     "see_post": "See post",
     "reward": "Reward",
     "fee": "Asami fee",
-		"statuses": {
-			"REGISTERED": {
-				"title": "Registered",
-				"text": "We saw your collab, we're validating it."
-			},
-			"CLEARED": {
-				"title": "Cleared",
-				"text": "Paid to your unclaimed balance."
-			},
-			"FAILED": {
-				"title": "Failed",
-				"text": "The campaign ran out of budget. You can undo your collaboration :("
-			}
-		}
+    "statuses": {
+      "REGISTERED": {
+        "title": "Registered",
+        "text": "We saw your collab, we're validating it."
+      },
+      "CLEARED": {
+        "title": "Cleared",
+        "text": "Paid to your unclaimed balance."
+      },
+      "FAILED": {
+        "title": "Failed",
+        "text": "The campaign ran out of budget. You can undo your collaboration :("
+      }
+    }
   },
   "campaign_request": {
     "title": "Suggest a campaign",
@@ -254,7 +251,7 @@
     "wait_for_campaigns": "There are no campaigns for you to amplify at the moment. Come back tomorrow!"
   },
   "handle_settings": {
-    "title": "Settings",
+    "title": "Handle",
     "stats": {
       "username": "Username",
       "user_id": "User ID",
@@ -263,28 +260,38 @@
       "locked_until": "Values in force until"
     },
     "x": {
-      "create_request": {
-        "text": "Verify your X account ownership to know your influence level, and get paid to repost.",
-        "username_label": "Your X handle",
-        "username_help": "Example: @jack",
-        "save": "Continue",
-        "success": "We've got your handle!",
-        "username_error": "That does not seem to be an X username. It should be something like '@jack'"
+      "grant_permissions_and_make_posts": {
+        "summary": "Discover your influence. Start collecting rewards.",
+        "get_started": "Get Started",
+        "dialog_title": "Show Your Impact: Link Your X Account!",
+        "we_will_check_your_activity": "We’ll check your X activity to measure your audience and influence based on interactions.",
+        "we_will_post_a_poll": "We’ll post a poll on your behalf so your audience can rate your influence, you can opt-out by deleting it right away, but it may affect your score.",
+        "you_will_earn_rewards": "After that, you’ll see campaigns you can repost to start earning rewards.",
+        "you_can_revoke": "You can revoke permissions anytime on X, and reset your influence.",
+        "help_text": "Need help? Ask our <a href=\"https://bot.asami.club\" target=\"_blank\" rel=\"noopener\">chatbot</a> or join our <a href=\"https://t.me/asami_club\" target=\"_blank\" rel=\"noopener\">Telegram group</a>."
       },
       "in_progress": {
-        "text": "We're verifying your X account, this may take up to one hour."
+        "summary": "We are measuring your influnce @%{username}, it may take up to one hour.",
+        "dialog_title": "Measuring influence for @%{username}",
+        "may_take_up_to_an_hour": "It may take up to an hour for your score to be ready.",
+        "check_the_poll": "In the meantime, check your X profile to see the poll we just posted for you — your audience’s votes will help shape your score!"
       },
-      "make_verification_post": {
-        "text": "Post this message to verify your handle ownership, consent to use asami, and disclosure to your followers.",
-        "post_text": "Starting today, some of my reposts will be paid for, as I joined @asami_club [%{accountId}]",
-        "button": "Post message",
-        "done": "Thank you! It may take up to an hour for us to pick up your post."
+      "grant_permissions_again": {
+        "summary": "We've lost access to your x account. Reconnect to keep collaborating.",
+        "dialog_title": "We've Lost Access to Your X Account",
+        "cant_measure": "We can’t measure your influence right now, so your score will be reset to 0.",
+        "please_reconnect": "Please reconnect your X account to restore access and continue collaborating in campaigns.",
+        "reconnect": "Reconnect",
+        "later": "I'll do this later"
+      },
+      "account_deactivated": {
+        "summary": "Your handle has been deactivated by the campaign manager due to infringement."
       }
     }
   },
   "balance_card": {
     "title": "Your account",
-    "account_id_label":"Account ID",
+    "account_id_label": "Account ID",
     "unclaimed": {
       "doc_label": "Unclaimed DOC",
       "asami_label": "Unclaimed ASAMI",
@@ -299,16 +306,15 @@
       "not_added": "%{symbol} could not be added to your wallet.",
       "address": "RSK Address",
       "last_payout_amount_label": "Last fee share received",
-      "last_payout_date_label":"Last fee share date",
-      "next_payout_date_label":"Next fee share date",
-			"cant_withdraw": "You don't have enough RBTC in your wallet to claim your balance.",
-			"claim_button_label": "Claim to wallet",
-			"gasless_claim_button_label": "Claim without RBTC",
-			"suggest_gasless": "We deduct 1 DOC, you get your unclaimed balances and 0.000006 RBTC in your wallet.",
-			"no_pending_balance": "Your rewards will go to your unclaimed balance, then you can claim them here.",
-			"cant_withdraw": "You're low on RBTC for this claim. We can process your claim ind send you some extra RBTC for 1 DOC of your unclaimed balance. Keep stacking rewards!",
-			"gasless_allowance_success": "We'll process your claim soon.",
-			"claim_success": "Your tokens are on their way."
+      "last_payout_date_label": "Last fee share date",
+      "next_payout_date_label": "Next fee share date",
+      "claim_button_label": "Claim to wallet",
+      "gasless_claim_button_label": "Claim without RBTC",
+      "suggest_gasless": "We deduct 1 DOC, you get your unclaimed balances and 0.000006 RBTC in your wallet.",
+      "no_pending_balance": "Your rewards will go to your unclaimed balance, then you can claim them here.",
+      "cant_withdraw": "You're low on RBTC for this claim. We can process your claim ind send you some extra RBTC for 1 DOC of your unclaimed balance. Keep stacking rewards!",
+      "gasless_allowance_success": "We'll process your claim soon.",
+      "claim_success": "Your tokens are on their way."
     }
   },
   "logged_in_nav_card": {
@@ -364,15 +370,15 @@
     "web3_consent_body": "To collect your rewards, get ASAMI tokens, and vote.",
     "consent_and_connect": "Consent and connect",
     "send_email_token": {
-        "title": "Enter your email and we'll send you a login code.",
-        "submit": "Send me a code",
-        "error": "There was a problem sending your code. Contact us on X at @asami_club",
-        "done": "Code sent, check your inbox.",
-        "done_contact_us": "If you don't get your login token, contact us on X at @asami_club"
+      "title": "Enter your email and we'll send you a login code.",
+      "submit": "Send me a code",
+      "error": "There was a problem sending your code. Contact us on X at @asami_club",
+      "done": "Code sent, check your inbox.",
+      "done_contact_us": "If you don't get your login token, contact us on X at @asami_club"
     },
     "x_mobile_warning": {
-        "title": "This may not work on mobile",
-        "text": "If login fails, we suggest you log-in using your Email address or a WEB3 wallet. You can also try again using X but on your laptop or from a different browser on your mobile."
+      "title": "This may not work on mobile",
+      "text": "If login fails, we suggest you log-in using your Email address or a WEB3 wallet. You can also try again using X but on your laptop or from a different browser on your mobile."
     }
   },
   "about_us": {
@@ -412,43 +418,54 @@
       "skip_nav": "Skip"
     }
   },
-	"version_two": {
-		"title": "Version 2 is here 🎉",
-		"text": "Batteries included! Now you can get some RBTC with your rewards, so your wallet is always ready to be used with other apps in the rootstock ecosystem."
-	},
-	"explorer": {
-	  "menu": {
-	    "stats": "Club Stats",
-	    "handles": "Handles",
-	    "accounts": "Members",
-	    "campaigns": "Campaigns",
-	    "collabs": "Collabs",
-	    "oracle": "Oracle"
-	  },
-	  "stats": {
-	    "title": "Club Stats",
-	    "description": "These are the general club stats right now. You can explore all club activities in Members, Campaigns, Handles, and Collabs.",
-	    "explore_btn": "Explore data"
-	  },
-	  "campaigns": {
-	    "title": "Campaigns",
-	    "description": "These are all the campaigns ever created by advertisers."
-	  },
-	  "handles": {
-	    "title": "Handles",
-	    "description": "These are the handles that engage in collabs. They are scored by the campaign manager."
-	  },
-	  "accounts": {
-	    "title": "Members",
-	    "description": "Club members that can be making campaigns, collaborating, or both."
-	  },
-	  "collabs": {
-	    "title": "Collaborations",
-	    "description": "A collaboration occurs when a Handle reposts, participating on a Campaign"
-	  },
-	  "oracle": {
-	    "title": "Oracle Jobs",
-	    "description": "These are this campaign manager's on-chain jobs. This is the only campaign manager so far."
-	  }
-	}
+  "version_two": {
+    "title": "Version 2 is here 🎉",
+    "text": "Batteries included! Now you can get some RBTC with your rewards, so your wallet is always ready to be used with other apps in the rootstock ecosystem."
+  },
+  "explorer": {
+    "menu": {
+      "stats": "Club Stats",
+      "handles": "Handles",
+      "accounts": "Members",
+      "campaigns": "Campaigns",
+      "collabs": "Collabs",
+      "oracle": "Oracle"
+    },
+    "stats": {
+      "title": "Club Stats",
+      "description": "These are the general club stats right now. You can explore all club activities in Members, Campaigns, Handles, and Collabs.",
+      "explore_btn": "Explore data"
+    },
+    "campaigns": {
+      "title": "Campaigns",
+      "description": "These are all the campaigns ever created by advertisers."
+    },
+    "handles": {
+      "title": "Handles",
+      "description": "These are the handles that engage in collabs. They are scored by the campaign manager."
+    },
+    "accounts": {
+      "title": "Members",
+      "description": "Club members that can be making campaigns, collaborating, or both."
+    },
+    "collabs": {
+      "title": "Collaborations",
+      "description": "A collaboration occurs when a Handle reposts, participating on a Campaign"
+    },
+    "oracle": {
+      "title": "Oracle Jobs",
+      "description": "These are this campaign manager's on-chain jobs. This is the only campaign manager so far."
+    }
+  },
+  "oauth_redirect": {
+    "logging_you_in": "Logging you in, this won&apos;t take long.",
+    "invalid_redirect_state": "This link has expired or the redirect url is invalid. Did you copy it manually?. Please try again.",
+    "unexpected_error": "An unexpected error ocurred while starting your session",
+    "error_description_title": "We have a description for the error:",
+    "try_again": "Try again",
+    "contact_us": "Contact us",
+    "x_grant_access_success": "Success! We're verifying your influence now — you’ll be able to join campaigns shortly.",
+    "x_gant_access_error": "We couldn’t link your X account. Please try again, or contact support if the issue persists.",
+    "x_waiting_for_access": "Waiting for X access."
+  }
 }
