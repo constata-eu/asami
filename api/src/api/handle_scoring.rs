@@ -65,7 +65,7 @@ pub struct HandleScoringFilter {
 impl Showable<models::HandleScoring, HandleScoringFilter> for HandleScoring {
     fn sort_field_to_order_by(field: &str) -> Option<models::HandleScoringOrderBy> {
         match field {
-            "id" => Some(HandleOrderBy::Id),
+            "id" => Some(HandleScoringOrderBy::Id),
             _ => None,
         }
     }

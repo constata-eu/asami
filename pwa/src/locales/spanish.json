@@ -103,7 +103,7 @@
       }
     }
   },
-	"footer": {
+  "footer": {
     "built_with": "Smart contract bitcoiner en",
     "tech_sponsor": "Sponsor de tecnología",
     "funds_sponsor": "Sponsor de campañas",
@@ -118,11 +118,11 @@
     "post": "Post",
     "budget": "Presupuesto",
     "status": "Estado actual",
-		"statuses": {
-			"publishing": "Publicando pronto.",
-			"running": "Tiene %{budget} DOC. Sigue hasta: %{validUntil}.",
-			"stopped": "Detenida."
-		}
+    "statuses": {
+      "publishing": "Publicando pronto.",
+      "running": "Tiene %{budget} DOC. Sigue hasta: %{validUntil}.",
+      "stopped": "Detenida."
+    }
   },
   "claim_account": {
     "success": "El administrador the entregará el control de tu cuenta pronto.",
@@ -151,20 +151,20 @@
     "see_post": "Ver post",
     "reward": "Recompensa",
     "fee": "Comisión de Asami",
-		"statuses": {
-			"REGISTERED": {
-				"title": "Registrada",
-				"text": "Vimos tu colaboración, la estamos validando."
-			},
-			"CLEARED": {
-				"title": "Pagada",
-				"text": "La pagamos a tu balance."
-			},
-			"FAILED": {
-				"title": "Fallida",
-				"text": "La campaña se quedó sin fondos. Puedes deshacer tu colaboración :("
-			}
-		}
+    "statuses": {
+      "REGISTERED": {
+        "title": "Registrada",
+        "text": "Vimos tu colaboración, la estamos validando."
+      },
+      "CLEARED": {
+        "title": "Pagada",
+        "text": "La pagamos a tu balance."
+      },
+      "FAILED": {
+        "title": "Fallida",
+        "text": "La campaña se quedó sin fondos. Puedes deshacer tu colaboración :("
+      }
+    }
   },
   "campaign_request": {
     "title": "Sugiere una campaña",
@@ -306,13 +306,13 @@
       "last_payout_amount_label": "Última distribución de comisiones",
       "last_payout_date_label": "Fecha de la última distribución",
       "next_payout_date_label": "Fecha de la próxima distribución",
-			"claim_button_label": "Reclamar pendientes",
-			"gasless_claim_button_label": "Reclama sin RBTC",
-			"suggest_gasless": "Deducimos 1 DOC, te llegan tus pendientes y 0.000006 RBTC.",
-			"no_pending_balance": "Tus recompensas se acreditan en tu balance pendiente, podrás reclamarlos aquí.",
-			"cant_withdraw": "No tienes suficiente RBTC para la comisión de la red RSK. Podemos enviarte algunos a cambio de 1 DOC. Sigue acumulando!",
-			"gasless_allowance_success": "Pronto procesaremos tu pedido.",
-			"claim_success": "Tus tokens están en camino."
+      "claim_button_label": "Reclamar pendientes",
+      "gasless_claim_button_label": "Reclama sin RBTC",
+      "suggest_gasless": "Deducimos 1 DOC, te llegan tus pendientes y 0.000006 RBTC.",
+      "no_pending_balance": "Tus recompensas se acreditan en tu balance pendiente, podrás reclamarlos aquí.",
+      "cant_withdraw": "No tienes suficiente RBTC para la comisión de la red RSK. Podemos enviarte algunos a cambio de 1 DOC. Sigue acumulando!",
+      "gasless_allowance_success": "Pronto procesaremos tu pedido.",
+      "claim_success": "Tus tokens están en camino."
     }
   },
   "logged_in_nav_card": {
@@ -323,8 +323,7 @@
   "login": {
     "login_button": "Entrar",
     "about_asami_button": "Acerca de ASAMI",
-    "ig_handle": "asamiclub_es",
-    "x_handle": "asami_club_es",
+    "x_handle": "@asami_club_es",
     "unexpected_error": "Ocurrió un error inesperado iniciando tu sesión",
     "error_description_title": "Tenemos una descripción del error:",
     "try_again": "Intentar nuevamente",
@@ -350,7 +349,7 @@
   },
   "join_now": {
     "title": "Monetiza cualquier nivel de audiencia.",
-    "message": "Comparte contenido de anunciantes en X y recibe crypto equivalente a US$, con recompensas basadas en tu alcance genuino.", 
+    "message": "Comparte contenido de anunciantes en X y recibe crypto equivalente a US$, con recompensas basadas en tu alcance genuino.",
     "no_crypto_no_problem": "¿No usas crypto?",
     "learn_later": "¡No hay problema! Puedes acumular recompensas ahora, y aprender a usar crypto luego.",
     "button": "Únete al club gratis!"
@@ -368,15 +367,15 @@
     "web3_consent_body": "Para gastar tus recompensas, obtener tokens ASAMI, y votar.",
     "consent_and_connect": "Aceptar y conectar",
     "send_email_token": {
-        "title": "Danos tu email y te enviarémos un código de acceso.",
-        "submit": "Envíenme un código",
-        "error": "Hubo un problema enviando tu link. Contáctanos en X en @asami_club",
-        "done": "Código enviado, revisa tu correo",
-        "done_contact_us": "Si no recibes tu código de acceso, contáctanos en X en @asami_club"
+      "title": "Danos tu email y te enviarémos un código de acceso.",
+      "submit": "Envíenme un código",
+      "error": "Hubo un problema enviando tu link. Contáctanos en X en @asami_club",
+      "done": "Código enviado, revisa tu correo",
+      "done_contact_us": "Si no recibes tu código de acceso, contáctanos en X en @asami_club"
     },
     "x_mobile_warning": {
-        "title": "Esto puede fallar en el móvil",
-        "text": "Si esto falla, te recomendamos iniciar sesión con tu Email, una wallet WEB3. También puedes intentar otra vez con X desde un ordenador o desde otro navegador en tu móvil."
+      "title": "Esto puede fallar en el móvil",
+      "text": "Si esto falla, te recomendamos iniciar sesión con tu Email, una wallet WEB3. También puedes intentar otra vez con X desde un ordenador o desde otro navegador en tu móvil."
     }
   },
   "about_us": {
@@ -416,44 +415,44 @@
       "skip_nav": "Saltar al contenido"
     }
   },
-	"version_two": {
-		"title": "La versión 2 ya está aquí 🎉",
-		"text": "Batteries included! Now you can get some RBTC with your rewards, so your wallet is always ready to use your rewards in the rootstock ecosystem.",
-		"text": "Con baterías incluidas! Ahora puedes recibir RBTC con tus recompensas, para que tu billetera esté siempre lista para ser usada con otras aplicaciones de la red rootstock."
-	},
-	"explorer": {
-	  "menu": {
-	    "stats": "Datos del club",
-	    "handles": "Cuentas",
-	    "accounts": "Miembros",
-	    "campaigns": "Campañas",
-	    "collabs": "Colaboraciones",
-	    "oracle": "Oráculo"
-	  },
-	  "stats": {
-	    "title": "Datos del club",
-	    "description": "Estas son las estadísticas generales del club a la fecha. Puedes explorar las actividades por Miembro, Campaña, Cuenta o Colaboraciones",
-	    "explore_btn": "Explorar todo"
-	  },
-	  "campaigns": {
-	    "title": "Campañas",
-	    "description": "Estas son todas las campañas creadas por los miembros anunciantes."
-	  },
-	  "handles": {
-	    "title": "Cuentas",
-	    "description": "Estas son las cuentas de X de miembros que hacen colaboraciones. Están calificadas por el administrador de campañas." 
-	  },
-	  "accounts": {
-	    "title": "Miembros",
-	    "description": "Todos los miembros del club que pueden estar creando campañás, colaborando, o ambas."
-	  },
-	  "collabs": {
-	    "title": "Colaboraciones",
-	    "description": "Una colaboración ocurre cuando una Cuenta repostea, participando en una Campaña."
-	  },
-	  "oracle": {
-	    "title": "Oráculo",
-	    "description": "Estas son las tareas de este administrador de campañas. Es el único administrador a la fecha."
-	  }
-	}
+  "version_two": {
+    "title": "La versión 2 ya está aquí 🎉",
+    "text": "Batteries included! Now you can get some RBTC with your rewards, so your wallet is always ready to use your rewards in the rootstock ecosystem.",
+    "text": "Con baterías incluidas! Ahora puedes recibir RBTC con tus recompensas, para que tu billetera esté siempre lista para ser usada con otras aplicaciones de la red rootstock."
+  },
+  "explorer": {
+    "menu": {
+      "stats": "Datos del club",
+      "handles": "Cuentas",
+      "accounts": "Miembros",
+      "campaigns": "Campañas",
+      "collabs": "Colaboraciones",
+      "oracle": "Oráculo"
+    },
+    "stats": {
+      "title": "Datos del club",
+      "description": "Estas son las estadísticas generales del club a la fecha. Puedes explorar las actividades por Miembro, Campaña, Cuenta o Colaboraciones",
+      "explore_btn": "Explorar todo"
+    },
+    "campaigns": {
+      "title": "Campañas",
+      "description": "Estas son todas las campañas creadas por los miembros anunciantes."
+    },
+    "handles": {
+      "title": "Cuentas",
+      "description": "Estas son las cuentas de X de miembros que hacen colaboraciones. Están calificadas por el administrador de campañas."
+    },
+    "accounts": {
+      "title": "Miembros",
+      "description": "Todos los miembros del club que pueden estar creando campañás, colaborando, o ambas."
+    },
+    "collabs": {
+      "title": "Colaboraciones",
+      "description": "Una colaboración ocurre cuando una Cuenta repostea, participando en una Campaña."
+    },
+    "oracle": {
+      "title": "Oráculo",
+      "description": "Estas son las tareas de este administrador de campañas. Es el único administrador a la fecha."
+    }
+  }
 }

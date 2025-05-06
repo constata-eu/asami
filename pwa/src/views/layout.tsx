@@ -1,7 +1,6 @@
 import {
   Card,
   Typography,
-  Divider,
   Box,
   Button,
   Backdrop,
@@ -9,17 +8,23 @@ import {
   AppBar,
   Toolbar,
   IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
   useMediaQuery,
+  DialogContent,
+  Dialog,
 } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
 import {
   useLogout,
   useTranslate,
-  useSafeSetState,
   CoreAdminContext,
   I18nContext,
+  useTheme,
 } from "react-admin";
-import { useEffect, useContext } from "react";
+import { useEffect, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { publicDataProvider } from "../lib/data_provider";
 import RootstockLogo from "../assets/rootstock.svg?react";
@@ -29,7 +34,6 @@ import RootstockCollectiveLogo from "../assets/rootstock_collective.svg?react";
 import FpBlockLogo from "../assets/fpblock.svg?react";
 import AsamiLogo from "../assets/logo.svg?react";
 import XIcon from "@mui/icons-material/X";
-import DashboardIcon from "@mui/icons-material/Dashboard";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -40,6 +44,7 @@ export const DeckCard = ({
   color,
   elevation,
   children,
+  width,
 }) => {
   const border = borderColor ? "1px solid" : "none";
   return (
@@ -51,6 +56,7 @@ export const DeckCard = ({
         color,
         border,
         borderColor,
+        width,
         marginBottom: "1em",
         breakInside: "avoid",
         flex: "1 1 250px",
@@ -58,6 +64,133 @@ export const DeckCard = ({
     >
       {children}
     </Card>
+  );
+};
+
+export const LoggedOutAppBar = () => {
+  const translate = useTranslate();
+  const [open, setOpen] = useState(false);
+  const isMobile = useMediaQuery((theme: any) => theme.breakpoints.down("md"));
+
+  return (
+    <>
+      <AppBar position="static" color="transparent" elevation={0}>
+        <Toolbar disableGutters={true} sx={{ mb: "1em" }}>
+          <AsamiLogo margin="auto" width="100px" height="100%" />
+          <Box sx={{ flexGrow: 1 }} />
+
+          {isMobile ? (
+            <IconButton
+              color="inverted"
+              edge="end"
+              onClick={() => setOpen(true)}
+            >
+              <MenuIcon sx={{ fontSize: "2em" }} />
+            </IconButton>
+          ) : (
+            <Box display="flex" flexWrap="nowrap" whiteSpace="nowrap" gap="2em">
+              <Button
+                href="/#/about"
+                color="primary"
+                fullWidth
+                id="button-about-us"
+              >
+                {translate("login.about_asami_button")}
+              </Button>
+              <Button
+                href="/#/Stats/0/show"
+                color="primary"
+                fullWidth
+                id="button-stats"
+              >
+                {translate("explorer.menu.stats")}
+              </Button>
+              <Button
+                href={`https://x.com/${translate("login.x_handle")}`}
+                target="_blank"
+                color="primary"
+                fullWidth
+                id="button-visit-x"
+              >
+                {translate("login.x_handle")}
+              </Button>
+              <Button
+                color="primary"
+                variant="contained"
+                onClick={() => loginAs("member")}
+                fullWidth
+                id="button-login-as-member"
+              >
+                {translate("login.login_button")}
+              </Button>
+            </Box>
+          )}
+        </Toolbar>
+      </AppBar>
+
+      <Dialog
+        fullScreen
+        open={open}
+        onClose={() => setOpen(false)}
+        PaperProps={{
+          sx: {
+            backgroundColor: "background.default",
+          },
+        }}
+      >
+        <DialogContent>
+          <Box display="flex" justifyContent="flex-end">
+            <IconButton onClick={() => setOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+
+          <List>
+            <ListItem disablePadding>
+              <ListItemButton
+                color="primary"
+                onClick={() => loginAs("member")}
+                fullWidth
+                id="button-login-as-member"
+              >
+                <ListItemText primary={translate("login.login_button")} />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton
+                href="/#/about"
+                color="inverted"
+                fullWidth
+                id="button-about-us"
+              >
+                <ListItemText primary={translate("login.about_asami_button")} />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton
+                href="/#/Stats/0/show"
+                color="inverted"
+                fullWidth
+                id="button-stats"
+              >
+                <ListItemText primary={translate("explorer.menu.stats")} />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton
+                href={`https://x.com/${translate("login.x_handle")}`}
+                target="_blank"
+                color="inverted"
+                fullWidth
+                id="button-visit-x"
+              >
+                <ListItemText primary={translate("login.x_handle")} />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
@@ -151,10 +284,13 @@ export const BareLayout = ({ children }) => {
       }}
     >
       <CssBaseline />
-      <Container maxWidth="xl">
+      <Container
+        maxWidth="xl"
+        sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}
+      >
         {children}
-        <Divider light sx={{ mt: "5em", mb: "2em" }} />
-        <Box display="flex" direction="row" gap="2em" flexWrap="wrap">
+        <Box sx={{ flexGrow: 1 }} />
+        <Box display="flex" direction="row" gap="2em" flexWrap="wrap" my="2em">
           <Button
             href="https://explorer.rootstock.io/address/0x16039ab4e9b0bf3b79f9a221898d152151026034"
             target="_blank"
@@ -253,7 +389,7 @@ export const ColumnsContainer = ({ children }) => (
 );
 
 export const ExplorerAppBar = () => {
-  const [menuOpen, setMenuOpen] = useSafeSetState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const translate = useTranslate();
   const isSmall = useMediaQuery((theme: any) => theme.breakpoints.down("sm"));
@@ -443,7 +579,7 @@ export const ExplorerAppBar = () => {
 
 export const ExplorerLayout = ({ children }) => {
   const i18nProvider = useContext(I18nContext);
-  const [pubDataProvider, setPubDataProvider] = useSafeSetState();
+  const [pubDataProvider, setPubDataProvider] = useState();
   useEffect(() => {
     async function initApp() {
       const prov = await publicDataProvider();

@@ -24,9 +24,7 @@ import {
   Link,
   ListItemIcon,
 } from "@mui/material";
-import { Trans } from "react-i18next";
 
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PollIcon from "@mui/icons-material/Poll";
 import CampaignIcon from "@mui/icons-material/Campaign";

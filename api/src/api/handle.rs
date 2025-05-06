@@ -93,6 +93,8 @@ impl Showable<models::Handle, HandleFilter> for Handle {
             user_id: d.attrs.user_id,
             score: d.attrs.score,
             topic_ids,
+            current_scoring_id: d.attrs.current_scoring_id,
+            last_scoring: d.attrs.last_scoring,
             status: d.attrs.status,
             total_collabs: d.attrs.total_collabs,
             total_collab_rewards: d.attrs.total_collab_rewards,

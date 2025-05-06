@@ -1,5 +1,5 @@
 /// <reference types="vite-plugin-svgr/client" />
-import { useEffect, useContext } from "react";
+import { useEffect, useContext, useState } from "react";
 import {
   Alert,
   Divider,
@@ -12,6 +12,7 @@ import {
   Button,
   Typography,
 } from "@mui/material";
+
 import { makeXLogin } from "../lib/auth_provider";
 import { etherToHex } from "../lib/formatters";
 import { formatEther } from "ethers";
@@ -21,29 +22,24 @@ import {
   useStore,
   useListController,
   CoreAdminContext,
-  useGetList,
   useTranslate,
   I18nContext,
   useDataProvider,
   Form,
   TextInput,
   SaveButton,
-  useNotify,
   email,
   required,
 } from "react-admin";
 
 import { TwitterTweetEmbed } from "react-twitter-embed";
 import { useNavigate } from "react-router-dom";
-import { BareLayout, DeckCard } from "./layout";
+import { BareLayout, DeckCard, LoggedOutAppBar } from "./layout";
 import { Head2, Head3, light, green } from "../components/theme";
-import AsamiLogo from "../assets/logo.svg?react";
 import { useContracts } from "../components/contracts_context";
-import { Settings } from "../settings";
 import XIcon from "@mui/icons-material/X";
 import WalletIcon from "@mui/icons-material/Wallet";
 import CampaignIcon from "@mui/icons-material/Campaign";
-import truncate from "lodash/truncate";
 import chunk from "lodash/chunk";
 import flatten from "lodash/flatten";
 import CampaignListEmpty from "./campaign_list_empty";
@@ -53,10 +49,9 @@ import SendIcon from "@mui/icons-material/Send";
 import StatsCard from "./stats_card";
 
 const Login = () => {
-  const translate = useTranslate();
   const [, setRole] = useStore("user.role", "advertiser");
-  const [open, setOpen] = useSafeSetState(false);
-  const [pubDataProvider, setPubDataProvider] = useSafeSetState();
+  const [open, setOpen] = useState(false);
+  const [pubDataProvider, setPubDataProvider] = useState();
   const i18nProvider = useContext(I18nContext);
 
   useEffect(() => {
@@ -85,6 +80,7 @@ const Login = () => {
       <BareLayout>
         <Box p="1em" id="login-form-and-landing">
           <LoginSelector open={open} setOpen={setOpen} />
+          <LoggedOutAppBar />
 
           <Box
             sx={{
@@ -92,55 +88,6 @@ const Login = () => {
               columnGap: "1em",
             }}
           >
-            <Box
-              sx={{
-                breakInside: "avoid",
-                p: "1em",
-                mb: "1em",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-              }}
-            >
-              <AsamiLogo margin="auto" width="250px" height="100%" />
-              <Box my="1em">
-                <Button
-                  color="primary"
-                  onClick={() => loginAs("member")}
-                  fullWidth
-                  id="button-login-as-member"
-                >
-                  {translate("login.login_button")}
-                </Button>
-                <Button
-                  href="/#/about"
-                  color="inverted"
-                  fullWidth
-                  id="button-about-us"
-                >
-                  {translate("login.about_asami_button")}
-                </Button>
-                <Button
-                  href="/#/Stats/0/show"
-                  color="inverted"
-                  fullWidth
-                  id="button-stats"
-                >
-                  {translate("explorer.menu.stats")}
-                </Button>
-                <Button
-                  href={`https://x.com/${translate("login.x_handle")}`}
-                  target="_blank"
-                  startIcon={<XIcon />}
-                  color="inverted"
-                  size="small"
-                  fullWidth
-                  id="button-visit-x"
-                >
-                  {translate("login.x_handle")}
-                </Button>
-              </Box>
-            </Box>
             <JoinNow key="join-now" loginAs={loginAs} />
             <PublicCampaignList loginAs={loginAs} />
             <StatsCard />

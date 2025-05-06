@@ -2,11 +2,11 @@
   "resources": {
     "Account": {
       "fields": {
-        "unclaimedAsamiBalance": "Unclaimed ASAMI",
-        "unclaimedDocBalance": "Unclaimed DOC",
+        "unclaimedAsamiBalance": "ASAMI to claim",
+        "unclaimedDocBalance": "DOC to claim",
         "addr": "Wallet Address",
-        "totalCollabs": "Collabs made",
-        "totalCollabRewards": "Collabs Reward",
+        "totalCollabs": "Collab count",
+        "totalCollabRewards": "Collab rewards",
         "totalCampaigns": "Campaigns created",
         "totalCollabsReceived": "Collabs received",
         "totalSpent": "Spent",
@@ -325,8 +325,7 @@
   "login": {
     "login_button": "Login",
     "about_asami_button": "About ASAMI",
-    "ig_handle": "asamiclub",
-    "x_handle": "asami_club",
+    "x_handle": "@asami_club",
     "unexpected_error": "An unexpected error ocurred while starting your session",
     "error_description_title": "We have a description for the error:",
     "try_again": "Try again",
@@ -467,5 +466,52 @@
     "x_grant_access_success": "Success! We're verifying your influence now — you’ll be able to join campaigns shortly.",
     "x_gant_access_error": "We couldn’t link your X account. Please try again, or contact support if the issue persists.",
     "x_waiting_for_access": "Waiting for X access."
+  },
+  "account_show": {
+    "title": {
+      "default_name": "Valued Anon",
+      "member": "member"
+    },
+    "scoring_in_progress": "We're scoring this handle",
+    "advertiser_title": "Advertiser",
+    "member_info_title": "Member Info",
+    "score": "Score",
+    "online_engagement": {
+      "title": "Online engagement",
+      "average": "Engagement on X is okay, but has room to grow. %{extra}",
+      "high": "Engagement on X is high, the audience is tuned in. %{extra}",
+      "none": "We could not detect authentic engagement on X. %{extra}"
+    },
+    "offline_engagement_title": "Offline Engagement",
+    "audience_poll": {
+      "title": "Audience poll",
+      "high": "An audience poll shows high influence. %{extra}",
+      "average": "An audience poll shows moderate influence. %{extra}",
+      "reverse": "An audience poll shows contentious influence. %{extra}"
+    },
+    "banned_title": "[Shadow] Banned",
+    "banned_text": "X is limiting this account's reach. %{extra}",
+    "verified_title": "Verified",
+    "verified_text": "This account has improved reach on X. %{extra}",
+    "referrer_title": "Referrer",
+    "referrer_text": "User has referred other high scored members. %{extra}",
+    "holder_title": "Hodler",
+    "holder_text": "Is commited to the cause, holding ASAMI tokens. %{extra}",
+    "ghost_title": "Ghost",
+    "ghost_text": "Doesn't talk much, and/or gets few impressions.",
+    "repost_fatigue_title": "Repost Fatigue",
+    "repost_fatigue_text": "User reposts too much, people can't keep up.",
+    "indeterminate_audience_title": "Unclear Audience",
+    "indeterminate_audience_text": "Can't tell if their audience is real or bots.",
+    "followed_title": "Followed",
+    "followed_text": "Is verified, and has a high ratio of verified followers.",
+    "liked_title": "Liked",
+    "liked_text": "Gets many likes per impression on posts.",
+    "replied_title": "Replied",
+    "replied_text": "A lot of people reply to this user's posts.",
+    "reposted_title": "Reposted",
+    "reposted_text": "User posts get reposted often, in relation to impressions.",
+    "mentioned_title": "Mentioned",
+    "mentioned_text": "Was recently mentioned on high visibility posts."
   }
 }

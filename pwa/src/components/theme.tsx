@@ -1,5 +1,5 @@
-import { defaultTheme, useTranslate } from 'react-admin';
-import { Box, styled } from '@mui/material';
+import { defaultTheme, useTranslate } from "react-admin";
+import { Box, styled } from "@mui/material";
 
 import LeagueSpartanBlack from "../assets/League_Spartan/static/LeagueSpartan-Black.ttf";
 import LeagueSpartanExtraBold from "../assets/League_Spartan/static/LeagueSpartan-ExtraBold.ttf";
@@ -22,13 +22,14 @@ let fontFaces = [
   [LeagueSpartanLight, "Light", 300],
   [LeagueSpartanExtraLight, "ExtraLight", 200],
   [LeagueSpartanThin, "Thin", 100],
-].map((font) => 
-  `@font-face {
+].map(
+  (font) =>
+    `@font-face {
     font-family: 'LeagueSpartan${font[1]}';
     font-weight: ${font[2]};
     src: local('LeagueSpartan'), local('LeagueSpartan-${font[1]}'), url("${font[0]}") format('truetype');
     unicodeRange: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF;
-  }`
+  }`,
 );
 
 fontFaces.push(` @font-face {
@@ -38,11 +39,45 @@ fontFaces.push(` @font-face {
   unicodeRange: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF;
 }`);
 
-export const light = '#fafafb';
-export const green = '#2ec4b6';
-export const yellow = '#ff9f1c';
-export const dark = '#011627';
-export const red = '#e71d36';
+/*
+Dark surface background:
+radial-gradient(49% 81% at 45% 47%, #214255 0%, #0d314600 100%),
+radial-gradient(113% 91% at 17% -2%, #4d5962 1%, #0000ff00 99%),
+radial-gradient(142% 91% at 83% 7%, #147bb6b3 1%, #19303d 99%),
+radial-gradient(142% 91% at -6% 74%, #4B6574 1%, #081b2763 99%),
+radial-gradient(142% 91% at 111% 84%, #282426a8 0%, #533f4921 100%)
+*/
+
+/*
+Light surface background:
+radial-gradient(49% 81% at 45% 47%, #f8f4d745 0%, #e2dac34d 100%),
+radial-gradient(113% 91% at 17% -2%, #e4ad0c0f 1%, #e2dac300 99%),
+radial-gradient(142% 91% at 83% 7%, #e2dac300 1%, #fdeee2a8 99%),
+radial-gradient(142% 91% at -6% 74%, #f8f7f2 1%, #f8f4d703 99%),
+radial-gradient(142% 91% at 111% 84%, #e2dac303 0%, #fbfbfb 100%)
+
+radial-gradient(49% 81% at 45% 47%, #f8f4d745 0%, #e2dac34d 100%),
+radial-gradient(113% 91% at 17% -2%, #e4ad0c0f 1%, #e2dac300 99%),
+radial-gradient(142% 91% at 83% 7%, #e2dac300 1%, #fde2f499 99%),
+radial-gradient(142% 91% at -6% 74%, #f8f7f2 1%, #f8f4d703 99%),
+radial-gradient(142% 91% at 111% 84%, #e2dac303 0%, #fbfbfb 100%)
+
+
+radial-gradient(49% 81% at 45% 47%, #f8d7d745 0%, #ffeefd00 100%),
+radial-gradient(113% 91% at 17% -2%, #e286bc17 1%, #e2c3d700 99%),
+radial-gradient(142% 91% at 83% 7%, #e2c3e000 1%, #fde2f49c 99%),
+radial-gradient(142% 91% at -6% 74%, #f8f7f2 1%, #f8f4d703 99%),
+radial-gradient(142% 91% at 111% 84%, #e2dac303 0%, #fbfbfb 100%)
+*/
+
+export const light = "#fffcf6";
+export const pink = "#cc1e7d";
+export const darkGreen = "#034843";
+export const red = "#e50062";
+export const orange = "#d0774a";
+export const lightBlue = "#4B6574";
+export const green = "#3a9780";
+export const dark = "#1d3644";
 
 const theme = {
   ...defaultTheme,
@@ -50,24 +85,86 @@ const theme = {
     fontFamily: '"LeagueSpartanLight", serif',
   },
   palette: {
-    mode: 'dark',
-    primary: { main: green },
-    secondary: { main: yellow },
-    inverted: { main: light, contrastText: dark },
-    error: { main: red },
+    mode: "light",
+    text: {
+      primary: dark,
+    },
+    background: {
+      default: light,
+      paper: light,
+    },
+    inverted: {
+      main: light,
+      contrastText: dark,
+    },
+    primary: {
+      main: pink,
+      contrastText: light,
+    },
+    secondary: {
+      main: darkGreen,
+      contrastText: light,
+    },
+    error: {
+      main: red,
+    },
+    warning: {
+      main: orange,
+    },
+    info: {
+      main: lightBlue,
+    },
+    success: {
+      main: "#388e3c", // custom green
+    },
   },
   components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          fontFamily: '"LeagueSpartanMedium", serif',
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          backgroundSize: "100% 100%",
+          backgroundPosition: "0px 0px,0px 0px,0px 0px,0px 0px,0px 0px",
+          backgroundImage: `
+            radial-gradient(49% 81% at 45% 47%, #f8f4d745 0%, #e2dac34d 100%),
+            radial-gradient(113% 91% at 17% -2%, #e4ad0c0f 1%, #e2dac300 99%),
+            radial-gradient(142% 91% at 83% 7%, #e2dac300 1%, #fde2f499 99%),
+            radial-gradient(142% 91% at -6% 74%, #f8f7f2 1%, #f8f4d703 99%),
+            radial-gradient(142% 91% at 111% 84%, #e2dac303 0%, #fbfbfb 100%)
+          `,
+        },
+      },
+    },
     MuiAlert: {
       styleOverrides: {
         root: {
           "& .MuiAlert-message": {
-            flex: "1 1 auto !important"
-          }
-        }
-      }
+            flex: "1 1 auto !important",
+          },
+        },
+      },
     },
     MuiCssBaseline: {
-      styleOverrides: `.twitter-tweet iframe { border-radius: 13px; } ${fontFaces.join("\n")}`
+      styleOverrides: {
+        "&": `.twitter-tweet iframe { border-radius: 13px; } ${fontFaces.join("\n")}`,
+        body: {
+          backgroundSize: "100% 100%",
+          backgroundPosition: "0px 0px,0px 0px,0px 0px,0px 0px,0px 0px",
+          backgroundImage: `
+            radial-gradient(49% 81% at 45% 47%, #FFE20345 0%, #073AFF00 100%),
+            radial-gradient(113% 91% at 17% -2%, #FFADB9 1%, #FF000000 99%),
+            radial-gradient(142% 91% at 83% 7%, #F8F4D7 1%, #FF000000 99%),
+            radial-gradient(142% 91% at -6% 74%, #fe7296 1%, #FF000000 99%),
+            radial-gradient(142% 91% at 111% 84%, #F6EDEE 0%, #FFADB9 100%)
+            `,
+        },
+      },
     },
     RaFilterForm: {
       styleOverrides: {
@@ -76,11 +173,10 @@ const theme = {
             marginBottom: 0,
           },
           "& .hide-filter": {
-            marginBottom: "4px"
-          }
-        }
-      }
-      
+            marginBottom: "4px",
+          },
+        },
+      },
     },
     RaSimpleShowLayout: {
       styleOverrides: {
@@ -90,18 +186,18 @@ const theme = {
             gap: "0.5em",
             flexDirection: "row",
             flexWrap: "wrap",
-            margin: "1em 0"
+            margin: "1em 0",
           },
           "& .RaSimpleShowLayout-row": {
             marginTop: 0,
             background: "rgba(0,0,0, 0.2)",
             padding: "0.5em",
-            borderRadius: "5px"
-          }
-        }
-      }
-    }
-  }
+            borderRadius: "5px",
+          },
+        },
+      },
+    },
+  },
 };
 
 export default theme;
@@ -111,7 +207,7 @@ export const Head1 = styled("h1")(({ theme }) => ({
   fontSize: "40px",
   lineHeight: "1.1em",
   letterSpacing: "-0.05em",
-  [theme.breakpoints.up('md')]: {
+  [theme.breakpoints.up("md")]: {
     fontSize: "60px",
   },
   margin: "0",
@@ -122,7 +218,7 @@ export const Head2 = styled("h2")(({ theme }) => ({
   fontSize: "20px",
   lineHeight: "1.1em",
   letterSpacing: "-0.05em",
-  [theme.breakpoints.up('md')]: {
+  [theme.breakpoints.up("md")]: {
     fontSize: "30px",
   },
   margin: 0,
@@ -133,17 +229,22 @@ export const Head3 = styled("h3")(({ theme }) => ({
   fontSize: "15px",
   lineHeight: "1em",
   letterSpacing: "-0.05em",
-  [theme.breakpoints.up('md')]: {
+  [theme.breakpoints.up("md")]: {
     fontSize: "20px",
   },
   margin: 0,
 }));
 
-export const CardTitle = ({text, ...props}) => {
+export const CardTitle = ({ text, ...props }) => {
   const translate = useTranslate();
 
-  return(<Box {...props} sx={{ p: 2, borderBottom: "2px solid", borderColor: green }}>
-    <Head2>{ translate(text, { _: text }) }</Head2>
-    { props.children }
-  </Box>)
-}
+  return (
+    <Box
+      {...props}
+      sx={{ p: 2, borderBottom: "2px solid", borderColor: green }}
+    >
+      <Head2>{translate(text, { _: text })}</Head2>
+      {props.children}
+    </Box>
+  );
+};
