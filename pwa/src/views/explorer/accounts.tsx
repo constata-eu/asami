@@ -189,7 +189,8 @@ const AccountCardTable = () => {
           {showAccount.record.name || t("account_show.title.default_name")}
         </strong>
         <Box component="span" fontSize="0.6em">
-          {", "} {t("account_show.title.member")} # {showAccount.record.id}
+          {" "}
+          # {showAccount.record.id}
         </Box>
       </Head1>
       <HorizontalCardTable mt="2em">
@@ -260,7 +261,7 @@ const ScoringCardTable = ({ handle }) => {
     <>
       <FixedWidthCard elevation={10}>
         <CardContent>
-          <XIcon sx={{ fontSize: 50 }} />
+          <XIcon sx={{ fontSize: 30 }} />
           <Box flexGrow="1" mt="1em">
             <Typography
               my="0.1em"
@@ -588,7 +589,7 @@ export const HorizontalCardTable = ({ children, ...props }) => (
 
 export const BigText = styled("h2")(({ theme }) => ({
   fontFamily: "'LeagueSpartanBold'",
-  fontSize: "30px",
+  fontSize: "40px",
   lineHeight: "1.1em",
   letterSpacing: "-0.05em",
   margin: 0,

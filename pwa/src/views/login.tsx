@@ -80,7 +80,7 @@ const Login = () => {
       <BareLayout>
         <Box p="1em" id="login-form-and-landing">
           <LoginSelector open={open} setOpen={setOpen} />
-          <LoggedOutAppBar />
+          <LoggedOutAppBar loginAs={loginAs} />
 
           <Box
             sx={{

@@ -104,10 +104,10 @@
     }
   },
   "footer": {
-    "built_with": "Smart contract bitcoiner en",
-    "tech_sponsor": "Sponsor de tecnología",
-    "funds_sponsor": "Sponsor de campañas",
-    "with_support_from": "Apoyo general de",
+    "built_with": "Funciona en",
+    "tech_sponsor": "Sponsor tech",
+    "funds_sponsor": "Fondeo de campañas",
+    "with_support_from": "Iniciado en",
     "campaign_manager": "Administrado por"
   },
   "campaign_list": {
@@ -431,7 +431,7 @@
     },
     "stats": {
       "title": "Datos del club",
-      "description": "Estas son las estadísticas generales del club a la fecha. Puedes explorar las actividades por Miembro, Campaña, Cuenta o Colaboraciones",
+      "description": "Estadísticas globales del club — para ver detalles, visita cada sección en la barra de navegación.",
       "explore_btn": "Explorar todo"
     },
     "campaigns": {

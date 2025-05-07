@@ -96,10 +96,10 @@
     }
   },
   "footer": {
-    "built_with": "Bitcoiner smart-contract in",
-    "tech_sponsor": "Industrial-grade tech sponsor",
-    "funds_sponsor": "Campaign funding sponsor",
-    "with_support_from": "Overall support from",
+    "built_with": "Powered by",
+    "tech_sponsor": "Tech sponsor",
+    "funds_sponsor": "Campaign funding",
+    "with_support_from": "Started on",
     "campaign_manager": "Managed by"
   },
   "campaign_list": {
@@ -432,7 +432,7 @@
     },
     "stats": {
       "title": "Club Stats",
-      "description": "These are the general club stats right now. You can explore all club activities in Members, Campaigns, Handles, and Collabs.",
+      "description": "Global club stats at a glance — for specifics, check each section in the navbar.",
       "explore_btn": "Explore data"
     },
     "campaigns": {

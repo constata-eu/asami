@@ -72,10 +72,10 @@ radial-gradient(142% 91% at 111% 84%, #e2dac303 0%, #fbfbfb 100%)
 
 export const light = "#fffcf6";
 export const pink = "#cc1e7d";
-export const darkGreen = "#034843";
 export const red = "#e50062";
 export const orange = "#d0774a";
 export const lightBlue = "#4B6574";
+export const lighterBlue = "#7196ab";
 export const green = "#3a9780";
 export const dark = "#1d3644";
 
@@ -102,7 +102,7 @@ const theme = {
       contrastText: light,
     },
     secondary: {
-      main: darkGreen,
+      main: lightBlue,
       contrastText: light,
     },
     error: {
@@ -112,7 +112,7 @@ const theme = {
       main: orange,
     },
     info: {
-      main: lightBlue,
+      main: lighterBlue,
     },
     success: {
       main: "#388e3c", // custom green
@@ -166,6 +166,13 @@ const theme = {
         },
       },
     },
+    RaListToolbar: {
+      styleOverrides: {
+        root: {
+          marginBottom: "1em",
+        },
+      },
+    },
     RaFilterForm: {
       styleOverrides: {
         root: {
@@ -181,19 +188,23 @@ const theme = {
     RaSimpleShowLayout: {
       styleOverrides: {
         root: {
-          padding: 0,
           "& .RaSimpleShowLayout-stack": {
-            gap: "0.5em",
-            flexDirection: "row",
+            padding: "1em 0 0.5em 0",
             flexWrap: "wrap",
-            margin: "1em 0",
+            gap: "2em",
           },
           "& .RaSimpleShowLayout-row": {
-            marginTop: 0,
-            background: "rgba(0,0,0, 0.2)",
-            padding: "0.5em",
-            borderRadius: "5px",
+            margin: 0,
           },
+          "& .RaLabeled-label": {
+            color: lightBlue,
+            fontSize: "0.8em !important",
+            lineHeight: "0.9em",
+            marginBottom: 0,
+            fontFamily: '"LeagueSpartanBold"',
+            textTransform: "uppercase",
+          },
+          "& .RaSimpleShowLayout-row > span": {},
         },
       },
     },
@@ -202,38 +213,41 @@ const theme = {
 
 export default theme;
 
-export const Head1 = styled("h1")(({ theme }) => ({
+const baseHeadingStyles = (theme, smallSize, largeSize) => ({
   fontFamily: "'LeagueSpartanBold'",
-  fontSize: "40px",
   lineHeight: "1.1em",
   letterSpacing: "-0.05em",
-  [theme.breakpoints.up("md")]: {
-    fontSize: "60px",
-  },
-  margin: "0",
-}));
-
-export const Head2 = styled("h2")(({ theme }) => ({
-  fontFamily: "'LeagueSpartanBold'",
-  fontSize: "20px",
-  lineHeight: "1.1em",
-  letterSpacing: "-0.05em",
-  [theme.breakpoints.up("md")]: {
-    fontSize: "30px",
-  },
   margin: 0,
-}));
-
-export const Head3 = styled("h3")(({ theme }) => ({
-  fontFamily: "'LeagueSpartanBold'",
-  fontSize: "15px",
-  lineHeight: "1em",
-  letterSpacing: "-0.05em",
+  color: theme.palette.secondary.main,
+  fontSize: smallSize,
   [theme.breakpoints.up("md")]: {
-    fontSize: "20px",
+    fontSize: largeSize,
   },
-  margin: 0,
-}));
+});
+
+export const Head1 = styled("h1")(({ theme }) =>
+  baseHeadingStyles(theme, "40px", "60px"),
+);
+
+export const Head2 = styled("h2")(({ theme }) =>
+  baseHeadingStyles(theme, "25px", "35px"),
+);
+export const Head3 = styled("h3")(({ theme }) =>
+  baseHeadingStyles(theme, "20px", "25px"),
+);
+
+export const Lead = styled("p")(({ theme }) => {
+  return {
+    fontFamily: "'LeagueSpartanLight'",
+    color: theme.palette.secondary.main,
+    lineHeight: 1,
+    fontSize: "15px",
+    margin: 0,
+    [theme.breakpoints.up("md")]: {
+      fontSize: "20px",
+    },
+  };
+});
 
 export const CardTitle = ({ text, ...props }) => {
   const translate = useTranslate();
