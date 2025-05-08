@@ -1,24 +1,26 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Admin,
   Resource,
   CustomRoutes,
   useStore,
   Authenticated,
+  I18nContext,
 } from "react-admin";
 import { ContractsProvider } from "./components/contracts_context";
 import { Settings } from "./settings";
 import { GoogleReCaptchaProvider } from "react-google-recaptcha-v3";
 import { Route, useSearchParams } from "react-router-dom";
 import { authProvider } from "./lib/auth_provider";
-import { defaultDataProvider } from "./lib/data_provider";
+import { defaultDataProvider, publicDataProvider } from "./lib/data_provider";
+import Landing from "./views/landing";
 import Login from "./views/login";
 import About from "./views/about";
 import asamiTheme from "./components/theme";
 import { BareLayout } from "./views/layout";
 import AdvertiserDashboard from "./views/advertiser/dashboard";
 import MemberDashboard from "./views/member/dashboard";
-import { Container, Skeleton } from "@mui/material";
+import { Box, Container, Skeleton } from "@mui/material";
 import {
   XLogin,
   XGrantAccess,
@@ -31,7 +33,6 @@ import { HandleList } from "./views/explorer/handles";
 import { CampaignList } from "./views/explorer/campaigns";
 import { AccountList, AccountShow } from "./views/explorer/accounts";
 import { CollabList } from "./views/explorer/collabs";
-import { OnChainJobList } from "./views/explorer/on_chain_jobs";
 import { StatsShow } from "./views/explorer/stats";
 
 const Dashboard = () => {
@@ -94,14 +95,16 @@ export const App = () => {
 
           <Resource name="Collab" list={CollabList} />
 
-          <Resource name="OnChainJob" list={OnChainJobList} />
-
           <Resource name="Stats" show={StatsShow} />
 
           <Resource name="Topic" />
 
           <CustomRoutes>
+            <Route path="/" element={<Landing />} />
             <Route path="/about" element={<About />} />
+          </CustomRoutes>
+
+          <CustomRoutes noLayout>
             <Route
               path="/one_time_token_login"
               element={<OneTimeTokenLogin />}

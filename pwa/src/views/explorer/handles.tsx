@@ -44,29 +44,18 @@ export const HandleList = () => {
     <ExplorerLayout>
       <Head1>{translate("explorer.handles.title")}</Head1>
       <Lead>{translate("explorer.handles.description")}</Lead>
-      <List disableAuthentication filters={filters} exporter={false}>
+      <List
+        disableAuthentication
+        filters={filters}
+        sort={{ field: "score", order: "DESC" }}
+      >
         <Datagrid bulkActionButtons={false}>
-          <TextField source="id" />
           <TextField source="username" sortable={false} />
           <BigNumField textAlign="right" source="score" />
           <TextField source="status" sortable={false} />
-          <FunctionField
-            textAlign="right"
-            source="totalCollabs"
-            render={(record) =>
-              record.totalCollabs > 0 ? (
-                <Link
-                  to={`/Collab?displayedFilters=%7B%7D&filter=%7B%22handleIdEq%22%3A${record.id}%7D`}
-                >
-                  <NumberField source="totalCollabs" />
-                </Link>
-              ) : (
-                <NumberField source="totalCollabs" />
-              )
-            }
-          />
+          <NumberField textAlign="right" source="totalCollabs" />
           <AmountField textAlign="right" source="totalCollabRewards" />
-          <TextField source="accountId" sortable={false} />
+          <TextField source="id" />
           <ReferenceField
             textAlign="right"
             source="accountId"

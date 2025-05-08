@@ -3,27 +3,21 @@ import { useEffect, useContext, useState } from "react";
 import {
   Alert,
   Divider,
-  Avatar,
-  CardContent,
-  CardHeader,
   Dialog,
   DialogContent,
   Box,
   Button,
   Typography,
+  Stack,
+  Container,
 } from "@mui/material";
 
 import { makeXLogin } from "../lib/auth_provider";
-import { etherToHex } from "../lib/formatters";
-import { formatEther } from "ethers";
 import { publicDataProvider } from "../lib/data_provider";
 import {
   useSafeSetState,
   useStore,
-  useListController,
-  CoreAdminContext,
   useTranslate,
-  I18nContext,
   useDataProvider,
   Form,
   TextInput,
@@ -32,216 +26,35 @@ import {
   required,
 } from "react-admin";
 
-import { TwitterTweetEmbed } from "react-twitter-embed";
 import { useNavigate } from "react-router-dom";
-import { BareLayout, DeckCard, LoggedOutAppBar } from "./layout";
-import { Head2, Head3, light, green } from "../components/theme";
+import { BareLayout } from "./layout";
 import { useContracts } from "../components/contracts_context";
 import XIcon from "@mui/icons-material/X";
 import WalletIcon from "@mui/icons-material/Wallet";
-import CampaignIcon from "@mui/icons-material/Campaign";
-import chunk from "lodash/chunk";
-import flatten from "lodash/flatten";
-import CampaignListEmpty from "./campaign_list_empty";
 import { isMobile } from "react-device-detect";
 import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import SendIcon from "@mui/icons-material/Send";
-import StatsCard from "./stats_card";
+import AsamiLogo from "../assets/logo.svg?react";
+import { Head1, Head2, Lead } from "../components/theme";
+import { Link } from "react-router-dom";
+import ThumbDownAltIcon from "@mui/icons-material/ThumbDownAlt";
 
 const Login = () => {
-  const [, setRole] = useStore("user.role", "advertiser");
-  const [open, setOpen] = useState(false);
-  const [pubDataProvider, setPubDataProvider] = useState();
-  const i18nProvider = useContext(I18nContext);
-
-  useEffect(() => {
-    async function initApp() {
-      const prov = await publicDataProvider();
-      setPubDataProvider(prov);
-    }
-    initApp();
-  }, []);
-
-  if (!pubDataProvider) {
-    return <></>;
-  }
-
-  const loginAs = async (newRole) => {
-    setRole(newRole);
-    setOpen(true);
-  };
-
   return (
-    <CoreAdminContext
-      i18nProvider={i18nProvider}
-      dataProvider={pubDataProvider}
-      authProvider={null}
-    >
-      <BareLayout>
-        <Box p="1em" id="login-form-and-landing">
-          <LoginSelector open={open} setOpen={setOpen} />
-          <LoggedOutAppBar loginAs={loginAs} />
-
-          <Box
-            sx={{
-              columnCount: { xs: 1, sm: 2, md: 3, lg: 4, xl: 5 },
-              columnGap: "1em",
-            }}
-          >
-            <JoinNow key="join-now" loginAs={loginAs} />
-            <PublicCampaignList loginAs={loginAs} />
-            <StatsCard />
-          </Box>
-        </Box>
-      </BareLayout>
-    </CoreAdminContext>
-  );
-};
-
-const PublicCampaignList = ({ loginAs }) => {
-  const listContext = useListController({
-    debounce: 500,
-    disableSyncWithLocation: true,
-    filter: { budgetGt: etherToHex("1") },
-    sort: { field: "createdAt", order: "DESC" },
-    perPage: 20,
-    queryOptions: {
-      refetchInterval: 100000,
-    },
-    resource: "Campaign",
-  });
-
-  if (listContext.isLoading) {
-    return <></>;
-  }
-
-  if (listContext.total == 0) {
-    return <CampaignListEmpty />;
-  }
-
-  const items = flatten(
-    chunk(listContext.data, 4).map((i) => [...i, { yourPostHere: true }]),
-  );
-
-  return (
-    <>
-      {items.map((item, index) => {
-        if (item.yourPostHere) {
-          return (
-            <YourPostHere key={`your-post-here-${index}`} loginAs={loginAs} />
-          );
-        } else {
-          return (
-            <PublicXCampaign key={item.id} item={item} loginAs={loginAs} />
-          );
-        }
-      })}
-    </>
-  );
-};
-
-const YourPostHere = ({ loginAs }) => {
-  const translate = useTranslate();
-
-  return (
-    <DeckCard elevation={10}>
-      <CardContent>
-        <Head2>{translate("your_post_here.title")}</Head2>
-        <Typography>{translate("your_post_here.message")}</Typography>
-        <Box mt="1em">
-          <Button
-            onClick={() => loginAs("advertiser")}
-            className="submit-your-post"
-            color="inverted"
-            fullWidth
-            size="large"
-            variant="outlined"
-          >
-            <CampaignIcon sx={{ mr: "5px" }} />
-            {translate("your_post_here.button")}
-          </Button>
-        </Box>
-      </CardContent>
-    </DeckCard>
-  );
-};
-
-const JoinNow = ({ loginAs }) => {
-  const translate = useTranslate();
-
-  return (
-    <DeckCard borderColor={green} elevation={10}>
-      <CardContent>
-        <Head2 sx={{ mb: "0.5em" }}>{translate("join_now.title")}</Head2>
-        <Typography>{translate("join_now.message")}</Typography>
-        <Head3 sx={{ mt: "1em", mb: "0.5em" }}>
-          {translate("join_now.no_crypto_no_problem")}
-        </Head3>
-        <Typography>{translate("join_now.learn_later")}</Typography>
-        <Box mt="1em">
-          <Button
-            onClick={() => loginAs("member")}
-            className="get-your-sparkles"
-            fullWidth
-            size="large"
-            variant="contained"
-          >
-            {translate("join_now.button")}
-          </Button>
-        </Box>
-      </CardContent>
-    </DeckCard>
-  );
-};
-
-const PublicCardHeader = ({ loginAs, item, buttonLabel, icon }) => {
-  const translate = useTranslate();
-
-  return (
-    <CardHeader
-      sx={{ mb: "0", pb: "0.5em" }}
-      avatar={<Avatar sx={{ bgcolor: light }}>{icon}</Avatar>}
-      title={translate("public_card_header.title", {
-        amount: formatEther(item.budget),
-      })}
-      subheader={
-        <Button
-          sx={{ mt: "0.2em" }}
-          onClick={() => loginAs("member")}
-          fullWidth
-          color="inverted"
-          size="small"
-          variant="outlined"
-        >
-          {buttonLabel}
-        </Button>
-      }
-    />
-  );
-};
-
-const PublicXCampaign = ({ loginAs, item }) => {
-  const translate = useTranslate();
-  return (
-    <DeckCard id={`campaign-container-${item.id}`}>
-      <PublicCardHeader
-        icon={<XIcon />}
-        item={item}
-        loginAs={loginAs}
-        buttonLabel={translate("public_x_campaign.main_button")}
-      />
-      <CardContent>
-        <TwitterTweetEmbed
-          tweetId={JSON.parse(item.briefingJson)}
-          options={{
-            theme: "dark",
-            align: "center",
-            width: "250px",
-            conversation: "none",
-          }}
-        />
-      </CardContent>
-    </DeckCard>
+    <BareLayout sponsors={false}>
+      <Box
+        display="flex"
+        flexDirection="column"
+        my="3em"
+        gap="3em"
+        alignItems="center"
+        minHeight="50vh"
+        id="login-form"
+      >
+        <LoginSelector />
+        <AsamiLogo width="150px" height="auto" />
+      </Box>
+    </BareLayout>
   );
 };
 
@@ -263,16 +76,7 @@ const LoginSelector = ({ open, setOpen }) => {
     navigate(`/eip712_login?code=${code}`);
   };
 
-  return (
-    <Dialog
-      open={open}
-      onClose={() => setOpen(false)}
-      fullWidth
-      maxWidth="sm"
-      slotProps={{ backdrop: { sx: { background: "rgba(0,0,0,0.9)" } } }}
-      PaperProps={{ variant: "outlined", sx: { borderWidth: "10px" } }}
-    >
-      <Alert severity="warning" icon={false}>
+  /*
         <Typography
           sx={{ color: "inherit" }}
           fontSize="1.2em"
@@ -301,68 +105,73 @@ const LoginSelector = ({ open, setOpen }) => {
             {translate("login_form.read_more")}
           </Button>
         </Box>
-      </Alert>
-      <Divider />
-      <DialogContent>
-        <Box display="flex" gap="1em" flexDirection="column">
-          <Box>
-            <Typography
-              mb="1em"
-              fontSize="1.2em"
-              fontFamily="LeagueSpartanBlack"
-              letterSpacing="-0.03em"
-            >
-              {translate("login_form.web2_consent_title")}
-            </Typography>
-            <Box display="flex" gap="1em" alignItems="center" mb="1em">
-              <XIcon />
+      */
 
-              {isMobile ? (
-                <LoginWithXMobileWarning onClick={startXLogin} />
-              ) : (
-                <Button
-                  id="x-login-button"
-                  fullWidth
-                  variant="contained"
-                  color="inverted"
-                  onClick={startXLogin}
-                >
-                  {translate("login_form.consent_with_x")}
-                </Button>
-              )}
-            </Box>
-            <Box display="flex" gap="1em" alignItems="center" mb="1em">
-              <AlternateEmailIcon />
-              <LoginWithEmail />
-            </Box>
-          </Box>
-          <Box>
-            <Typography
-              fontSize="1.2em"
-              fontFamily="LeagueSpartanBlack"
-              letterSpacing="-0.03em"
-            >
-              {translate("login_form.web3_consent_title")}
-            </Typography>
-            <Typography mb="1em">
-              {translate("login_form.web3_consent_body")}
-            </Typography>
-            <Box display="flex" gap="1em" alignItems="center" mb="1em">
-              <WalletIcon />
+  return (
+    <Container maxWidth="md">
+      <Stack direction="row" gap="2em" alignItems="end">
+        <Stack flex="0 0 50%">
+          <Head2>Before you log in,</Head2>
+          <Lead>
+            One of our club innovative aspects is blockchain based fairness and
+            transparency to all members, to achieve it we need to operate it in
+            a way that is silghtly different from other websites, some of the
+            policies and guarantees you're used to from other services are not
+            applicable to asami.
+          </Lead>
+          <Typography color="secondary.main">
+            The service is provided as-is, no warranty to be fit for any
+            particular purpose
+          </Typography>
+          <Typography color="secondary.main">
+            You are ultimately responsible to know if your usage of asami is in
+            compliance with your local laws and third parties terms of service,
+            including X.
+          </Typography>
+          <Typography color="secondary.main">
+            We will transfer your data outside the EU, and it may be stored and
+            disclosed forever.
+          </Typography>
+          <Typography color="secondary.main">
+            You can learn more about these policies reading our{" "}
+            <Link to="/about">Whitepaper</Link>{" "}
+          </Typography>
+        </Stack>
+        <Box>
+          <Box display="flex" gap="1em" flexDirection="column">
+            {isMobile ? (
+              <LoginWithXMobileWarning onClick={startXLogin} />
+            ) : (
               <Button
-                id="wallet-login-button"
-                fullWidth
-                color="inverted"
-                variant="contained"
-                onClick={startEip712Login}
+                id="x-login-button"
+                variant="outlined"
+                onClick={startXLogin}
+                startIcon={<XIcon />}
               >
-                {translate("login_form.consent_and_connect")}
+                I agree, with X
               </Button>
-            </Box>
+            )}
+            <LoginWithEmail />
+            <Button
+              id="wallet-login-button"
+              variant="outlined"
+              onClick={startEip712Login}
+              startIcon={<WalletIcon />}
+            >
+              I agree, with a WEB3 wallet
+            </Button>
+            <Button
+              id="wallet-login-button"
+              color="secondary"
+              variant="outlined"
+              startIcon={<ThumbDownAltIcon />}
+            >
+              I don't agree.
+            </Button>
           </Box>
         </Box>
-      </DialogContent>
-    </Dialog>
+      </Stack>
+    </Container>
   );
 };
 
@@ -438,15 +247,14 @@ const LoginWithEmail = ({ onClick }) => {
   };
 
   return (
-    <Box width="100%">
+    <>
       <Button
         id="email-login-button"
-        fullWidth
-        variant="contained"
-        color="inverted"
+        variant="outlined"
+        startIcon={<AlternateEmailIcon />}
         onClick={() => setOpen(true)}
       >
-        {translate("login_form.consent_with_email")}
+        I agree, with Email
       </Button>
       <Dialog
         open={open}
@@ -500,7 +308,7 @@ const LoginWithEmail = ({ onClick }) => {
           </Alert>
         )}
       </Dialog>
-    </Box>
+    </>
   );
 };
 

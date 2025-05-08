@@ -5,6 +5,7 @@ import {
   Box,
   CircularProgress,
   Button,
+  Stack,
 } from "@mui/material";
 import {
   useTranslate,
@@ -14,11 +15,12 @@ import {
 } from "react-admin";
 import { useNavigate } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
-import { Head2 } from "../components/theme";
+import { Head2, Head3, Lead } from "../components/theme";
 import { BareLayout } from "./layout";
 import authProvider from "../lib/auth_provider";
 import { NoAccounts, LiveHelp, Replay } from "@mui/icons-material";
 import { GoogleReCaptcha } from "react-google-recaptcha-v3";
+import AsamiLogo from "../assets/logo.svg?react";
 
 export const OneTimeTokenLogin = () => {
   const [searchParams] = useSearchParams();
@@ -89,32 +91,41 @@ const Errors = ({ error }) => {
 
   return (
     <>
-      <NoAccounts sx={{ mb: 3, width: "2em", height: "auto" }} />
-      <Head2 sx={{ mb: 3 }}>
-        {translate("oauth_redirect.unexpected_error")}
-      </Head2>
-      <Typography>
-        {translate("oauth_redirect.error_description_title")}
-      </Typography>
-      <Alert severity="info" sx={{ my: "2em" }}>
+      <Alert
+        severity="error"
+        variant="filled"
+        sx={{ fontSize: "1em", mt: "3em" }}
+      >
+        <Head3 sx={{ color: "inverted.main" }}>
+          {translate("oauth_redirect.unexpected_error")}
+        </Head3>
         {error}
+        <Stack
+          mt="2em"
+          direction="row"
+          gap="1em"
+          flexWrap="wrap"
+          justifyContent="stretch"
+        >
+          <Button
+            color="inverted"
+            variant="contained"
+            onClick={() => navigate("/login")}
+            startIcon={<Replay />}
+            sx={{ flexGrow: 1 }}
+          >
+            {translate("oauth_redirect.try_again")}
+          </Button>
+          <Button
+            variant="outlined"
+            color="inverted"
+            href="https://t.me/asami_club"
+            startIcon={<LiveHelp />}
+          >
+            {translate("oauth_redirect.contact_us")}
+          </Button>
+        </Stack>
       </Alert>
-
-      <Button
-        sx={{ mb: 2 }}
-        variant="contained"
-        onClick={() => navigate("/login")}
-        startIcon={<Replay />}
-      >
-        {translate("oauth_redirect.try_again")}
-      </Button>
-      <Button
-        variant="outlined"
-        href="https://t.me/asami_club"
-        startIcon={<LiveHelp />}
-      >
-        {translate("oauth_redirect.contact_us")}
-      </Button>
     </>
   );
 };
@@ -172,11 +183,12 @@ const Layout = ({ hasRedirectState, children }) => {
   const translate = useTranslate();
 
   return (
-    <BareLayout>
+    <BareLayout sponsors={false}>
       <Box
         display="flex"
         flexDirection="column"
-        marginTop="3em"
+        my="3em"
+        gap="3em"
         alignItems="center"
         minHeight="50vh"
       >
@@ -185,6 +197,7 @@ const Layout = ({ hasRedirectState, children }) => {
         ) : (
           <Errors error={translate("oauth_redirect.invalid_redirect_state")} />
         )}
+        <AsamiLogo width="150px" height="auto" />
       </Box>
     </BareLayout>
   );

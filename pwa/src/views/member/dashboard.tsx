@@ -9,6 +9,7 @@ import HelpCard from "./help_card";
 import StatsCard from "../stats_card";
 import { XCampaign } from "./campaigns";
 import { HandleSettings } from "./handle_settings";
+import { ResponsiveAppBar } from "../responsive_app_bar";
 
 const Dashboard = () => {
   useAuthenticated();
@@ -34,8 +35,8 @@ const Dashboard = () => {
 
   return (
     <Box p="1em" id="member-dashboard">
+      <ResponsiveAppBar />
       <ColumnsContainer>
-        <LoggedInNavCard />
         <HelpCard handles={handles} campaigns={campaigns} />
         <StatsCard />
         <HandleSettings handles={handles} />
