@@ -1,8 +1,8 @@
 # Whitepaper de Asami Club
 
-Este whitepaper describe el sistema tal como está concebido. Algunas funciones ya existen, otras están en desarrollo.
+Este whitepaper describe el sistema tal como está concebido. Algunas funciones ya existen, otras están en desarrollo. { .lead }
 
-Puedes leerlo de principio a fin, o [usar nuestro GPT para hacer preguntas específicas.](https://chatgpt.com/g/g-67fd6491ef24819183b0d2829ec71929-robot-asami-club)
+Puedes leerlo de principio a fin, o [usar nuestro GPT para hacer preguntas específicas.](https://chatgpt.com/g/g-67fd6491ef24819183b0d2829ec71929-robot-asami-club) { .lead }
 
 ---
 
@@ -633,23 +633,23 @@ Asami está pensado para personas —personas con algo para decir, algo que prom
 
 ---
 
-## 12. Direcciones de contrato y enlaces
+## 12. Direccionse de contrato y enlaces { .no-cols }
 
-- **Contrato inteligente de Asami** (Rootstock):  
+**Contrato inteligente de Asami** (Rootstock):  
   https://explorer.rootstock.io/address/0x3150e390bc96f1b4a05cf5183b8e7bdb68566954
 
-- **Dirección actual del Administrador de campañas**:  
+**Dirección actual del Administrador de campañas**:  
   https://explorer.rootstock.io/address/0x3e79325b61d941e7996f0a1aad4f66a703e24faa
 
-- **Información sobre la stablecoin DOC (Money on Chain)**:  
+**Información sobre la stablecoin DOC (Money on Chain)**:  
   https://moneyonchain.com/
 
-- **Código abierto del software del Administrador de campañas**:  
+**Código abierto del software del Administrador de campañas**:  
   https://github.com/constata-eu/asami
 
 ---
 
-## 13. Contacto y soporte
+## 13. Contacto y soporte { .no-cols }
 
 Se alienta a los miembros a hacer preguntas o solicitar ayuda a través de canales públicos. Nuestro objetivo es mantener toda la comunicación transparente y orientada a la comunidad.
 
@@ -665,7 +665,7 @@ Ten en cuenta que todas las solicitudes de revisión de puntajes deben seguir el
 
 ---
 
-### Apéndice A: Preguntas frecuentes y problemas conocidos
+## Apéndice A: Preguntas frecuentes y problemas conocidos { .no-cols }
 
 **P: ¿Por qué no estoy recibiendo campañas?**  
 - Es posible que tu puntaje de influencia sea bajo o que falten categorías requeridas. Puedes solicitar una revisión.

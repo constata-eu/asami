@@ -1,29 +1,6 @@
-import {
-  Card,
-  Typography,
-  Box,
-  Button,
-  Backdrop,
-  Container,
-  AppBar,
-  Toolbar,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  useMediaQuery,
-  DialogContent,
-  Dialog,
-} from "@mui/material";
+import { Card, Typography, Box, Button, Container } from "@mui/material";
 import CssBaseline from "@mui/material/CssBaseline";
-import {
-  useLogout,
-  useTranslate,
-  CoreAdminContext,
-  I18nContext,
-  useTheme,
-} from "react-admin";
+import { useTranslate, CoreAdminContext, I18nContext } from "react-admin";
 import { useEffect, useContext, useState } from "react";
 import { publicDataProvider } from "../lib/data_provider";
 import { ResponsiveAppBar } from "./responsive_app_bar";
@@ -32,10 +9,6 @@ import ConstataLogo from "../assets/constata.svg?react";
 import RootstockLabsLogo from "../assets/rootstock_labs.svg?react";
 import RootstockCollectiveLogo from "../assets/rootstock_collective.svg?react";
 import FpBlockLogo from "../assets/fpblock.svg?react";
-import AsamiLogo from "../assets/logo.svg?react";
-import XIcon from "@mui/icons-material/X";
-import MenuIcon from "@mui/icons-material/Menu";
-import CloseIcon from "@mui/icons-material/Close";
 
 export const DeckCard = ({
   id,
@@ -64,6 +37,15 @@ export const DeckCard = ({
     >
       {children}
     </Card>
+  );
+};
+
+export const AppBarLayout = ({ children, id }) => {
+  return (
+    <BareLayout>
+      <ResponsiveAppBar />
+      <Box id={id}>{children}</Box>
+    </BareLayout>
   );
 };
 

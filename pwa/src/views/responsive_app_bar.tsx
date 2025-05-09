@@ -16,7 +16,12 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-import { useAuthState, useTranslate } from "react-admin";
+import {
+  useAuthProvider,
+  useAuthState,
+  useLogout,
+  useTranslate,
+} from "react-admin";
 import { useState } from "react";
 import AsamiLogo from "../assets/logo.svg?react";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -36,80 +41,90 @@ export const ResponsiveAppBar = ({
 }: {
   expandExplorer?: boolean;
 }) => {
-  const translate = useTranslate();
+  const t = useTranslate();
   const [open, setOpen] = useState(false);
   const isMobile = useMediaQuery((theme: any) => theme.breakpoints.down("md"));
   const navigate = useNavigate();
-  const { authenticated: isLoggedIn } = useAuthState();
+  const { authenticated } = useAuthState();
+  const logout = useLogout();
 
   const defs = {
     home: {
       id: "home",
       onClick: () => navigate("/"),
       icon: HomeIcon,
+      label: "app_bar.home",
     },
     x: {
       id: "visit-x",
-      href: `https://x.com/${translate("login.x_handle")}`,
+      href: `https://x.com/@${t("app_bar.x_handle")}`,
       icon: SmallXIcon,
+      label: "app_bar.x_handle",
+    },
+    mobile_x: {
+      id: "visit-x",
+      href: `https://x.com/${t("app_bar.x_handle")}`,
+      icon: XIcon,
+      label: "app_bar.x_handle",
     },
     help: {
       id: "about",
       onClick: () => navigate("/about"),
       icon: HelpOutlineIcon,
+      label: "app_bar.help",
     },
     explorer: {
       id: "explorer",
       onClick: () => navigate("/Stats/0/show"),
       icon: QueryStatsIcon,
-      label: "explorer.menu.stats",
+      label: "app_bar.stats",
     },
     login: {
       id: "login",
       onClick: () => navigate("/login"),
       icon: LoginIcon,
-      label: "login.login_button",
+      label: "app_bar.login",
     },
     logout: {
       id: "logout",
-      onClick: () => logout(),
+      onClick: logout,
       icon: LoginIcon,
-      label: "logged_in_nav_card.logout",
+      label: "app_bar.logout",
     },
     myCampaigns: {
       id: "my-campaings",
       onClick: () => navigate("/?role=advertiser"),
       icon: CampaignIcon,
-      label: "logged_in_nav_card.pay_to_amplify",
+      label: "app_bar.my_campaings",
     },
     myCollabs: {
       id: "my-collabs",
       onClick: () => navigate("/?role=member"),
       icon: HandshakeIcon,
-      label: "logged_in_nav_card.post_to_earn",
+      label: "app_bar.my_collabs",
     },
   };
 
   const explorerItems = [
     {
       id: "accounts-menu-item",
-      href: "/#/Account",
-      text: "explorer.menu.accounts",
+      href: "/Account",
+      text: "app_bar.accounts",
     },
     {
       id: "handles-menu-item",
-      href: "/#/Handle",
-      text: "explorer.menu.handles",
+      href: "/Handle",
+      text: "app_bar.handles",
     },
     {
       id: "campaigns-menu-item",
-      href: "/#/Campaign",
-      text: "explorer.menu.campaigns",
+      href: "/Campaign",
+      text: "app_bar.campaigns",
     },
     {
       id: "collabs-menu-item",
-      href: "/#/Collab",
-      text: "explorer.menu.collabs",
+      href: "/Collab",
+      text: "app_bar.collabs",
     },
   ];
 
@@ -147,13 +162,13 @@ export const ResponsiveAppBar = ({
                 explorerItems.map((i) => (
                   <Button
                     key={i.id}
-                    href={i.href}
+                    onClick={() => navigate(i.href)}
                     color="primary"
                     id={i.id}
                     disableRipple
                     sx={{ minWidth: 0 }}
                   >
-                    {translate(i.text)}
+                    {t(i.text)}
                   </Button>
                 ))}
 
@@ -162,16 +177,20 @@ export const ResponsiveAppBar = ({
                   onClick={defs.explorer.onClick}
                   startIcon={<defs.explorer.icon />}
                 >
-                  {translate(defs.explorer.label)}
+                  {t(defs.explorer.label)}
                 </Button>
               )}
 
               <VerticalDivider />
 
-              {!isLoggedIn && <TextEntry def={defs.login} />}
-              {isLoggedIn && <TextEntry def={defs.myCampaigns} />}
-              {isLoggedIn && <TextEntry def={defs.myCollabs} />}
-              {isLoggedIn && <IconEntry def={defs.logout} />}
+              {!authenticated && <TextEntry def={defs.login} />}
+              {authenticated && (
+                <>
+                  <TextEntry def={defs.myCampaigns} />
+                  <TextEntry def={defs.myCollabs} />
+                  <IconEntry def={defs.logout} />
+                </>
+              )}
             </Box>
           )}
         </Toolbar>
@@ -209,115 +228,34 @@ export const ResponsiveAppBar = ({
           </Box>
 
           <List>
-            <ListItem disablePadding>
-              <ListItemButton color="primary" href="/" fullWidth>
-                <ListItemIcon>
-                  <CampaignIcon
-                    color="inverted"
-                    sx={{ fontSize: "2em", mr: "0.5em" }}
-                  />
-                </ListItemIcon>
-                <BigListItemText primary="My Campaigns" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton color="primary" href="/" fullWidth>
-                <ListItemIcon>
-                  <HandshakeIcon
-                    color="inverted"
-                    sx={{ fontSize: "2em", mr: "0.5em" }}
-                  />
-                </ListItemIcon>
-                <BigListItemText primary="My Collabs" />
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem disablePadding>
-              <ListItemButton color="primary" href="/" fullWidth>
-                <ListItemIcon>
-                  <HomeIcon
-                    color="inverted"
-                    sx={{ fontSize: "2em", mr: "0.5em" }}
-                  />
-                </ListItemIcon>
-                <BigListItemText primary="Home" />
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem disablePadding>
-              <ListItemButton color="primary" href="/" fullWidth>
-                <ListItemIcon>
-                  <LoginIcon
-                    color="inverted"
-                    sx={{ fontSize: "2em", mr: "0.5em" }}
-                  />
-                </ListItemIcon>
-                <BigListItemText primary="Login" />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton color="primary" href="/" fullWidth>
-                <ListItemIcon>
-                  <QueryStatsIcon
-                    color="inverted"
-                    sx={{ fontSize: "2em", mr: "0.5em" }}
-                  />
-                </ListItemIcon>
-                <BigListItemText primary="Explorer" />
-              </ListItemButton>
-            </ListItem>
+            {authenticated && (
+              <>
+                <ListItemEntry def={defs.myCampaigns} />
+                <ListItemEntry def={defs.myCollabs} />
+              </>
+            )}
+            <ListItemEntry def={defs.home} />
+            {!authenticated && <ListItemEntry def={defs.login} />}
+            <ListItemEntry def={defs.explorer} />
 
             {explorerItems.map((i) => (
               <ListItem disablePadding>
                 <ListItemButton
                   sx={{ ml: "2em" }}
-                  color="primary"
-                  href={i.href}
+                  onClick={() => navigate(i.href)}
                   fullWidth
-                  id={`${i.id}-mobile`}
+                  id={`mobile-menu-${i.id}`}
                 >
                   <ListItemIcon sx={{ minWidth: 0 }}>
                     <ArrowRightIcon color="inverted" sx={{ fontSize: "2em" }} />
                   </ListItemIcon>
-                  <BigListItemText primary={translate(i.text)} />
+                  <BigListItemText primary={t(i.text)} />
                 </ListItemButton>
               </ListItem>
             ))}
-            <ListItem disablePadding>
-              <ListItemButton color="primary" href="/" fullWidth>
-                <ListItemIcon>
-                  <XIcon
-                    color="inverted"
-                    sx={{ fontSize: "2em", mr: "0.5em" }}
-                  />
-                </ListItemIcon>
-                <BigListItemText primary="asami_club" />
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem disablePadding>
-              <ListItemButton color="primary" href="/" fullWidth>
-                <ListItemIcon>
-                  <HelpOutlineIcon
-                    color="inverted"
-                    sx={{ fontSize: "2em", mr: "0.5em" }}
-                  />
-                </ListItemIcon>
-                <BigListItemText primary="Help" />
-              </ListItemButton>
-            </ListItem>
-
-            <ListItem disablePadding>
-              <ListItemButton color="primary" href="/" fullWidth>
-                <ListItemIcon>
-                  <LogoutIcon
-                    color="inverted"
-                    sx={{ fontSize: "2em", mr: "0.5em" }}
-                  />
-                </ListItemIcon>
-                <BigListItemText primary="Logout" />
-              </ListItemButton>
-            </ListItem>
+            <ListItemEntry def={defs.mobile_x} />
+            <ListItemEntry def={defs.help} />
+            {authenticated && <ListItemEntry def={defs.logout} />}
           </List>
         </DialogContent>
       </Dialog>
@@ -376,3 +314,23 @@ const VerticalDivider = () => (
     }}
   />
 );
+
+const ListItemEntry = ({ def }) => {
+  const t = useTranslate();
+  return (
+    <ListItem disablePadding>
+      <ListItemButton
+        id={`mobile-menu-${def.id}`}
+        onClick={def.onClick}
+        target={def.target}
+        href={def.href}
+        fullWidth
+      >
+        <ListItemIcon>
+          <def.icon color="inverted" sx={{ fontSize: "2em", mr: "0.5em" }} />
+        </ListItemIcon>
+        <BigListItemText primary={t(def.label)} />
+      </ListItemButton>
+    </ListItem>
+  );
+};

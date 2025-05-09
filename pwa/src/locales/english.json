@@ -317,11 +317,6 @@
       "claim_success": "Your tokens are on their way."
     }
   },
-  "logged_in_nav_card": {
-    "post_to_earn": "Post to earn",
-    "pay_to_amplify": "Pay for reach",
-    "logout": "Logout"
-  },
   "login": {
     "login_button": "Login",
     "about_asami_button": "About ASAMI",
@@ -357,27 +352,29 @@
     "button": "Join the club, it's free!"
   },
   "login_form": {
-    "disclaimer_title": "Consent to transfer your data outside the EU",
-    "disclaimer_body": "Using ASAMI means agreeing to permanent disclosure and storage of your data globally. This non-revocable policy is essential for our club's fairness and transparency.  Before logging in, please assess the potential privacy and reputation risks of disclosing your social media handles and rewards.",
-    "reject_button": "I do not consent!",
-    "read_more": "Read more",
-    "web2_consent_title": "Consent and login with your social account.",
-    "consent_with_x": "Consent and login with X",
-    "consent_with_email": "Consent and login via Email",
-    "consent_with_facebook": "Consent with Facebook",
-    "web3_consent_title": "Consent and login with a WEB3 wallet",
-    "web3_consent_body": "To collect your rewards, get ASAMI tokens, and vote.",
-    "consent_and_connect": "Consent and connect",
-    "send_email_token": {
-      "title": "Enter your email and we'll send you a login code.",
-      "submit": "Send me a code",
-      "error": "There was a problem sending your code. Contact us on X at @asami_club",
-      "done": "Code sent, check your inbox.",
-      "done_contact_us": "If you don't get your login token, contact us on X at @asami_club"
-    },
+    "read_our_terms": "Read our terms. If you agree, choose how you'd like to log in.",
+    "read_terms_button": "I'll read the terms first",
+    "x_login_button": "• agree & login",
+    "email_login_button": "Email • agree & login",
+    "rsk_login_button": "RSK Wallet • agree & login",
     "x_mobile_warning": {
-      "title": "This may not work on mobile",
-      "text": "If login fails, we suggest you log-in using your Email address or a WEB3 wallet. You can also try again using X but on your laptop or from a different browser on your mobile."
+      "title": "X login doesn’t always work on mobile.",
+      "text": "This happens when the X app opens instead of your browser. If it doesn't work, try logging in from a laptop, use Email or Web3 instead, or temporarily disable link handling in the X app settings so the login opens in your mobile browser."
+    },
+    "send_email_token": {
+      "title": "Type your email and we'll send you a login link.",
+      "submit": "Send login link",
+      "error": "We couldn’t send the code. Contact us on X at @asami_club if the issue continues.",
+      "done": "Link sent! Check your inbox.",
+      "done_contact_us": "It might take a few minutes to arrive — please wait up to 10 minutes and check your spam folder. If it still hasn’t arrived, contact us on X at @asami_club."
+    },
+    "login_disclaimer": {
+      "title": "How things work here",
+      "heads_up": "Just a quick heads-up before you join",
+      "asami_operates_differently": "— Asami operates differently from typical websites due to its blockchain-based fairness and transparency model.",
+      "data_outside_the_eu": "Your data may be transferred outside the EU and stored forever, given our legitimate interest in blockchain transparency.",
+      "no_guarantees": "The service is provided as is, with no guarantees of suitability for any specific purpose, and may be changed or discontinued at any time.",
+      "local_laws": "You are responsible for ensuring your asami usage complies with local laws and third-party platform terms — like X. We haven’t run into any issues ourselves, but we include this just to cover our bases."
     }
   },
   "about_us": {
@@ -422,14 +419,6 @@
     "text": "Batteries included! Now you can get some RBTC with your rewards, so your wallet is always ready to be used with other apps in the rootstock ecosystem."
   },
   "explorer": {
-    "menu": {
-      "stats": "Stats",
-      "handles": "Handles",
-      "accounts": "Members",
-      "campaigns": "Campaigns",
-      "collabs": "Collabs",
-      "oracle": "Oracle"
-    },
     "stats": {
       "title": "Club Stats",
       "description": "Global club stats at a glance — for specifics, check each section in the navbar.",
@@ -513,5 +502,25 @@
     "reposted_text": "User posts get reposted often, in relation to impressions.",
     "mentioned_title": "Mentioned",
     "mentioned_text": "Was recently mentioned on high visibility posts."
+  },
+  "logged_in_nav_card": {
+    "post_to_earn": "Post to earn",
+    "pay_to_amplify": "Pay for reach",
+    "logout": "Logout"
+  },
+  "app_bar": {
+    "home": "Home",
+    "x_handle": "asami_club",
+    "help": "Help",
+    "stats": "Stats",
+    "login": "Login",
+    "logout": "Logout",
+    "my_campaings": "My Campaigns",
+    "my_collabs": "My Collabs",
+
+    "handles": "Handles",
+    "accounts": "Members",
+    "campaigns": "Campaigns",
+    "collabs": "Collabs"
   }
 }

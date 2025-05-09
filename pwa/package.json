@@ -43,6 +43,7 @@
     "jose": "^4.15.2",
     "lodash": "^4.17.21",
     "markdown-it": "^14.1.0",
+    "markdown-it-attrs": "^4.3.1",
     "nostr-tools": "^1.14.2",
     "ra-data-graphql-simple": "^4.14.3",
     "ra-i18n-polyglot": "^4.16.11",

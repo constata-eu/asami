@@ -1,5 +1,5 @@
 import { defaultTheme, useTranslate } from "react-admin";
-import { Box, styled } from "@mui/material";
+import { alpha, Box, styled } from "@mui/material";
 
 import LeagueSpartanBlack from "../assets/League_Spartan/static/LeagueSpartan-Black.ttf";
 import LeagueSpartanExtraBold from "../assets/League_Spartan/static/LeagueSpartan-ExtraBold.ttf";
@@ -80,7 +80,43 @@ export const orange = "#d0774a";
 export const lightBlue = "#4B6574";
 export const lighterBlue = "#7196ab";
 export const green = "#3a9780";
+export const brightGreen = "#388e3c";
 export const dark = "#1d3644";
+
+const backgroundGradientRules = (opacity = 100) => {
+  const yellow = alpha("#FFE203", (opacity * 27) / 100.0 / 100.0);
+  const one = alpha("#FFADB9", opacity / 100);
+  const two = alpha("#F8F4D7", opacity / 100);
+  const three = alpha("#FE7296", opacity / 100);
+  const four = alpha("#F6EDEE", opacity / 100);
+
+  return {
+    backgroundSize: "200% 100%",
+    "@media (min-width:600px)": {
+      backgroundSize: "100% 100%",
+    },
+    backgroundPosition: "0px 0px,0px 0px,0px 0px,0px 0px,0px 0px",
+    backgroundImage: `
+      radial-gradient(49% 81% at 45% 47%, ${yellow} 0%, #073AFF00 100%),
+      radial-gradient(113% 91% at 17% -2%, ${one} 1%, #FF000000 99%),
+      radial-gradient(142% 91% at 83% 7%, ${two} 1%, #FF000000 99%),
+      radial-gradient(142% 91% at -6% 74%, ${three} 1%, #FF000000 99%),
+      radial-gradient(142% 91% at 111% 84%, ${four} 0%, ${one} 100%)
+      `,
+  };
+};
+
+const paperBackground = {
+  backgroundSize: "100% 100%",
+  backgroundPosition: "0px 0px,0px 0px,0px 0px,0px 0px,0px 0px",
+  backgroundImage: `
+    radial-gradient(49% 81% at 45% 47%, #f8f4d745 0%, #e2dac34d 100%),
+    radial-gradient(113% 91% at 17% -2%, #e4ad0c0f 1%, #e2dac300 99%),
+    radial-gradient(142% 91% at 83% 7%, #e2dac300 1%, #fde2f499 99%),
+    radial-gradient(142% 91% at -6% 74%, #f8f7f2 1%, #f8f4d703 99%),
+    radial-gradient(142% 91% at 111% 84%, #e2dac303 0%, #fbfbfb 100%)
+  `,
+};
 
 const theme = {
   ...defaultTheme,
@@ -118,7 +154,7 @@ const theme = {
       main: lighterBlue,
     },
     success: {
-      main: "#388e3c", // custom green
+      main: brightGreen,
     },
   },
   components: {
@@ -126,22 +162,39 @@ const theme = {
       styleOverrides: {
         root: {
           fontFamily: '"LeagueSpartanMedium", serif',
+          "&.Mui-disabled": {
+            background: "linear-gradient(to right, #f9dbd6, #fbe4d5)",
+            color: "#d4b39e",
+          },
+        },
+      },
+    },
+    MuiFilledInput: {
+      styleOverrides: {
+        root: {
+          background: "linear-gradient(to right, #f9dbd6, #fbe4d5)",
+          "&:hover": {
+            background: "linear-gradient(to right, #f8cec6, #f9dcca)",
+          },
+          "&.Mui-focused": {
+            background: "linear-gradient(to right, #f9dbd6, #fbe4d5)",
+          },
         },
       },
     },
     MuiCard: {
       styleOverrides: {
-        root: {
-          backgroundSize: "100% 100%",
-          backgroundPosition: "0px 0px,0px 0px,0px 0px,0px 0px,0px 0px",
-          backgroundImage: `
-            radial-gradient(49% 81% at 45% 47%, #f8f4d745 0%, #e2dac34d 100%),
-            radial-gradient(113% 91% at 17% -2%, #e4ad0c0f 1%, #e2dac300 99%),
-            radial-gradient(142% 91% at 83% 7%, #e2dac300 1%, #fde2f499 99%),
-            radial-gradient(142% 91% at -6% 74%, #f8f7f2 1%, #f8f4d703 99%),
-            radial-gradient(142% 91% at 111% 84%, #e2dac303 0%, #fbfbfb 100%)
-          `,
-        },
+        root: paperBackground,
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: ({ theme, ownerState }) => ({
+          // Only apply to dialogs
+          ...(ownerState.variant === "elevation" &&
+            ownerState["data-mui-dialog"] &&
+            paperBackground),
+        }),
       },
     },
     MuiAlert: {
@@ -157,15 +210,8 @@ const theme = {
       styleOverrides: {
         "&": `.twitter-tweet iframe { border-radius: 13px; } ${fontFaces.join("\n")}`,
         body: {
-          backgroundSize: "100% 100%",
-          backgroundPosition: "0px 0px,0px 0px,0px 0px,0px 0px,0px 0px",
-          backgroundImage: `
-            radial-gradient(49% 81% at 45% 47%, #FFE20345 0%, #073AFF00 100%),
-            radial-gradient(113% 91% at 17% -2%, #FFADB9 1%, #FF000000 99%),
-            radial-gradient(142% 91% at 83% 7%, #F8F4D7 1%, #FF000000 99%),
-            radial-gradient(142% 91% at -6% 74%, #fe7296 1%, #FF000000 99%),
-            radial-gradient(142% 91% at 111% 84%, #F6EDEE 0%, #FFADB9 100%)
-            `,
+          ...backgroundGradientRules(100),
+          backgroundAttachment: "fixed",
         },
       },
     },
@@ -207,8 +253,12 @@ const theme = {
             fontFamily: '"LeagueSpartanBold"',
             textTransform: "uppercase",
           },
-          "& .RaSimpleShowLayout-row > span": {},
         },
+      },
+    },
+    MuiBackdrop: {
+      styleOverrides: {
+        root: backgroundGradientRules(40),
       },
     },
   },
@@ -229,11 +279,11 @@ const baseHeadingStyles = (theme, smallSize, largeSize) => ({
 });
 
 export const Head1 = styled("h1")(({ theme }) =>
-  baseHeadingStyles(theme, "40px", "60px"),
+  baseHeadingStyles(theme, "50px", "60px"),
 );
 
 export const Head2 = styled("h2")(({ theme }) =>
-  baseHeadingStyles(theme, "25px", "35px"),
+  baseHeadingStyles(theme, "35px", "45px"),
 );
 export const Head3 = styled("h3")(({ theme }) =>
   baseHeadingStyles(theme, "20px", "25px"),
