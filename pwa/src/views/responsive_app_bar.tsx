@@ -16,12 +16,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-import {
-  useAuthProvider,
-  useAuthState,
-  useLogout,
-  useTranslate,
-} from "react-admin";
+import { useAuthState, useLogout, useStore, useTranslate } from "react-admin";
 import { useState } from "react";
 import AsamiLogo from "../assets/logo.svg?react";
 import MenuIcon from "@mui/icons-material/Menu";
@@ -35,6 +30,7 @@ import LoginIcon from "@mui/icons-material/Login";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import HandshakeIcon from "@mui/icons-material/Handshake";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 
 export const ResponsiveAppBar = ({
   expandExplorer = false,
@@ -88,20 +84,32 @@ export const ResponsiveAppBar = ({
     logout: {
       id: "logout",
       onClick: logout,
-      icon: LoginIcon,
+      icon: LogoutIcon,
       label: "app_bar.logout",
     },
     myCampaigns: {
       id: "my-campaings",
-      onClick: () => navigate("/?role=advertiser"),
+      onClick: () => {
+        localStorage.setItem("asami_user_role", "advertiser");
+        navigate("/dashboard");
+      },
       icon: CampaignIcon,
       label: "app_bar.my_campaings",
     },
     myCollabs: {
       id: "my-collabs",
-      onClick: () => navigate("/?role=member"),
+      onClick: () => {
+        localStorage.setItem("asami_user_role", "member");
+        navigate("/dashboard");
+      },
       icon: HandshakeIcon,
       label: "app_bar.my_collabs",
+    },
+    whitepaper: {
+      id: "whitepaper",
+      onClick: () => navigate("/whitepaper"),
+      icon: MenuBookIcon,
+      label: "app_bar.whitepaper",
     },
   };
 
@@ -133,7 +141,16 @@ export const ResponsiveAppBar = ({
       <AppBar position="static" color="transparent" elevation={0}>
         <Toolbar
           disableGutters={true}
-          sx={{ mt: "1em", mb: "3em", gap: "1em", alignItems: "flex-end" }}
+          sx={{
+            mt: "1em",
+            mb: {
+              xs: "0.5em",
+              md: "1.5em",
+            },
+            gap: "1em",
+            flexWrap: { xs: "nowrap", sm: "wrap" },
+            alignItems: "flex-end",
+          }}
         >
           <AsamiLogo width="250px" height="100%" />
           <Box sx={{ flexGrow: 1 }} />
@@ -148,11 +165,19 @@ export const ResponsiveAppBar = ({
               flexWrap="nowrap"
               whiteSpace="nowrap"
               alignItems="center"
-              gap="0.5em"
             >
               <IconEntry def={defs.home} />
               <IconEntry def={defs.x} />
               <IconEntry def={defs.help} />
+              {authenticated && <IconEntry def={defs.whitepaper} />}
+              {!authenticated && (
+                <Button
+                  onClick={defs.whitepaper.onClick}
+                  startIcon={<defs.whitepaper.icon />}
+                >
+                  {t(defs.whitepaper.label)}
+                </Button>
+              )}
 
               <VerticalDivider />
 
@@ -255,6 +280,7 @@ export const ResponsiveAppBar = ({
             ))}
             <ListItemEntry def={defs.mobile_x} />
             <ListItemEntry def={defs.help} />
+            <ListItemEntry def={defs.whitepaper} />
             {authenticated && <ListItemEntry def={defs.logout} />}
           </List>
         </DialogContent>
@@ -270,18 +296,19 @@ const IconEntry = ({ def }) => {
       onClick={def.onClick}
       target={def.target}
       href={def.href}
-      sx={{ minWidth: 0, padding: "0 5px" }}
+      sx={{ minWidth: 0, padding: "0 7px" }}
     >
       <def.icon />
     </Button>
   );
 };
 
-const TextEntry = ({ def }) => {
+const TextEntry = ({ def, variant }) => {
   const t = useTranslate();
   return (
     <Button
       id={`menu-${def.id}`}
+      variant={variant}
       onClick={def.onClick}
       target={def.target}
       href={def.href}
@@ -311,6 +338,7 @@ const VerticalDivider = () => (
     flexItem={true}
     sx={{
       borderColor: "primary.main",
+      mx: "0.5em",
     }}
   />
 );

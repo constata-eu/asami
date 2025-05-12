@@ -1,5 +1,5 @@
 /// <reference types="vite-plugin-svgr/client" />
-import { useEffect, useContext, useState } from "react";
+import { useEffect, useContext, useState, useRef } from "react";
 import {
   Avatar,
   CardContent,
@@ -7,6 +7,8 @@ import {
   Box,
   Button,
   Typography,
+  Stack,
+  Card,
 } from "@mui/material";
 
 import { etherToHex } from "../lib/formatters";
@@ -20,30 +22,22 @@ import {
 } from "react-admin";
 
 import { TwitterTweetEmbed } from "react-twitter-embed";
-import { DeckCard } from "./layout";
-import { Head2, Head3, light, green } from "../components/theme";
-import XIcon from "@mui/icons-material/X";
+import { CardTable, DeckCard } from "./layout";
+import { Head2, Head3, light, green, Head1, Lead } from "../components/theme";
+import { useNavigate } from "react-router-dom";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import chunk from "lodash/chunk";
 import flatten from "lodash/flatten";
 import CampaignListEmpty from "./campaign_list_empty";
 import StatsCard from "./stats_card";
 import { ResponsiveAppBar } from "./responsive_app_bar";
-
-/*
-
-  const [, setRole] = useStore("user.role", "advertiser");
-
-  const loginAs = async (newRole) => {
-    setRole(newRole);
-    setOpen(true);
-  };
-
-  */
+import { contentId } from "../lib/campaign";
 
 export default () => {
+  const t = useTranslate();
   const [pubDataProvider, setPubDataProvider] = useState();
   const i18nProvider = useContext(I18nContext);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function initApp() {
@@ -57,26 +51,32 @@ export default () => {
     return <></>;
   }
 
+  const loginAs = async (role) => {
+    localStorage.setItem("asami_user_role", role);
+    navigate("/login");
+  };
+
   return (
     <>
       <ResponsiveAppBar />
-      <Box
-        sx={{
-          columnCount: { xs: 1, sm: 2, md: 3, lg: 4, xl: 5 },
-          columnGap: "1em",
-        }}
-      >
-        <JoinNow key="join-now" />
+      <CardTable>
+        <Stack gap="0.5em" mb="1em">
+          <Head1>{t("landing.title")}</Head1>
+          <Lead>{t("landing.asami_invites")}</Lead>
+          <Lead>{t("landing.boost")}</Lead>
+          <Lead>{t("landing.built_on_fairness")}</Lead>
+        </Stack>
+        <JoinNow key="join-now" loginAs={loginAs} />
         {pubDataProvider && (
           <CoreAdminContext
             i18nProvider={i18nProvider}
             dataProvider={pubDataProvider}
           >
-            <PublicCampaignList />
+            <PublicCampaignList loginAs={loginAs} />
             <StatsCard />
           </CoreAdminContext>
         )}
-      </Box>
+      </CardTable>
     </>
   );
 };
@@ -126,10 +126,14 @@ const YourPostHere = ({ loginAs }) => {
   const translate = useTranslate();
 
   return (
-    <DeckCard elevation={10}>
+    <DeckCard color="inverted.main" background={(t) => t.palette.primary.main}>
       <CardContent>
-        <Head2>{translate("your_post_here.title")}</Head2>
-        <Typography>{translate("your_post_here.message")}</Typography>
+        <Head2 sx={{ color: "inverted.main" }}>
+          {translate("your_post_here.title")}
+        </Head2>
+        <Lead sx={{ my: "1em", color: "inverted.main" }}>
+          {translate("your_post_here.message")}
+        </Lead>
         <Box mt="1em">
           <Button
             onClick={() => loginAs("advertiser")}
@@ -147,80 +151,102 @@ const YourPostHere = ({ loginAs }) => {
     </DeckCard>
   );
 };
-const JoinNow = () => {
+
+const JoinNow = ({ loginAs }) => {
   const translate = useTranslate();
 
   return (
-    <DeckCard borderColor={green} elevation={10}>
+    <DeckCard color="primary.main">
       <CardContent>
-        <Head2 sx={{ mb: "0.5em" }}>{translate("join_now.title")}</Head2>
-        <Typography>{translate("join_now.message")}</Typography>
-        <Head3 sx={{ mt: "1em", mb: "0.5em" }}>
-          {translate("join_now.no_crypto_no_problem")}
-        </Head3>
-        <Typography>{translate("join_now.learn_later")}</Typography>
-        <Box mt="1em">
-          <Button
-            className="get-your-sparkles"
-            fullWidth
-            size="large"
-            variant="contained"
-          >
-            {translate("join_now.button")}
-          </Button>
-        </Box>
+        <Head2 sx={{ color: "primary.main" }}>
+          {translate("join_now.title")}
+        </Head2>
+        <Lead sx={{ color: "primary.main", my: "1em" }}>
+          {translate("join_now.you_will_be_invited")}
+        </Lead>
+        <Lead sx={{ color: "primary.main", my: "1em" }}>
+          {translate("join_now.join_from_anywhere")}
+        </Lead>
+        <Button
+          fullWidth
+          size="large"
+          color="primary"
+          variant="contained"
+          onClick={() => loginAs("member")}
+        >
+          {translate("join_now.button")}
+        </Button>
       </CardContent>
     </DeckCard>
-  );
-};
-
-const PublicCardHeader = ({ loginAs, item, buttonLabel, icon }) => {
-  const translate = useTranslate();
-
-  return (
-    <CardHeader
-      sx={{ mb: "0", pb: "0.5em" }}
-      avatar={<Avatar sx={{ bgcolor: light }}>{icon}</Avatar>}
-      title={translate("public_card_header.title", {
-        amount: formatEther(item.budget),
-      })}
-      subheader={
-        <Button
-          sx={{ mt: "0.2em" }}
-          onClick={() => loginAs("member")}
-          fullWidth
-          color="inverted"
-          size="small"
-          variant="outlined"
-        >
-          {buttonLabel}
-        </Button>
-      }
-    />
   );
 };
 
 const PublicXCampaign = ({ loginAs, item }) => {
   const translate = useTranslate();
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const cleanupMargins = () => {
+      const tweetBlockquote =
+        containerRef.current?.querySelector(".twitter-tweet");
+      if (tweetBlockquote) {
+        tweetBlockquote.style.margin = "0";
+      }
+    };
+
+    const interval = setInterval(cleanupMargins, 200);
+
+    setTimeout(() => clearInterval(interval), 3000);
+  }, []);
+
   return (
-    <DeckCard id={`campaign-container-${item.id}`}>
-      <PublicCardHeader
-        icon={<XIcon />}
-        item={item}
-        loginAs={loginAs}
-        buttonLabel={translate("public_x_campaign.main_button")}
-      />
-      <CardContent>
-        <TwitterTweetEmbed
-          tweetId={JSON.parse(item.briefingJson)}
-          options={{
-            theme: "dark",
-            align: "center",
-            width: "250px",
-            conversation: "none",
-          }}
-        />
-      </CardContent>
-    </DeckCard>
+    <Card
+      id={`campaign-container-${item.id}`}
+      sx={{
+        borderRadius: "13px 13px 4px 4px",
+        mb: "1em",
+      }}
+    >
+      <Box overflow="hidden">
+        <div ref={containerRef}>
+          <TwitterTweetEmbed
+            tweetId={contentId(item)}
+            options={{
+              align: "center",
+              width: "100%",
+              conversation: "none",
+              margin: 0,
+            }}
+          />
+        </div>
+      </Box>
+
+      <Box
+        height="50px"
+        mt="-50px"
+        position="relative"
+        sx={{
+          backgroundImage:
+            "linear-gradient(to bottom, rgba(245, 235, 231, 0) 0%, #f5ebe7 100%)",
+        }}
+      ></Box>
+      <Box p="0.5em 1em 1em 1em">
+        <Typography mb="0.5em" variant="h6">
+          {translate("public_card_header.title", {
+            amount: formatEther(item.budget),
+          })}
+        </Typography>
+
+        <Button
+          sx={{ mt: "0.2em" }}
+          onClick={() => loginAs("member")}
+          fullWidth
+          color="primary"
+          variant="outlined"
+        >
+          {translate("public_x_campaign.main_button")}
+        </Button>
+      </Box>
+    </Card>
   );
 };

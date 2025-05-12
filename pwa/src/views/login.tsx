@@ -36,7 +36,6 @@ import SendIcon from "@mui/icons-material/Send";
 import AsamiLogo from "../assets/logo.svg?react";
 import { Head2, Head3 } from "../components/theme";
 import { useContext, useEffect, useState } from "react";
-import WarningIcon from "@mui/icons-material/Warning";
 import { publicDataProvider } from "../lib/data_provider";
 
 const Login = () => {
@@ -148,7 +147,7 @@ const LoginWithX = () => {
       <Button
         id="x-login-button"
         variant="contained"
-        onClick={() => (!isMobile ? setOpen(true) : startXLogin())}
+        onClick={() => (isMobile ? setOpen(true) : startXLogin())}
         startIcon={<XIcon />}
         fullWidth
       >

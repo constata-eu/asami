@@ -1,39 +1,22 @@
-import React from "react";
-import { useEffect, useContext } from "react";
 import {
   SelectInput,
-  SearchInput,
   Datagrid,
   List,
-  useSafeSetState,
   useTranslate,
-  ListBase,
   TextField,
   FunctionField,
-  Button,
-  useRedirect,
   TextInput,
   DateField,
   NumberField,
   NumberInput,
-  BooleanField,
   ReferenceInput,
-  AutocompleteInput,
-  BooleanInput,
   SimpleShowLayout,
-  EditButton,
   ReferenceField,
 } from "react-admin";
 import { Link } from "react-router-dom";
-import { BareLayout, DeckCard, ExplorerLayout } from "../layout";
-import { Box, Typography } from "@mui/material";
+import { ExplorerLayout } from "../layout";
 import { viewPostUrl } from "../../lib/campaign";
-import {
-  AmountField,
-  BigNumField,
-  AmountInput,
-} from "../../components/custom_fields";
-import { formatEther, formatUnits, parseEther, toBeHex } from "ethers";
+import { AmountField, AmountInput } from "../../components/custom_fields";
 import { Head1, Lead } from "../../components/theme";
 
 export const CampaignList = () => {
@@ -69,6 +52,14 @@ export const CampaignList = () => {
         sort={{ field: "createdAt", order: "DESC" }}
       >
         <Datagrid bulkActionButtons={false} expand={<ExpandCampaign />}>
+          <FunctionField
+            label={translate("campaign_list.post")}
+            render={(record) => (
+              <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">
+                {translate("campaign_list.see_post")}
+              </a>
+            )}
+          />
           <TextField source="id" />
           <TextField source="status" sortable={false} />
           <FunctionField

@@ -1,4 +1,4 @@
-use models::{weihex, EngagementScore, Handle, HandleScoringStatus, HandleStatus, OperationalStatus, PollScore};
+use models::{weihex, CollabStatus, EngagementScore, Handle, HandleScoringStatus, HandleStatus, OnChainJobKind, OnChainJobStatus, OperationalStatus, PollScore};
 
 use super::*;
 
@@ -6,8 +6,14 @@ use super::*;
 async fn shows_member_profile_page() {
     let h = TestHelper::for_web().await;
     let w = h.web();
+    let mut api = h.make_api_client().await;
 
     let handle = stub_scored_handle(&h).await;
+    let mut campaign = api.quick_campaign(u("100"), 30, &[]).await;
+    campaign.make_x_collab_with_user_id(handle.user_id()).await.unwrap().unwrap();
+    h.app.wait_for_job("Account collab", OnChainJobKind::MakeSubAccountCollabs, OnChainJobStatus::Settled).await;
+    assert_eq!(handle.collab_vec().await.unwrap().len(), 1);
+    assert_eq!(handle.collab_scope().status_eq(CollabStatus::Cleared).all().await.unwrap().len(), 1);
 
     w.goto(&format!("http://127.0.0.1:5173/#/Account/{}/show", handle.account_id() )).await;
     wait_for_enter("Check the member show page").await;

@@ -66,7 +66,7 @@ const RegularLogin = ({ authData, authMethodKind }) => {
     async (recaptchaToken) => {
       try {
         await authProvider.login(authMethodKind, authData, recaptchaToken);
-        navigate("/");
+        navigate("/dashboard");
       } catch (e) {
         setError(e.message || translate("oauth_redirect.unexpected_error"));
       }
@@ -143,7 +143,7 @@ export const XGrantAccess = () => {
 
   useEffect(() => {
     if (hasRun.current) {
-      redirect("/");
+      redirect("/dashboard");
     }
     hasRun.current = true;
 
@@ -156,7 +156,7 @@ export const XGrantAccess = () => {
         notify("oauth_redirect.x_grant_access_success", {
           type: "success",
         });
-        redirect("/");
+        redirect("/dashboard");
       } catch (err) {
         setError(translate("oauth_redirect.x_grant_access_error"));
       }

@@ -32,20 +32,10 @@ export const DeckCard = ({
         width,
         marginBottom: "1em",
         breakInside: "avoid",
-        flex: "1 1 250px",
       }}
     >
       {children}
     </Card>
-  );
-};
-
-export const AppBarLayout = ({ children, id }) => {
-  return (
-    <BareLayout>
-      <ResponsiveAppBar />
-      <Box id={id}>{children}</Box>
-    </BareLayout>
   );
 };
 

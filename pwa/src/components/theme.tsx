@@ -197,6 +197,11 @@ const theme = {
         }),
       },
     },
+    MuiDialog: {
+      styleOverrides: {
+        paper: paperBackground,
+      },
+    },
     MuiAlert: {
       styleOverrides: {
         root: {
@@ -208,7 +213,7 @@ const theme = {
     },
     MuiCssBaseline: {
       styleOverrides: {
-        "&": `.twitter-tweet iframe { border-radius: 13px; } ${fontFaces.join("\n")}`,
+        "&": `.twitter-tweet { color: 'red'; margin: 0 !important;} ${fontFaces.join("\n")}`,
         body: {
           ...backgroundGradientRules(100),
           backgroundAttachment: "fixed",
@@ -286,14 +291,14 @@ export const Head2 = styled("h2")(({ theme }) =>
   baseHeadingStyles(theme, "35px", "45px"),
 );
 export const Head3 = styled("h3")(({ theme }) =>
-  baseHeadingStyles(theme, "20px", "25px"),
+  baseHeadingStyles(theme, "25px", "35px"),
 );
 
 export const Lead = styled("p")(({ theme }) => {
   return {
     fontFamily: "'LeagueSpartanLight'",
     color: theme.palette.secondary.main,
-    lineHeight: 1,
+    lineHeight: 1.2,
     fontSize: "15px",
     margin: 0,
     [theme.breakpoints.up("md")]: {
@@ -315,3 +320,11 @@ export const CardTitle = ({ text, ...props }) => {
     </Box>
   );
 };
+
+export const BigText = styled("h2")(({ theme }) => ({
+  fontFamily: "'LeagueSpartanBold'",
+  fontSize: "40px",
+  lineHeight: "1.1em",
+  letterSpacing: "-0.05em",
+  margin: 0,
+}));

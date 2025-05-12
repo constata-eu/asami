@@ -1,32 +1,18 @@
-import React from "react";
-import { useEffect, useContext } from "react";
 import {
   SelectInput,
-  SearchInput,
   Datagrid,
   List,
-  useSafeSetState,
   useTranslate,
-  ListBase,
   TextField,
   FunctionField,
-  Button,
-  useRedirect,
   TextInput,
   NumberInput,
-  DateField,
-  NumberField,
   SimpleShowLayout,
-  BooleanField,
   ReferenceInput,
-  AutocompleteInput,
-  BooleanInput,
-  EditButton,
   ReferenceField,
 } from "react-admin";
 import { Link } from "react-router-dom";
-import { BareLayout, DeckCard, ExplorerLayout } from "../layout";
-import { Box, Typography } from "@mui/material";
+import { ExplorerLayout } from "../layout";
 import { AmountField } from "../../components/custom_fields";
 import { Head1, Lead } from "../../components/theme";
 
@@ -87,13 +73,15 @@ export const CollabList = () => {
           <TextField source="status" sortable={false} />
           <ReferenceField
             source="advertiserId"
-            resource="Account"
+            reference="Account"
             sortable={false}
+            link="show"
           />
           <ReferenceField
             source="memberId"
-            resource="Account"
+            reference="Account"
             sortable={false}
+            link="show"
           />
         </Datagrid>
       </List>

@@ -7,30 +7,18 @@ import {
   TextInput,
   DateField,
   NumberField,
-  BooleanField,
-  SimpleShowLayout,
-  ReferenceManyField,
-  SingleFieldList,
-  Show,
-  ShowBase,
-  Labeled,
   useShowController,
   useListController,
   RecordContextProvider,
-  ReferenceArrayField,
   ShowButton,
+  ListBase,
+  ReferenceField,
+  ListView,
 } from "react-admin";
-import { Link, useParams } from "react-router-dom";
-import { CardTable, DeckCard, ExplorerLayout } from "../layout";
-import {
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  Stack,
-  styled,
-  Typography,
-} from "@mui/material";
+import { viewPostUrl } from "../../lib/campaign";
+import { useParams, Link } from "react-router-dom";
+import { ExplorerLayout } from "../layout";
+import { Box, Card, CardContent, styled, Typography } from "@mui/material";
 import { AmountField, BigNumField } from "../../components/custom_fields";
 import XIcon from "@mui/icons-material/X";
 import BadgeIcon from "@mui/icons-material/Badge";
@@ -55,7 +43,8 @@ import StarHalfIcon from "@mui/icons-material/StarHalf";
 import StarIcon from "@mui/icons-material/Star";
 import GrassIcon from "@mui/icons-material/Grass";
 
-import { red, Head1, yellow, green, dark, Lead } from "../../components/theme";
+import { red, Head1, Head2, Lead, BigText } from "../../components/theme";
+import { AttributeTable } from "../../components/attribute_table";
 
 export const AccountList = () => {
   const t = useTranslate();
@@ -130,69 +119,73 @@ const AccountCardTable = () => {
     resource: "Handle",
   });
 
-  if (showAccount.isPending || listHandles.isPending) {
+  if (showAccount.isPending || !showAccount.record || listHandles.isPending) {
     return <></>;
   }
 
   const handle = listHandles.data[0];
 
   return (
-    <RecordContextProvider value={showAccount.record}>
-      <Head1>
-        <strong>
-          {showAccount.record.name || t("account_show.title.default_name")}
-        </strong>
-        <Box component="span" fontSize="0.6em">
-          {" "}
-          # {showAccount.record.id}
-        </Box>
-      </Head1>
-      <HorizontalCardTable mt="2em">
-        {handle &&
-          (handle.currentScoringId ? (
-            <ScoringCardTable handle={handle} />
-          ) : (
-            <IconTextCard
-              title={`@${handle.username}`}
-              text="scoring_in_progress"
-              icon={XIcon}
-            />
-          ))}
-        {!showAccount.record.totalCampaigns && (
+    <>
+      <RecordContextProvider value={showAccount.record}>
+        <Head1>
+          <strong>
+            {showAccount.record.name || t("account_show.title.default_name")}
+          </strong>
+          <Box component="span" fontSize="0.6em">
+            {" "}
+            # {showAccount.record.id}
+          </Box>
+        </Head1>
+        <HorizontalCardTable mt="2em">
+          {handle &&
+            (handle.currentScoringId ? (
+              <ScoringCardTable handle={handle} />
+            ) : (
+              <IconTextCard
+                title={`@${handle.username}`}
+                text="scoring_in_progress"
+                icon={XIcon}
+              />
+            ))}
+          {showAccount.record.totalCampaigns > 0 && (
+            <FixedWidthCard elevation={10}>
+              <CardContent>
+                <CardTitle>{t("account_show.advertiser_title")}</CardTitle>
+                <CampaignIcon sx={{ fontSize: 90, flexGrow: 1 }} />
+                <AttributeTable>
+                  <NumberField source="totalCampaigns" />
+                  <AmountField textAlign="right" source="totalSpent" />
+                  <NumberField source="totalCollabsReceived" />
+                </AttributeTable>
+              </CardContent>
+            </FixedWidthCard>
+          )}
           <FixedWidthCard elevation={10}>
             <CardContent>
-              <CardTitle>{t("account_show.advertiser_title")}</CardTitle>
-              <CampaignIcon sx={{ fontSize: 90, flexGrow: 1 }} />
-              <SimpleShowLayout>
-                <NumberField source="totalCampaigns" />
-                <AmountField textAlign="right" source="totalSpent" />
-                <NumberField source="totalCollabsReceived" />
-              </SimpleShowLayout>
+              <CardTitle>{t("account_show.member_info_title")}</CardTitle>
+              <BadgeIcon sx={{ fontSize: 90, flexGrow: 1 }} />
+              <AttributeTable>
+                <DateField source="createdAt" />
+                <TextField source="addr" emptyText={"-"} />
+                <AmountField
+                  textAlign="right"
+                  source="unclaimedAsamiBalance"
+                  currency=""
+                />
+                <AmountField
+                  textAlign="right"
+                  source="unclaimedDocBalance"
+                  currency=""
+                />
+              </AttributeTable>
             </CardContent>
           </FixedWidthCard>
-        )}
-        <FixedWidthCard elevation={10}>
-          <CardContent>
-            <CardTitle>{t("account_show.member_info_title")}</CardTitle>
-            <BadgeIcon sx={{ fontSize: 90, flexGrow: 1 }} />
-            <SimpleShowLayout>
-              <DateField source="createdAt" />
-              <TextField source="addr" />
-              <AmountField
-                textAlign="right"
-                source="unclaimedAsamiBalance"
-                currency=""
-              />
-              <AmountField
-                textAlign="right"
-                source="unclaimedDocBalance"
-                currency=""
-              />
-            </SimpleShowLayout>
-          </CardContent>
-        </FixedWidthCard>
-      </HorizontalCardTable>
-    </RecordContextProvider>
+        </HorizontalCardTable>
+      </RecordContextProvider>
+      <AccountCollabs account={showAccount.record} />
+      <AccountCampaigns account={showAccount.record} />
+    </>
   );
 };
 
@@ -242,21 +235,21 @@ const ScoringCardTable = ({ handle }) => {
               </Typography>
             </BigText>
           </Box>
-          <RecordContextProvider value={scoring}>
-            <SimpleShowLayout>
-              <NumberField source="audienceSize" />
-              <FunctionField
-                source="authority"
-                render={(h) => `${BigInt(h.authority)}%`}
-              />
-            </SimpleShowLayout>
-          </RecordContextProvider>
-          <RecordContextProvider value={handle}>
-            <SimpleShowLayout>
-              <NumberField source="totalCollabs" />
-              <AmountField textAlign="right" source="totalCollabRewards" />
-            </SimpleShowLayout>
-          </RecordContextProvider>
+          <AttributeTable record={scoring}>
+            <NumberField source="audienceSize" />
+            <FunctionField
+              source="authority"
+              render={(h) => `${BigInt(h.authority)}%`}
+            />
+          </AttributeTable>
+          <AttributeTable record={handle}>
+            <NumberField source="totalCollabs" />
+            <AmountField
+              textAlign="right"
+              currency=""
+              source="totalCollabRewards"
+            />
+          </AttributeTable>
         </CardContent>
       </FixedWidthCard>
       <RecordContextProvider value={scoring}>
@@ -470,9 +463,9 @@ const IconTextCard = ({ color, title, icon: Icon, text, textParam }) => {
     <FixedWidthCard color={color}>
       <CardContent>
         <CardTitle>{t(`account_show.${title}`, { _: title })}</CardTitle>
-        <Icon sx={{ fontSize: "100px", mt: "30px" }} />
+        <Icon sx={{ fontSize: "100px", margin: "30px" }} />
         <Box sx={{ flexGrow: "1" }} />
-        <Typography align="center" fontSize="0.8em">
+        <Typography align="center" fontSize="0.9em" lineHeight="1.2em">
           {t(`account_show.${text}`, { _: text, extra: textParam || "" })}
         </Typography>
       </CardContent>
@@ -498,13 +491,12 @@ const FixedWidthCard = ({ id, color, children }) => {
   );
 };
 
-export const HorizontalCardTable = ({ children, ...props }) => (
+const HorizontalCardTable = ({ children, ...props }) => (
   <Box
     sx={{
       display: "flex",
       gap: "1em",
       flexWrap: "wrap",
-      justifyContent: "center",
       "& .MuiCardContent-root": {
         alignItems: "center",
         display: "flex !important",
@@ -512,47 +504,119 @@ export const HorizontalCardTable = ({ children, ...props }) => (
         height: "100%",
         paddingBottom: "16px !important",
       },
-      "& .RaSimpleShowLayout-stack": {
-        margin: "0 !important",
-        gap: "0.2em !important",
-        paddingBottom: "0 !important",
-      },
-      "& .RaSimpleShowLayout-row.ra-field": {
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        width: "100%",
-        alignItems: "center",
-        padding: 0,
-        margin: 0,
-        background: "none",
-      },
-      "& .ra-field > p": {
-        marginRight: 1,
-        fontWeight: 500,
-        display: "flex",
-      },
-      "& .ra-field > span": {
-        margin: 0,
-      },
     }}
     {...props}
     children={children}
   />
 );
 
-export const BigText = styled("h2")(({ theme }) => ({
-  fontFamily: "'LeagueSpartanBold'",
-  fontSize: "40px",
-  lineHeight: "1.1em",
-  letterSpacing: "-0.05em",
-  margin: 0,
-}));
-
-export const CardTitle = styled("h3")(({ theme }) => ({
+const CardTitle = styled("h3")(({ theme }) => ({
   fontFamily: "'LeagueSpartanBold'",
   fontSize: "20px",
   lineHeight: "1em",
   letterSpacing: "-0.05em",
   margin: 0,
 }));
+
+const AccountCollabs = ({ account }) => {
+  const t = useTranslate();
+  const listContext = useListController({
+    resource: "Collab",
+    filter: { memberIdEq: account.id },
+    sort: { field: "id", order: "DESC" },
+    perPage: 5,
+  });
+
+  if (listContext.isPending || listContext.total == 0) {
+    return <></>;
+  }
+
+  return (
+    <>
+      <Head2 sx={{ mt: "1em" }}>{t("account_show.collabs_title")}</Head2>
+      <ListBase disableAuthentication disableSyncWithLocation {...listContext}>
+        <ListView>
+          <Datagrid bulkActionButtons={false}>
+            <TextField source="id" />
+            <FunctionField
+              source="campaignId"
+              render={(record) => (
+                <Link
+                  to={`/Campaign?displayedFilters=%7B%7D&filter=%7B%22idEq%22%3A${record.campaignId}%7D`}
+                >
+                  <TextField source="campaignId" />
+                </Link>
+              )}
+            />
+            <AmountField textAlign="right" source="reward" />
+            <AmountField textAlign="right" source="fee" />
+            <TextField source="status" sortable={false} />
+            <ReferenceField
+              source="advertiserId"
+              reference="Account"
+              sortable={false}
+              link="show"
+            />
+          </Datagrid>
+        </ListView>
+      </ListBase>
+    </>
+  );
+};
+
+const AccountCampaigns = ({ account }) => {
+  const t = useTranslate();
+  const listContext = useListController({
+    resource: "Campaign",
+    filter: { accountIdEq: account.id },
+    sort: { field: "createdAt", order: "DESC" },
+    perPage: 5,
+  });
+
+  if (listContext.isPending || listContext.total == 0) {
+    return <></>;
+  }
+
+  return (
+    <>
+      <Head2 sx={{ mt: "1em" }}>{t("account_show.campaigns_title")}</Head2>
+      <ListBase disableAuthentication disableSyncWithLocation {...listContext}>
+        <ListView>
+          <Datagrid bulkActionButtons={false}>
+            <TextField source="id" />
+            <TextField source="status" sortable={false} />
+            <FunctionField
+              textAlign="right"
+              source="totalCollabs"
+              render={(record) =>
+                record.totalCollabs > 0 ? (
+                  <Link
+                    to={`/Collab?displayedFilters=%7B%7D&filter=%7B%22campaignIdEq%22%3A${record.id}%7D`}
+                  >
+                    <NumberField source="totalCollabs" />
+                  </Link>
+                ) : (
+                  <NumberField source="totalCollabs" />
+                )
+              }
+            />
+            <AmountField textAlign="right" currency="" source="budget" />
+            <AmountField textAlign="right" currency="" source="totalSpent" />
+            <AmountField textAlign="right" currency="" source="totalBudget" />
+            <DateField source="validUntil" showTime />
+            <DateField source="createdAt" showTime />
+            <FunctionField
+              source="briefingJson"
+              sortable={false}
+              render={(record) => (
+                <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">
+                  {JSON.parse(record.briefingJson)}
+                </a>
+              )}
+            />
+          </Datagrid>
+        </ListView>
+      </ListBase>
+    </>
+  );
+};

@@ -2,8 +2,6 @@
 
 This whitepaper describes the system as intended, some features already exist, others are under development. { .lead }
 
-You can read this from start to end, or [use our GPT to ask specific questions.](https://chatgpt.com/g/g-67fd41c84f808191b6d034654e621696-asami-club) { .lead }
-
 ---
 
 ## 1. Overview

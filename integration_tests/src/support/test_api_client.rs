@@ -186,6 +186,18 @@ impl ApiClient {
             .await;
     }
 
+    pub async fn quick_campaign(&mut self, budget: U256, duration: i64, topic_ids: &[i32]) -> models::Campaign {
+        self.setup_as_advertiser("test main advertiser").await;
+        self
+            .start_and_pay_campaign(
+                "https://x.com/somebody/status/1716421161867710954",
+                budget,
+                duration,
+                topic_ids,
+            )
+            .await
+    }
+
     pub async fn setup_as_advertiser(&mut self, message: &str) {
         self.setup_as_advertiser_with_amount(message, u("2000")).await;
     }

@@ -1,7 +1,16 @@
 import { useEffect } from "react";
-import { useAuthenticated, useSafeSetState, useGetOne } from "react-admin";
+import {
+  useAuthenticated,
+  useSafeSetState,
+  useGetOne,
+  ListView,
+  ListBase,
+  DateField,
+  NumberField,
+} from "react-admin";
 import {
   Box,
+  Button,
   Card,
   CardContent,
   Container,
@@ -9,20 +18,21 @@ import {
   Typography,
 } from "@mui/material";
 import { formatEther } from "ethers";
-import { LoggedInNavCard, ColumnsContainer, DeckCard } from "../layout";
-import { CardTitle, Head2, green } from "../../components/theme";
+import { ColumnsContainer, DeckCard } from "../layout";
+import { CardTitle, Head1, Head2, Lead, green } from "../../components/theme";
 import { viewPostUrl } from "../../lib/campaign";
 import { Pagination, Datagrid, TextField, FunctionField } from "react-admin";
+import { Link } from "react-router-dom";
 import {
   useListController,
   ListContextProvider,
   useTranslate,
 } from "react-admin";
 import { getAuthKeys } from "../../lib/auth_provider";
-import { MakeCampaignCard } from "./make_campaign_card";
+import { MakeCampaignWithDocCard } from "./make_campaign_card";
 import BalanceCard from "../balance_card";
-import StatsCard from "../stats_card";
 import { ResponsiveAppBar } from "../responsive_app_bar";
+import { AmountField } from "../../components/custom_fields";
 
 const Dashboard = () => {
   useAuthenticated();
@@ -40,6 +50,7 @@ const Dashboard = () => {
       accountIdEq: getAuthKeys().session.accountId,
       statusNe: "DRAFT",
     },
+    sort: { field: "createdAt", order: "DESC" },
     perPage: 20,
     queryOptions: {
       refetchInterval: 10000,
@@ -60,14 +71,12 @@ const Dashboard = () => {
       <ResponsiveAppBar />
       <ColumnsContainer>
         <AdvertiserHelpCard account={data} />
-        <StatsCard />
-        <BalanceCard />
-        {data.status == "CLAIMED" && (
-          <MakeCampaignCard
-            account={data}
-            onCreate={() => listContext.refetch()}
-          />
-        )}
+        <MakeCampaignWithDocCard
+          account={data}
+          onCreate={() => listContext.refetch()}
+        />
+        <MakeCampaignWithStripeCard />
+        {data.status == "CLAIMED" && <BalanceCard />}
       </ColumnsContainer>
 
       <CampaignList listContext={listContext} />
@@ -77,22 +86,30 @@ const Dashboard = () => {
 
 const AdvertiserHelpCard = ({ account }) => {
   const translate = useTranslate();
-  const id = {
-    MANAGED: "advertiser-claim-account-none",
-    CLAIMING: "advertiser-claim-account-pending",
-    CLAIMED: "advertiser-claim-account-done",
-    BANNED: "advertiser-banned",
-  }[account.status];
+  return (
+    <Box
+      id="advertiser-help-card"
+      sx={{ breakInside: "avoid" }}
+      mb="1em"
+      p="0.5em"
+    >
+      <Head1 sx={{ mb: "0.5em" }}>{translate("advertiser_help.title")}</Head1>
+      <Lead>{translate("advertiser_help.text")}</Lead>
+    </Box>
+  );
+};
+
+export const MakeCampaignWithStripeCard = () => {
+  const t = useTranslate();
 
   return (
-    <DeckCard id="advertiser-help-card" borderColor={green}>
+    <DeckCard>
       <CardContent>
-        <Head2 sx={{ color: green }}>
-          {translate("advertiser_help.title")}
-        </Head2>
-        <Typography id={id} mt="1em">
-          {translate(`advertiser_help.${account.status}`)}
-        </Typography>
+        <Head2>{t("make_campaign.with_stripe.title")}</Head2>
+        <Typography my="1em">{t("make_campaign.with_stripe.text")}</Typography>
+        <Button fullWidth color="primary" disabled variant="outlined">
+          {t("make_campaign.with_stripe.coming_soon")}
+        </Button>
       </CardContent>
     </DeckCard>
   );
@@ -106,40 +123,45 @@ const CampaignList = ({ listContext }) => {
   }
 
   return (
-    <ListContextProvider value={listContext}>
-      <Card id="campaign-list" sx={{ my: "3em" }}>
-        <CardTitle text="campaign_list.title">
-          <Typography mt="1em">{translate("campaign_list.text")} </Typography>
-        </CardTitle>
-        <Datagrid resource="Campaign" bulkActionButtons={false}>
-          <FunctionField
-            label={translate("campaign_list.post")}
-            render={(record) => (
-              <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">
-                {translate("campaign_list.see_post")}
-              </a>
-            )}
-          />
-          <FunctionField
-            source="status"
-            label={translate("campaign_list.status")}
-            render={(record) => {
-              if (record.status == "SUBMITTED") {
-                return translate("campaign_list.statuses.publishing");
-              } else if (record.budget > BigInt(0)) {
-                return translate("campaign_list.statuses.running", {
-                  budget: formatEther(record.budget),
-                  validUntil: new Date(record.validUntil).toDateString(),
-                });
-              } else {
-                return translate("campaign_list.statuses.stopped");
+    <Box id="campaign-list" sx={{ mt: "1em", mb: "2em" }}>
+      <Head2 sx={{ mt: "2em" }}>{translate("campaign_list.title")}.</Head2>
+      <ListBase disableAuthentication disableSyncWithLocation {...listContext}>
+        <ListView>
+          <Datagrid resource="Campaign" bulkActionButtons={false}>
+            <FunctionField
+              label={translate("campaign_list.post")}
+              render={(record) => (
+                <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">
+                  {translate("campaign_list.see_post")}
+                </a>
+              )}
+            />
+            <TextField source="status" sortable={false} />
+            <FunctionField
+              textAlign="right"
+              source="totalCollabs"
+              render={(record) =>
+                record.totalCollabs > 0 ? (
+                  <Link
+                    to={`/Collab?displayedFilters=%7B%7D&filter=%7B%22campaignIdEq%22%3A${record.id}%7D`}
+                  >
+                    <NumberField source="totalCollabs" />
+                  </Link>
+                ) : (
+                  <NumberField source="totalCollabs" />
+                )
               }
-            }}
-          />
-        </Datagrid>
-        <Pagination rowsPerPageOptions={[]} />
-      </Card>
-    </ListContextProvider>
+            />
+            <AmountField textAlign="right" currency="" source="budget" />
+            <AmountField textAlign="right" currency="" source="totalSpent" />
+            <AmountField textAlign="right" currency="" source="totalBudget" />
+            <DateField source="validUntil" showTime />
+            <DateField source="createdAt" showTime />
+            <TextField source="id" />
+          </Datagrid>
+        </ListView>
+      </ListBase>
+    </Box>
   );
 };
 

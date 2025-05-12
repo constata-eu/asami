@@ -34,13 +34,14 @@ import { CampaignList } from "./views/explorer/campaigns";
 import { AccountList, AccountShow } from "./views/explorer/accounts";
 import { CollabList } from "./views/explorer/collabs";
 import { StatsShow } from "./views/explorer/stats";
+import Whitepaper from "./views/whitepaper";
 
 const Dashboard = () => {
   const [searchParams] = useSearchParams();
-  const [storedRole] = useStore("user.role", "advertiser");
+  const storedRole = localStorage.getItem("asami_user_role") || "advertiser";
   const role = searchParams.get("role") || storedRole;
   return (
-    <Authenticated requireAuth>
+    <Authenticated>
       {role == "advertiser" ? <AdvertiserDashboard /> : <MemberDashboard />}
     </Authenticated>
   );
@@ -101,7 +102,9 @@ export const App = () => {
 
           <CustomRoutes>
             <Route path="/" element={<Landing />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/about" element={<About />} />
+            <Route path="/whitepaper" element={<Whitepaper />} />
           </CustomRoutes>
 
           <CustomRoutes noLayout>

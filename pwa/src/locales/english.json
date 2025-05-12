@@ -48,6 +48,7 @@
     "Handle": {
       "fields": {
         "username": "X username",
+        "userId": "ID on X",
         "score": "Influence level",
         "status": "Status",
         "totalCollabs": "Collabs",
@@ -81,6 +82,14 @@
         "statusNe": "status is not"
       }
     },
+    "Stats": {
+      "fields": {
+        "totalActiveHandles": "Active Handles",
+        "totalCollabs": "Collabs",
+        "totalCampaigns": "Campaigns",
+        "totalRewardsPaid": "Rewards Paid"
+      }
+    },
     "OnChainJob": {
       "fields": {
         "status": "Stauts",
@@ -103,7 +112,7 @@
     "campaign_manager": "Managed by"
   },
   "campaign_list": {
-    "title": "Active campaigns",
+    "title": "Your campaigns",
     "text": "Club members will be reposting your content until the budget is fully spent. Unspent amounts will be returned after campaign ends.",
     "see_post": "See Post",
     "kind": "Campaign Kind",
@@ -121,21 +130,8 @@
     "error": "Oops, we could not receive your request. Please try again or contact the admin on X."
   },
   "advertiser_help": {
-    "title": "Little help:",
-    "CLAIMED": "You can create a campaign in X by providing a link to any post, and members will amplify it. Remember they have the last word, so make your post friendly!",
-    "CLAIMING": "You'll be able to start new campaigns once the admin processes your account claim",
-    "MANAGED": "You should connect your WEB3 wallet to be able to create campaigns.",
-    "BANNED": "Your account has been deactivated 😭. Your funds are still in the smart contract, and you can find them there, but you cannot longer use this website."
-  },
-  "campaign_request_list": {
-    "title": "Requested campaigns",
-    "admin_will_review": "The club's admin will review and decide whether to fund your campaigns.",
-    "claim_to_create": "Claim your account using a WEB3 wallet to create campaigns yourself!",
-    "see_post": "See Post",
-    "post": "Post",
-    "status": "Status",
-    "site": "Site",
-    "budget": "Budget"
+    "title": "Pay & Boost",
+    "text": "Get more impressions on your posts by launching a campaign. You’ll choose a post, set a budget, and reach real people through authentic reposts. Eligible collaborators are paid based on their genuine influence and audience size, helping you achieve meaningful reach."
   },
   "collab_list": {
     "title": "Your collaboration history",
@@ -170,13 +166,26 @@
       "invalid_url": "The link must point to a post, and start with https://..."
     }
   },
-  "make_campaign_card": {
-    "title": "Start a campaign!",
+  "make_campaign": {
+    "with_stripe": {
+      "title": "Use Stripe",
+      "text": "You can fund your campaign using a credit or debit card. A portion of your budget will go to payment processing fees, and you won’t receive Asami tokens — but collaborators will still be paid in DOC, just like with on-chain campaigns.",
+      "coming_soon": "Coming Soon"
+    },
+    "with_doc": {
+      "title": "Use DOC",
+      "claim_to_use": "Funding your campaign with DOC is 25% cheaper and earns you Asami tokens for every repost. DOC is a fully decentralized stablecoin on the Rootstock blockchain, so you’ll need a compatible wallet — like Beexo, MetaMask, Enkrypt, or Rabby — to use it.",
+      "claim_to_use_button": "Connect Wallet to Continue",
+      "claim_in_progress": "Linking your wallet... Soon you'll be able to create campaigns and enjoy all the benefits of using DOC — including lower costs and Asami rewards.",
+      "create_text": "Want more for your budget? Use DOC to launch campaigns at lower cost and collect Asami tokens with every collaboration.",
+      "create_button": "Launch with DOC",
+      "doc_funded": "You don't have any DOC in your wallet yet. To get started, you can mint it using RBTC or swap for it using supported protocols.",
+      "get_doc": "Get DOC now",
+      "form_title": "What to know before you launch."
+    },
     "pay_members": "Pay club members to repost any X post.",
-    "doc_funded": "Campaigns are funded in DoC, a US dollar pegged stablecoin from Money On Chain, that you can mint yourself using RBTC.",
-    "get_doc": "Go get some DoC",
     "start_campaign": "Start Campaign",
-    "close": "Close",
+    "close": "I changed my mind",
     "post_url_label": "The X post link",
     "cancel": "Cancel",
     "errors": {
@@ -195,8 +204,7 @@
       "content_url": "Link to X post",
       "budget": "Total budget you'll spend, in DOC",
       "start_campaign": "Start Campaign",
-      "service_summary": "Members will repost your content and get paid based on their reach",
-      "refund_notice": "Unused funds will be returned to you after 15 days.",
+      "service_summary": "Your campaign will go live as soon as it’s submitted. Your wallet may ask for DOC spending authorization before it can proceed. Campaigns run for 15 days, and any unused DOC will be automatically returned to your wallet at the end.<br/> Collaborators are paid in DOC based on their influence level, which helps you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small budget to get a feel for how the system works.",
       "price_per_point": "DOC per impression contributed.",
       "price_per_point_help": "Impressions contributed by collaborators are only a rough approximation, and are not guaranteed. A value of 0.002 means your intent is to pay 2 DOC every 1K impressions.",
       "max_individual_reward": "Max DOC per individual collaborator",
@@ -237,21 +245,22 @@
     },
     "header": {
       "title": "You get $%{amount}",
-      "subheader": "*minus fees"
+      "subheader": "minus fees"
     },
     "x": {
       "main_button": "Repost to earn",
       "attempted": "Now just wait, your repost may take up to an hour to register in Asami."
     }
   },
-  "help_card": {
-    "title": "What's next?",
-    "collaborate": "You can collaborate in a campaign, but remember, people are listening to you, be responsible an true to yourself when choosing what content to amplify.",
-    "verify_handles": "Help us verify your X account. We'll estimate your influence level, and you'll be able to start earning for your reposts",
-    "wait_for_campaigns": "There are no campaigns for you to amplify at the moment. Come back tomorrow!"
+  "title_card": {
+    "title": "Repost & Earn",
+    "collaborate": "You're all set to collaborate! Just remember — your audience is paying attention, so be a bit selective. Reposting content that doesn’t align with you can wear out your followers and weaken your influence. Plus, staying true to your voice shows you're sharing responsibly.",
+    "verify_handles": "Let’s link your X account so we can estimate your influence. Once you're verified, you can start earning from reposts!",
+    "wait_for_campaigns": "No campaigns available right now — check back soon, new opportunities pop up all the time, specially on fridays!"
   },
   "handle_settings": {
     "title": "Handle",
+    "see_full_profile": "See your public profile",
     "stats": {
       "username": "Username",
       "user_id": "User ID",
@@ -290,16 +299,17 @@
     }
   },
   "balance_card": {
-    "title": "Your account",
     "account_id_label": "Account ID",
     "unclaimed": {
-      "doc_label": "Unclaimed DOC",
-      "asami_label": "Unclaimed ASAMI",
-      "not_requested": "You must create and connect a WEB3 wallet to gain full control of your account. Then, you can claim your rewards whenever you like.",
-      "not_requested_button": "Connect wallet and claim",
-      "pending": "You've started the process to claim your account, which will complete soon."
+      "title": "Getting Started Without a Wallet",
+      "doc_label": "Locked DOC rewards",
+      "asami_label": "Locked ASAMI tokens",
+      "not_requested": "You're using a managed account — no wallet needed for now. When you’re ready, connect your RSK wallet to take full control. Your funds will move to a smart contract only you can access. Just keep your wallet safe — lost wallets mean lost funds.",
+      "not_requested_button": "Link wallet and unlock",
+      "pending": "Hang tight — your wallet is being linked. You’ll be able to manage and withdraw your rewards as soon as it’s ready."
     },
     "claimed": {
+      "title": "Rewards",
       "doc_label": "DOC in wallet",
       "asami_label": "ASAMI in wallet",
       "added": "%{symbol} added to your wallet.",
@@ -314,7 +324,8 @@
       "no_pending_balance": "Your rewards will go to your unclaimed balance, then you can claim them here.",
       "cant_withdraw": "You're low on RBTC for this claim. We can process your claim ind send you some extra RBTC for 1 DOC of your unclaimed balance. Keep stacking rewards!",
       "gasless_allowance_success": "We'll process your claim soon.",
-      "claim_success": "Your tokens are on their way."
+      "claim_success": "Your tokens are on their way.",
+      "on_your_wallet": "On your wallet"
     }
   },
   "login": {
@@ -340,16 +351,15 @@
     "message": "Check back soon though!"
   },
   "your_post_here": {
-    "title": "Your post, here.",
-    "message": "Pay club members to repost your X content.",
+    "title": "Your Post, Here.",
+    "message": "Boost your engagement with word-of-mouth energy. Asami adds real reposts to your ad strategy — campaigns can be funded with crypto or credit card.",
     "button": "Start a campaign"
   },
   "join_now": {
-    "title": "Monetize any audience size.",
-    "message": "Repost content from advertisers in X and receive US dollar equivalent crypto, with rewards based on your genuine reach.",
-    "no_crypto_no_problem": "No crypto? No problem!",
-    "learn_later": "You can start accumulating rewards now, and learn more about using crypto later.",
-    "button": "Join the club, it's free!"
+    "title": "Get your personalized influence reading.",
+    "you_will_be_invited": "It’s fun, and lets you join campaigns on X to earn crypto for reposting.",
+    "join_from_anywhere": "Join from anywhere and start collecting rewards — you’ll only need a wallet to cash out.",
+    "button": "Join the club — It's free"
   },
   "login_form": {
     "read_our_terms": "Read our terms. If you agree, choose how you'd like to log in.",
@@ -422,7 +432,7 @@
     "stats": {
       "title": "Club Stats",
       "description": "Global club stats at a glance — for specifics, check each section in the navbar.",
-      "explore_btn": "Explore data"
+      "explore_btn": "Explore all stats"
     },
     "campaigns": {
       "title": "Campaigns",
@@ -499,9 +509,11 @@
     "replied_title": "Replied",
     "replied_text": "A lot of people reply to this user's posts.",
     "reposted_title": "Reposted",
-    "reposted_text": "User posts get reposted often, in relation to impressions.",
+    "reposted_text": "Audience can’t resist the urge to repost.",
     "mentioned_title": "Mentioned",
-    "mentioned_text": "Was recently mentioned on high visibility posts."
+    "mentioned_text": "Was recently mentioned on high visibility posts.",
+    "collabs_title": "Activity as Collaborator",
+    "campaigns_title": "Activity as Advertiser"
   },
   "logged_in_nav_card": {
     "post_to_earn": "Post to earn",
@@ -515,12 +527,22 @@
     "stats": "Stats",
     "login": "Login",
     "logout": "Logout",
-    "my_campaings": "My Campaigns",
-    "my_collabs": "My Collabs",
+    "my_campaings": "Pay & Boost",
+    "my_collabs": "Repost & Earn",
+    "whitepaper": "Whitepaper",
 
     "handles": "Handles",
     "accounts": "Members",
     "campaigns": "Campaigns",
     "collabs": "Collabs"
+  },
+  "whitepaper": {
+    "robot_url": "bot.asami.club"
+  },
+  "landing": {
+    "title": "A trend making club.",
+    "asami_invites": "Asami invites people to pay each other to repost on social media.",
+    "boost": "Advertisers boost through word-of-mouth energy. Collaborators earn real rewards for their influence.",
+    "built_on_fairness": "Built on fairness, shared values, and transparent rules, it's for people and brands who want to grow — together."
   }
 }

@@ -1,98 +1,151 @@
 /// <reference types="vite-plugin-svgr/client" />
-import { Alert, Avatar, CardContent, CardHeader, Dialog, DialogContent, Box, Button, Typography } from '@mui/material';
+import { Alert, Box, Button, Typography, Card, Stack } from "@mui/material";
 import { formatEther } from "ethers";
-import { useSafeSetState, useNotify, useGetList, useTranslate, Confirm } from 'react-admin';
-import { TwitterTweetEmbed } from 'react-twitter-embed';
-import { DeckCard } from '../layout';
-import { light } from '../../components/theme';
-import XIcon from '@mui/icons-material/X';
-import truncate from 'lodash/truncate';
-import { contentId } from '../../lib/campaign';
+import { useSafeSetState, useTranslate, Confirm } from "react-admin";
+import { TwitterTweetEmbed } from "react-twitter-embed";
+import { contentId } from "../../lib/campaign";
+import { useEffect, useRef } from "react";
 
-export const CampaignHeader = ({campaign, icon, children}) => {
-  const translate = useTranslate();
-
-  return (<>
-    <CardHeader
-      avatar={ <Avatar sx={{ bgcolor: light }} >{icon}</Avatar> }
-      title={ <Typography variant="h6">{translate("member_campaigns.header.title", {amount: formatEther(campaign.youWouldReceive || 0)}) }</Typography>}
-      subheader={ translate("member_campaigns.header.subheader") }
-    />
-    <Box px="10px">
-      { children }
-    </Box>
-  </>);
-};
-
-const ConfirmHideCampaign = ({campaignId, setPreference }) => {
+const ConfirmHideCampaign = ({ campaignId, setPreference }) => {
   const translate = useTranslate();
   const [open, setOpen] = useSafeSetState(false);
   const [hide, setHide] = useSafeSetState(false);
-  
+
   const handleConfirm = () => {
-    setPreference(campaignId, true, false)
+    setPreference(campaignId, true, false);
     setOpen(false);
     setHide(true);
+  };
+
+  if (hide) {
+    return null;
   }
 
-  if (hide) { return null; }
+  return (
+    <>
+      <Button
+        fullWidth
+        id={`open-hide-campaign-${campaignId}`}
+        size="small"
+        color="secondary"
+        fullWidth
+        onClick={() => setOpen(true)}
+      >
+        {translate("member_campaigns.hide_campaign.button")}
+      </Button>
+      <Confirm
+        isOpen={open}
+        title={translate("member_campaigns.hide_campaign.title")}
+        content={translate("member_campaigns.hide_campaign.content")}
+        onConfirm={handleConfirm}
+        onClose={() => setOpen(false)}
+      />
+    </>
+  );
+};
 
-  return <>
-    <Button fullWidth id={`open-hide-campaign-${campaignId}`}
-      size="small" color="inverted" onClick={() => setOpen(true) }
-    >
-      { translate("member_campaigns.hide_campaign.button") }
-    </Button>
-    <Confirm
-      isOpen={open}
-      title={ translate("member_campaigns.hide_campaign.title") }
-      content={ translate("member_campaigns.hide_campaign.content") }
-      onConfirm={handleConfirm}
-      onClose={() => setOpen(false)}
-    />
-  </>;
-}
-
-export const XCampaign = ({handle, campaign, prefsContext, setPreference}) => {
+export const XCampaign = ({
+  handle,
+  campaign,
+  prefsContext,
+  setPreference,
+}) => {
   const translate = useTranslate();
   const repostUrl = `https://twitter.com/intent/retweet?tweet_id=${contentId(campaign)}&related=asami_club`;
-	const attemptedOn = prefsContext.data.find((x) => x.campaignId == campaign.id)?.attemptedOn;
+  const attemptedOn = prefsContext.data.find(
+    (x) => x.campaignId == campaign.id,
+  )?.attemptedOn;
+  const containerRef = useRef(null);
 
-  return <DeckCard id={`campaign-container-${campaign.id}`} elevation={attemptedOn ? 1 : 10}>
-    <CampaignHeader
-      handle={handle}
-      icon={<XIcon/>}
-      campaign={campaign}
-    >
-      { attemptedOn ?
-        <Alert id={`alert-repost-attempted-${campaign.id}`}
-          variant="outlined" color="warning" severity="info"
-          sx={{mb: "1em", border:"none", p: 0}}
-        >
-          { translate("member_campaigns.x.attempted") }
-        </Alert>
-        :
-        <Button
-          id={`button-repost-${campaign.id}`}
-          sx={{mb: "0.5em" }}
-          onClick={() => setPreference(campaign.id, false, true)}
-          fullWidth
-          size="large"
-          variant="contained"
-          href={repostUrl}
-          target="_blank"
-        >
-          { translate("member_campaigns.x.main_button") }
-        </Button>
+  useEffect(() => {
+    const cleanupMargins = () => {
+      const tweetBlockquote =
+        containerRef.current?.querySelector(".twitter-tweet");
+      if (tweetBlockquote) {
+        tweetBlockquote.style.margin = "0";
       }
-    </CampaignHeader>
-    <Box minHeight="250px" mb="1em">
-      <TwitterTweetEmbed tweetId={contentId(campaign)} options={{ theme: "dark", align: "center", width: "250px", conversation: "none"}} />
-    </Box>
-    { !attemptedOn &&
-      <CardContent sx={{pt: 0, pb: "1em !important" }}>
-        <ConfirmHideCampaign campaignId={campaign.id} setPreference={setPreference} />
-      </CardContent>
-    }
-  </DeckCard>;
-}
+    };
+
+    const interval = setInterval(cleanupMargins, 200);
+
+    setTimeout(() => clearInterval(interval), 3000);
+  }, []);
+
+  return (
+    <Card
+      id={`campaign-container-${campaign.id}`}
+      sx={{
+        borderRadius: "13px 13px 4px 4px",
+        mb: "1em",
+      }}
+    >
+      <Box overflow="hidden">
+        <div ref={containerRef}>
+          <TwitterTweetEmbed
+            tweetId={contentId(campaign)}
+            options={{
+              align: "center",
+              width: "100%",
+              conversation: "none",
+              margin: 0,
+            }}
+          />
+        </div>
+      </Box>
+      <Box
+        height="50px"
+        mt="-50px"
+        position="relative"
+        sx={{
+          backgroundImage:
+            "linear-gradient(to bottom, rgba(245, 235, 231, 0) 0%, #f5ebe7 100%)",
+        }}
+      ></Box>
+      <Box p="0.5em 1em 1em 1em">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="baseline"
+        >
+          <Typography variant="h6">
+            {translate("member_campaigns.header.title", {
+              amount: formatEther(campaign.youWouldReceive || 0),
+            })}
+          </Typography>
+          <Typography variant="body2">
+            •{translate("member_campaigns.header.subheader")}
+          </Typography>
+        </Stack>
+        {attemptedOn ? (
+          <Alert
+            id={`alert-repost-attempted-${campaign.id}`}
+            variant="outlined"
+            color="warning"
+            severity="info"
+            sx={{ border: "none", p: 0 }}
+          >
+            {translate("member_campaigns.x.attempted")}
+          </Alert>
+        ) : (
+          <Button
+            id={`button-repost-${campaign.id}`}
+            sx={{ my: "0.5em" }}
+            onClick={() => setPreference(campaign.id, false, true)}
+            fullWidth
+            variant="contained"
+            href={repostUrl}
+            target="_blank"
+          >
+            {translate("member_campaigns.x.main_button")}
+          </Button>
+        )}
+        {!attemptedOn && (
+          <ConfirmHideCampaign
+            campaignId={campaign.id}
+            setPreference={setPreference}
+          />
+        )}
+      </Box>
+    </Card>
+  );
+};

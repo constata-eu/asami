@@ -1,15 +1,14 @@
 import { useDataProvider, useAuthenticated } from "react-admin";
-import { LoggedInNavCard, ColumnsContainer } from "../layout";
-import { Box } from "@mui/material";
+import { Box, Stack } from "@mui/material";
 import { useListController } from "react-admin";
 import { getAuthKeys } from "../../lib/auth_provider";
 import BalanceCard from "../balance_card";
 import CollabList from "./collab_list";
-import HelpCard from "./help_card";
-import StatsCard from "../stats_card";
+import TitleCard from "./title_card";
 import { XCampaign } from "./campaigns";
 import { HandleSettings } from "./handle_settings";
 import { ResponsiveAppBar } from "../responsive_app_bar";
+import { CardTable } from "../layout";
 
 const Dashboard = () => {
   useAuthenticated();
@@ -34,15 +33,14 @@ const Dashboard = () => {
   });
 
   return (
-    <Box p="1em" id="member-dashboard">
+    <Box id="member-dashboard">
       <ResponsiveAppBar />
-      <ColumnsContainer>
-        <HelpCard handles={handles} campaigns={campaigns} />
-        <StatsCard />
-        <HandleSettings handles={handles} />
+      <CardTable mb="2em">
+        <TitleCard handles={handles} campaigns={campaigns} />
         <BalanceCard />
+        <HandleSettings handles={handles} />
         <CampaignList handles={handles} />
-      </ColumnsContainer>
+      </CardTable>
       <CollabList />
     </Box>
   );
@@ -70,8 +68,7 @@ const CampaignList = ({ handles }) => {
     prefsContext.isLoading ||
     listContext.isLoading ||
     handles.isLoading ||
-    handles.total == 0 ||
-    listContext.total == 0
+    handles.total == 0
   ) {
     return <></>;
   }
@@ -90,17 +87,16 @@ const CampaignList = ({ handles }) => {
 
   return (
     <>
-      <Box id="campaign-list" display="flex" flexWrap="wrap">
-        {listContext.data.map((item) => (
-          <XCampaign
-            key={item.id}
-            handle={xHandle}
-            campaign={item}
-            prefsContext={prefsContext}
-            setPreference={setPreference}
-          />
-        ))}
-      </Box>
+      {listContext.data.map((item) => (
+        <XCampaign
+          key={item.id}
+          handle={xHandle}
+          campaign={item}
+          prefsContext={prefsContext}
+          setPreference={setPreference}
+          height="300px"
+        />
+      ))}
     </>
   );
 };

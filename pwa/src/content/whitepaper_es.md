@@ -2,8 +2,6 @@
 
 Este whitepaper describe el sistema tal como está concebido. Algunas funciones ya existen, otras están en desarrollo. { .lead }
 
-Puedes leerlo de principio a fin, o [usar nuestro GPT para hacer preguntas específicas.](https://chatgpt.com/g/g-67fd6491ef24819183b0d2829ec71929-robot-asami-club) { .lead }
-
 ---
 
 ## 1. Resumen
