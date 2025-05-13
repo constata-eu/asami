@@ -7,6 +7,7 @@ import {
   ListBase,
   DateField,
   NumberField,
+  ShowButton,
 } from "react-admin";
 import {
   Box,
@@ -20,7 +21,7 @@ import {
 import { formatEther } from "ethers";
 import { ColumnsContainer, DeckCard } from "../layout";
 import { CardTitle, Head1, Head2, Lead, green } from "../../components/theme";
-import { viewPostUrl } from "../../lib/campaign";
+import { contentId, viewPostUrl } from "../../lib/campaign";
 import { Pagination, Datagrid, TextField, FunctionField } from "react-admin";
 import { Link } from "react-router-dom";
 import {
@@ -128,36 +129,16 @@ const CampaignList = ({ listContext }) => {
       <ListBase disableAuthentication disableSyncWithLocation {...listContext}>
         <ListView>
           <Datagrid resource="Campaign" bulkActionButtons={false}>
-            <FunctionField
-              label={translate("campaign_list.post")}
-              render={(record) => (
-                <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">
-                  {translate("campaign_list.see_post")}
-                </a>
-              )}
-            />
+            <FunctionField source="briefingJson" render={contentId} />
             <TextField source="status" sortable={false} />
-            <FunctionField
-              textAlign="right"
-              source="totalCollabs"
-              render={(record) =>
-                record.totalCollabs > 0 ? (
-                  <Link
-                    to={`/Collab?displayedFilters=%7B%7D&filter=%7B%22campaignIdEq%22%3A${record.id}%7D`}
-                  >
-                    <NumberField source="totalCollabs" />
-                  </Link>
-                ) : (
-                  <NumberField source="totalCollabs" />
-                )
-              }
-            />
+            <NumberField source="totalCollabs" />
             <AmountField textAlign="right" currency="" source="budget" />
             <AmountField textAlign="right" currency="" source="totalSpent" />
             <AmountField textAlign="right" currency="" source="totalBudget" />
-            <DateField source="validUntil" showTime />
-            <DateField source="createdAt" showTime />
+            <DateField source="validUntil" />
+            <DateField source="createdAt" />
             <TextField source="id" />
+            <ShowButton />
           </Datagrid>
         </ListView>
       </ListBase>

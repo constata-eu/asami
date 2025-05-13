@@ -103,7 +103,7 @@ const PublicCampaignList = ({ loginAs }) => {
   }
 
   const items = flatten(
-    chunk(listContext.data, 4).map((i) => [...i, { yourPostHere: true }]),
+    chunk(listContext.data, 4).map((i) => [{ yourPostHere: true }, ...i]),
   );
 
   return (
@@ -128,6 +128,9 @@ const YourPostHere = ({ loginAs }) => {
   return (
     <DeckCard color="inverted.main" background={(t) => t.palette.primary.main}>
       <CardContent>
+        <Lead sx={{ mb: "0.2em", color: "inverted.main" }}>
+          {translate("your_post_here.lead")}
+        </Lead>
         <Head2 sx={{ color: "inverted.main" }}>
           {translate("your_post_here.title")}
         </Head2>
@@ -158,6 +161,9 @@ const JoinNow = ({ loginAs }) => {
   return (
     <DeckCard color="primary.main">
       <CardContent>
+        <Lead sx={{ color: "primary.main", mb: "0.2em" }}>
+          {translate("join_now.lead")}
+        </Lead>
         <Head2 sx={{ color: "primary.main" }}>
           {translate("join_now.title")}
         </Head2>

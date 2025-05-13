@@ -12,12 +12,20 @@ import {
   ReferenceInput,
   SimpleShowLayout,
   ReferenceField,
+  ListView,
+  ListBase,
+  useShowController,
+  useListController,
+  ShowButton,
 } from "react-admin";
 import { Link } from "react-router-dom";
 import { ExplorerLayout } from "../layout";
-import { viewPostUrl } from "../../lib/campaign";
+import { contentId, viewPostUrl } from "../../lib/campaign";
 import { AmountField, AmountInput } from "../../components/custom_fields";
-import { Head1, Lead } from "../../components/theme";
+import { Head1, Head2, Lead } from "../../components/theme";
+import { Box, Card, Stack } from "@mui/material";
+import { TwitterTweetEmbed } from "react-twitter-embed";
+import XIcon from "@mui/icons-material/X";
 
 export const CampaignList = () => {
   const t = useTranslate();
@@ -52,46 +60,17 @@ export const CampaignList = () => {
         sort={{ field: "createdAt", order: "DESC" }}
       >
         <Datagrid bulkActionButtons={false} expand={<ExpandCampaign />}>
-          <FunctionField
-            label={translate("campaign_list.post")}
-            render={(record) => (
-              <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">
-                {translate("campaign_list.see_post")}
-              </a>
-            )}
-          />
-          <TextField source="id" />
+          <FunctionField source="briefingJson" render={contentId} />
+          <ReferenceField source="accountId" reference="Account" link="show" />
           <TextField source="status" sortable={false} />
-          <FunctionField
-            textAlign="right"
-            source="totalCollabs"
-            render={(record) =>
-              record.totalCollabs > 0 ? (
-                <Link
-                  to={`/Collab?displayedFilters=%7B%7D&filter=%7B%22campaignIdEq%22%3A${record.id}%7D`}
-                >
-                  <NumberField source="totalCollabs" />
-                </Link>
-              ) : (
-                <NumberField source="totalCollabs" />
-              )
-            }
-          />
+          <NumberField source="totalCollabs" />
           <AmountField textAlign="right" currency="" source="budget" />
           <AmountField textAlign="right" currency="" source="totalSpent" />
           <AmountField textAlign="right" currency="" source="totalBudget" />
-          <DateField source="validUntil" showTime />
-          <DateField source="createdAt" showTime />
-          <ReferenceField source="accountId" resource="Account" />
-          <FunctionField
-            source="briefingJson"
-            sortable={false}
-            render={(record) => (
-              <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">
-                {JSON.parse(record.briefingJson)}
-              </a>
-            )}
-          />
+          <DateField source="validUntil" />
+          <DateField source="createdAt" />
+          <TextField source="id" />
+          <ShowButton />
         </Datagrid>
       </List>
     </ExplorerLayout>
@@ -103,3 +82,101 @@ const ExpandCampaign = () => (
     <TextField source="briefingHash" />
   </SimpleShowLayout>
 );
+
+export const CampaignShow = () => {
+  const show = useShowController({ disableAuthentication: true });
+
+  if (show.isPending || !show.record) {
+    return <></>;
+  }
+
+  return (
+    <ExplorerLayout>
+      <Stack direction="row" gap="1em" mt="1em" flexWrap="wrap">
+        <Box flex="0 1 500px">
+          <TwitterTweetEmbed
+            tweetId={contentId(show.record)}
+            options={{
+              align: "center",
+              width: "100%",
+              conversation: "none",
+              margin: 0,
+            }}
+          />
+          <Card sx={{ mt: "1em", justifySelf: "left" }} elevation={1}>
+            <SimpleShowLayout record={show.record} direction="row">
+              <TextField source="id" />
+              <TextField source="status" sortable={false} />
+              <AmountField textAlign="right" currency="" source="budget" />
+              <AmountField textAlign="right" currency="" source="totalSpent" />
+              <AmountField textAlign="right" currency="" source="totalBudget" />
+              <NumberField source="totalCollabs" />
+              <DateField source="validUntil" showTime />
+              <DateField source="createdAt" showTime />
+              <ReferenceField source="accountId" reference="Account" />
+              <FunctionField
+                source="briefingJson"
+                sortable={false}
+                render={(record) => (
+                  <a
+                    target="_blank"
+                    href={viewPostUrl(record)}
+                    rel="noreferrer"
+                  >
+                    {contentId(record)}
+                  </a>
+                )}
+              />
+            </SimpleShowLayout>
+          </Card>
+        </Box>
+        <Box flex="1 0 500px">
+          <CampaignCollabs campaign={show.record} />
+        </Box>
+      </Stack>
+    </ExplorerLayout>
+  );
+};
+
+const CampaignCollabs = ({ campaign }) => {
+  const listContext = useListController({
+    resource: "Collab",
+    filter: { campaignIdEq: campaign.id },
+    sort: { field: "id", order: "DESC" },
+    exporter: false,
+    perPage: 30,
+  });
+
+  if (listContext.isPending || listContext.total == 0) {
+    return <></>;
+  }
+
+  return (
+    <>
+      <Head2 sx={{ my: "0.5em" }}>Collabs</Head2>
+      <ListBase disableAuthentication disableSyncWithLocation {...listContext}>
+        <ListView filters={false} actions={false}>
+          <Datagrid bulkActionButtons={false}>
+            <ReferenceField
+              label={<XIcon sx={{ fontSize: "1em", mb: "-4px" }} />}
+              source="handleId"
+              reference="Handle"
+              sortable={false}
+            >
+              <FunctionField
+                render={(record) => (
+                  <Link to={`/Account/${record.accountId}/show`}>
+                    <TextField source="username" />
+                  </Link>
+                )}
+              />
+            </ReferenceField>
+            <AmountField currency="" textAlign="right" source="reward" />
+            <AmountField currency="" textAlign="right" source="fee" />
+            <TextField source="status" sortable={false} />
+          </Datagrid>
+        </ListView>
+      </ListBase>
+    </>
+  );
+};

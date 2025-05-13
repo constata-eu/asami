@@ -65,8 +65,8 @@
       "fields": {
         "campaignId": "Campaign",
         "handleId": "Handle",
-        "reward": "Reward",
-        "fee": "Fee",
+        "reward": "Reward DOC",
+        "fee": "Fee DOC",
         "status": "Status",
         "advertiserId": "Advertiser member",
         "memberId": "Collaborator member",
@@ -270,9 +270,9 @@
     },
     "x": {
       "grant_permissions_and_make_posts": {
-        "summary": "Discover your influence. Start collecting rewards.",
+        "summary": "Connect your X account to get your personalized influence reading. It’s fun, and lets you join campaigns on X to earn crypto for reposting.",
         "get_started": "Get Started",
-        "dialog_title": "Show Your Impact: Link Your X Account!",
+        "dialog_title": "Get Your Personalized influence Reading",
         "we_will_check_your_activity": "We’ll check your X activity to measure your audience and influence based on interactions.",
         "we_will_post_a_poll": "We’ll post a poll on your behalf so your audience can rate your influence, you can opt-out by deleting it right away, but it may affect your score.",
         "you_will_earn_rewards": "After that, you’ll see campaigns you can repost to start earning rewards.",
@@ -351,11 +351,13 @@
     "message": "Check back soon though!"
   },
   "your_post_here": {
+    "lead": "Need to Advertise?",
     "title": "Your Post, Here.",
     "message": "Boost your engagement with word-of-mouth energy. Asami adds real reposts to your ad strategy — campaigns can be funded with crypto or credit card.",
     "button": "Start a campaign"
   },
   "join_now": {
+    "lead": "Want to Collaborate?",
     "title": "Get your personalized influence reading.",
     "you_will_be_invited": "It’s fun, and lets you join campaigns on X to earn crypto for reposting.",
     "join_from_anywhere": "Join from anywhere and start collecting rewards — you’ll only need a wallet to cash out.",
@@ -512,8 +514,8 @@
     "reposted_text": "Audience can’t resist the urge to repost.",
     "mentioned_title": "Mentioned",
     "mentioned_text": "Was recently mentioned on high visibility posts.",
-    "collabs_title": "Activity as Collaborator",
-    "campaigns_title": "Activity as Advertiser"
+    "collabs_title": "Collaborations made.",
+    "campaigns_title": "Campaigns created."
   },
   "logged_in_nav_card": {
     "post_to_earn": "Post to earn",

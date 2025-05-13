@@ -55,15 +55,11 @@ export const CollabList = () => {
       >
         <Datagrid bulkActionButtons={false} expand={<ExpandCollab />}>
           <TextField source="id" />
-          <FunctionField
+          <ReferenceField
             source="campaignId"
-            render={(record) => (
-              <Link
-                to={`/Campaign?displayedFilters=%7B%7D&filter=%7B%22idEq%22%3A${record.campaignId}%7D`}
-              >
-                <TextField source="campaignId" />
-              </Link>
-            )}
+            reference="Campaign"
+            sortable={false}
+            link="show"
           />
           <ReferenceField source="handleId" reference="Handle" sortable={false}>
             <TextField source="username" />

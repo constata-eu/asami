@@ -52,15 +52,10 @@ const CollabList = () => {
                 </>
               )}
             />
-            <FunctionField
+            <ReferenceField
               source="campaignId"
-              render={(record) => (
-                <Link
-                  to={`/Campaign?displayedFilters=%7B%7D&filter=%7B%22idEq%22%3A${record.campaignId}%7D`}
-                >
-                  <TextField source="campaignId" />
-                </Link>
-              )}
+              reference="Campaign"
+              link="show"
             />
             <AmountField textAlign="right" source="reward" />
             <AmountField textAlign="right" source="fee" />

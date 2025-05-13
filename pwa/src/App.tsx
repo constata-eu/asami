@@ -30,7 +30,7 @@ import {
 import polyglotI18nProvider from "ra-i18n-polyglot";
 import { messages, browserLocale } from "./i18n";
 import { HandleList } from "./views/explorer/handles";
-import { CampaignList } from "./views/explorer/campaigns";
+import { CampaignList, CampaignShow } from "./views/explorer/campaigns";
 import { AccountList, AccountShow } from "./views/explorer/accounts";
 import { CollabList } from "./views/explorer/collabs";
 import { StatsShow } from "./views/explorer/stats";
@@ -90,7 +90,7 @@ export const App = () => {
             recordRepresentation={(record) => record.username}
           />
 
-          <Resource name="Campaign" list={CampaignList} />
+          <Resource name="Campaign" list={CampaignList} show={CampaignShow} />
 
           <Resource name="Account" list={AccountList} show={AccountShow} />
 

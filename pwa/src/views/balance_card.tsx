@@ -17,8 +17,6 @@ import {
 import { AmountField } from "../components/custom_fields";
 import { formatEther, parseEther } from "ethers";
 import { Head2, Head3, Lead } from "../components/theme";
-import { DeckCard } from "./layout";
-import { FunctionField, SimpleShowLayout } from "react-admin";
 import { getAuthKeys } from "../lib/auth_provider";
 import ClaimAccountButton from "./claim_account";
 import { useContracts } from "../components/contracts_context";
@@ -26,8 +24,6 @@ import WalletIcon from "@mui/icons-material/Wallet";
 import NorthEastIcon from "@mui/icons-material/NorthEast";
 import { AttributeTable } from "../components/attribute_table";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
-
-const truncateEther = (str) => Math.trunc(+formatEther(str) * 1e4) / 1e4;
 
 const BalanceCard = () => {
   const { data, isLoading } = useGetOne(
@@ -133,14 +129,16 @@ const Done = ({ account }) => {
         >
           {translate("balance_card.claimed.no_pending_balance")}
         </Typography>
-        <AttributeTable
-          fontSize="0.9em !important"
-          record={account}
-          resource="Account"
-        >
-          <AmountField source="unclaimedDocBalance" currency="" />
-          <AmountField source="unclaimedAsamiBalance" currency="" />
-        </AttributeTable>
+        <Box mb="0.5em">
+          <AttributeTable
+            fontSize="0.9em !important"
+            record={account}
+            resource="Account"
+          >
+            <AmountField source="unclaimedDocBalance" currency="" />
+            <AmountField source="unclaimedAsamiBalance" currency="" />
+          </AttributeTable>
+        </Box>
         {claimRegular && <ClaimButton account={account} />}
         {claimGasless && (
           <Box mt="1em">
