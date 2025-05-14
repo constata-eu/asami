@@ -8,6 +8,7 @@ import {
   DateField,
   NumberField,
   ShowButton,
+  ExportButton,
 } from "react-admin";
 import {
   Box,
@@ -16,6 +17,7 @@ import {
   CardContent,
   Container,
   Skeleton,
+  Stack,
   Typography,
 } from "@mui/material";
 import { formatEther } from "ethers";
@@ -124,10 +126,16 @@ const CampaignList = ({ listContext }) => {
   }
 
   return (
-    <Box id="campaign-list" sx={{ mt: "1em", mb: "2em" }}>
-      <Head2 sx={{ mt: "2em" }}>{translate("campaign_list.title")}.</Head2>
+    <Box id="campaign-list" sx={{ mt: "2em", mb: "2em" }}>
       <ListBase disableAuthentication disableSyncWithLocation {...listContext}>
-        <ListView>
+        <Stack gap="1em" mb="1em" alignItems="baseline" direction="row">
+          <Head2>{translate("campaign_list.title")}.</Head2>
+          <ExportButton
+            disabled={listContext.total === 0}
+            resource="Campaign"
+          />
+        </Stack>
+        <ListView filters={false} actions={false}>
           <Datagrid resource="Campaign" bulkActionButtons={false}>
             <FunctionField source="briefingJson" render={contentId} />
             <TextField source="status" sortable={false} />

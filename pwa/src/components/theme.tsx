@@ -223,7 +223,11 @@ const theme = {
     RaListToolbar: {
       styleOverrides: {
         root: {
+          backgroundColor: "transparent !important",
           marginBottom: "1em",
+          "& .MuiToolbar-root": {
+            backgroundColor: "transparent !important",
+          },
         },
       },
     },

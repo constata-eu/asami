@@ -30,6 +30,7 @@
         "briefingJson": "ID en X",
         "status": "Estado",
         "totalCollabs": "Colaboraciones",
+        "collabs": "Colaboraciones",
         "budget": "DOC Disponible",
         "totalSpent": "DOC Gastado",
         "totalBudget": "DOC Total",
@@ -130,7 +131,7 @@
     "error": "Ups, no pudimos recibir tu pedido. Por favor contáctate con el administrador en X."
   },
   "advertiser_help": {
-    "title": "Compra Difusión",
+    "title": "Paga y Amplifica.",
     "text": "Consigue más vistas en tus publicaciones lanzando una campaña. Tú eliges una publicación, defines el presupuesto y llegas a personas reales con reposts auténticos. Los colaboradores que participan reciben un pago según su influencia real y el tamaño de su audiencia, ayudándote a lograr un alcance que realmente vale la pena."
   },
   "collab_list": {
@@ -427,20 +428,7 @@
       "skip_nav": "Saltar al contenido"
     }
   },
-  "version_two": {
-    "title": "La versión 2 ya está aquí 🎉",
-    "text": "Batteries included! Now you can get some RBTC with your rewards, so your wallet is always ready to use your rewards in the rootstock ecosystem.",
-    "text": "Con baterías incluidas! Ahora puedes recibir RBTC con tus recompensas, para que tu billetera esté siempre lista para ser usada con otras aplicaciones de la red rootstock."
-  },
   "explorer": {
-    "menu": {
-      "stats": "Métricas",
-      "handles": "Cuentas",
-      "accounts": "Miembros",
-      "campaigns": "Campañas",
-      "collabs": "Colaboraciones",
-      "oracle": "Oráculo"
-    },
     "stats": {
       "title": "Datos del club",
       "description": "Estadísticas globales del club — para ver detalles, visita cada sección en la barra de navegación.",
@@ -466,5 +454,94 @@
       "title": "Oráculo",
       "description": "Estas son las tareas de este administrador de campañas. Es el único administrador a la fecha."
     }
+  },
+  "oauth_redirect": {
+    "logging_you_in": "Iniciando sesión, esto no tomará mucho tiempo.",
+    "invalid_redirect_state": "Este enlace ha expirado o la URL de redirección no es válida. ¿Lo copiaste manualmente? Por favor, intenta de nuevo.",
+    "unexpected_error": "Ocurrió un error inesperado al iniciar tu sesión.",
+    "error_description_title": "Tenemos una descripción del error:",
+    "try_again": "Intentar de nuevo",
+    "contact_us": "Contáctanos",
+    "x_grant_access_success": "¡Éxito! Ahora estamos verificando tu influencia — pronto podrás unirte a campañas.",
+    "x_gant_access_error": "No pudimos vincular tu cuenta de X. Intenta de nuevo o contacta a soporte si el problema continúa.",
+    "x_waiting_for_access": "Esperando acceso a X."
+  },
+  "account_show": {
+    "title": {
+      "default_name": "Anónimo",
+      "member": "miembro"
+    },
+    "scoring_in_progress": "Estamos evaluando este usuario",
+    "advertiser_title": "Anunciante",
+    "member_info_title": "Información del miembro",
+    "score": "Puntaje",
+    "online_engagement": {
+      "title": "Interacción en X",
+      "average": "La interacción en X es aceptable, pero podría mejorar. %{extra}",
+      "high": "La interacción en X es alta, su audiencia está atenta. %{extra}",
+      "none": "No pudimos detectar interacción auténtica en X. %{extra}"
+    },
+    "offline_engagement_title": "Interacción fuera de X",
+    "audience_poll": {
+      "title": "Encuesta a la audiencia",
+      "high": "Una encuesta indica alta influencia. %{extra}",
+      "average": "Una encuesta indica influencia moderada. %{extra}",
+      "reverse": "Una encuesta indica influencia polémica. %{extra}"
+    },
+    "banned_title": "Restringido",
+    "banned_text": "X está limitando el alcance de esta cuenta. %{extra}",
+    "verified_title": "Verificado",
+    "verified_text": "Esta cuenta tiene mejor alcance en X. %{extra}",
+    "referrer_title": "Referidor",
+    "referrer_text": "Este usuario ha invitado a miembros con buen puntaje. %{extra}",
+    "holder_title": "Holder",
+    "holder_text": "Está comprometido con la causa, mantiene tokens ASAMI. %{extra}",
+    "ghost_title": "Fantasma",
+    "ghost_text": "Publica poco o recibe pocas impresiones.",
+    "repost_fatigue_title": "Fatiga de repost",
+    "repost_fatigue_text": "Hace demasiados reposts, la audiencia no puede seguirle el ritmo.",
+    "indeterminate_audience_title": "Audiencia indefinida",
+    "indeterminate_audience_text": "No podemos saber si su audiencia es real o bots.",
+    "followed_title": "Seguido",
+    "followed_text": "Está verificado y tiene una alta proporción de seguidores verificados.",
+    "liked_title": "Con likes",
+    "liked_text": "Recibe muchos likes por impresión en sus publicaciones.",
+    "replied_title": "Con respuestas",
+    "replied_text": "Muchas personas responden a sus publicaciones.",
+    "reposted_title": "Con reposts",
+    "reposted_text": "Su audiencia no puede evitar hacerle repost.",
+    "mentioned_title": "Mencionado",
+    "mentioned_text": "Ha sido mencionado recientemente en publicaciones de alta visibilidad.",
+    "collabs_title": "Colaboraciones realizadas.",
+    "campaigns_title": "Campañas creadas."
+  },
+  "logged_in_nav_card": {
+    "post_to_earn": "Publica y gana",
+    "pay_to_amplify": "Paga para amplificar",
+    "logout": "Cerrar sesión"
+  },
+  "app_bar": {
+    "home": "Inicio",
+    "x_handle": "asami_club_es",
+    "help": "Ayuda",
+    "stats": "Estadísticas",
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "my_campaings": "Paga y amplifica",
+    "my_collabs": "Repostea y gana",
+    "whitepaper": "Whitepaper",
+    "handles": "Usuarios",
+    "accounts": "Miembros",
+    "campaigns": "Campañas",
+    "collabs": "Colaboraciones"
+  },
+  "whitepaper": {
+    "robot_url": "robot.asami.club"
+  },
+  "landing": {
+    "title": "Un club que crea tendencias.",
+    "asami_invites": "Asami invita a las personas a pagarse entre sí por repostear en redes sociales.",
+    "boost": "Los anunciantes amplifican con energía de boca en boca. Los colaboradores ganan recompensas reales por su influencia.",
+    "built_on_fairness": "Basado en la equidad, valores compartidos y reglas transparentes, es para personas y marcas que quieren crecer — juntos."
   }
 }

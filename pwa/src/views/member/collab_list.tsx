@@ -4,9 +4,10 @@ import {
   TextField,
   ListBase,
   ListView,
+  ExportButton,
 } from "react-admin";
 import { viewPostUrl } from "../../lib/campaign";
-import { Box, Card, Typography } from "@mui/material";
+import { Box, Card, Stack, Typography } from "@mui/material";
 import { formatEther } from "ethers";
 import { CardTitle, Head1, Head2, Lead } from "../../components/theme";
 import { Pagination, Datagrid, FunctionField } from "react-admin";
@@ -35,9 +36,12 @@ const CollabList = () => {
 
   return (
     <Box id="collab-list" sx={{ mt: "1em", mb: "2em" }}>
-      <Head2 sx={{ mt: "2em" }}>{translate("collab_list.title")}.</Head2>
       <ListBase disableAuthentication disableSyncWithLocation {...listContext}>
-        <ListView>
+        <Stack gap="1em" mb="1em" alignItems="baseline" direction="row">
+          <Head2>{translate("collab_list.title")}</Head2>
+          <ExportButton disabled={listContext.total === 0} resource="Collab" />
+        </Stack>
+        <ListView filters={false} actions={false}>
           <Datagrid bulkActionButtons={false} resource="Collab">
             <FunctionField
               source="status"

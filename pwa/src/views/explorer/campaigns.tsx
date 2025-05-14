@@ -17,6 +17,7 @@ import {
   useShowController,
   useListController,
   ShowButton,
+  ExportButton,
 } from "react-admin";
 import { Link } from "react-router-dom";
 import { ExplorerLayout } from "../layout";
@@ -139,6 +140,7 @@ export const CampaignShow = () => {
 };
 
 const CampaignCollabs = ({ campaign }) => {
+  const t = useTranslate();
   const listContext = useListController({
     resource: "Collab",
     filter: { campaignIdEq: campaign.id },
@@ -152,9 +154,13 @@ const CampaignCollabs = ({ campaign }) => {
   }
 
   return (
-    <>
-      <Head2 sx={{ my: "0.5em" }}>Collabs</Head2>
+    <Box my="0.5em">
       <ListBase disableAuthentication disableSyncWithLocation {...listContext}>
+        <Stack gap="1em" mb="1em" alignItems="baseline" direction="row">
+          <Head2>{t("resources.Campaign.fields.collabs")}</Head2>
+          <ExportButton disabled={listContext.total === 0} resource="Collab" />
+        </Stack>
+
         <ListView filters={false} actions={false}>
           <Datagrid bulkActionButtons={false}>
             <ReferenceField
@@ -177,6 +183,6 @@ const CampaignCollabs = ({ campaign }) => {
           </Datagrid>
         </ListView>
       </ListBase>
-    </>
+    </Box>
   );
 };
