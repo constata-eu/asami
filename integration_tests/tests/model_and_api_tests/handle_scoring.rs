@@ -1,6 +1,9 @@
-use models::{weihex, EngagementScore, Handle, HandleScoring, HandleScoringStatus, HandleStatus, InsertHandleScoring, OperationalStatus, PollScore};
-use rocket::serde::json::{self, Value};
+use models::{
+    weihex, EngagementScore, Handle, HandleScoring, HandleScoringStatus, HandleStatus, InsertHandleScoring,
+    OperationalStatus, PollScore,
+};
 use rand::{thread_rng, Rng};
+use rocket::serde::json::{self, Value};
 
 use super::*;
 
@@ -11,30 +14,34 @@ async fn full_authority_scoring() {
     let account = h.app.create_account().await;
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
     handle = handle
-      .update()
-      .poll_id(Some(poll_tweet_id()))
-      .referrer_score_override(Some(true))
-      .holder_score_override(Some(true))
-      .offline_engagement_score(EngagementScore::High)
-      .save()
-      .await
-      .unwrap();
+        .update()
+        .poll_id(Some(poll_tweet_id()))
+        .referrer_score_override(Some(true))
+        .holder_score_override(Some(true))
+        .offline_engagement_score(EngagementScore::High)
+        .save()
+        .await
+        .unwrap();
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("347", true),
-      &[
-          reply_to_own_tweet(500, 0, 2, 11, 1),
-          quoting_someone_elses_tweet(300,0,2,11,1),
-          tweet_hello_world(300,0,0,11,0),
-          tweet_goodbye_world(550,0,1,11,0),
-          tweet_foo_bar(50,0,0,0,1),
-          tweet_poll(300,0,0,3,0),
-      ],
-      mentions_json(10, 16),
-      Some(poll_json(1, 3, 4, 5)),
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("347", true),
+        &[
+            reply_to_own_tweet(500, 0, 2, 11, 1),
+            quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+            tweet_hello_world(300, 0, 0, 11, 0),
+            tweet_goodbye_world(550, 0, 1, 11, 0),
+            tweet_foo_bar(50, 0, 0, 0, 1),
+            tweet_poll(300, 0, 0, 3, 0),
+        ],
+        mentions_json(10, 16),
+        Some(poll_json(1, 3, 4, 5)),
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -71,14 +78,14 @@ async fn applies_empty_score() {
     let account = h.app.create_account().await;
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
     handle = handle
-      .update()
-      .poll_id(Some(poll_tweet_id()))
-      .referrer_score_override(Some(true))
-      .holder_score_override(Some(true))
-      .offline_engagement_score(EngagementScore::High)
-      .save()
-      .await
-      .unwrap();
+        .update()
+        .poll_id(Some(poll_tweet_id()))
+        .referrer_score_override(Some(true))
+        .holder_score_override(Some(true))
+        .offline_engagement_score(EngagementScore::High)
+        .save()
+        .await
+        .unwrap();
 
     let scoring = handle
         .state
@@ -111,20 +118,24 @@ async fn applies_empty_score() {
     assert_eq!(handle.score(), &Some(weihex("0")));
 
     let applied_scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("347", true),
-      &[
-          reply_to_own_tweet(500, 0, 2, 11, 1),
-          quoting_someone_elses_tweet(300,0,2,11,1),
-          tweet_hello_world(300,0,0,11,0),
-          tweet_goodbye_world(550,0,1,11,0),
-          tweet_foo_bar(50,0,0,0,1),
-          tweet_poll(300,0,0,3,0),
-      ],
-      mentions_json(10, 16),
-      Some(poll_json(1, 3, 4, 5)),
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("347", true),
+        &[
+            reply_to_own_tweet(500, 0, 2, 11, 1),
+            quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+            tweet_hello_world(300, 0, 0, 11, 0),
+            tweet_goodbye_world(550, 0, 1, 11, 0),
+            tweet_foo_bar(50, 0, 0, 0, 1),
+            tweet_poll(300, 0, 0, 3, 0),
+        ],
+        mentions_json(10, 16),
+        Some(poll_json(1, 3, 4, 5)),
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -176,20 +187,24 @@ async fn average_authority_scoring() {
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("5", false),
-      &[
-        reply_to_own_tweet(50, 0, 0, 1, 0),
-        quoting_someone_elses_tweet(31,0,0,1,1),
-        tweet_hello_world(31,0,0,1,0),
-        tweet_goodbye_world(55,0,0,1,0),
-        tweet_foo_bar(5,0,0,0,0),
-        tweet_poll(31,0,0,3,0),
-      ],
-      tweets_json([]),
-      None,
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("5", false),
+        &[
+            reply_to_own_tweet(50, 0, 0, 1, 0),
+            quoting_someone_elses_tweet(31, 0, 0, 1, 1),
+            tweet_hello_world(31, 0, 0, 1, 0),
+            tweet_goodbye_world(55, 0, 0, 1, 0),
+            tweet_foo_bar(5, 0, 0, 0, 0),
+            tweet_poll(31, 0, 0, 3, 0),
+        ],
+        tweets_json([]),
+        None,
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -225,21 +240,25 @@ async fn ghost_account_for_short_tweets() {
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("5", false),
-      &[
-        reply_to_own_tweet(50, 0, 0, 1, 0),
-        quoting_someone_elses_tweet(31,0,0,1,1),
-        tweet_hello_world(31,0,0,1,0),
-        tweet_goodbye_world(55,0,0,1,0),
-        make_own_tweet("GM", 20000, 1, 1, 1, 1),
-        make_own_tweet("My friends!", 20000, 1, 1, 1, 1),
-        make_own_tweet("LFG", 10000, 0, 0, 0, 0),
-      ],
-      tweets_json([]),
-      None,
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("5", false),
+        &[
+            reply_to_own_tweet(50, 0, 0, 1, 0),
+            quoting_someone_elses_tweet(31, 0, 0, 1, 1),
+            tweet_hello_world(31, 0, 0, 1, 0),
+            tweet_goodbye_world(55, 0, 0, 1, 0),
+            make_own_tweet("GM", 20000, 1, 1, 1, 1),
+            make_own_tweet("My friends!", 20000, 1, 1, 1, 1),
+            make_own_tweet("LFG", 10000, 0, 0, 0, 0),
+        ],
+        tweets_json([]),
+        None,
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -274,20 +293,24 @@ async fn ghost_account_for_low_impressions() {
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("5", false),
-      &[
-        reply_to_own_tweet(50, 0, 0, 1, 0),
-        quoting_someone_elses_tweet(50,0,0,1,1),
-        tweet_hello_world(50,0,0,1,0),
-        tweet_goodbye_world(50,0,0,1,0),
-        tweet_foo_bar(30,0,0,0,0),
-        tweet_poll(30,0,0,3,0),
-      ],
-      tweets_json([]),
-      None,
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("5", false),
+        &[
+            reply_to_own_tweet(50, 0, 0, 1, 0),
+            quoting_someone_elses_tweet(50, 0, 0, 1, 1),
+            tweet_hello_world(50, 0, 0, 1, 0),
+            tweet_goodbye_world(50, 0, 0, 1, 0),
+            tweet_foo_bar(30, 0, 0, 0, 0),
+            tweet_poll(30, 0, 0, 3, 0),
+        ],
+        tweets_json([]),
+        None,
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -322,25 +345,29 @@ async fn repost_fatigue() {
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("5", false),
-      &[
-        tweet_hello_world(50,0,0,1,0),
-        tweet_hello_world(50,0,0,1,0),
-        tweet_hello_world(50,0,0,1,0),
-        tweet_hello_world(50,0,0,1,0),
-      ],
-      tweets_json([]),
-      None,
-      tweets_json([
-        make_retweet(&make_random_id()),
-        make_retweet(&make_random_id()),
-        make_retweet(&make_random_id()),
-        make_retweet(&make_random_id()),
-        make_retweet(&make_random_id()),
-        make_retweet(&make_random_id()),
-      ]),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("5", false),
+        &[
+            tweet_hello_world(50, 0, 0, 1, 0),
+            tweet_hello_world(50, 0, 0, 1, 0),
+            tweet_hello_world(50, 0, 0, 1, 0),
+            tweet_hello_world(50, 0, 0, 1, 0),
+        ],
+        tweets_json([]),
+        None,
+        tweets_json([
+            make_retweet(&make_random_id()),
+            make_retweet(&make_random_id()),
+            make_retweet(&make_random_id()),
+            make_retweet(&make_random_id()),
+            make_retweet(&make_random_id()),
+            make_retweet(&make_random_id()),
+        ]),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -374,30 +401,34 @@ async fn full_authority_overrides_to_none() {
     let account = h.app.create_account().await;
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
     handle = handle
-      .update()
-      .poll_id(Some(poll_tweet_id()))
-      .online_engagement_override(Some(EngagementScore::None))
-      .referrer_score_override(Some(true))
-      .holder_score_override(Some(true))
-      .save()
-      .await
-      .unwrap();
+        .update()
+        .poll_id(Some(poll_tweet_id()))
+        .online_engagement_override(Some(EngagementScore::None))
+        .referrer_score_override(Some(true))
+        .holder_score_override(Some(true))
+        .save()
+        .await
+        .unwrap();
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("347", true),
-      &[
-          reply_to_own_tweet(500, 0, 2, 11, 1),
-          quoting_someone_elses_tweet(300,0,2,11,1),
-          tweet_hello_world(300,0,0,11,0),
-          tweet_goodbye_world(550,0,1,11,0),
-          tweet_foo_bar(50,0,0,0,1),
-          tweet_poll(300,0,0,3,0),
-      ],
-      mentions_json(10, 16),
-      Some(poll_json(1, 3, 4, 5)),
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("347", true),
+        &[
+            reply_to_own_tweet(500, 0, 2, 11, 1),
+            quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+            tweet_hello_world(300, 0, 0, 11, 0),
+            tweet_goodbye_world(550, 0, 1, 11, 0),
+            tweet_foo_bar(50, 0, 0, 0, 1),
+            tweet_poll(300, 0, 0, 3, 0),
+        ],
+        mentions_json(10, 16),
+        Some(poll_json(1, 3, 4, 5)),
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -435,30 +466,34 @@ async fn full_authority_overrides_to_none_for_operational_status() {
     let account = h.app.create_account().await;
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
     handle = handle
-      .update()
-      .poll_id(Some(poll_tweet_id()))
-      .operational_status_override(Some(OperationalStatus::Shadowbanned))
-      .referrer_score_override(Some(true))
-      .holder_score_override(Some(true))
-      .save()
-      .await
-      .unwrap();
+        .update()
+        .poll_id(Some(poll_tweet_id()))
+        .operational_status_override(Some(OperationalStatus::Shadowbanned))
+        .referrer_score_override(Some(true))
+        .holder_score_override(Some(true))
+        .save()
+        .await
+        .unwrap();
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("347", true),
-      &[
-          reply_to_own_tweet(500, 0, 2, 11, 1),
-          quoting_someone_elses_tweet(300,0,2,11,1),
-          tweet_hello_world(300,0,0,11,0),
-          tweet_goodbye_world(550,0,1,11,0),
-          tweet_foo_bar(50,0,0,0,1),
-          tweet_poll(300,0,0,3,0),
-      ],
-      mentions_json(10, 16),
-      Some(poll_json(1, 3, 4, 5)),
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("347", true),
+        &[
+            reply_to_own_tweet(500, 0, 2, 11, 1),
+            quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+            tweet_hello_world(300, 0, 0, 11, 0),
+            tweet_goodbye_world(550, 0, 1, 11, 0),
+            tweet_foo_bar(50, 0, 0, 0, 1),
+            tweet_poll(300, 0, 0, 3, 0),
+        ],
+        mentions_json(10, 16),
+        Some(poll_json(1, 3, 4, 5)),
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -496,31 +531,35 @@ async fn overrides_audience_size() {
     let account = h.app.create_account().await;
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
     handle = handle
-      .update()
-      .poll_id(Some(poll_tweet_id()))
-      .offline_engagement_score(EngagementScore::High)
-      .referrer_score_override(Some(true))
-      .holder_score_override(Some(true))
-      .audience_size_override(Some(10))
-      .save()
-      .await
-      .unwrap();
+        .update()
+        .poll_id(Some(poll_tweet_id()))
+        .offline_engagement_score(EngagementScore::High)
+        .referrer_score_override(Some(true))
+        .holder_score_override(Some(true))
+        .audience_size_override(Some(10))
+        .save()
+        .await
+        .unwrap();
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("347", true),
-      &[
-          reply_to_own_tweet(500, 0, 2, 11, 1),
-          quoting_someone_elses_tweet(300,0,2,11,1),
-          tweet_hello_world(300,0,0,11,0),
-          tweet_goodbye_world(550,0,1,11,0),
-          tweet_foo_bar(50,0,0,0,1),
-          tweet_poll(300,0,0,3,0),
-      ],
-      mentions_json(10, 16),
-      Some(poll_json(1, 3, 4, 5)),
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("347", true),
+        &[
+            reply_to_own_tweet(500, 0, 2, 11, 1),
+            quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+            tweet_hello_world(300, 0, 0, 11, 0),
+            tweet_goodbye_world(550, 0, 1, 11, 0),
+            tweet_foo_bar(50, 0, 0, 0, 1),
+            tweet_poll(300, 0, 0, 3, 0),
+        ],
+        mentions_json(10, 16),
+        Some(poll_json(1, 3, 4, 5)),
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -553,7 +592,6 @@ async fn overrides_audience_size() {
     assert_eq!(handle.score(), scoring.score());
 }
 
-
 #[tokio::test]
 #[serial_test::file_serial]
 async fn full_authority_overrides_to_average() {
@@ -562,33 +600,37 @@ async fn full_authority_overrides_to_average() {
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
 
     handle = handle
-      .update()
-      .poll_id(Some(poll_tweet_id()))
-      .online_engagement_override(Some(EngagementScore::Average))
-      .poll_override(Some(PollScore::None))
-      .referrer_score_override(Some(false))
-      .holder_score_override(Some(false))
-      .operational_status_override(Some(OperationalStatus::Normal))
-      .offline_engagement_score(EngagementScore::None)
-      .save()
-      .await
-      .unwrap();
+        .update()
+        .poll_id(Some(poll_tweet_id()))
+        .online_engagement_override(Some(EngagementScore::Average))
+        .poll_override(Some(PollScore::None))
+        .referrer_score_override(Some(false))
+        .holder_score_override(Some(false))
+        .operational_status_override(Some(OperationalStatus::Normal))
+        .offline_engagement_score(EngagementScore::None)
+        .save()
+        .await
+        .unwrap();
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("347", true),
-      &[
-          reply_to_own_tweet(500, 0, 2, 11, 1),
-          quoting_someone_elses_tweet(300,0,2,11,1),
-          tweet_hello_world(300,0,0,11,0),
-          tweet_goodbye_world(550,0,1,11,0),
-          tweet_foo_bar(50,0,0,0,1),
-          tweet_poll(300,0,0,3,0),
-      ],
-      mentions_json(10, 16),
-      Some(poll_json(1, 3, 4, 5)),
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("347", true),
+        &[
+            reply_to_own_tweet(500, 0, 2, 11, 1),
+            quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+            tweet_hello_world(300, 0, 0, 11, 0),
+            tweet_goodbye_world(550, 0, 1, 11, 0),
+            tweet_foo_bar(50, 0, 0, 0, 1),
+            tweet_poll(300, 0, 0, 3, 0),
+        ],
+        mentions_json(10, 16),
+        Some(poll_json(1, 3, 4, 5)),
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -626,32 +668,36 @@ async fn ghost_account_overrides_to_full() {
     let account = h.app.create_account().await;
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
     handle = handle
-      .update()
-      .poll_override(Some(PollScore::High))
-      .referrer_score_override(Some(true))
-      .holder_score_override(Some(true))
-      .offline_engagement_score(EngagementScore::High)
-      .online_engagement_override(Some(EngagementScore::High))
-      .save()
-      .await
-      .unwrap();
+        .update()
+        .poll_override(Some(PollScore::High))
+        .referrer_score_override(Some(true))
+        .holder_score_override(Some(true))
+        .offline_engagement_score(EngagementScore::High)
+        .online_engagement_override(Some(EngagementScore::High))
+        .save()
+        .await
+        .unwrap();
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("0", false),
-      &[
-        reply_to_own_tweet(50, 0, 0, 1, 0),
-        quoting_someone_elses_tweet(31,0,0,1,0),
-        tweet_hello_world(31,0,0,1,0),
-        tweet_goodbye_world(55,0,0,1,0),
-        make_own_tweet("GM", 20, 1, 0, 1, 0),
-        make_own_tweet("My friends!", 20, 1, 0, 1, 0),
-        make_own_tweet("LFG", 10, 0, 0, 0, 0),
-      ],
-      tweets_json([]),
-      None,
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("0", false),
+        &[
+            reply_to_own_tweet(50, 0, 0, 1, 0),
+            quoting_someone_elses_tweet(31, 0, 0, 1, 0),
+            tweet_hello_world(31, 0, 0, 1, 0),
+            tweet_goodbye_world(55, 0, 0, 1, 0),
+            make_own_tweet("GM", 20, 1, 0, 1, 0),
+            make_own_tweet("My friends!", 20, 1, 0, 1, 0),
+            make_own_tweet("LFG", 10, 0, 0, 0, 0),
+        ],
+        tweets_json([]),
+        None,
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -685,30 +731,34 @@ async fn average_poll_score() {
     let account = h.app.create_account().await;
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
     handle = handle
-      .update()
-      .poll_id(Some(poll_tweet_id()))
-      .referrer_score_override(Some(true))
-      .holder_score_override(Some(true))
-      .offline_engagement_score(EngagementScore::High)
-      .save()
-      .await
-      .unwrap();
+        .update()
+        .poll_id(Some(poll_tweet_id()))
+        .referrer_score_override(Some(true))
+        .holder_score_override(Some(true))
+        .offline_engagement_score(EngagementScore::High)
+        .save()
+        .await
+        .unwrap();
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("347", false),
-      &[
-          reply_to_own_tweet(500, 0, 2, 11, 1),
-          quoting_someone_elses_tweet(300,0,2,11,1),
-          tweet_hello_world(300,0,0,11,0),
-          tweet_goodbye_world(550,0,1,11,0),
-          tweet_foo_bar(50,0,0,0,1),
-          tweet_poll(300,0,0,3,0),
-      ],
-      mentions_json(10, 16),
-      Some(poll_json(1, 4, 3, 5)),
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("347", false),
+        &[
+            reply_to_own_tweet(500, 0, 2, 11, 1),
+            quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+            tweet_hello_world(300, 0, 0, 11, 0),
+            tweet_goodbye_world(550, 0, 1, 11, 0),
+            tweet_foo_bar(50, 0, 0, 0, 1),
+            tweet_poll(300, 0, 0, 3, 0),
+        ],
+        mentions_json(10, 16),
+        Some(poll_json(1, 4, 3, 5)),
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -745,28 +795,27 @@ async fn reverse_poll_score() {
     let h = TestHelper::for_model().await;
     let account = h.app.create_account().await;
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
-    handle = handle
-      .update()
-      .poll_id(Some(poll_tweet_id()))
-      .save()
-      .await
-      .unwrap();
+    handle = handle.update().poll_id(Some(poll_tweet_id())).save().await.unwrap();
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("0", false),
-      &[
-          reply_to_own_tweet(50, 0, 0, 11, 0),
-          quoting_someone_elses_tweet(50,0,0,11,0),
-          tweet_hello_world(30,0,0,11,0),
-          tweet_goodbye_world(55,0,1,11,0),
-          tweet_foo_bar(50,0,0,0,1),
-          tweet_poll(50,0,0,3,0),
-      ],
-      mentions_json(0, 0),
-      Some(poll_json(1, 3, 4, 8)),
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("0", false),
+        &[
+            reply_to_own_tweet(50, 0, 0, 11, 0),
+            quoting_someone_elses_tweet(50, 0, 0, 11, 0),
+            tweet_hello_world(30, 0, 0, 11, 0),
+            tweet_goodbye_world(55, 0, 1, 11, 0),
+            tweet_foo_bar(50, 0, 0, 0, 1),
+            tweet_poll(50, 0, 0, 3, 0),
+        ],
+        mentions_json(0, 0),
+        Some(poll_json(1, 3, 4, 8)),
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -800,28 +849,27 @@ async fn none_poll_score() {
     let h = TestHelper::for_model().await;
     let account = h.app.create_account().await;
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
-    handle = handle
-      .update()
-      .poll_id(Some(poll_tweet_id()))
-      .save()
-      .await
-      .unwrap();
+    handle = handle.update().poll_id(Some(poll_tweet_id())).save().await.unwrap();
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("0", false),
-      &[
-          reply_to_own_tweet(50, 0, 0, 11, 0),
-          quoting_someone_elses_tweet(50,0,0,11,0),
-          tweet_hello_world(30,0,0,11,0),
-          tweet_goodbye_world(55,0,1,11,0),
-          tweet_foo_bar(50,0,0,0,1),
-          tweet_poll(50,0,0,3,0),
-      ],
-      mentions_json(0, 0),
-      Some(poll_json(10, 3, 4, 8)),
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("0", false),
+        &[
+            reply_to_own_tweet(50, 0, 0, 11, 0),
+            quoting_someone_elses_tweet(50, 0, 0, 11, 0),
+            tweet_hello_world(30, 0, 0, 11, 0),
+            tweet_goodbye_world(55, 0, 1, 11, 0),
+            tweet_foo_bar(50, 0, 0, 0, 1),
+            tweet_poll(50, 0, 0, 3, 0),
+        ],
+        mentions_json(0, 0),
+        Some(poll_json(10, 3, 4, 8)),
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -856,28 +904,32 @@ async fn override_poll_score() {
     let account = h.app.create_account().await;
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
     handle = handle
-      .update()
-      .poll_id(Some(poll_tweet_id()))
-      .poll_override(Some(PollScore::High))
-      .save()
-      .await
-      .unwrap();
+        .update()
+        .poll_id(Some(poll_tweet_id()))
+        .poll_override(Some(PollScore::High))
+        .save()
+        .await
+        .unwrap();
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("0", false),
-      &[
-          reply_to_own_tweet(50, 0, 0, 11, 0),
-          quoting_someone_elses_tweet(50,0,0,11,0),
-          tweet_hello_world(30,0,0,11,0),
-          tweet_goodbye_world(55,0,1,11,0),
-          tweet_foo_bar(50,0,0,0,1),
-          tweet_poll(50,0,0,3,0),
-      ],
-      mentions_json(0, 0),
-      Some(poll_json(1, 3, 4, 8)),
-      reposts_json(),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("0", false),
+        &[
+            reply_to_own_tweet(50, 0, 0, 11, 0),
+            quoting_someone_elses_tweet(50, 0, 0, 11, 0),
+            tweet_hello_world(30, 0, 0, 11, 0),
+            tweet_goodbye_world(55, 0, 1, 11, 0),
+            tweet_foo_bar(50, 0, 0, 0, 1),
+            tweet_poll(50, 0, 0, 3, 0),
+        ],
+        mentions_json(0, 0),
+        Some(poll_json(1, 3, 4, 8)),
+        reposts_json(),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -905,7 +957,6 @@ async fn override_poll_score() {
     assert_eq!(handle.score(), scoring.score());
 }
 
-
 #[tokio::test]
 #[serial_test::file_serial]
 async fn does_not_count_own_replies_and_reposts() {
@@ -913,41 +964,45 @@ async fn does_not_count_own_replies_and_reposts() {
     let account = h.app.create_account().await;
     let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
     handle = handle
-      .update()
-      .poll_id(Some(poll_tweet_id()))
-      .referrer_score_override(Some(true))
-      .holder_score_override(Some(true))
-      .offline_engagement_score(EngagementScore::High)
-      .save()
-      .await
-      .unwrap();
+        .update()
+        .poll_id(Some(poll_tweet_id()))
+        .referrer_score_override(Some(true))
+        .holder_score_override(Some(true))
+        .offline_engagement_score(EngagementScore::High)
+        .save()
+        .await
+        .unwrap();
 
     let posts = [
-      reply_to_own_tweet(500, 0, 2, 11, 1),
-      quoting_someone_elses_tweet(300,0,2,11,1),
-      tweet_hello_world(300,0,0,11,0),
-      tweet_goodbye_world(550,0,1,11,0),
-      tweet_foo_bar(50,0,0,0,1),
-      tweet_poll(300,0,0,3,0),
+        reply_to_own_tweet(500, 0, 2, 11, 1),
+        quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+        tweet_hello_world(300, 0, 0, 11, 0),
+        tweet_goodbye_world(550, 0, 1, 11, 0),
+        tweet_foo_bar(50, 0, 0, 0, 1),
+        tweet_poll(300, 0, 0, 3, 0),
     ];
 
     let referenced = [
-      make_reply(posts[0]["id"].as_str().unwrap()),
-      make_reply(posts[0]["id"].as_str().unwrap()),
-      make_quote(posts[0]["id"].as_str().unwrap()),
-      make_reply(posts[1]["id"].as_str().unwrap()),
-      make_reply(posts[1]["id"].as_str().unwrap()),
-      make_quote(posts[1]["id"].as_str().unwrap()),
+        make_reply(posts[0]["id"].as_str().unwrap()),
+        make_reply(posts[0]["id"].as_str().unwrap()),
+        make_quote(posts[0]["id"].as_str().unwrap()),
+        make_reply(posts[1]["id"].as_str().unwrap()),
+        make_reply(posts[1]["id"].as_str().unwrap()),
+        make_quote(posts[1]["id"].as_str().unwrap()),
     ];
 
     let scoring = pre_ingested_handle_scoring(
-      &handle,
-      me_json("347", true),
-      &posts,
-      mentions_json(10, 16),
-      Some(poll_json(1, 3, 4, 5)),
-      tweets_json(referenced),
-    ).await.apply().await.unwrap();
+        &handle,
+        me_json("347", true),
+        &posts,
+        mentions_json(10, 16),
+        Some(poll_json(1, 3, 4, 5)),
+        tweets_json(referenced),
+    )
+    .await
+    .apply()
+    .await
+    .unwrap();
 
     handle.reload().await.unwrap();
 
@@ -978,12 +1033,12 @@ async fn does_not_count_own_replies_and_reposts() {
 }
 
 async fn pre_ingested_handle_scoring(
-  handle: &Handle,
-  me: Value,
-  tweets: impl AsRef<[Value]>,
-  mentions: Value,
-  poll: Option<Value>,
-  reposts: Value,
+    handle: &Handle,
+    me: Value,
+    tweets: impl AsRef<[Value]>,
+    mentions: Value,
+    poll: Option<Value>,
+    reposts: Value,
 ) -> HandleScoring {
     handle
         .state
@@ -1183,67 +1238,73 @@ fn poll_json(none: u64, average: u64, high: u64, reverse: u64) -> Value {
 }
 
 pub fn reposts_json() -> Value {
-  serde_json::json![
-    {
-      "data": [
-        {
-          "id": "1915751867046367667",
-          "text": "RT @asami_tester: And here I quote my own tweet.",
-          "created_at": "2025-04-25T12:56:52Z",
-          "referenced_tweets": [
-            {"type": "retweeted", "id": "1915751819168383001"}
-          ]
-        },
-        {
-          "id": "1915751819168383001",
-          "text": "And here I quote my own tweet. https://t.co/i69mvXzkG4",
-          "created_at": "2025-04-25T12:56:41Z",
-          "referenced_tweets": [ {"type": "quoted", "id": "1915364366796444108"} ]
-        },
-        {
-          "id": "1915751715191562722",
-          "text": "RT @asami_tester: And replies to my own tweets.",
-          "created_at": "2025-04-25T12:56:16Z",
-          "referenced_tweets": [
-            {"type": "retweeted", "id": "1915364225507119328"}
-          ]
-        },
-        {
-          "id": "1915364366796444108",
-          "text": "Oh. Too bad. Not many impressions here.",
-          "created_at": "2025-04-24T11:17:05Z",
-          "referenced_tweets": [
-            {"type": "replied_to", "id": "1914718611517698226"}
-          ]
-        },
-        {
-          "id": "1915364225507119328",
-          "text": "And replies to my own tweets.",
-          "created_at": "2025-04-24T11:16:31Z",
-          "referenced_tweets": [
-            {"type": "replied_to", "id": "1915364126894838112"}
-          ]
-        },
-        {
-          "id": "1915364126894838112",
-          "text": "Example quote tweet here. https://t.co/CHTOSFRdeR",
-          "created_at": "2025-04-24T11:16:08Z",
-          "referenced_tweets": [ {"type": "quoted", "id": "1911875257733959859"} ]
-        },
-        {
-          "id": "1915364064110489854",
-          "text": "RT @asami_club: Asami is a club where members pay each other for reposts on X. You can get your content to go viral, you can get paid to re…",
-          "created_at": "2025-04-24T11:15:53Z",
-          "referenced_tweets": [
-            {"type": "retweeted", "id": "1911875257733959859"}
-          ]
-        }
-      ]
-    }
-  ]
+    serde_json::json![
+      {
+        "data": [
+          {
+            "id": "1915751867046367667",
+            "text": "RT @asami_tester: And here I quote my own tweet.",
+            "created_at": "2025-04-25T12:56:52Z",
+            "referenced_tweets": [
+              {"type": "retweeted", "id": "1915751819168383001"}
+            ]
+          },
+          {
+            "id": "1915751819168383001",
+            "text": "And here I quote my own tweet. https://t.co/i69mvXzkG4",
+            "created_at": "2025-04-25T12:56:41Z",
+            "referenced_tweets": [ {"type": "quoted", "id": "1915364366796444108"} ]
+          },
+          {
+            "id": "1915751715191562722",
+            "text": "RT @asami_tester: And replies to my own tweets.",
+            "created_at": "2025-04-25T12:56:16Z",
+            "referenced_tweets": [
+              {"type": "retweeted", "id": "1915364225507119328"}
+            ]
+          },
+          {
+            "id": "1915364366796444108",
+            "text": "Oh. Too bad. Not many impressions here.",
+            "created_at": "2025-04-24T11:17:05Z",
+            "referenced_tweets": [
+              {"type": "replied_to", "id": "1914718611517698226"}
+            ]
+          },
+          {
+            "id": "1915364225507119328",
+            "text": "And replies to my own tweets.",
+            "created_at": "2025-04-24T11:16:31Z",
+            "referenced_tweets": [
+              {"type": "replied_to", "id": "1915364126894838112"}
+            ]
+          },
+          {
+            "id": "1915364126894838112",
+            "text": "Example quote tweet here. https://t.co/CHTOSFRdeR",
+            "created_at": "2025-04-24T11:16:08Z",
+            "referenced_tweets": [ {"type": "quoted", "id": "1911875257733959859"} ]
+          },
+          {
+            "id": "1915364064110489854",
+            "text": "RT @asami_club: Asami is a club where members pay each other for reposts on X. You can get your content to go viral, you can get paid to re…",
+            "created_at": "2025-04-24T11:15:53Z",
+            "referenced_tweets": [
+              {"type": "retweeted", "id": "1911875257733959859"}
+            ]
+          }
+        ]
+      }
+    ]
 }
 
-pub fn reply_to_own_tweet(impression_count: u64, retweet_count: u64, reply_count: u64, like_count: u64, quote_count: u64) -> Value {
+pub fn reply_to_own_tweet(
+    impression_count: u64,
+    retweet_count: u64,
+    reply_count: u64,
+    like_count: u64,
+    quote_count: u64,
+) -> Value {
     serde_json::json!({
         "id": "1915364225507119328",
         "text": "And replies to my own tweets.",
@@ -1270,7 +1331,13 @@ pub fn reply_to_own_tweet(impression_count: u64, retweet_count: u64, reply_count
     })
 }
 
-pub fn quoting_someone_elses_tweet(impression_count: u64, retweet_count: u64, reply_count: u64, like_count: u64, quote_count: u64) -> Value {
+pub fn quoting_someone_elses_tweet(
+    impression_count: u64,
+    retweet_count: u64,
+    reply_count: u64,
+    like_count: u64,
+    quote_count: u64,
+) -> Value {
     serde_json::json!({
         "id": "1915364126894838112",
         "text": "Example of a quote tweet here, looks good. https://t.co/CHTOSFRdeR",
@@ -1337,63 +1404,83 @@ fn make_random_id() -> String {
 
 pub fn tweet_hello_world(impressions: u64, retweets: u64, replies: u64, likes: u64, quotes: u64) -> Value {
     make_own_tweet(
-      "Hello World! We're live testing new features in Asami Club, hopefully with interesting tweets.",
-      impressions, retweets, replies, likes, quotes)
+        "Hello World! We're live testing new features in Asami Club, hopefully with interesting tweets.",
+        impressions,
+        retweets,
+        replies,
+        likes,
+        quotes,
+    )
 }
 
 pub fn tweet_goodbye_world(impressions: u64, retweets: u64, replies: u64, likes: u64, quotes: u64) -> Value {
     make_own_tweet(
-      "Goodbye World! You've been great, I'll see you next weekend though.",
-      impressions, retweets, replies, likes, quotes)
+        "Goodbye World! You've been great, I'll see you next weekend though.",
+        impressions,
+        retweets,
+        replies,
+        likes,
+        quotes,
+    )
 }
 
 pub fn tweet_foo_bar(impressions: u64, retweets: u64, replies: u64, likes: u64, quotes: u64) -> Value {
     make_own_tweet(
-      "It's interesting to say something interesting, and long also.",
-      impressions, retweets, replies, likes, quotes)
+        "It's interesting to say something interesting, and long also.",
+        impressions,
+        retweets,
+        replies,
+        likes,
+        quotes,
+    )
 }
 
-
 pub fn make_retweet(tweet_id: &str) -> Value {
-  serde_json::json![
-        {
-          "id": make_random_id(),
-          "text": "RT this is a retweet",
-          "created_at": "2025-04-24T11:15:53Z",
-          "referenced_tweets": [
-            {"type": "retweeted", "id": tweet_id}
-          ]
-        }
-  ]
+    serde_json::json![
+          {
+            "id": make_random_id(),
+            "text": "RT this is a retweet",
+            "created_at": "2025-04-24T11:15:53Z",
+            "referenced_tweets": [
+              {"type": "retweeted", "id": tweet_id}
+            ]
+          }
+    ]
 }
 
 pub fn make_reply(tweet_id: &str) -> Value {
-  serde_json::json![
-        {
-          "id": make_random_id(),
-          "text": "I'm replying to this tweet",
-          "created_at": "2025-04-24T11:15:53Z",
-          "referenced_tweets": [
-            {"type": "replied_to", "id": tweet_id}
-          ]
-        }
-  ]
+    serde_json::json![
+          {
+            "id": make_random_id(),
+            "text": "I'm replying to this tweet",
+            "created_at": "2025-04-24T11:15:53Z",
+            "referenced_tweets": [
+              {"type": "replied_to", "id": tweet_id}
+            ]
+          }
+    ]
 }
 
 pub fn make_quote(tweet_id: &str) -> Value {
-  serde_json::json![
-        {
-          "id": make_random_id(),
-          "text": "Quoting this tweet",
-          "created_at": "2025-04-24T11:15:53Z",
-          "referenced_tweets": [
-            {"type": "quoted", "id": tweet_id}
-          ]
-        }
-  ]
+    serde_json::json![
+          {
+            "id": make_random_id(),
+            "text": "Quoting this tweet",
+            "created_at": "2025-04-24T11:15:53Z",
+            "referenced_tweets": [
+              {"type": "quoted", "id": tweet_id}
+            ]
+          }
+    ]
 }
 
-pub fn tweet_poll(impression_count: u64, retweet_count: u64, reply_count: u64, like_count: u64, quote_count: u64) -> Value {
+pub fn tweet_poll(
+    impression_count: u64,
+    retweet_count: u64,
+    reply_count: u64,
+    like_count: u64,
+    quote_count: u64,
+) -> Value {
     serde_json::json!({
         "id": "1913187163358835110",
         "text": "If I told you to jump off a bridge, would you do it? Would you even think about it?",
@@ -1419,4 +1506,3 @@ pub fn tweet_poll(impression_count: u64, retweet_count: u64, reply_count: u64, l
         "conversation_id": "1913187163358835110"
     })
 }
-

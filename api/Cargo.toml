@@ -35,8 +35,7 @@ hex = "0.4.3"
 chbs = "0.1.0"
 hmac = "0.11.0"
 sha2 = "0.9.8"
-#twitter-v2 = { git = "https://github.com/constata-eu/twitter-v2-rs", features = ["oauth2", "rustls-tls"] }
-twitter-v2 = { path = "/home/nubis/twitter-v2-rs", features = ["oauth2", "rustls-tls"] }
+twitter-v2 = { git = "https://github.com/constata-eu/twitter-v2-rs", features = ["oauth2", "rustls-tls"] }
 ureq = { version = "2.8.0", features = ["json"] }
 ethers = { version = "2.0.10", features = ["eip712", "legacy"] }
 regex = "1"

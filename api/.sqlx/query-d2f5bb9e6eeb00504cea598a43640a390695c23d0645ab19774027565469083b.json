@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO estimated_fee_pool_claims (holder_id, \namount, \ncontract_cycle) VALUES ($1, $2, $3) RETURNING id as \"id!: i32\", \nholder_id as \"holder_id!: i32\", \namount as \"amount!: String\", \ncontract_cycle as \"contract_cycle!: String\", \ncreated_at as \"created_at!: DateTime < Utc >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "holder_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "amount!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "contract_cycle!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at!: DateTime < Utc >",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d2f5bb9e6eeb00504cea598a43640a390695c23d0645ab19774027565469083b"
+}

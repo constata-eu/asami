@@ -1,3 +1,7 @@
+// The test-api client represents a fully signed in user
+// who also owns a wallet, and uses a session and the wallet to
+// interact with the contract.
+
 use std::sync::Arc;
 
 pub use api::{
@@ -10,7 +14,10 @@ use api::{
     on_chain::{self, Address, AsamiContract, DocContract, Http, LegacyContract, Provider, SignerMiddleware, IERC20},
 };
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
-use ethers::signers::{LocalWallet, Signer};
+use ethers::{
+    abi::AbiEncode,
+    signers::{LocalWallet, Signer},
+};
 pub use galvanic_assert::{
     self,
     matchers::{collection::*, variant::*, *},
@@ -188,18 +195,21 @@ impl ApiClient {
 
     pub async fn quick_campaign(&mut self, budget: U256, duration: i64, topic_ids: &[i32]) -> models::Campaign {
         self.setup_as_advertiser("test main advertiser").await;
-        self
-            .start_and_pay_campaign(
-                "https://x.com/somebody/status/1716421161867710954",
-                budget,
-                duration,
-                topic_ids,
-            )
-            .await
+        self.start_and_pay_campaign(
+            "https://x.com/somebody/status/1716421161867710954",
+            budget,
+            duration,
+            topic_ids,
+        )
+        .await
+    }
+
+    pub async fn create_handle(&self, username: &str, user_id: &str, score: U256) -> models::Handle {
+        self.test_app.create_handle(&self.account_id().encode_hex(), username, user_id, score).await
     }
 
     pub async fn setup_as_advertiser(&mut self, message: &str) {
-        self.setup_as_advertiser_with_amount(message, u("2000")).await;
+        self.setup_as_advertiser_with_amount(message, u("2000000")).await;
     }
 
     pub async fn setup_as_advertiser_with_amount(&mut self, message: &str, amount: U256) {
@@ -316,6 +326,7 @@ impl ApiClient {
 
         let provider = Provider::<Http>::try_from(&rsk.rpc_url).unwrap().interval(std::time::Duration::from_millis(10));
         let client = std::sync::Arc::new(SignerMiddleware::new(provider, wallet.clone()));
+
         let legacy_address: Address = rsk.legacy_contract_address.parse().unwrap();
         let asami_address: Address = rsk.asami_contract_address.parse().unwrap();
         self.legacy_contract = Some(LegacyContract::new(legacy_address, client.clone()));

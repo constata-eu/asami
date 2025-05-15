@@ -28,7 +28,7 @@ ethers = { version = "2.0.10", features = ["eip712"] }
 rust_decimal = "*"
 image = { version = "0.24.7" }
 image_hasher = "1.1.0"
-rand = "*"
+rand = "0.8.5"
 test-log = { version = "0.2", features = ["trace"] }
 nix = { workspace = true }
 sqlx-cli = { workspace = true }

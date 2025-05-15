@@ -1,6 +1,6 @@
 use api::{
     models::{
-        self, on_chain_job::AsamiFunctionCall, u, InsertAccount, InsertAccountUser, InsertHandle, InsertUser, U256,
+        self, on_chain_job::AsamiFunctionCall, InsertAccount, InsertAccountUser, InsertHandle, InsertUser, U256,
     },
     on_chain, App, AppConfig,
 };
@@ -12,7 +12,7 @@ pub use ethers::{
     types::{transaction::eip2718::TypedTransaction, TransactionReceipt, TransactionRequest, H256, U64},
 };
 use jwt_simple::algorithms::*;
-use rand::thread_rng;
+use ethers::core::rand::thread_rng;
 use rocket::{config::LogLevel, local::asynchronous::Client as RocketClient, Config};
 
 use super::*;
@@ -156,34 +156,13 @@ impl TestApp {
             .expect("could not score handle")
     }
 
-    /*
-    pub async fn quick_campaign(&self, budget: U256, duration: i64, topic_ids: &[i32]) -> models::Campaign {
-        let mut client = self.client().await;
-        client.setup_as_advertiser("test main advertiser").await;
-        client
-            .start_and_pay_campaign(
-                "https://x.com/somebody/status/1716421161867710954",
-                budget,
-                duration,
-                topic_ids,
-            )
-            .await
-    }
-
-    pub async fn quick_handle(&self, username: &str, user_id: &str, score: U256) -> models::Handle {
-        let mut client = self.client().await;
-        client.claim_account().await;
-        client.create_handle(username, user_id, score).await
-    }
-    */
-
     pub fn make_random_local_wallet(&self) -> LocalWallet {
         LocalWallet::new(&mut thread_rng()).with_chain_id(self.app.settings.rsk.chain_id)
     }
 
     pub async fn make_wallet(&self) -> LocalWallet {
         let wallet = self.make_random_local_wallet();
-        let tx = TransactionRequest::new().to(wallet.address()).value(u("10"));
+        let tx = TransactionRequest::new().to(wallet.address()).value(wei("10000000000000000"));
 
         self.start_mining().await;
         self.app

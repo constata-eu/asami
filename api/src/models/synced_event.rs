@@ -4,13 +4,16 @@ use ethers::prelude::{EthLogDecode, Event};
 
 use super::*;
 use crate::{
-    models::on_chain_job::AsamiSigner,
+    models::on_chain::AsamiMiddleware,
     on_chain::{
-        AsamiContract, CampaignCreatedFilter, CampaignExtendedFilter, CampaignReimbursedFilter, CampaignToppedUpFilter,
+        asami_contract_code::{
+            CampaignCreatedFilter, CampaignExtendedFilter, CampaignReimbursedFilter, CampaignToppedUpFilter,
+        },
+        AsamiContract,
     },
 };
 
-pub type AsamiEvent<D> = Event<Arc<AsamiSigner>, AsamiSigner, D>;
+pub type AsamiEvent<D> = Event<Arc<AsamiMiddleware>, AsamiMiddleware, D>;
 
 model! {
   state: App,
@@ -56,7 +59,51 @@ impl SyncedEventHub {
         self.sync_campaign_events_for::<CampaignExtendedFilter>(from_block, to_block).await?;
         self.sync_campaign_events_for::<CampaignReimbursedFilter>(from_block, to_block).await?;
 
+        self.sync_asami_transfer_events(from_block, to_block).await?;
+
         index_state.update().last_synced_block(u64_to_d(to_block)).save().await?;
+        Ok(())
+    }
+
+    pub async fn sync_asami_transfer_events(&self, from_block: U64, to_block: U64) -> anyhow::Result<()> {
+        let events = self.contract().transfer_filter()
+            .address(self.contract().address().into())
+            .from_block(from_block)
+            .to_block(to_block)
+            .query_with_meta()
+            .await?;
+
+        for (e, meta) in &events {
+            let tx = self.state.transactional().await?;
+
+            let Some(_synced_event) = tx.synced_event().save_unprocessed_event(meta, &e).await? else {
+                continue;
+            };
+
+            let address = e.to;
+
+            let balance = self.contract().balance_of(address).await?;
+
+            let maybe_holder = tx.holder().select().address_eq(address.encode_hex()).optional().await?;
+
+            match maybe_holder {
+                Some(holder) => {
+                    holder.update().balance(balance.encode_hex()).save().await?;
+                },
+                None => {
+                    let code = self.contract().client().get_code(address, None).await?;
+                    let is_contract = !code.as_ref().is_empty();
+                    tx.holder().insert(InsertHolder{
+                        is_contract,
+                        address: address.encode_hex(),
+                        balance: balance.encode_hex(),
+                    }).save().await?;
+                }
+            }
+
+            tx.commit().await?;
+        }
+
         Ok(())
     }
 

@@ -1,7 +1,12 @@
 use std::collections::HashMap;
 
 use twitter_v2::{
-    authorization::Oauth2Token, data::ReferencedTweetKind, id::NumericId, meta::TweetsMeta, query::{Exclude, MediaField, PollField, TweetExpansion, TweetField, UserField}, ApiPayload, Tweet, TwitterApi, User as TwitterUser
+    authorization::Oauth2Token,
+    data::ReferencedTweetKind,
+    id::NumericId,
+    meta::TweetsMeta,
+    query::{Exclude, MediaField, PollField, TweetExpansion, TweetField, UserField},
+    ApiPayload, Tweet, TwitterApi, User as TwitterUser,
 };
 
 use super::*;
@@ -160,11 +165,7 @@ impl HandleScoringHub {
         api: TwitterApi<Oauth2Token>,
         poll_id: &Option<String>,
     ) -> anyhow::Result<(String, String, String, String, Option<String>)> {
-        let me = api
-            .get_users_me()
-            .user_fields(build_user_fields())
-            .send()
-            .await?;
+        let me = api.get_users_me().user_fields(build_user_fields()).send().await?;
 
         let me_json = serde_json::to_string(&me)?;
 
@@ -183,62 +184,66 @@ impl HandleScoringHub {
         let end_time = time::OffsetDateTime::from_unix_timestamp((now - chrono::Duration::days(0)).timestamp())?
             .to_offset(time::UtcOffset::UTC);
 
-        let tweets_json = serde_json::to_string(&api
-            .get_user_tweets(user_id)
-            .max_results(100)
-            .start_time(start_time)
-            .end_time(end_time)
-            .exclude([Exclude::Retweets])
-            .expansions(build_expansions())
-            .user_fields(build_user_fields())
-            .tweet_fields(build_tweet_fields(&[
-                TweetField::OrganicMetrics,
-                TweetField::NonPublicMetrics,
-            ]))
-            .media_fields(build_media_fields(&[
-                MediaField::NonPublicMetrics,
-                MediaField::OrganicMetrics,
-                MediaField::PromotedMetrics,
-            ]))
-            .poll_fields([PollField::VotingStatus, PollField::Options, PollField::Id])
-            .send()
-            .await?)?;
-
-        let mentions_json = serde_json::to_string(&api
-            .get_user_mentions(user_id)
-            .max_results(100)
-            .start_time(start_time)
-            .end_time(end_time)
-            .expansions(build_expansions())
-            .user_fields(build_user_fields())
-            .tweet_fields(build_tweet_fields(&[]))
-            .media_fields(build_media_fields(&[]))
-            .poll_fields([PollField::VotingStatus, PollField::Options, PollField::Id])
-            .send()
-            .await?)?;
-
-        let reposts_json = serde_json::to_string(&api
-            .get_user_tweets(user_id)
-            .max_results(100)
-            .start_time(start_time)
-            .end_time(end_time)
-            .tweet_fields([TweetField::CreatedAt, TweetField::ReferencedTweets, TweetField::Id])
-            .send()
-            .await?)?;
-
-        let maybe_poll_json = if let Some(tweet_id_string) = poll_id {
-            let tweet_id: u64 = tweet_id_string.parse()?;
-            Some(serde_json::to_string(&api
-                .get_tweet(tweet_id)
+        let tweets_json = serde_json::to_string(
+            &api.get_user_tweets(user_id)
+                .max_results(100)
+                .start_time(start_time)
+                .end_time(end_time)
+                .exclude([Exclude::Retweets])
                 .expansions(build_expansions())
                 .user_fields(build_user_fields())
                 .tweet_fields(build_tweet_fields(&[
                     TweetField::OrganicMetrics,
                     TweetField::NonPublicMetrics,
                 ]))
+                .media_fields(build_media_fields(&[
+                    MediaField::NonPublicMetrics,
+                    MediaField::OrganicMetrics,
+                    MediaField::PromotedMetrics,
+                ]))
                 .poll_fields([PollField::VotingStatus, PollField::Options, PollField::Id])
                 .send()
-                .await?)?)
+                .await?,
+        )?;
+
+        let mentions_json = serde_json::to_string(
+            &api.get_user_mentions(user_id)
+                .max_results(100)
+                .start_time(start_time)
+                .end_time(end_time)
+                .expansions(build_expansions())
+                .user_fields(build_user_fields())
+                .tweet_fields(build_tweet_fields(&[]))
+                .media_fields(build_media_fields(&[]))
+                .poll_fields([PollField::VotingStatus, PollField::Options, PollField::Id])
+                .send()
+                .await?,
+        )?;
+
+        let reposts_json = serde_json::to_string(
+            &api.get_user_tweets(user_id)
+                .max_results(100)
+                .start_time(start_time)
+                .end_time(end_time)
+                .tweet_fields([TweetField::CreatedAt, TweetField::ReferencedTweets, TweetField::Id])
+                .send()
+                .await?,
+        )?;
+
+        let maybe_poll_json = if let Some(tweet_id_string) = poll_id {
+            let tweet_id: u64 = tweet_id_string.parse()?;
+            Some(serde_json::to_string(
+                &api.get_tweet(tweet_id)
+                    .expansions(build_expansions())
+                    .user_fields(build_user_fields())
+                    .tweet_fields(build_tweet_fields(&[
+                        TweetField::OrganicMetrics,
+                        TweetField::NonPublicMetrics,
+                    ]))
+                    .poll_fields([PollField::VotingStatus, PollField::Options, PollField::Id])
+                    .send()
+                    .await?,
+            )?)
         } else {
             None
         };
@@ -366,7 +371,6 @@ impl HandleScoring {
             .await?)
     }
 
-
     fn get_referenced_tweets(reposts: &[Tweet]) -> HashMap<NumericId, ReferencedStats> {
         let mut stats = HashMap::new();
 
@@ -434,13 +438,15 @@ impl HandleScoring {
 
     // Repost fatigue occurs when an account has very little original content
     // in comparison to their reposts. More original content should offset
-    // repost fatigue. 
+    // repost fatigue.
     fn is_repost_fatigue(tweets: &[Tweet], referenced: &HashMap<NumericId, ReferencedStats>) -> bool {
-        let repost_count: u64 = referenced.iter().map(|(_,r)| r.retweeted ).sum();
+        let repost_count: u64 = referenced.iter().map(|(_, r)| r.retweeted).sum();
 
-        let good_post_count: u64 = tweets.iter().filter(|t| t.text.len() > 50 ).count().try_into().unwrap_or(0);
+        let good_post_count: u64 = tweets.iter().filter(|t| t.text.len() > 50).count().try_into().unwrap_or(0);
 
-        if repost_count == 0 { return false; }
+        if repost_count == 0 {
+            return false;
+        }
 
         // Reposts can't be more than 1 and 1/2 the good posts.
         repost_count * 100 / good_post_count >= 150
@@ -448,8 +454,12 @@ impl HandleScoring {
 
     // Ghost accounts tweet too little and generate no impressions.
     fn is_ghost_account(tweets: &[Tweet]) -> bool {
-        tweets.iter().filter(|t| t.text.len() > 50 ).count() < 5 ||
-        tweets.iter().filter(|t| t.organic_metrics.as_ref().map(|m| m.impression_count > 30).unwrap_or(false)).count() < 5
+        tweets.iter().filter(|t| t.text.len() > 50).count() < 5
+            || tweets
+                .iter()
+                .filter(|t| t.organic_metrics.as_ref().map(|m| m.impression_count > 30).unwrap_or(false))
+                .count()
+                < 5
     }
 
     fn is_indeterminate_audience_or_followed(me: &TwitterUser) -> (bool, bool) {
@@ -493,10 +503,14 @@ impl HandleScoring {
     fn is_replied(tweets: &[Tweet], referenced: &HashMap<NumericId, ReferencedStats>) -> bool {
         let mut impression_count: i32 = 0;
         let mut reply_count: i32 = 0;
-        
+
         for tweet in tweets {
-            let Some(o) = tweet.organic_metrics.as_ref() else { continue };
-            let Some(p) = tweet.public_metrics.as_ref() else { continue };
+            let Some(o) = tweet.organic_metrics.as_ref() else {
+                continue;
+            };
+            let Some(p) = tweet.public_metrics.as_ref() else {
+                continue;
+            };
 
             if o.impression_count < NOT_ENOUGH_IMPRESSIONS {
                 continue;
@@ -556,11 +570,11 @@ impl HandleScoring {
 
     fn get_poll_score(maybe_payload: &Option<ApiPayload<Tweet, ()>>) -> Option<PollScore> {
         let Some(payload) = maybe_payload else {
-            return Some(PollScore::None)
+            return Some(PollScore::None);
         };
 
         let mut options = payload.includes().as_ref()?.polls.as_ref()?.first().as_ref()?.options.clone();
-        options.sort_by_key(|i| i.position );
+        options.sort_by_key(|i| i.position);
         let [none, average, high, reverse] = options.as_slice() else {
             return None;
         };
@@ -620,11 +634,8 @@ impl HandleScoring {
             .count()
             > 0;
 
-        let never_applied_any = handle
-            .handle_scoring_scope()
-            .status_eq(HandleScoringStatus::Applied)
-            .count()
-            .await? == 0;
+        let never_applied_any =
+            handle.handle_scoring_scope().status_eq(HandleScoringStatus::Applied).count().await? == 0;
 
         if some_recently_applied || never_applied_any {
             Ok(self.update().status(HandleScoringStatus::Discarded).save().await?)

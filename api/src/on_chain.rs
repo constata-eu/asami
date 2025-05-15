@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 pub use ethers::{
     prelude::{abigen, LogMeta, Middleware, SignerMiddleware},
-    providers::{Http, Provider},
+    providers::{Http, Provider, PendingTransaction},
     signers::{coins_bip39::English, LocalWallet, MnemonicBuilder, Signer},
     types::{Address, U256, U64},
 };
@@ -31,9 +31,10 @@ abigen!(
     derives(serde::Deserialize, serde::Serialize),
 );
 
-pub type LegacyContract = LegacyContractCode<SignerMiddleware<Provider<Http>, LocalWallet>>;
-pub type DocContract = IERC20<SignerMiddleware<Provider<Http>, LocalWallet>>;
-pub type AsamiContract = AsamiContractCode<SignerMiddleware<Provider<Http>, LocalWallet>>;
+pub type AsamiMiddleware = SignerMiddleware<Provider<Http>,LocalWallet>;
+pub type LegacyContract = LegacyContractCode<AsamiMiddleware>;
+pub type DocContract = IERC20<AsamiMiddleware>;
+pub type AsamiContract = AsamiContractCode<AsamiMiddleware>;
 
 #[derive(Clone)]
 pub struct OnChain {
@@ -58,10 +59,12 @@ impl OnChain {
         let provider = Provider::<Http>::try_from(&config.rsk.rpc_url)
             .map_err(|_| Error::Init("Invalid rsk rpc_url in config".to_string()))?;
 
-        let client = Arc::new(SignerMiddleware::new(
+        let signer_middleware = SignerMiddleware::new(
             provider,
             wallet.with_chain_id(config.rsk.chain_id),
-        ));
+        );
+
+        let client = Arc::new(signer_middleware);
         let legacy_address: Address = config
             .rsk
             .legacy_contract_address

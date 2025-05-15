@@ -1,0 +1,33 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM holders WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR address = $4::varchar) AND (NOT $5::boolean OR balance = $6::varchar) AND (NOT $7::boolean OR last_auto_paid_cycle = $8::varchar) AND (NOT $9::boolean OR last_auto_paid_cycle < $10::varchar) AND (NOT $11::boolean OR is_contract = $12::boolean)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c0ec4da7320ef32b99c21b0ab6d01b312a653ba8b91d0892188a71f950b2d14a"
+}

@@ -190,7 +190,7 @@ impl TestHelper {
             web: None,
         };
 
-        let api = this.make_api_client().await;
+        let api = this.user().await;
         this.web = Some(Selenium::start(api).await);
 
         this
@@ -208,7 +208,7 @@ impl TestHelper {
         }
     }
 
-    pub async fn make_api_client(&self) -> ApiClient {
+    pub async fn user(&self) -> ApiClient {
         let mut api = ApiClient::new(self.app.clone()).await;
         api.login().await;
         api

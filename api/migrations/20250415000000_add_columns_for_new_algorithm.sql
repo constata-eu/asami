@@ -137,3 +137,20 @@ ADD COLUMN audience_size_override_reason TEXT,
 ADD COLUMN audience_size_override_date TIMESTAMPTZ;
 
 CREATE INDEX idx_handles_current_scoring_id ON handles(current_scoring_id);
+
+ALTER TABLE holders
+    ADD COLUMN is_contract BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN last_auto_paid_cycle VARCHAR NOT NULL DEFAULT '0x000000000000000000000000000000000000000000000000000000000000000';
+
+CREATE TABLE estimated_fee_pool_claims (
+    id SERIAL PRIMARY KEY NOT NULL,
+    holder_id INTEGER REFERENCES holders(id) NOT NULL,
+    amount VARCHAR NOT NULL,
+    contract_cycle VARCHAR NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+INSERT INTO holders (address, is_contract, balance)
+SELECT DISTINCT addr, false, '0x000000000000000000000000000000000000000000000000000000000000000'
+FROM accounts
+WHERE addr IS NOT NULL;

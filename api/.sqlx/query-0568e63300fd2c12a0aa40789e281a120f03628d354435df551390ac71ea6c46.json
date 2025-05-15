@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE estimated_fee_pool_claims SET (id, \nholder_id, \namount, \ncontract_cycle, \ncreated_at) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE holder_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE amount END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE contract_cycle END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE created_at END)) WHERE id = $1 RETURNING id as \"id!: i32\", \nholder_id as \"holder_id!: i32\", \namount as \"amount!: String\", \ncontract_cycle as \"contract_cycle!: String\", \ncreated_at as \"created_at!: DateTime < Utc >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "holder_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "amount!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "contract_cycle!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at!: DateTime < Utc >",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0568e63300fd2c12a0aa40789e281a120f03628d354435df551390ac71ea6c46"
+}

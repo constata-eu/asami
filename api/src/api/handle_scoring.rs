@@ -70,7 +70,10 @@ impl Showable<models::HandleScoring, HandleScoringFilter> for HandleScoring {
         }
     }
 
-    fn filter_to_select(_context: &Context, filter: Option<HandleScoringFilter>) -> FieldResult<models::SelectHandleScoring> {
+    fn filter_to_select(
+        _context: &Context,
+        filter: Option<HandleScoringFilter>,
+    ) -> FieldResult<models::SelectHandleScoring> {
         if let Some(f) = filter {
             Ok(models::SelectHandleScoring {
                 id_in: f.ids,

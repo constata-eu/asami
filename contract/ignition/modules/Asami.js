@@ -8,13 +8,18 @@ module.exports = buildModule("LocalAsami", (m) => {
 
   const mockDoc = m.contract("MockDoc", []);
 
-  const asamiOld = m.contract("Asami", [mockDoc, "0x0000000000000000000000000000000000000000"]);
+  const asamiOld = m.contract("Asami", [
+    mockDoc,
+    "0x0000000000000000000000000000000000000000",
+  ]);
 
-  const asami = m.contract("AsamiCore", [mockDoc])
+  const asami = m.contract("AsamiCore", [mockDoc]);
 
   for (let a of [adminAddress, memberAddress]) {
-    m.call(mockDoc, "transfer", [a, ethers.parseEther("420000000")], { id: `transfer_doc_to_${a}`});
-    m.send(`send_eth_to_${a}`, a, ethers.parseEther("100"));
+    m.call(mockDoc, "transfer", [a, ethers.parseEther("420000000")], {
+      id: `transfer_doc_to_${a}`,
+    });
+    m.send(`send_eth_to_${a}`, a, ethers.parseEther("1000"));
   }
 
   return { asami };

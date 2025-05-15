@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO holders (address, \nbalance) VALUES ($1, $2) RETURNING id as \"id!: i32\", \naddress as \"address!: String\", \nbalance as \"balance!: String\", \nlast_fee_pool_share as \"last_fee_pool_share!: Option < String >\"",
+  "query": "INSERT INTO holders (address, \nbalance, \nis_contract) VALUES ($1, $2, $3) RETURNING id as \"id!: i32\", \naddress as \"address!: String\", \nbalance as \"balance!: String\", \nlast_auto_paid_cycle as \"last_auto_paid_cycle!: String\", \nis_contract as \"is_contract!: bool\"",
   "describe": {
     "columns": [
       {
@@ -20,22 +20,29 @@
       },
       {
         "ordinal": 3,
-        "name": "last_fee_pool_share!: Option < String >",
+        "name": "last_auto_paid_cycle!: String",
         "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "is_contract!: bool",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
       "Left": [
         "Varchar",
-        "Varchar"
+        "Varchar",
+        "Bool"
       ]
     },
     "nullable": [
       false,
       false,
       false,
-      true
+      false,
+      false
     ]
   },
-  "hash": "8f00f54afd4d037ff431c5c4bcc9ddafe685c3488aa833e91396e88a0c612859"
+  "hash": "c6c1b44e7b06cb83b4f9ba6b6a5358bfc7f7a3c5202631edd8d994156d168e34"
 }

@@ -5,7 +5,7 @@ use integration_tests::support::*;
 async fn main() -> anyhow::Result<()> {
     let h = TestHelper::for_web().await;
 
-    let mut advertiser = h.make_api_client().await;
+    let mut advertiser = h.user().await;
     advertiser.setup_as_advertiser("test main advertiser").await;
 
     let mut x_campaign = advertiser

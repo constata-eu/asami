@@ -155,4 +155,5 @@ pub struct Rsk {
     pub gasless_rbtc_per_user: U256,
     pub gasless_fee: U256,
     pub admin_claim_trigger: U256,
+    pub gas_override: Option<bool>,
 }

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE holders SET last_auto_paid_cycle = $1 WHERE id = ANY($2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Int4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "77204925a415d807fd4cef2120f2633a5713c60c573ebfceb8031686899b892f"
+}

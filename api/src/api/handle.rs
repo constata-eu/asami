@@ -29,7 +29,7 @@ pub struct Handle {
 
     #[graphql(description = "Topics assigned to this handle")]
     topic_ids: Vec<i32>,
-    
+
     #[graphql(description = "Status of this handle.")]
     status: HandleStatus,
     #[graphql(description = "Collabs made")]
