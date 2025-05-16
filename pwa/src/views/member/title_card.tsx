@@ -12,10 +12,10 @@ const TitleCard = ({ handles, campaigns }) => {
 
   let text;
   let id;
-  if (handles.data.length == 0) {
+  if (handles?.data?.length == 0) {
     text = "title_card.verify_handles";
     id = "title-card-verify-a-handle";
-  } else if (campaigns.data.length == 0) {
+  } else if (campaigns?.data?.length == 0) {
     text = "title_card.wait_for_campaigns";
     id = "title-card-no-campaigns";
   } else {

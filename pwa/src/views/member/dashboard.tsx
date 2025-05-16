@@ -67,8 +67,9 @@ const CampaignList = ({ handles }) => {
   if (
     prefsContext.isLoading ||
     listContext.isLoading ||
+    !listContext.total ||
     handles.isLoading ||
-    handles.total == 0
+    !handles.total
   ) {
     return <></>;
   }

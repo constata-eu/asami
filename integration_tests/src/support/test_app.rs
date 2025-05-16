@@ -1,9 +1,8 @@
 use api::{
-    models::{
-        self, on_chain_job::AsamiFunctionCall, InsertAccount, InsertAccountUser, InsertHandle, InsertUser, U256,
-    },
+    models::{self, on_chain_job::AsamiFunctionCall, InsertAccount, InsertAccountUser, InsertHandle, InsertUser, U256},
     on_chain, App, AppConfig,
 };
+use ethers::core::rand::thread_rng;
 pub use ethers::{
     abi::{AbiEncode, Address, Detokenize},
     middleware::{contract::FunctionCall, Middleware},
@@ -12,7 +11,6 @@ pub use ethers::{
     types::{transaction::eip2718::TypedTransaction, TransactionReceipt, TransactionRequest, H256, U64},
 };
 use jwt_simple::algorithms::*;
-use ethers::core::rand::thread_rng;
 use rocket::{config::LogLevel, local::asynchronous::Client as RocketClient, Config};
 
 use super::*;

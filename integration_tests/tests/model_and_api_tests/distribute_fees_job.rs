@@ -25,12 +25,12 @@ async fn distributes_fees_to_holders() {
     Box::pin(advertiser.setup_as_advertiser("Setting up advertiser")).await;
 
     let mut campaign = Box::pin(advertiser.start_and_pay_campaign(
-                "https://x.com/somebody/status/1716421161867710954",
-                u("100000"),
-                300,
-                &[]
-            ))
-            .await;
+        "https://x.com/somebody/status/1716421161867710954",
+        u("100000"),
+        300,
+        &[],
+    ))
+    .await;
 
     assert_eq!(Box::pin(a.contract_doc_balance()).await, u("100000"));
     assert_eq!(Box::pin(a.admin_doc_balance()).await, u("418000000"));
@@ -38,7 +38,14 @@ async fn distributes_fees_to_holders() {
 
     let bob = h.user().await;
     let bob_handle = bob.create_handle("bob_on_x", "123456", u("100")).await;
-    a.register_collab("first bob collab", &mut campaign, &bob_handle, u("1000"), "bob_collab_1").await;
+    a.register_collab(
+        "first bob collab",
+        &mut campaign,
+        &bob_handle,
+        u("1000"),
+        "bob_collab_1",
+    )
+    .await;
 
     // The total claimed tokens for the whole collaboration is less than what was issued.
     assert_eq!(
@@ -46,12 +53,14 @@ async fn distributes_fees_to_holders() {
         u("400000")
     );
 
-    a.send_tx("Admin claims pending balance", "151402", a.asami_contract().claim_balances()).await;
+    a.send_tx(
+        "Admin claims pending balance",
+        "151402",
+        a.asami_contract().claim_balances(),
+    )
+    .await;
 
-    assert_eq!(
-        a.asami_contract().total_supply().call().await.unwrap(),
-           u("160000")
-    );
+    assert_eq!(a.asami_contract().total_supply().call().await.unwrap(), u("160000"));
     assert_eq!(a.admin_asami_balance().await, u("160000"));
 
     assert_eq!(a.contract_doc_balance().await, u("100000"));
@@ -68,20 +77,21 @@ async fn distributes_fees_to_holders() {
 
     a.sync_events_until("we have 21 holders", || async {
         a.app.holder().select().count().await.unwrap() == 21
-    }).await;
+    })
+    .await;
 
     for h in &holders {
         assert_eq!(a.asami_balance_of(h).await, u("6000"));
         assert_eq!(a.doc_balance_of(h).await, wei("0"));
     }
-    
+
     // Second Cycle: The fee pool has leftover funds so it can pay. Otherwise it wouldn't.
     a.evm_forward_to_next_cycle().await;
-    assert_eq!(a.asami_contract().get_fee_pool_before_recent_changes().call().await.unwrap(), u("100"));
     assert_eq!(
-        a.asami_contract().total_supply().call().await.unwrap(),
-           u("160000")
+        a.asami_contract().get_fee_pool_before_recent_changes().call().await.unwrap(),
+        u("100")
     );
+    assert_eq!(a.asami_contract().total_supply().call().await.unwrap(), u("160000"));
     a.wait_for_job("Nobody gets paid yet, but tokens vested", ClaimFeePoolShare, Settled).await;
     for h in &holders {
         assert_eq!(a.asami_balance_of(h).await, u("6000"));
@@ -89,19 +99,30 @@ async fn distributes_fees_to_holders() {
     }
 
     // New campaign and collaborations will populate the fee pool
-    campaign = advertiser.start_and_pay_campaign(
-                "https://x.com/somebody/status/1716421161867711111",
-                u("100000"),
-                300,
-                &[]
-            )
-            .await;
+    campaign = advertiser
+        .start_and_pay_campaign(
+            "https://x.com/somebody/status/1716421161867711111",
+            u("100000"),
+            300,
+            &[],
+        )
+        .await;
 
-    a.register_collab("second bob collab", &mut campaign, &bob_handle, u("1000"), "bob_collab_2").await;
+    a.register_collab(
+        "second bob collab",
+        &mut campaign,
+        &bob_handle,
+        u("1000"),
+        "bob_collab_2",
+    )
+    .await;
 
     // Third Cycle
     a.evm_forward_to_next_cycle().await;
-    assert_eq!(a.asami_contract().get_fee_pool_before_recent_changes().call().await.unwrap(), u("100"));
+    assert_eq!(
+        a.asami_contract().get_fee_pool_before_recent_changes().call().await.unwrap(),
+        u("100")
+    );
     a.wait_for_job("All holders get paid now", ClaimFeePoolShare, Settled).await;
 
     assert_eq!(a.app.estimated_fee_pool_claim().select().count().await.unwrap(), 42);
@@ -117,4 +138,3 @@ async fn distributes_fees_to_holders() {
     assert_eq!(a.admin_asami_balance().await, u("40000"));
     assert_eq!(a.admin_doc_balance().await, u("418000050"));
 }
-

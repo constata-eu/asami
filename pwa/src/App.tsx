@@ -5,7 +5,6 @@ import {
   CustomRoutes,
   useStore,
   Authenticated,
-  I18nContext,
 } from "react-admin";
 import { ContractsProvider } from "./components/contracts_context";
 import { Settings } from "./settings";
@@ -20,7 +19,7 @@ import asamiTheme from "./components/theme";
 import { BareLayout } from "./views/layout";
 import AdvertiserDashboard from "./views/advertiser/dashboard";
 import MemberDashboard from "./views/member/dashboard";
-import { Box, Container, Skeleton } from "@mui/material";
+import { Container, Skeleton } from "@mui/material";
 import {
   XLogin,
   XGrantAccess,
@@ -29,7 +28,7 @@ import {
 } from "./views/oauth_redirect";
 import polyglotI18nProvider from "ra-i18n-polyglot";
 import { messages, browserLocale } from "./i18n";
-import { HandleList } from "./views/explorer/handles";
+import { HandleEdit, HandleList } from "./views/explorer/handles";
 import { CampaignList, CampaignShow } from "./views/explorer/campaigns";
 import { AccountList, AccountShow } from "./views/explorer/accounts";
 import { CollabList } from "./views/explorer/collabs";
@@ -38,8 +37,8 @@ import Whitepaper from "./views/whitepaper";
 
 const Dashboard = () => {
   const [searchParams] = useSearchParams();
-  const storedRole = localStorage.getItem("asami_user_role") || "advertiser";
-  const role = searchParams.get("role") || storedRole;
+  const storedRole = localStorage.getItem("asami_user_role");
+  const role = searchParams.get("role") || storedRole || "member";
   return (
     <Authenticated>
       {role == "advertiser" ? <AdvertiserDashboard /> : <MemberDashboard />}
@@ -87,6 +86,7 @@ export const App = () => {
           <Resource
             name="Handle"
             list={HandleList}
+            edit={HandleEdit}
             recordRepresentation={(record) => record.username}
           />
 

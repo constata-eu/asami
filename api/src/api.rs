@@ -403,6 +403,14 @@ impl Mutation {
             .await?;
         Ok(Handle::db_to_graphql(context, handle).await?)
     }
+
+    pub async fn update_handle(context: &Context, id: i32, data: AdminEditHandleInput) -> FieldResult<Handle> {
+        if !context.current_session()?.0.admin() {
+            return Err(Error::service("authentication", "asami_authentication_needed").into());
+        }
+
+        data.process(context, id).await
+    }
 }
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]

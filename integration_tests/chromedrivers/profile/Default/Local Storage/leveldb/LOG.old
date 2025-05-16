@@ -1,3 +1,2 @@
-2025/04/12-13:49:51.201 20197c Reusing MANIFEST /tmp/asami-browser-datadir/Default/Local Storage/leveldb/MANIFEST-000001
-2025/04/12-13:49:51.205 20197c Recovering log #3
-2025/04/12-13:49:51.206 20197c Reusing old log /tmp/asami-browser-datadir/Default/Local Storage/leveldb/000003.log 
+2025/05/16-17:25:55.232 31182d Creating DB /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Local Storage/leveldb__tmp_for_rebuild since it was missing.
+2025/05/16-17:25:55.282 31182d Reusing MANIFEST /home/nubis/asami/integration_tests/chromedrivers/profile/Default/Local Storage/leveldb__tmp_for_rebuild/MANIFEST-000001

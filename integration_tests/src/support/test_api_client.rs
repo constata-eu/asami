@@ -512,5 +512,6 @@ pub mod gql {
         AllCollabs,
         AllCollabsMeta,
         CreateXRefreshToken,
+        UpdateHandle,
     ];
 }

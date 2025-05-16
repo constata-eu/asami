@@ -165,6 +165,20 @@ export const authProvider: AuthProvider = {
     });
   },
   getPermissions: () => Promise.resolve(),
+  canAccess: ({ action, resource }) => {
+    const storedSession = localStorage.getItem("session");
+    const session = storedSession ? JSON.parse(storedSession) : null;
+
+    if (action == "delete") {
+      return false;
+    }
+
+    if (resource == "Handle" && action == "edit") {
+      return session?.admin;
+    } else {
+      return true;
+    }
+  },
 };
 
 export default authProvider;

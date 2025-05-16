@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM users WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR created_at = $4::timestamptz) AND (NOT $5::boolean OR updated_at = $6::timestamptz) AND (NOT $7::boolean OR admin = $8::boolean)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "4771e72088630335ee9575f095c8847f243e53279e4410efe5716e0140a6eb87"
+}

@@ -170,6 +170,7 @@ impl CurrentSession {
                     auth_method_id: auth_method.attrs.id,
                     pubkey,
                     nonce,
+                    admin: user.attrs.admin,
                 })
                 .save()
                 .await,

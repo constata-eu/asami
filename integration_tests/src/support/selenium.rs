@@ -228,7 +228,7 @@ impl Selenium {
     pub async fn login(&self) {
         let token = format!("web-login-{}", Utc::now().timestamp());
 
-        let one_time_token = self
+        self
             .api
             .test_app
             .app
@@ -251,7 +251,7 @@ impl Selenium {
             .insert(models::InsertAuthMethod {
                 user_id: self.api.user().await.attrs.id,
                 kind: models::AuthMethodKind::OneTimeToken,
-                lookup_key: format!("one_time_token:{}", one_time_token.attrs.id),
+                lookup_key: token.clone()
             })
             .save()
             .await

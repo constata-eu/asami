@@ -9,7 +9,7 @@ use super::*;
 async fn shows_member_profile_page() {
     let h = TestHelper::for_web().await;
     let w = h.web();
-    let mut api = h.make_api_client().await;
+    let mut api = h.user().await;
 
     let handle = stub_scored_handle(&h).await;
     let mut campaign = api.quick_campaign(u("100"), 30, &[]).await;
@@ -27,8 +27,18 @@ async fn shows_member_profile_page() {
         1
     );
 
-    w.goto(&format!("http://127.0.0.1:5173/#/Account/{}/show", handle.account_id())).await;
-    wait_for_enter("Check the member show page").await;
+    w.api.user().await.update().admin(true).save().await.unwrap();
+    w.login().await;
+    w.goto("http://127.0.0.1:5173/#/Handle/1").await;
+    w.wait_for_text(".MuiChip-label", "English speaking").await;
+    w.wait_for("input[name='offlineEngagementDescription']").await;
+    w.fill_in("input[name='offlineEngagementDescription']", " en argentina").await;
+    w.click("button[type='submit']").await;
+    w.wait_for_text(".MuiSnackbarContent-message", "Element updated").await;
+
+    let reloaded = handle.reloaded().await.unwrap();
+    assert!(reloaded.last_scoring().is_none());
+    assert_eq!(reloaded.attrs.offline_engagement_description.unwrap(), "Founder de un proyecto WEB3 en argentina");
 }
 
 async fn stub_scored_handle(h: &TestHelper) -> Handle {
@@ -70,8 +80,12 @@ async fn stub_scored_handle(h: &TestHelper) -> Handle {
         .await
         .unwrap();
 
+    handle.add_topic(&h.app.app.topic().find(1).await.unwrap()).await.unwrap();
+
     handle
         .update()
+        .offline_engagement_score(EngagementScore::High)
+        .offline_engagement_description(Some("Founder de un proyecto WEB3".to_string()))
         .current_scoring_id(Some(*scoring.id()))
         .last_scoring(Some(*scoring.created_at()))
         .score(Some(weihex("553")))

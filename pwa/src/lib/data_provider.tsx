@@ -162,6 +162,59 @@ export const defaultDataProvider = async () => {
           }
         `,
       };
+    } else if (resource === "Handle" && fetchType == "UPDATE") {
+      const parser = function (data) {
+        return buildQuery(introspection)(
+          "GET_ONE",
+          "Handle",
+          params,
+        ).parseResponse(data);
+      };
+
+      const keys = [
+        "topicIds",
+        "onlineEngagementOverride",
+        "onlineEngagementOverrideReason",
+        "offlineEngagementScore",
+        "offlineEngagementDescription",
+        "pollOverride",
+        "pollOverrideReason",
+        "operationalStatusOverride",
+        "operationalStatusOverrideReason",
+        "referrerScoreOverride",
+        "referrerScoreOverrideReason",
+        "holderScoreOverride",
+        "holderScoreOverrideReason",
+        "audienceSizeOverride",
+        "audienceSizeOverrideReason",
+      ];
+
+      let data = {};
+
+      for (let k of keys) {
+        data[k] = params.data[k];
+      }
+
+      return {
+        parseResponse: parser,
+        variables: { id: params.data.id, data },
+        query: gql`
+          mutation ($id: Int!, $data: AdminEditHandleInput!) {
+            data: updateHandle(id: $id, data: $data) {
+              id
+              accountId
+              username
+              userId
+              needsRefreshToken
+              score
+              topicIds
+              status
+              totalCollabs
+              totalCollabRewards
+            }
+          }
+        `,
+      };
     } else {
       return buildQuery(introspection)(fetchType, resource, params);
     }
