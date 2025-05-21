@@ -47,6 +47,8 @@ pub mod one_time_token;
 pub use one_time_token::*;
 pub mod handle_scoring;
 pub use handle_scoring::*;
+pub mod community_member;
+pub use community_member::*;
 
 #[macro_export]
 macro_rules! make_sql_enum {

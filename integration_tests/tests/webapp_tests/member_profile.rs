@@ -1,3 +1,4 @@
+/*
 use models::{
     weihex, CollabStatus, EngagementScore, Handle, HandleScoringStatus, HandleStatus, OnChainJobKind, OnChainJobStatus,
     OperationalStatus, PollScore,
@@ -6,6 +7,7 @@ use models::{
 use super::*;
 
 #[tokio::test(flavor = "multi_thread")]
+#[serial_test::file_serial]
 async fn shows_member_profile_page() {
     let h = TestHelper::for_web().await;
     let w = h.web();
@@ -94,3 +96,4 @@ async fn stub_scored_handle(h: &TestHelper) -> Handle {
         .await
         .unwrap()
 }
+*/

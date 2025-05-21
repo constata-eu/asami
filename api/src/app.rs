@@ -15,7 +15,7 @@ use twitter_v2::authorization::Oauth2Client;
 
 use super::{models::*, on_chain::OnChain, *};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct App {
     pub settings: Box<AppConfig>,
     pub db: Db,

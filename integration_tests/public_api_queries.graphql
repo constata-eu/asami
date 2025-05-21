@@ -164,6 +164,19 @@ mutation UpdateHandle($id: Int!, $data: AdminEditHandleInput!) {
     __typename
   }
 }
+mutation UpdateCommunityMember($id: Int!, $data: EditCommunityMemberInput!) {
+  updateCommunityMember(id: $id, data: $data) {
+    id
+    accountId
+    memberId
+    rating
+    collabs
+    rewards
+    firstCollabDate
+    lastCollabDate
+    __typename
+  }
+}
 query Account($id: String!) {
   Account(id: $id) {
     id
@@ -552,6 +565,38 @@ query AllAuditLogEntries($page: Int, $perPage: Int, $sortField: String, $sortOrd
 }
 query AllAuditLogEntriesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: AuditLogEntryFilter) {
   _allAuditLogEntriesMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query CommunityMember($id: Int!) {
+  CommunityMember(id: $id) {
+    id
+    accountId
+    memberId
+    rating
+    collabs
+    rewards
+    firstCollabDate
+    lastCollabDate
+    __typename
+  }
+}
+query AllCommunityMembers($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CommunityMemberFilter) {
+  allCommunityMembers(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    accountId
+    memberId
+    rating
+    collabs
+    rewards
+    firstCollabDate
+    lastCollabDate
+    __typename
+  }
+}
+query AllCommunityMembersMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CommunityMemberFilter) {
+  _allCommunityMembersMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
     count
     __typename
   }

@@ -1,8 +1,11 @@
+/*
 use api::models::*;
 use integration_tests::support::*;
+*/
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+/*
     let h = TestHelper::for_web().await;
 
     let mut advertiser = h.user().await;
@@ -15,7 +18,9 @@ async fn main() -> anyhow::Result<()> {
     let d = h.web();
     d.goto("http://127.0.0.1:5173").await;
 
-    d.login().await;
+    let alice = h.user().await;
+
+    d.login(&alice).await;
     d.click("#button-post-to-earn").await;
 
     d.wait_for("#member-dashboard").await;
@@ -25,9 +30,8 @@ async fn main() -> anyhow::Result<()> {
     d.wait_for(".MuiSnackbarContent-message").await;
     d.wait_until_gone(".MuiSnackbarContent-message").await;
 
-    for h in d.app().handle().select().all().await?.into_iter() {
-        d.test_app()
-            .app
+    for h in h.app().handle().select().all().await?.into_iter() {
+        h.app()
             .handle_topic()
             .insert(InsertHandleTopic {
                 handle_id: h.attrs.id,
@@ -46,14 +50,13 @@ async fn main() -> anyhow::Result<()> {
 
     d.wait_for("#existing-x-handle-stats").await;
 
-    for h in d.app().handle().select().all().await? {
+    for h in h.app().handle().select().all().await? {
         x_campaign.make_collab(&h, u("2"), &h.attrs.username).await?;
     }
 
     d.wait_for_text("td.column-status", "Registered").await;
 
-    d.test_app()
-        .wait_for_job(
+    h.app.wait_for_job(
             "Subaccount collabs",
             OnChainJobKind::MakeSubAccountCollabs,
             OnChainJobStatus::Settled,
@@ -69,7 +72,7 @@ async fn main() -> anyhow::Result<()> {
     d.wait_until_gone(".MuiSnackbarContent-message").await;
     d.wait_for("#account-summary-claim-pending").await;
 
-    d.test_app()
+    h.app
         .wait_for_job(
             "Claim Accounts",
             OnChainJobKind::PromoteSubAccounts,
@@ -81,7 +84,7 @@ async fn main() -> anyhow::Result<()> {
     d.click("#gasless-claim-button").await;
     d.wait_until_gone(".MuiSnackbarContent-message").await;
 
-    d.test_app()
+    h.app
         .wait_for_job(
             "Gasless Claim",
             OnChainJobKind::GaslessClaimBalances,
@@ -119,5 +122,6 @@ async fn main() -> anyhow::Result<()> {
     h.app.stop_mining().await;
     h.stop().await;
 
+*/
     Ok(())
 }

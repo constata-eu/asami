@@ -1,6 +1,5 @@
-use super::*;
-
 /*
+use super::*;
 TODO: Test all login methods here. You have X. You can mimic email.
 TODO: Can you add something for wallets other than metamask?
 api_test! { api_creates_and_sends_email_login (mut c)

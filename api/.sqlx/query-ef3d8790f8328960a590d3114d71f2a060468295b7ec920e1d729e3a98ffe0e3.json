@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM community_members WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR member_id = $8::varchar) AND (NOT $9::boolean OR rating = $10::community_member_rating) AND (NOT $11::boolean OR collabs = $12::int4) AND (NOT $13::boolean OR rewards = $14::varchar) AND (NOT $15::boolean OR first_collab_date = $16::timestamptz) AND (NOT $17::boolean OR last_collab_date = $18::timestamptz) AND (NOT $19::boolean OR force_hydrate = $20::boolean)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "community_member_rating",
+            "kind": {
+              "Enum": [
+                "good",
+                "normal",
+                "bad"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "ef3d8790f8328960a590d3114d71f2a060468295b7ec920e1d729e3a98ffe0e3"
+}

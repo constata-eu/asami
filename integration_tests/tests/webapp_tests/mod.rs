@@ -1,9 +1,6 @@
-pub use integration_tests::{
-    api_test, app_test, browser_test,
-    support::{self, *},
-    test,
-};
+pub use integration_tests::support::{self, *};
 pub mod adds_tokens_to_wallet;
+pub mod advertiser_community;
 pub mod full_flow_to_reward;
 pub mod grant_x_access;
 pub mod landing;

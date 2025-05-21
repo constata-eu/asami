@@ -1,18 +1,27 @@
 use std::{
     path::Path,
-    process::{Child, Command},
+    process::{Child, Command}
 };
 
-use api::{lang, models};
+use api::{lang, models, App};
 use chrono::Utc;
 use thirtyfour::prelude::*;
 
-use super::ApiClient;
+use crate::TestUser;
 
 pub struct Selenium {
     pub driver: WebDriver,
-    pub api: ApiClient,
+    app: App,
     child: Child,
+}
+
+impl std::fmt::Debug for Selenium {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Selenium")
+            .field("app", &self.app)
+            .field("child", &self.child)
+            .finish()
+    }
 }
 
 pub const DOWNLOADS: &str = "/tmp/asami-tests-downloads";
@@ -24,7 +33,7 @@ pub const EXTENSION_ID: &str = "nkbihfbeogaeaoehlefnkodbefgpgknn";
 //pub const MEMBER_ADDR: "0xbe992ec27E90c07caDE70c6C3CD26eECC8CadCfE"
 
 impl Selenium {
-    pub async fn start(api: ApiClient) -> Selenium {
+    pub async fn start(app: App) -> Selenium {
         let dir = std::fs::canonicalize(format!(
             "{}/../integration_tests/chromedrivers",
             env!("CARGO_MANIFEST_DIR")
@@ -98,20 +107,12 @@ impl Selenium {
 
         let driver = WebDriver::new("http://localhost:4444", caps).await.expect("Webdriver init");
         driver.maximize_window().await.expect("to maximize window");
-        let selenium = Selenium { child, driver, api };
+        let selenium = Selenium { child, driver, app };
 
         selenium.go_to_extension_window("home.html").await;
         selenium.driver.close_window().await.unwrap();
         selenium.go_to_window("chrome://new-tab-page").await;
         selenium
-    }
-
-    pub fn app(&self) -> api::App {
-        self.api.app()
-    }
-
-    pub fn test_app(&self) -> &super::TestApp {
-        self.api.test_app.as_ref()
     }
 
     pub async fn wait_for(&self, selector: &str) -> WebElement {
@@ -206,8 +207,7 @@ impl Selenium {
     }
 
     pub async fn signup_with_one_time_token(&self) {
-        self.api
-            .test_app
+        self
             .app
             .one_time_token()
             .insert(models::InsertOneTimeToken {
@@ -225,12 +225,10 @@ impl Selenium {
         self.wait_for("#member-dashboard").await;
     }
 
-    pub async fn login(&self) {
+    pub async fn login(&self, test_user: &TestUser) {
         let token = format!("web-login-{}", Utc::now().timestamp());
 
         self
-            .api
-            .test_app
             .app
             .one_time_token()
             .insert(models::InsertOneTimeToken {
@@ -244,12 +242,10 @@ impl Selenium {
             .await
             .unwrap();
 
-        self.api
-            .test_app
-            .app
+        self.app
             .auth_method()
             .insert(models::InsertAuthMethod {
-                user_id: self.api.user().await.attrs.id,
+                user_id: test_user.user_id(),
                 kind: models::AuthMethodKind::OneTimeToken,
                 lookup_key: token.clone()
             })

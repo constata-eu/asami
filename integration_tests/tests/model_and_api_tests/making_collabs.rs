@@ -147,3 +147,6 @@ app_test! { handle_has_a_max_reward_for_campaign(a)
     assert_eq!(small.reward_for(&campaign).unwrap(), u("5"));
     assert_eq!(big.reward_for(&campaign).unwrap(), milli("9999"));
 }
+
+// TODO: Do not make collabs or show campaigns for user that was downvoted.
+// TODO: Do not make collabs if campaign is for thumbs_up_only and user is not thumbs up.

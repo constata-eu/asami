@@ -1,8 +1,11 @@
+// The TestApp can set up and run the full environment and all test services.
+
 use api::{
-    models::{self, on_chain_job::AsamiFunctionCall, InsertAccount, InsertAccountUser, InsertHandle, InsertUser, U256},
+    models::{self, on_chain_job::AsamiFunctionCall, U256},
     on_chain, App, AppConfig,
 };
 use ethers::core::rand::thread_rng;
+pub use selenium::Selenium;
 pub use ethers::{
     abi::{AbiEncode, Address, Detokenize},
     middleware::{contract::FunctionCall, Middleware},
@@ -10,17 +13,20 @@ pub use ethers::{
     signers::{LocalWallet, Signer},
     types::{transaction::eip2718::TypedTransaction, TransactionReceipt, TransactionRequest, H256, U64},
 };
-use jwt_simple::algorithms::*;
 use rocket::{config::LogLevel, local::asynchronous::Client as RocketClient, Config};
 
 use super::*;
-use crate::support::{ApiClient, Truffle};
+use crate::support::Truffle;
 
+#[derive(Debug)]
 pub struct TestApp {
     pub app: App,
     pub truffle: Truffle,
     pub provider: Provider<Http>,
     pub rocket_client: RocketClient,
+    pub api_server: Option<JoinHandle<()>>,
+    pub vite_preview: Option<VitePreview>,
+    pub web: Option<Selenium>,
 }
 use clap_builder::Parser;
 use sqlx_cli::*;
@@ -62,7 +68,34 @@ impl TestApp {
             provider,
             truffle,
             app,
+            api_server: None,
+            vite_preview: None,
+            web: None,
         }
+    }
+
+    pub async fn with_web(mut self) -> Self {
+        self.api_server = Some(TestApiServer::start(self.app.clone()).await);
+        self.vite_preview = Some(VitePreview::start());
+        self.web = Some(Selenium::start(self.app.clone()).await);
+        self
+    }
+
+    pub async fn stop(self) {
+        if let Some(mut x) = self.vite_preview {
+            x.stop();
+        }
+        if let Some(x) = self.web {
+            x.stop().await;
+        }
+        if let Some(x) = self.api_server {
+            x.abort();
+            assert!(x.await.unwrap_err().is_cancelled());
+        }
+    }
+
+    pub fn web(&self) -> &Selenium {
+        self.web.as_ref().unwrap()
     }
 
     pub async fn evm_increase_time(&self, seconds: U256) -> u64 {
@@ -96,62 +129,6 @@ impl TestApp {
 
     pub async fn admin_nonce(&self) -> U256 {
         self.provider.get_transaction_count(self.client_admin_address(), None).await.unwrap()
-    }
-
-    pub async fn create_account(&self) -> models::Account {
-        let account = self
-            .app
-            .account()
-            .insert(InsertAccount {
-                name: Some("account".to_string()),
-                addr: None,
-            })
-            .save()
-            .await
-            .unwrap();
-        let user = self
-            .app
-            .user()
-            .insert(InsertUser {
-                name: "user".to_string(),
-            })
-            .save()
-            .await
-            .unwrap();
-
-        self.app
-            .account_user()
-            .insert(InsertAccountUser {
-                account_id: account.attrs.id.clone(),
-                user_id: user.attrs.id,
-            })
-            .save()
-            .await
-            .unwrap();
-
-        account
-    }
-
-    pub async fn create_handle(&self, account_id: &str, username: &str, user_id: &str, score: U256) -> models::Handle {
-        self.app
-            .handle()
-            .insert(InsertHandle {
-                account_id: account_id.to_string(),
-                username: username.to_string(),
-                user_id: user_id.to_string(),
-                x_refresh_token: Some("invalid_refresh_token".to_string()),
-            })
-            .save()
-            .await
-            .expect("could not save handle")
-            .verify("poll_id_test".to_string())
-            .await
-            .expect("could not verify handle")
-            .update()
-            .score(Some(score.encode_hex()))
-            .save()
-            .await
-            .expect("could not score handle")
     }
 
     pub fn make_random_local_wallet(&self) -> LocalWallet {
@@ -415,9 +392,9 @@ impl TestApp {
         &self,
         reference: &str,
         max_gas: &str,
-        advertiser: &ApiClient,
+        advertiser: &TestUser,
         briefing_hash: U256,
-        member: &ApiClient,
+        member: &TestUser,
         doc_reward: U256,
     ) {
         self.send_tx(
@@ -439,9 +416,9 @@ impl TestApp {
         &self,
         reference: &str,
         max_gas: &str,
-        advertiser: &ApiClient,
+        advertiser: &TestUser,
         briefing_hash: U256,
-        member: &ApiClient,
+        member: &TestUser,
         doc_reward: U256,
     ) {
         self.send_tx(
@@ -459,6 +436,73 @@ impl TestApp {
         .await;
     }
 
+
+    pub async fn batch_collabs(&self, mut campaign: models::Campaign, test_users: &[&TestUser]) {
+        use api::models::{OnChainJobKind, OnChainJobStatus};
+
+        let mut claimed_ids = vec![];
+        let mut managed_ids = vec![];
+
+        for u in test_users {
+            if u.account().await.addr().is_some() {
+                claimed_ids.push(u.x_user_id());
+            } else {
+                managed_ids.push(u.x_user_id());
+            }
+        }
+
+        let groups = [
+            (OnChainJobKind::MakeCollabs, claimed_ids),
+            (OnChainJobKind::MakeSubAccountCollabs, managed_ids)
+        ];
+
+        for (job_kind, group) in groups {
+            if group.is_empty() {
+                continue;
+            }
+
+            let mut collabs = vec![];
+            self.wait_for_job(
+                "Waiting a job for making collabs to be skipped",
+                job_kind,
+                OnChainJobStatus::Skipped,
+            )
+            .await;
+
+            for id in group {
+                collabs.push(
+                    campaign.make_x_collab_with_user_id(id).await
+                        .expect("collab to execute correctly")
+                        .expect("collab creation to succeed")
+                );
+            }
+            
+            let job = self
+                .wait_for_job(
+                    "Scheduling the collab-making job",
+                    job_kind,
+                    OnChainJobStatus::Scheduled,
+                )
+                .await;
+
+            self.wait_for_job_status(
+                "Waiting for job to settle",
+                &job,
+                OnChainJobStatus::Settled,
+            )
+            .await;
+
+            for collab in collabs {
+                let cleared = collab.reloaded().await.unwrap();
+                assert_eq!(
+                    *cleared.status(),
+                    models::CollabStatus::Cleared,
+                    "Collab did not clear"
+                );
+            }
+        }
+    }
+    
     pub async fn register_collab(
         &self,
         context: &str,
@@ -516,7 +560,7 @@ impl TestApp {
         kind: models::OnChainJobKind,
         status: models::OnChainJobStatus,
     ) -> models::OnChainJob {
-        let found = wait_for(150, 50, || async {
+        let found = Self::wait_for(150, 50, || async {
             self.evm_mine().await;
             let new_jobs = self.app.on_chain_job().run_scheduler().await.unwrap();
             new_jobs.into_iter().any(|job| job.attrs.status == status && job.attrs.kind == kind)
@@ -542,7 +586,7 @@ impl TestApp {
         job: &models::OnChainJob,
         status: models::OnChainJobStatus,
     ) -> models::OnChainJob {
-        let success = wait_for(100, 10, || async {
+        let success = Self::wait_for(100, 10, || async {
             self.evm_mine().await;
             self.app.on_chain_job().run_scheduler().await.unwrap();
             let reloaded = job.reloaded().await.unwrap();
@@ -554,14 +598,6 @@ impl TestApp {
             panic!("Job never got to status {status:?} in '{context}', job was: {reloaded:?}");
         }
         reloaded
-    }
-
-    pub fn private_key(&self) -> ES256KeyPair {
-        let key = ES256KeyPair::from_pem(
-      "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg626FUHw6lA0eAlYl\nqT0TI8m/JAWj+H497JAKfoTUrkmhRANCAARJPbG33RdPLOxXXbc390w00YaFAbh8\n0Hv44ScjS0UMB6/ZjjkIs5fV1gRK1IBF1JMnxM6qWjWUBlu/z9ZjvA0b\n-----END PRIVATE KEY-----\n"
-    ).unwrap();
-        let id = api::models::hasher::hexdigest(key.public_key().to_pem().unwrap().as_bytes());
-        key.with_key_id(&id)
     }
 
     pub async fn get_campaign(
@@ -673,7 +709,7 @@ impl TestApp {
 
     pub async fn wait_tx_failure(&self, reference: &str, tx_hash: &H256, expected_message: &str) {
         let client = self.asami_contract().client();
-        try_until(100, 10, &format!("Transaction '{reference}' was not found"), || async {
+        Self::try_until(100, 10, &format!("Transaction '{reference}' was not found"), || async {
             self.evm_mine().await;
             client.get_transaction_receipt(*tx_hash).await.unwrap().is_some()
         })
@@ -707,7 +743,7 @@ impl TestApp {
 
     pub async fn wait_tx_success(&self, reference: &str, tx_hash: &H256, max_gas: &str) -> TransactionReceipt {
         let client = self.asami_contract().client();
-        try_until(
+        Self::try_until(
             100,
             10,
             &format!("Transaction '{reference}' never had a receipt"),
@@ -749,7 +785,7 @@ impl TestApp {
     }
 
     pub async fn sync_events_until<T: std::future::Future<Output = bool>>(&self, context: &str, call: impl Fn() -> T) {
-        try_until(
+        Self::try_until(
             100,
             20,
             &format!("Syncing events did not have the expected effect for '{context}'"),
@@ -776,5 +812,42 @@ impl TestApp {
 
     pub fn future_date(&self, days: i64) -> U256 {
         models::utc_to_i(Utc::now() + chrono::Duration::days(days))
+    }
+
+    #[allow(dead_code)]
+    pub async fn wait_for_enter(msg: &'static str) {
+        task::spawn_blocking(move || {
+            if !isatty(io::stdin().as_raw_fd()).unwrap_or(false) {
+                println!("[Skipping pause — not a TTY]");
+                return;
+            }
+
+            let stdin = io::stdin();
+            let mut stdout = io::stdout();
+            let mut handle = stdin.lock();
+            let mut buf = String::new();
+
+            write!(stdout, "[{msg}] Press Enter to continue...").unwrap();
+            stdout.flush().unwrap();
+            handle.read_line(&mut buf).unwrap();
+        })
+        .await
+        .unwrap();
+    }
+
+    pub async fn try_until<T: std::future::Future<Output = bool>>(times: i32, sleep: u64, err: &str, call: impl Fn() -> T) {
+        assert!(Self::wait_for(times, sleep, call).await, "{err}");
+    }
+
+    pub async fn wait_for<T: std::future::Future<Output = bool>>(times: i32, sleep: u64, call: impl Fn() -> T) -> bool {
+        use std::{thread, time};
+        let millis = time::Duration::from_millis(sleep);
+        for _i in 0..times {
+            if call().await {
+                return true;
+            }
+            thread::sleep(millis);
+        }
+        false
     }
 }

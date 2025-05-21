@@ -1,8 +1,7 @@
+/*
 use models::CampaignStatus;
 
 use super::*;
-
-/*
 browser_test! { makes_campaign (mut d)
     d.test_app().start_mining().await;
 

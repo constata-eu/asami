@@ -45,4 +45,25 @@ Maybe "quick collab" ?
 
 
 
+
+Test helper:
+* Is the global test helper, main entry point. We always make one of this.
+* Has a single API server running.
+* Has a single selenium session. Can login any "TestUser" to the web.
+* Has an internal connection to the APP.
+* Does not have a default 'User'. This is all admin side.
+    * It does not know about creating handles or any of that. That's the user's responsibility.
+* Has methods to create TestUsers as needed.
+* It can create the selenium instance on demand. Some tests may not need it.
+* If no users are needed, then no api server is needed either.
+* Users can be created without being logged in to the api. In that case they just have a wallet.
+
+
+TestUser:
+* Has keys to interact with the contracts.
+* Has a an Arc linking back to the app in case something from it is needed internally.
+    Internal access to the APP model to bypass calling methods in the API and to wait for it's own side effects.
+* Does not know about selenium. It can share its access credentials with the selenium runner though.
+
+
 */

@@ -1,5 +1,6 @@
 use std::process::{Child, Command, Stdio};
 
+#[derive(Debug)]
 pub struct VitePreview(Child);
 
 impl VitePreview {

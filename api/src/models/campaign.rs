@@ -364,6 +364,8 @@ impl Campaign {
             .save()
             .await?;
 
+        self.state.community_member().create_or_update_from_collab(&collab).await?;
+
         self.reload().await?;
 
         Ok(collab)

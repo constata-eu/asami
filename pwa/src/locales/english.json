@@ -131,8 +131,12 @@
     "error": "Oops, we could not receive your request. Please try again or contact the admin on X."
   },
   "advertiser_help": {
-    "title": "Pay & Boost",
+    "title": "Pay & Boost.",
     "text": "Get more impressions on your posts by launching a campaign. You’ll choose a post, set a budget, and reach real people through authentic reposts. Eligible collaborators are paid based on their genuine influence and audience size, helping you achieve meaningful reach."
+  },
+  "community": {
+    "title": "Your Community.",
+    "description": "These members have participated in your campaigns. You can select your favourites, and make campaigns exclusive for them. Or you can flag the ones you don't like, so they will be excluded from future campaigns."
   },
   "collab_list": {
     "title": "Your collaboration history",

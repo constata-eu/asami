@@ -99,6 +99,7 @@ export const App = () => {
           <Resource name="Stats" show={StatsShow} />
 
           <Resource name="Topic" />
+          <Resource name="CommunityMember" />
 
           <CustomRoutes>
             <Route path="/" element={<Landing />} />

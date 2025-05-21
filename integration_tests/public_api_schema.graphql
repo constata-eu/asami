@@ -30,6 +30,12 @@ enum CollabStatus {
   FAILED
 }
 
+enum CommunityMemberRating {
+  GOOD
+  NORMAL
+  BAD
+}
+
 enum EngagementScore {
   NONE
   AVERAGE
@@ -152,6 +158,13 @@ input CollabFilter {
   statusNe: CollabStatus
 }
 
+input CommunityMemberFilter {
+  ids: [Int!]
+  idEq: Int
+  accountIdEq: Int
+  ratingEq: CommunityMemberRating
+}
+
 "The input for creating a new CampaignRequest."
 input CreateCampaignFromLinkInput {
   link: String!
@@ -171,6 +184,11 @@ input CreateCampaignPreferenceInput {
 "The input for creating a new ClaimAccountRequest."
 input CreateClaimAccountRequestInput {
   signature: String!
+}
+
+"The input for creating a new CampaignRequest."
+input EditCommunityMemberInput {
+  rating: CommunityMemberRating!
 }
 
 input HandleFilter {
@@ -344,6 +362,18 @@ type Collab {
 }
 
 "A request to verify a handle for an account."
+type CommunityMember {
+  id: Int!
+  accountId: Int!
+  memberId: Int!
+  rating: CommunityMemberRating!
+  collabs: Int!
+  rewards: String!
+  firstCollabDate: DateTime!
+  lastCollabDate: DateTime!
+}
+
+"A request to verify a handle for an account."
 type EmailLoginLink {
   "Unique numeric identifier of this resource"
   id: Int!
@@ -445,6 +475,7 @@ type Mutation {
   createEmailLoginLink(email: String!): EmailLoginLink!
   createXRefreshToken(token: String!, verifier: String!): Handle!
   updateHandle(id: Int!, data: AdminEditHandleInput!): Handle!
+  updateCommunityMember(id: Int!, data: EditCommunityMemberInput!): CommunityMember!
 }
 
 "A contract call made by the campaign manager or oracle."
@@ -500,6 +531,9 @@ type Query {
   AuditLogEntry(id: Int!): AuditLogEntry!
   allAuditLogEntries(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: AuditLogEntryFilter): [AuditLogEntry!]!
   _allAuditLogEntriesMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: AuditLogEntryFilter): ListMetadata!
+  CommunityMember(id: Int!): CommunityMember!
+  allCommunityMembers(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CommunityMemberFilter): [CommunityMember!]!
+  _allCommunityMembersMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CommunityMemberFilter): ListMetadata!
   Stats(id: Int!): Stats!
 }
 

@@ -1,8 +1,8 @@
+/*
 use api::models::*;
 
 use super::*;
 
-/*
 browser_test! { full_flow_to_reward_for_web2 (mut d)
     let mut advertiser = d.test_app().client().await;
     advertiser.setup_as_advertiser("test main advertiser").await;

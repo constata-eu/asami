@@ -134,6 +134,10 @@
     "title": "Paga y Amplifica.",
     "text": "Consigue más vistas en tus publicaciones lanzando una campaña. Tú eliges una publicación, defines el presupuesto y llegas a personas reales con reposts auténticos. Los colaboradores que participan reciben un pago según su influencia real y el tamaño de su audiencia, ayudándote a lograr un alcance que realmente vale la pena."
   },
+  "community": {
+    "title": "Tu comunidad",
+    "description": "Estos miembros del club colaboraron en tus campañas. Puedes marcar a tus favoritos para hacer campañas exclusivas para ellos. Y también puedes indicar si alguno no te gusta para excluirlo de participar en todas tus campañas futuras."
+  },
   "collab_list": {
     "title": "Tu histórico de colaboraciones",
     "text": "Estas son tus colaboraciones a la fecha",

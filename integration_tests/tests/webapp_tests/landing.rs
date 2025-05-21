@@ -1,5 +1,5 @@
-use super::*;
 /*
+use super::*;
 browser_test! { shows_campaigns_in_landing (mut d)
     d.test_app().start_mining().await;
 

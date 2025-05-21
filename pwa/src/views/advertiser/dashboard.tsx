@@ -1,5 +1,8 @@
 import { useEffect } from "react";
 import {
+  useUpdate,
+  useNotify,
+  useRefresh,
   useAuthenticated,
   useSafeSetState,
   useGetOne,
@@ -9,6 +12,8 @@ import {
   NumberField,
   ShowButton,
   ExportButton,
+  ReferenceField,
+  useRecordContext,
 } from "react-admin";
 import {
   Box,
@@ -83,6 +88,7 @@ const Dashboard = () => {
       </ColumnsContainer>
 
       <CampaignList listContext={listContext} />
+      <Community />
     </Box>
   );
 };
@@ -151,6 +157,96 @@ const CampaignList = ({ listContext }) => {
         </ListView>
       </ListBase>
     </Box>
+  );
+};
+
+const Community = () => {
+  const t = useTranslate();
+  const listContext = useListController({
+    resource: "CommunityMember",
+    filter: {
+      accountIdEq: getAuthKeys().session.accountId,
+    },
+    sort: { field: "id", order: "DESC" },
+    exporter: false,
+    perPage: 30,
+  });
+
+  if (listContext.isPending || listContext.total == 0) {
+    return <></>;
+  }
+
+  const toggleRating = (newRating) => {};
+
+  return (
+    <Box my="0.5em">
+      <ListBase disableAuthentication disableSyncWithLocation {...listContext}>
+        <Stack gap="1em" mb="1em" alignItems="baseline" direction="row">
+          <Head2>{t("community.title")}</Head2>
+          <ExportButton
+            disabled={listContext.total === 0}
+            resource="CommunityMember"
+          />
+        </Stack>
+        <Typography my="1em">{t("community.description")}</Typography>
+
+        <ListView filters={false} actions={false}>
+          <Datagrid bulkActionButtons={false}>
+            <ReferenceField
+              source="memberId"
+              reference="Account"
+              sortable={false}
+            >
+              <FunctionField
+                render={(record) => (
+                  <Link to={`/Account/${record.accountId}/show`}>
+                    <TextField source="id" />
+                  </Link>
+                )}
+              />
+            </ReferenceField>
+            <AmountField currency="" textAlign="right" source="rewards" />
+            <NumberField textAlign="right" source="collabs" />
+            <TextField source="rating" />
+            <DateField source="firstCollabDate" />
+            <DateField source="lastCollabDate" />
+            <ToggleRatingButton value="GOOD" />
+            <ToggleRatingButton value="BAD" />
+          </Datagrid>
+        </ListView>
+      </ListBase>
+    </Box>
+  );
+};
+
+const ToggleRatingButton = ({ value }) => {
+  const record = useRecordContext();
+  const [update, { isLoading }] = useUpdate();
+  const notify = useNotify();
+  const refresh = useRefresh();
+
+  const handleClick = () => {
+    const rating = value == record?.rating ? "NORMAL" : value;
+
+    update(
+      "CommunityMember",
+      { id: record?.id, data: { rating }, previousData: record },
+      {
+        onSuccess: () => {
+          notify(`Rating set to ${notify}`, { type: "info" });
+          refresh(); // optionally reload the list
+        },
+        onError: (error) => {
+          notify(`Error: ${error.message}`, { type: "warning" });
+        },
+      },
+    );
+  };
+
+  return (
+    <Button onClick={handleClick} disabled={isLoading}>
+      {value}
+    </Button>
   );
 };
 

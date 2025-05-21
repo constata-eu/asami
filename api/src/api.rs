@@ -36,6 +36,8 @@ mod topic;
 use topic::*;
 mod handle_scoring;
 use handle_scoring::*;
+mod community_member;
+use community_member::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -319,6 +321,7 @@ make_graphql_query! {
     [OnChainJob, allOnChainJobs, allOnChainJobsMeta, "_allOnChainJobsMeta", OnChainJobFilter, i32],
     [Topic, allTopics, allTopicsMeta, "_allTopicsMeta", TopicFilter, i32],
     [AuditLogEntry, allAuditLogEntries, allAuditLogEntriesMeta, "_allAuditLogEntriesMeta", AuditLogEntryFilter, i32],
+    [CommunityMember, allCommunityMembers, allCommunityMembersMeta, "_allCommunityMembersMeta", CommunityMemberFilter, i32],
   }
 
   #[graphql(name="Stats")]
@@ -409,6 +412,10 @@ impl Mutation {
             return Err(Error::service("authentication", "asami_authentication_needed").into());
         }
 
+        data.process(context, id).await
+    }
+
+    pub async fn update_community_member(context: &Context, id: i32, data: EditCommunityMemberInput) -> FieldResult<CommunityMember> {
         data.process(context, id).await
     }
 }

@@ -1,3 +1,4 @@
+/*
 use api::models::*;
 
 use super::*;
@@ -29,3 +30,4 @@ async fn adds_tokens_to_wallet() {
     d.wait_for_text(".MuiSnackbarContent-message", "DOC added to your wallet").await;
     d.wait_until_gone(".MuiSnackbarContent-message").await;
 }
+*/

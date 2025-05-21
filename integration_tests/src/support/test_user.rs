@@ -1,6 +1,7 @@
-// The test-api client represents a fully signed in user
-// who also owns a wallet, and uses a session and the wallet to
-// interact with the contract.
+// A test user has a wallet. 
+// And can sign up and start a session on the site using
+// the graphql client.
+// It can also start a web session through selenium.
 
 use std::sync::Arc;
 
@@ -10,7 +11,7 @@ pub use api::{
     Decimal,
 };
 use api::{
-    models::{on_chain_job::AsamiFunctionCall, AbiDecode},
+    models::{on_chain_job::AsamiFunctionCall, AbiDecode, InsertHandle},
     on_chain::{self, Address, AsamiContract, DocContract, Http, LegacyContract, Provider, SignerMiddleware, IERC20},
 };
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
@@ -20,11 +21,12 @@ use ethers::{
 };
 pub use galvanic_assert::{
     self,
-    matchers::{collection::*, variant::*, *},
+   matchers::{collection::*, variant::*, *},
     *,
 };
 pub use graphql_client::{self, GraphQLQuery};
 use jwt_simple::{algorithms::*, prelude::*};
+use rand::Rng;
 use rocket::{http::Header, local::asynchronous::LocalResponse};
 pub use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
@@ -36,37 +38,116 @@ pub struct ApiError {
 }
 
 #[allow(dead_code)]
-pub struct ApiClient {
+pub struct TestUser {
     pub test_app: Arc<TestApp>,
-    pub session_key: Option<ES256KeyPair>,
-    pub session: Option<models::Session>,
     pub local_wallet: Option<LocalWallet>,
-    pub account_id: Option<U256>,
     pub legacy_contract: Option<LegacyContract>,
     pub asami_contract: Option<AsamiContract>,
     pub doc_contract: Option<DocContract>,
+    pub session_key: Option<ES256KeyPair>,
+    pub session: Option<models::Session>,
+    pub user_id: Option<i32>,
+    pub x_user_id: Option<String>,
+    pub handle: Option<models::Handle>,
+    pub account_id: Option<U256>,
 }
 
-#[derive(Clone)]
-pub struct BaseLineScenario {
-    pub regular_campaign: models::Campaign,
-    pub high_rate_campaign: models::Campaign,
-    pub low_rate_campaign: models::Campaign,
-    pub low_budget_campaign: models::Campaign,
-}
+impl TestUser {
+    pub async fn new(test_app: Arc<TestApp>) -> TestUser {
 
-impl ApiClient {
-    pub async fn new(test_app: Arc<TestApp>) -> ApiClient {
+        let rsk = test_app.app.settings.rsk.clone();
+        let wallet = test_app.make_wallet().await;
+
+        let provider = Provider::<Http>::try_from(&rsk.rpc_url).unwrap().interval(std::time::Duration::from_millis(10));
+        let client = std::sync::Arc::new(SignerMiddleware::new(provider, wallet.clone()));
+
+        let legacy_address: Address = rsk.legacy_contract_address.parse().unwrap();
+        let asami_address: Address = rsk.asami_contract_address.parse().unwrap();
+        let legacy_contract = Some(LegacyContract::new(legacy_address, client.clone()));
+        let asami_contract = Some(AsamiContract::new(asami_address, client.clone()));
+
+        let doc_address: Address = rsk.doc_contract_address.parse().unwrap();
+        let doc_contract = Some(IERC20::new(doc_address, client.clone()));
+        let local_wallet = Some(wallet);
+
         Self {
             test_app,
-            local_wallet: None,
+            local_wallet,
+            legacy_contract,
+            doc_contract,
+            asami_contract,
             session_key: None,
             session: None,
             account_id: None,
-            legacy_contract: None,
-            doc_contract: None,
-            asami_contract: None,
+            user_id: None,
+            x_user_id: None,
+            handle: None,
         }
+    }
+
+    pub async fn signed_up(mut self) -> Self {
+        self.login_to_api_with_one_time_token().await;
+        self
+    }
+
+    pub async fn advertiser(mut self) -> Self {
+        self.setup_as_advertiser("advertiser").await;
+        self
+    }
+
+    pub async fn active(mut self, score: i32) -> Self {
+        use super::handle_scoring_builder::*;
+
+        let x_user_id = rand::thread_rng().gen_range(10000..=99999).to_string();
+
+        let poll = poll_json(1, 3, 4, 5);
+
+        let verified = self.test_app.app
+            .handle()
+            .insert(InsertHandle {
+                account_id: self.account_id().encode_hex(),
+                username: format!("twittero_{x_user_id}"),
+                user_id: x_user_id.clone(),
+                x_refresh_token: Some("invalid_refresh_token".to_string()),
+            })
+            .save()
+            .await
+            .expect("could not save handle")
+            .update()
+            .audience_size_override(Some(score))
+            .save()
+            .await
+            .expect("save audience size override")
+            .verify(poll["data"]["id"].as_str().unwrap().to_string())
+            .await
+            .expect("could not verify handle");
+
+            pre_ingested_handle_scoring(
+                &verified,
+                me_json("347", true),
+                &[
+                    reply_to_own_tweet(500, 0, 2, 11, 1),
+                    quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+                    tweet_hello_world(300, 0, 0, 11, 0),
+                    tweet_goodbye_world(550, 0, 1, 11, 0),
+                    tweet_foo_bar(50, 0, 0, 0, 1),
+                    tweet_poll(300, 0, 0, 3, 0),
+                ],
+                mentions_json(10, 16),
+                Some(poll),
+                reposts_json(),
+            )
+            .await
+            .apply()
+            .await
+            .unwrap();
+
+        let scored = verified.reloaded().await.unwrap();
+
+        self.handle = Some(scored);
+        self.x_user_id = Some(x_user_id);
+
+        self
     }
 
     pub fn app(&self) -> api::App {
@@ -75,6 +156,14 @@ impl ApiClient {
 
     pub fn account_id(&self) -> U256 {
         self.account_id.unwrap()
+    }
+
+    pub fn user_id(&self) -> i32 {
+        self.user_id.unwrap()
+    }
+
+    pub fn x_user_id(&self) -> &str {
+        self.x_user_id.as_ref().unwrap()
     }
 
     pub async fn account(&self) -> models::Account {
@@ -121,11 +210,15 @@ impl ApiClient {
         self.test_app.rbtc_balance_of(&self.address()).await
     }
 
-    pub async fn login(&mut self) {
-        self.login_with_key(ES256KeyPair::generate()).await
+    pub async fn login_to_web(&self) {
+        self.test_app.web().login(self).await
     }
 
-    pub async fn login_with_key(&mut self, key: ES256KeyPair) {
+    pub async fn login_to_api_with_one_time_token(&mut self) {
+        self.login_to_api_with_key(ES256KeyPair::generate()).await
+    }
+
+    pub async fn login_to_api_with_key(&mut self, key: ES256KeyPair) {
         let token = api::models::hasher::hexdigest(key.public_key().to_pem().unwrap().as_bytes());
         self.session_key = Some(key.with_key_id(&token));
 
@@ -163,6 +256,7 @@ impl ApiClient {
 
         let session = self.test_app.app.session().find(&result.create_session.id).await.unwrap();
         self.account_id = Some(u256(session.account_id()));
+        self.user_id = Some(*session.user_id());
         self.session = Some(session);
     }
 
@@ -193,8 +287,7 @@ impl ApiClient {
             .await;
     }
 
-    pub async fn quick_campaign(&mut self, budget: U256, duration: i64, topic_ids: &[i32]) -> models::Campaign {
-        self.setup_as_advertiser("test main advertiser").await;
+    pub async fn make_campaign_one(&self, budget: U256, duration: i64, topic_ids: &[i32]) -> models::Campaign {
         self.start_and_pay_campaign(
             "https://x.com/somebody/status/1716421161867710954",
             budget,
@@ -202,10 +295,6 @@ impl ApiClient {
             topic_ids,
         )
         .await
-    }
-
-    pub async fn create_handle(&self, username: &str, user_id: &str, score: U256) -> models::Handle {
-        self.test_app.create_handle(&self.account_id().encode_hex(), username, user_id, score).await
     }
 
     pub async fn setup_as_advertiser(&mut self, message: &str) {
@@ -320,25 +409,7 @@ impl ApiClient {
             .reimburse_campaigns(vec![on_chain::ReimburseCampaignsParam { addr, briefing_hash }])
     }
 
-    pub async fn make_client_wallet(&mut self) {
-        let rsk = &self.app().settings.rsk;
-        let wallet = self.test_app.make_wallet().await;
-
-        let provider = Provider::<Http>::try_from(&rsk.rpc_url).unwrap().interval(std::time::Duration::from_millis(10));
-        let client = std::sync::Arc::new(SignerMiddleware::new(provider, wallet.clone()));
-
-        let legacy_address: Address = rsk.legacy_contract_address.parse().unwrap();
-        let asami_address: Address = rsk.asami_contract_address.parse().unwrap();
-        self.legacy_contract = Some(LegacyContract::new(legacy_address, client.clone()));
-        self.asami_contract = Some(AsamiContract::new(asami_address, client.clone()));
-
-        let doc_address: Address = rsk.doc_contract_address.parse().unwrap();
-        self.doc_contract = Some(IERC20::new(doc_address, client.clone()));
-        self.local_wallet = Some(wallet);
-    }
-
     pub async fn submit_claim_account_request(&mut self) {
-        self.make_client_wallet().await;
         self.gql_claim_account_request(self.local_wallet()).await;
     }
 
@@ -475,6 +546,42 @@ impl ApiClient {
         )
         .await
     }
+
+    /* Create account in  
+    pub async fn create_account_in_db_only(&self) -> models::Account {
+        let account = self
+            .app
+            .account()
+            .insert(InsertAccount {
+                name: Some("account".to_string()),
+                addr: None,
+            })
+            .save()
+            .await
+            .unwrap();
+        let user = self
+            .app
+            .user()
+            .insert(InsertUser {
+                name: "user".to_string(),
+            })
+            .save()
+            .await
+            .unwrap();
+
+        self.app
+            .account_user()
+            .insert(InsertAccountUser {
+                account_id: account.attrs.id.clone(),
+                user_id: user.attrs.id,
+            })
+            .save()
+            .await
+            .unwrap();
+
+        account
+    }
+    */
 }
 
 macro_rules! make_graphql_queries {

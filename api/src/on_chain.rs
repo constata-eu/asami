@@ -36,7 +36,7 @@ pub type LegacyContract = LegacyContractCode<AsamiMiddleware>;
 pub type DocContract = IERC20<AsamiMiddleware>;
 pub type AsamiContract = AsamiContractCode<AsamiMiddleware>;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct OnChain {
     pub legacy_contract: LegacyContract,
     pub asami_contract: AsamiContract,

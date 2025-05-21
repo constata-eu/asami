@@ -215,6 +215,33 @@ export const defaultDataProvider = async () => {
           }
         `,
       };
+    } else if (resource === "CommunityMember" && fetchType == "UPDATE") {
+      const parser = function (data) {
+        return buildQuery(introspection)(
+          "GET_ONE",
+          "CommunityMember",
+          params,
+        ).parseResponse(data);
+      };
+
+      return {
+        parseResponse: parser,
+        variables: params,
+        query: gql`
+          mutation ($id: Int!, $data: EditCommunityMemberInput!) {
+            data: updateCommunityMember(id: $id, data: $data) {
+              id
+              accountId
+              memberId
+              rating
+              collabs
+              rewards
+              firstCollabDate
+              lastCollabDate
+            }
+          }
+        `,
+      };
     } else {
       return buildQuery(introspection)(fetchType, resource, params);
     }

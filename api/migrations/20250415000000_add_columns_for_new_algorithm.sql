@@ -157,3 +157,27 @@ WHERE addr IS NOT NULL;
 
 ALTER TABLE users ADD COLUMN admin BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE sessions ADD COLUMN admin BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE TYPE community_member_rating AS ENUM (
+    'good',
+    'normal',
+    'bad'
+);
+
+CREATE TABLE community_members (
+    id SERIAL PRIMARY KEY NOT NULL,
+    account_id VARCHAR REFERENCES accounts(id) NOT NULL,
+    member_id VARCHAR REFERENCES accounts(id) NOT NULL,
+    rating community_member_rating NOT NULL DEFAULT 'normal', 
+    rewards VARCHAR NOT NULL,
+    collabs INTEGER NOT NULL,
+    first_collab_date TIMESTAMPTZ NOT NULL,
+    last_collab_date TIMESTAMPTZ NOT NULL,
+    force_hydrate BOOLEAN NOT NULL DEFAULT FALSE,
+    UNIQUE (account_id, member_id)
+);
+
+INSERT INTO community_members (account_id, member_id, rewards, collabs, first_collab_date, last_collab_date, force_hydrate)
+SELECT DISTINCT advertiser_id, member_id, '0x000000000000000000000000000000000000000000000000000000000000000', 0, now(), now(), true
+FROM collabs
+ON CONFLICT (account_id, member_id) DO NOTHING;
