@@ -147,6 +147,10 @@ impl Selenium {
     }
 
     pub async fn wait_until_gone(&self, selector: &str) {
+        self.wait_until_gone_with_timeout(selector, 10000).await;
+    }
+
+    pub async fn wait_until_gone_with_timeout(&self, selector: &str, timeout: u64) {
         let found = self.driver.query(By::Css(selector)).single().await;
         if let Err(thirtyfour::error::WebDriverError::NoSuchElement(_)) = found {
             return;
@@ -156,7 +160,7 @@ impl Selenium {
             .expect("No errors")
             .wait_until()
             .wait(
-                std::time::Duration::from_millis(10000),
+                std::time::Duration::from_millis(timeout),
                 std::time::Duration::from_millis(500),
             )
             .stale()
@@ -201,6 +205,10 @@ impl Selenium {
         self.driver.goto(url).await.unwrap_or_else(|_| panic!("Could not visit {url}"));
     }
 
+    pub async fn navigate(&self, path: &str) {
+        self.goto(&format!("http://127.0.0.1:5173/#{path}")).await;
+    }
+
     pub async fn stop(mut self) {
         let _dontcare = self.driver.quit().await;
         let _dontcare_either = self.child.kill();
@@ -223,6 +231,40 @@ impl Selenium {
 
         self.goto("http://127.0.0.1:5173/#/one_time_token_login?token=user-token-1").await;
         self.wait_for("#member-dashboard").await;
+    }
+
+    pub async fn login_with_wallet(&self, test_user: &TestUser) {
+        let pkey = format!("{:x}", test_user.local_wallet().signer().to_bytes());
+
+        self.goto(&format!("chrome-extension://{EXTENSION_ID}/home.html")).await;
+        self.fill_in("input[data-testid=unlock-password]", "password").await;
+        self.click("button[data-testid=unlock-submit]").await;
+        self.click("button.btn-primary").await;
+        self.click("button[data-testid=account-menu-icon]").await;
+        self.click("button[data-testid=multichain-account-menu-popover-action-button]").await;
+        self.click("button[data-testid=multichain-account-menu-popover-add-imported-account]").await;
+        self.fill_in("#private-key-box", &pkey).await;
+        self.click("button[data-testid=import-account-confirm-button]").await;
+        self.click("button[data-testid=account-options-menu-button]").await;
+        self.click("button[data-testid=global-menu-connected-sites]").await;
+        self.click("button[data-testid=connection-list-item]").await;
+        self.click("button[data-testid=edit]").await;
+        self.click("input[title='Select all']").await;
+        self.click("button[data-testid=connect-more-accounts-button]").await;
+        self.goto("http://127.0.0.1:5173/").await;
+        self.click("#menu-login").await;
+        self.click("#wallet-login-button").await;
+        self.click(".rlogin-provider-icon img[alt=MetaMask]").await;
+        self.click("button.rlogin-button.confirm").await;
+        self.go_to_extension_notification().await;
+        self.click("button[data-testid=confirm-footer-button]").await;
+        self.go_to_app_window().await;
+        self.wait_for("#member-dashboard").await;
+    }
+
+    pub async fn logout(&self) {
+        self.click("#menu-logout").await;
+        self.wait_for("#login-form").await;
     }
 
     pub async fn login(&self, test_user: &TestUser) {
@@ -255,6 +297,7 @@ impl Selenium {
 
         self.goto("http://127.0.0.1:5173/").await;
         self.goto(&format!("http://127.0.0.1:5173/#/one_time_token_login?token={token}")).await;
+        self.click("#menu-my-collabs").await;
         self.wait_for("#member-dashboard").await;
     }
 
@@ -263,7 +306,7 @@ impl Selenium {
         self.wait_for("#member-dashboard").await;
     }
 
-    pub async fn link_wallet_and_sign_login(&self) {
+    pub async fn do_rlogin_login(&self) {
         self.click(".rlogin-provider-icon img[alt=MetaMask]").await;
 
         self.go_to_extension_notification().await;
@@ -273,7 +316,10 @@ impl Selenium {
 
         self.go_to_app_window().await;
         self.click("button.rlogin-button.confirm").await;
+    }
 
+    pub async fn link_wallet_and_sign_login(&self) {
+        self.do_rlogin_login().await;
         self.confirm_wallet_action().await;
     }
 
@@ -327,5 +373,36 @@ impl Selenium {
         self.driver.screenshot(Path::new(&filename)).await?;
         println!("Saved screenshot to: {}", filename);
         Ok(())
+    }
+
+    pub async fn open_and_fill_doc_campaign_form(&self, url: &str, budget: &str, thumbs_up_only: bool, needs_approval: bool) {
+        self.click("#open-start-campaign-dialog").await;
+        self.fill_in("input[name='contentUrl']", url).await;
+        self.fill_in("input[name='budget']", budget).await;
+        if thumbs_up_only {
+            self.click(".ra-input-thumbsUpOnly").await;
+        }
+        self.click("#submit-start-campaign-form").await;
+
+        if needs_approval {
+            self.wait_for("#approval-waiter").await;
+
+            self.go_to_extension_window("approval").await;
+            self.wait_for(".token-allowance-container").await;
+            self.fill_in("#custom-spending-cap", budget).await;
+            self.click("button[data-testid=page-container-footer-next]").await;
+            self.wait_for(".review-spending-cap").await;
+            self.click("button[data-testid=page-container-footer-next]").await;
+            self.go_to_app_window().await;
+
+            self.wait_until_gone("#approval-waiter").await;
+        }
+
+        self.wait_for("#creation-waiter").await;
+
+        self.confirm_wallet_action().await;
+
+        self.wait_for("#campaign-done").await;
+        self.click("#campaign-done-close").await;
     }
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO campaigns (account_id, \nadvertiser_addr, \nbriefing_hash, \nbriefing_json, \nbudget, \nprice_per_point, \nmax_individual_reward, \nmin_individual_reward) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nadvertiser_addr as \"advertiser_addr!: String\", \nstatus as \"status!: CampaignStatus\", \nbriefing_hash as \"briefing_hash!: String\", \nbriefing_json as \"briefing_json!: String\", \nbudget as \"budget!: String\", \nprice_per_point as \"price_per_point!: String\", \nmax_individual_reward as \"max_individual_reward!: String\", \nmin_individual_reward as \"min_individual_reward!: String\", \nvalid_until as \"valid_until!: Option < UtcDateTime >\", \nreport_hash as \"report_hash!: Option < String >\", \ncreated_at as \"created_at!: UtcDateTime\", \nforce_hydrate as \"force_hydrate!: bool\", \ntotal_collabs as \"total_collabs!: i32\", \ntotal_spent as \"total_spent!: String\", \ntotal_budget as \"total_budget!: String\", \nimpression_count as \"impression_count!: i32\", \nreply_count as \"reply_count!: i32\", \nrepost_count as \"repost_count!: i32\", \nlike_count as \"like_count!: i32\"",
+  "query": "INSERT INTO campaigns (account_id, \nadvertiser_addr, \nbriefing_hash, \nbriefing_json, \nbudget, \nprice_per_point, \nmax_individual_reward, \nmin_individual_reward, \nthumbs_up_only) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (id) DO UPDATE SET id = campaigns.id RETURNING id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nadvertiser_addr as \"advertiser_addr!: String\", \nstatus as \"status!: CampaignStatus\", \nbriefing_hash as \"briefing_hash!: String\", \nbriefing_json as \"briefing_json!: String\", \nbudget as \"budget!: String\", \nprice_per_point as \"price_per_point!: String\", \nmax_individual_reward as \"max_individual_reward!: String\", \nmin_individual_reward as \"min_individual_reward!: String\", \nvalid_until as \"valid_until!: Option < UtcDateTime >\", \nreport_hash as \"report_hash!: Option < String >\", \ncreated_at as \"created_at!: UtcDateTime\", \nthumbs_up_only as \"thumbs_up_only!: bool\", \nforce_hydrate as \"force_hydrate!: bool\", \ntotal_collabs as \"total_collabs!: i32\", \ntotal_spent as \"total_spent!: String\", \ntotal_budget as \"total_budget!: String\", \nimpression_count as \"impression_count!: i32\", \nreply_count as \"reply_count!: i32\", \nrepost_count as \"repost_count!: i32\", \nlike_count as \"like_count!: i32\"",
   "describe": {
     "columns": [
       {
@@ -81,41 +81,46 @@
       },
       {
         "ordinal": 13,
-        "name": "force_hydrate!: bool",
+        "name": "thumbs_up_only!: bool",
         "type_info": "Bool"
       },
       {
         "ordinal": 14,
+        "name": "force_hydrate!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 15,
         "name": "total_collabs!: i32",
         "type_info": "Int4"
       },
       {
-        "ordinal": 15,
+        "ordinal": 16,
         "name": "total_spent!: String",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 16,
+        "ordinal": 17,
         "name": "total_budget!: String",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 17,
+        "ordinal": 18,
         "name": "impression_count!: i32",
         "type_info": "Int4"
       },
       {
-        "ordinal": 18,
+        "ordinal": 19,
         "name": "reply_count!: i32",
         "type_info": "Int4"
       },
       {
-        "ordinal": 19,
+        "ordinal": 20,
         "name": "repost_count!: i32",
         "type_info": "Int4"
       },
       {
-        "ordinal": 20,
+        "ordinal": 21,
         "name": "like_count!: i32",
         "type_info": "Int4"
       }
@@ -129,7 +134,8 @@
         "Varchar",
         "Varchar",
         "Varchar",
-        "Varchar"
+        "Varchar",
+        "Bool"
       ]
     },
     "nullable": [
@@ -153,8 +159,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "caf21974c53de3914b61c2bd517d8ccd42b83bc39fde821c51b8ef514df003b7"
+  "hash": "63078d00eaa9913cb9411685a38b245d7660a77464fcef21a4a04741d877e82f"
 }

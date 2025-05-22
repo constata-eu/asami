@@ -11,9 +11,7 @@ pub mod vite_preview;
 pub mod handle_scoring_builder;
 
 use std::{
-    io::{self, BufRead, Write},
-    os::fd::AsRawFd,
-    sync::Arc,
+    future::Future, io::{self, BufRead, Write}, os::fd::AsRawFd, sync::Arc
 };
 
 use nix::unistd::isatty;
@@ -35,6 +33,7 @@ pub use galvanic_assert::{
 pub use test_user::*;
 pub use thirtyfour::{error::WebDriverResult, prelude::*, WebDriver, WebElement};
 
+#[derive(Clone)]
 pub struct TestHelper {
     pub test_app: Arc<TestApp>,
 }
@@ -46,6 +45,16 @@ impl TestHelper {
 
     pub async fn for_web() -> Self {
         Self { test_app: Arc::new(TestApp::init().await.with_web().await) }
+    }
+
+    pub async fn with_web<F, Fut>(f: F)
+    where
+        F: FnOnce(Self) -> Fut,
+        Fut: Future<Output = ()>,
+    {
+        let h = TestHelper::for_web().await;
+        f(h.clone()).await;
+        h.stop().await;
     }
 
     pub async fn user(&self) -> TestUser {

@@ -21,6 +21,7 @@ import {
   Card,
   CardContent,
   Container,
+  IconButton,
   Skeleton,
   Stack,
   Typography,
@@ -41,6 +42,8 @@ import { MakeCampaignWithDocCard } from "./make_campaign_card";
 import BalanceCard from "../balance_card";
 import { ResponsiveAppBar } from "../responsive_app_bar";
 import { AmountField } from "../../components/custom_fields";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import ThumbDownIcon from "@mui/icons-material/ThumbDown";
 
 const Dashboard = () => {
   useAuthenticated();
@@ -102,7 +105,9 @@ const AdvertiserHelpCard = ({ account }) => {
       mb="1em"
       p="0.5em"
     >
-      <Head1 sx={{ mb: "0.5em" }}>{translate("advertiser_help.title")}</Head1>
+      <Head1 sx={{ mb: "0.5em", color: "primary.main" }}>
+        {translate("advertiser_help.title")}
+      </Head1>
       <Lead>{translate("advertiser_help.text")}</Lead>
     </Box>
   );
@@ -197,21 +202,33 @@ const Community = () => {
               reference="Account"
               sortable={false}
             >
-              <FunctionField
-                render={(record) => (
-                  <Link to={`/Account/${record.accountId}/show`}>
-                    <TextField source="id" />
-                  </Link>
-                )}
-              />
+              <TextField source="id" />
+              <TextField source="name" />
             </ReferenceField>
             <AmountField currency="" textAlign="right" source="rewards" />
             <NumberField textAlign="right" source="collabs" />
-            <TextField source="rating" />
             <DateField source="firstCollabDate" />
             <DateField source="lastCollabDate" />
-            <ToggleRatingButton value="GOOD" />
-            <ToggleRatingButton value="BAD" />
+            <FunctionField
+              source="rating"
+              render={() => {
+                return (
+                  <>
+                    <ToggleRatingButton value="GOOD" icon={ThumbUpIcon} />
+                    <ToggleRatingButton value="BAD" icon={ThumbDownIcon} />
+                  </>
+                );
+              }}
+            />
+            <Box label={false}>
+              <ReferenceField
+                source="memberId"
+                reference="Account"
+                sortable={false}
+              >
+                <ShowButton />
+              </ReferenceField>
+            </Box>
           </Datagrid>
         </ListView>
       </ListBase>
@@ -219,11 +236,14 @@ const Community = () => {
   );
 };
 
-const ToggleRatingButton = ({ value }) => {
+const ToggleRatingButton = ({ value, icon: Icon }) => {
   const record = useRecordContext();
   const [update, { isLoading }] = useUpdate();
   const notify = useNotify();
   const refresh = useRefresh();
+
+  const selected = record?.rating == value;
+  const id = `rating-${record?.memberId}-${value}`;
 
   const handleClick = () => {
     const rating = value == record?.rating ? "NORMAL" : value;
@@ -233,20 +253,20 @@ const ToggleRatingButton = ({ value }) => {
       { id: record?.id, data: { rating }, previousData: record },
       {
         onSuccess: () => {
-          notify(`Rating set to ${notify}`, { type: "info" });
+          notify("community.rating_success", { type: "info" });
           refresh(); // optionally reload the list
         },
         onError: (error) => {
-          notify(`Error: ${error.message}`, { type: "warning" });
+          notify(`Error: ${error.message}`, { type: "error" });
         },
       },
     );
   };
 
   return (
-    <Button onClick={handleClick} disabled={isLoading}>
-      {value}
-    </Button>
+    <IconButton id={id} onClick={handleClick} size="small" disabled={isLoading}>
+      <Icon fontSize="small" color={selected ? "primary" : "normal"} />
+    </IconButton>
   );
 };
 

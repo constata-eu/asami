@@ -19,6 +19,17 @@
         "addrLike": "by wallet address"
       }
     },
+    "CommunityMember": {
+      "fields": {
+        "memberId": "Member",
+        "accountId": "Advertiser",
+        "rewards": "Total rewads DOC",
+        "collabs": "Collabs",
+        "firstCollabDate": "First collab",
+        "lastCollabDate": "Last collab",
+        "rating": "Rating"
+      }
+    },
     "Topic": {
       "names": {
         "speaks_spanish": "Spanish speaking",
@@ -135,8 +146,9 @@
     "text": "Get more impressions on your posts by launching a campaign. You’ll choose a post, set a budget, and reach real people through authentic reposts. Eligible collaborators are paid based on their genuine influence and audience size, helping you achieve meaningful reach."
   },
   "community": {
-    "title": "Your Community.",
-    "description": "These members have participated in your campaigns. You can select your favourites, and make campaigns exclusive for them. Or you can flag the ones you don't like, so they will be excluded from future campaigns."
+    "title": "Your community.",
+    "description": "These members helped amplify your campaigns! Pick your favorites to invite them to exclusive ones — or flag those you’d rather not work with again.",
+    "rating_success": "Rating saved."
   },
   "collab_list": {
     "title": "Your collaboration history",
@@ -190,7 +202,8 @@
     },
     "pay_members": "Pay club members to repost any X post.",
     "start_campaign": "Start Campaign",
-    "close": "I changed my mind",
+    "close": "Close",
+    "i_changed_my_mind": "I changed my mind",
     "post_url_label": "The X post link",
     "cancel": "Cancel",
     "errors": {
@@ -206,18 +219,21 @@
       "invalid_url": "The link must point to a post, and start with https://..."
     },
     "form_step": {
-      "content_url": "Link to X post",
-      "budget": "Total budget you'll spend, in DOC",
+      "content_url": "X post link to boost",
+      "content_url_help": "Paste the link here. Find it on the “Share Post” menu on X. <a target='_blank' href='https://help.x.com/en/using-x/post-and-moment-url'>Need help?</a>",
+      "budget": "Total campaign budget (in DOC)",
       "start_campaign": "Start Campaign",
       "service_summary": "Your campaign will go live as soon as it’s submitted. Your wallet may ask for DOC spending authorization before it can proceed. Campaigns run for 15 days, and any unused DOC will be automatically returned to your wallet at the end.<br/> Collaborators are paid in DOC based on their influence level, which helps you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small budget to get a feel for how the system works.",
-      "price_per_point": "DOC per impression contributed.",
-      "price_per_point_help": "Impressions contributed by collaborators are only a rough approximation, and are not guaranteed. A value of 0.002 means your intent is to pay 2 DOC every 1K impressions.",
-      "max_individual_reward": "Max DOC per individual collaborator",
-      "max_individual_reward_help": "No collaborator will be paid more than this, regardless of how many impressions they contribute.",
-      "min_individual_reward": "Min DOC per individual collaborator",
-      "min_individual_reward_help": "Collaborators will be paid at least this much, regardles of impressions. You can use this to incentivize contributions from lower reach members.",
-      "topics": "Relevant audience criteria",
-      "topics_help": "Only members who meet all selected criteria can collaborate. Leave blank if you want anyone to collaborate."
+      "price_per_point": "DOC per influence point.",
+      "price_per_point_help": "Sets how much to reward for reach. Each point estimates one person getting your message. 0.01 means you pay 10 DOC for approximately 1,000 people meaningfully reached.",
+      "max_individual_reward": "Max per collaborator",
+      "max_individual_reward_help": "No one earns more than this total, no matter their reach.",
+      "min_individual_reward": "Min per collaborator",
+      "min_individual_reward_help": "Useful to support smaller collaborators with guaranteed pay.",
+      "topics": "Who can collaborate?",
+      "topics_help": "Leave this blank to allow everyone.",
+      "thumbs_up_only": "Thumbs up only",
+      "thumbs_up_only_help": "Only visible to collaborators you have approved."
     },
     "tx_waiter": {
       "approving_title": "Approve budget spend",

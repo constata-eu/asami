@@ -37,6 +37,9 @@ model! {
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
 
+    #[sqlx_model_hints(boolean)]
+    thumbs_up_only: bool,
+
     // These columns are part of the campaign activity report
     // they are denormalized and re-hydrated when:
     // - A collab for the campaign is settled.
@@ -149,6 +152,7 @@ impl CampaignHub {
         price_per_point: U256,
         max_individual_reward: U256,
         min_individual_reward: U256,
+        thumbs_up_only: bool,
     ) -> AsamiResult<Campaign> {
         use regex::Regex;
         use url::Url;
@@ -198,6 +202,7 @@ impl CampaignHub {
                 price_per_point: price_per_point.encode_hex(),
                 max_individual_reward: max_individual_reward.encode_hex(),
                 min_individual_reward: min_individual_reward.encode_hex(),
+                thumbs_up_only
             })
             .save()
             .await?;

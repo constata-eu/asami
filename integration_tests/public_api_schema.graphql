@@ -172,6 +172,7 @@ input CreateCampaignFromLinkInput {
   pricePerPoint: String!
   maxIndividualReward: String!
   minIndividualReward: String!
+  thumbsUpOnly: Boolean!
 }
 
 "The input for creating a new CampaignPreference."
@@ -324,6 +325,8 @@ type Campaign {
   totalSpent: String!
   "The campaign total budget: remaining + spent"
   totalBudget: String!
+  "Campaign only available with users with a thumbs up from advertiser"
+  thumbsUpOnly: Boolean!
 }
 
 "Internal UX preferences for specific campaigns"

@@ -181,3 +181,5 @@ INSERT INTO community_members (account_id, member_id, rewards, collabs, first_co
 SELECT DISTINCT advertiser_id, member_id, '0x000000000000000000000000000000000000000000000000000000000000000', 0, now(), now(), true
 FROM collabs
 ON CONFLICT (account_id, member_id) DO NOTHING;
+
+ALTER TABLE campaigns ADD COLUMN thumbs_up_only BOOLEAN NOT NULL DEFAULT FALSE;

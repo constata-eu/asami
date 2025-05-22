@@ -213,7 +213,7 @@ const theme = {
     },
     MuiCssBaseline: {
       styleOverrides: {
-        "&": `.twitter-tweet { color: 'red'; margin: 0 !important;} ${fontFaces.join("\n")}`,
+        "&": `.twitter-tweet { margin: 0 !important;} a { color: ${pink}; } ${fontFaces.join("\n")}`,
         body: {
           ...backgroundGradientRules(100),
           backgroundAttachment: "fixed",

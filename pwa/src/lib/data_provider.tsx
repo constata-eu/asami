@@ -50,6 +50,7 @@ export const defaultDataProvider = async () => {
     cache: new InMemoryCache(),
   });
   const myBuildQuery = (introspection) => (fetchType, resource, params) => {
+    console.log(params);
     if (resource === "CreateCampaignFromLink") {
       const parser = function (data) {
         return buildQuery(introspection)(
@@ -74,6 +75,7 @@ export const defaultDataProvider = async () => {
               validUntil
               createdAt
               topicIds
+              thumbsUpOnly
             }
           }
         `,

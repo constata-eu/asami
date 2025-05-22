@@ -26,6 +26,7 @@ mutation CreateCampaignFromLink($input: CreateCampaignFromLinkInput!) {
     totalCollabs
     totalSpent
     totalBudget
+    thumbsUpOnly
     __typename
   }
 }
@@ -44,6 +45,7 @@ mutation UpdateCampaign($id: Int!) {
     totalCollabs
     totalSpent
     totalBudget
+    thumbsUpOnly
     __typename
   }
 }
@@ -238,6 +240,7 @@ query Campaign($id: Int!) {
     totalCollabs
     totalSpent
     totalBudget
+    thumbsUpOnly
     __typename
   }
 }
@@ -256,6 +259,7 @@ query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: St
     totalCollabs
     totalSpent
     totalBudget
+    thumbsUpOnly
     __typename
   }
 }

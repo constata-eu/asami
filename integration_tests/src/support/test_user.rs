@@ -11,7 +11,7 @@ pub use api::{
     Decimal,
 };
 use api::{
-    models::{on_chain_job::AsamiFunctionCall, AbiDecode, InsertHandle},
+    models::{on_chain_job::AsamiFunctionCall, AbiDecode, InsertHandle, OnChainJobKind, OnChainJobStatus},
     on_chain::{self, Address, AsamiContract, DocContract, Http, LegacyContract, Provider, SignerMiddleware, IERC20},
 };
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
@@ -36,6 +36,9 @@ use super::TestApp;
 pub struct ApiError {
     pub error: String,
 }
+
+pub const WEB_WALLET_SEED: &str = "clay useful lion spawn drift census subway require small matrix guess away";
+pub const WEB_WALLET_ADDR: &str = "0xbe992ec27E90c07caDE70c6C3CD26eECC8CadCfE";
 
 #[allow(dead_code)]
 pub struct TestUser {
@@ -91,7 +94,24 @@ impl TestUser {
     }
 
     pub async fn advertiser(mut self) -> Self {
-        self.setup_as_advertiser("advertiser").await;
+        let amount = u("2000000");
+
+        self.submit_claim_account_request().await;
+
+        self.test_app.send_doc_to(self.address(), amount).await;
+
+        self.setup_trusted_admin("Setting up main advertiser").await;
+
+        self.test_app
+            .send_tx(
+                "Approving spending for setting up as advertiser",
+                "46296",
+                self.doc_contract().approve(self.test_app.asami_contract().address(), amount),
+            )
+            .await;
+
+        self.test_app.wait_for_job("Claiming advertiser address", OnChainJobKind::PromoteSubAccounts, OnChainJobStatus::Settled).await;
+
         self
     }
 
@@ -210,8 +230,12 @@ impl TestUser {
         self.test_app.rbtc_balance_of(&self.address()).await
     }
 
-    pub async fn login_to_web(&self) {
+    pub async fn login_to_web_with_otp(&self) {
         self.test_app.web().login(self).await
+    }
+
+    pub async fn login_to_web_with_wallet(&self) {
+        self.test_app.web().login_with_wallet(self).await
     }
 
     pub async fn login_to_api_with_one_time_token(&mut self) {
@@ -297,29 +321,6 @@ impl TestUser {
         .await
     }
 
-    pub async fn setup_as_advertiser(&mut self, message: &str) {
-        self.setup_as_advertiser_with_amount(message, u("2000000")).await;
-    }
-
-    pub async fn setup_as_advertiser_with_amount(&mut self, message: &str, amount: U256) {
-        // Submitting teh claim account request is enough to set an address for the account
-        // Even if teh promote account is not called.
-        // As a side effect, this will create the advertiser's local wallet.
-        self.submit_claim_account_request().await;
-
-        self.test_app.send_doc_to(self.address(), amount).await;
-
-        self.setup_trusted_admin(message).await;
-
-        self.test_app
-            .send_tx(
-                &format!("Approving spending for setting up as advertiser: {message}"),
-                "46296",
-                self.doc_contract().approve(self.test_app.asami_contract().address(), amount),
-            )
-            .await;
-    }
-
     /* Gets a campaign briefing hash, and pays for it */
     pub async fn start_and_pay_campaign(
         &self,
@@ -339,6 +340,7 @@ impl TestUser {
                         price_per_point: milli("1").encode_hex(),
                         max_individual_reward: milli("20000").encode_hex(),
                         min_individual_reward: milli("200").encode_hex(),
+                        thumbs_up_only: false,
                     },
                 }),
                 vec![],

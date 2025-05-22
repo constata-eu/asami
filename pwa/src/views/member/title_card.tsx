@@ -25,7 +25,9 @@ const TitleCard = ({ handles, campaigns }) => {
 
   return (
     <Box mb="1em" p="0.5em">
-      <Head1 sx={{ mb: "0.5em" }}>{translate("title_card.title")}</Head1>
+      <Head1 sx={{ mb: "0.5em", color: "primary.main" }}>
+        {translate("title_card.title")}
+      </Head1>
       <Lead id={id}>{translate(text)}</Lead>
     </Box>
   );

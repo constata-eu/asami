@@ -4,6 +4,7 @@ import {
   useTranslate,
   ReferenceArrayInput,
   AutocompleteArrayInput,
+  BooleanInput,
 } from "react-admin";
 
 import {
@@ -30,6 +31,7 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import ClaimAccountButton from "../claim_account";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 
 export const MakeCampaignWithDocCard = ({ account, onCreate }) => {
   const t = useTranslate();
@@ -126,6 +128,7 @@ const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
             maxIndividualReward: toBeHex(input.maxIndividualReward, 32),
             minIndividualReward: toBeHex(input.minIndividualReward, 32),
             topicIds: input.topicIds,
+            thumbsUpOnly: input.thumbsUpOnly,
           },
         },
       });
@@ -187,6 +190,7 @@ const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
     input.link = values.contentUrl;
     input.topicIds = values.topic_ids;
     input.pricePerPoint = values.pricePerPoint;
+    input.thumbsUpOnly = !!values.thumbsUpOnly;
 
     const budget = parseNumber(
       values.budget,
@@ -309,9 +313,9 @@ const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
 const CampaignForm = ({ onSubmit, validate, handleClose }) => {
   const translate = useTranslate();
   const defaultValues = {
-    pricePerPoint: "0.003",
-    maxIndividualReward: "10",
-    minIndividualReward: "0.2",
+    pricePerPoint: "0.01",
+    maxIndividualReward: "5",
+    minIndividualReward: "0.1",
   };
   return (
     <Box p="1em" id="campaign-form">
@@ -322,7 +326,7 @@ const CampaignForm = ({ onSubmit, validate, handleClose }) => {
         onSubmit={onSubmit}
       >
         <Stack direction="row" gap="1em" flexWrap="wrap">
-          <Box flex="1 1 450px">
+          <Stack flex="1 1 450px" gap="0.5em">
             <TextInput
               fullWidth
               required={true}
@@ -330,6 +334,15 @@ const CampaignForm = ({ onSubmit, validate, handleClose }) => {
               variant="filled"
               source="contentUrl"
               label={translate("make_campaign.form_step.content_url")}
+              helperText={
+                <Box
+                  dangerouslySetInnerHTML={{
+                    __html: translate(
+                      "make_campaign.form_step.content_url_help",
+                    ),
+                  }}
+                />
+              }
             />
             <TextInput
               fullWidth
@@ -338,29 +351,14 @@ const CampaignForm = ({ onSubmit, validate, handleClose }) => {
               variant="filled"
               source="budget"
               label={translate("make_campaign.form_step.budget")}
+              helperText={false}
+              sx={{ mb: "0.5em" }}
             />
-
-            <ReferenceArrayInput
-              fullWidth
-              size="large"
-              variant="filled"
-              source="topic_ids"
-              reference="Topic"
-            >
-              <AutocompleteArrayInput
-                label={translate("make_campaign.form_step.topics")}
-                helperText={translate("make_campaign.form_step.topics_help")}
-                sx={{ mb: "0.5em" }}
-                size="small"
-                variant="filled"
-                optionText={(x) => translate(`resources.Topic.names.${x.name}`)}
-              />
-            </ReferenceArrayInput>
 
             <TextInput
               fullWidth
               required={true}
-              value="0.002"
+              value="0.005"
               size="small"
               variant="filled"
               source="pricePerPoint"
@@ -370,31 +368,75 @@ const CampaignForm = ({ onSubmit, validate, handleClose }) => {
               sx={{ mb: "0.5em" }}
               label={translate("make_campaign.form_step.price_per_point")}
             />
-            <TextInput
-              fullWidth
-              required={true}
-              size="small"
-              variant="filled"
-              source="maxIndividualReward"
-              helperText={translate(
-                "make_campaign.form_step.max_individual_reward_help",
-              )}
-              sx={{ mb: "0.5em" }}
-              label={translate("make_campaign.form_step.max_individual_reward")}
-            />
-            <TextInput
-              fullWidth
-              required={true}
-              size="small"
-              variant="filled"
-              source="minIndividualReward"
-              helperText={translate(
-                "make_campaign.form_step.min_individual_reward_help",
-              )}
-              sx={{ mb: "0.5em" }}
-              label={translate("make_campaign.form_step.min_individual_reward")}
-            />
-          </Box>
+            <Stack flexWrap="wrap" direction="row" gap="1em" mb="0.5em">
+              <TextInput
+                required={true}
+                size="small"
+                variant="filled"
+                source="maxIndividualReward"
+                helperText={translate(
+                  "make_campaign.form_step.max_individual_reward_help",
+                )}
+                label={translate(
+                  "make_campaign.form_step.max_individual_reward",
+                )}
+                sx={{ flex: "1 1 200px" }}
+              />
+              <TextInput
+                required={true}
+                size="small"
+                variant="filled"
+                source="minIndividualReward"
+                helperText={translate(
+                  "make_campaign.form_step.min_individual_reward_help",
+                )}
+                label={translate(
+                  "make_campaign.form_step.min_individual_reward",
+                )}
+                sx={{ flex: "1 1 200px" }}
+              />
+            </Stack>
+            <Stack
+              flexWrap="wrap"
+              direction="row"
+              gap="1em"
+              mb="0.5em"
+              alignItems="flex-end"
+            >
+              <Box flex="0 1 50%">
+                <ReferenceArrayInput
+                  size="large"
+                  variant="filled"
+                  source="topic_ids"
+                  reference="Topic"
+                >
+                  <AutocompleteArrayInput
+                    label={translate("make_campaign.form_step.topics")}
+                    helperText={translate(
+                      "make_campaign.form_step.topics_help",
+                    )}
+                    size="small"
+                    variant="filled"
+                    optionText={(x) =>
+                      translate(`resources.Topic.names.${x.name}`)
+                    }
+                  />
+                </ReferenceArrayInput>
+              </Box>
+              <BooleanInput
+                source="thumbsUpOnly"
+                label={
+                  <Stack direction="row" gap="0.5em">
+                    {translate("make_campaign.form_step.thumbs_up_only")}
+                    <ThumbUpIcon color="primary" fontSize="small" />
+                  </Stack>
+                }
+                helperText={translate(
+                  "make_campaign.form_step.thumbs_up_only_help",
+                )}
+              />
+            </Stack>
+          </Stack>
           <Stack gap="0.5em" flex="1 1 250px">
             <Head3 sx={{ color: "primary.main", mb: "0.5em" }}>
               {translate("make_campaign.with_doc.form_title")}
@@ -414,7 +456,7 @@ const CampaignForm = ({ onSubmit, validate, handleClose }) => {
               icon={<CampaignIcon />}
             />
             <Button fullWidth color="secondary" onClick={handleClose}>
-              {translate("make_campaign.close")}
+              {translate("make_campaign.i_changed_my_mind")}
             </Button>
           </Stack>
         </Stack>
@@ -427,7 +469,7 @@ const TxWaiter = ({ title, text, tx, id }) => {
   const translate = useTranslate();
   return (
     <Box p="1em" id={id}>
-      <Head2>{translate(title)}</Head2>
+      <Head2 sx={{ color: "primary.main" }}>{translate(title)}</Head2>
       <LinearProgress sx={{ my: "1em" }} />
       {!tx ? (
         <Typography>{translate(text)}</Typography>
@@ -438,7 +480,7 @@ const TxWaiter = ({ title, text, tx, id }) => {
           </Typography>
           <Button
             fullWidth
-            color="inverted"
+            color="primary"
             variant="outlined"
             startIcon={<LaunchIcon />}
             href={`https://explorer.rootstock.io/tx/${tx.hash}`}
@@ -458,15 +500,17 @@ const Done = ({ tx, handleClose }) => {
   return (
     <Alert
       id="campaign-done"
-      severity="success"
-      sx={{ color: light }}
+      sx={{
+        color: light,
+        backgroundColor: (theme) => theme.palette.primary.main,
+      }}
       variant="filled"
       icon={false}
     >
-      <Head2>{translate("make_campaign_card.done.title")}</Head2>
-      <Typography my="1em">
-        {translate("make_campaign_card.done.text")}
-      </Typography>
+      <Head2 sx={{ color: "inverted.main" }}>
+        {translate("make_campaign.done.title")}
+      </Head2>
+      <Typography my="1em">{translate("make_campaign.done.text")}</Typography>
       <Button
         fullWidth
         color="inverted"
@@ -475,7 +519,7 @@ const Done = ({ tx, handleClose }) => {
         href={`https://explorer.rootstock.io/tx/${tx.hash}`}
         target="_blank"
       >
-        {translate("make_campaign_card.done.see_in_explorer")}
+        {translate("make_campaign.done.see_in_explorer")}
       </Button>
       <Button
         id="campaign-done-close"
@@ -485,7 +529,7 @@ const Done = ({ tx, handleClose }) => {
         color="inverted"
         variant="outlined"
       >
-        {translate("make_campaign_card.close")}
+        {translate("make_campaign.close")}
       </Button>
     </Alert>
   );
@@ -499,21 +543,21 @@ const Failure = ({ failure, handleClose }) => {
   let info;
 
   if (failure == "Modal closed by user" || failure.code == "ACTION_REJECTED") {
-    msg = translate("make_campaign_card.failure_step.action_rejected");
+    msg = translate("make_campaign.failure_step.action_rejected");
   } else if (failure.code == "WRONG_SIGNER") {
-    msg = translate("make_campaign_card.failure_step.wrong_signer", {
+    msg = translate("make_campaign.failure_step.wrong_signer", {
       expected: formatAddress(failure.expected),
       actual: formatAddress(failure.actual),
     });
   } else {
-    msg = translate("make_campaign_card.failure_step.unexpected_error");
+    msg = translate("make_campaign.failure_step.unexpected_error");
     info = failure.info
       ? JSON.stringify(failure.info, null, 2)
       : failure.toString();
   }
 
   const copyText = async () => {
-    notify("make_campaign_card.failure_step.info_copied", {
+    notify("make_campaign.failure_step.info_copied", {
       anchorOrigin: { vertical: "top", horizontal: "center" },
     });
     await navigator.clipboard.writeText(info);
@@ -521,8 +565,8 @@ const Failure = ({ failure, handleClose }) => {
 
   return (
     <Alert severity="error" variant="filled" icon={false}>
-      <Head2 sx={{ mb: "0.5em" }}>
-        {translate("make_campaign_card.failure_step.title")}
+      <Head2 sx={{ mb: "0.5em", color: "inverted.main" }}>
+        {translate("make_campaign.failure_step.title")}
       </Head2>
       {msg}
       {info && (
@@ -541,7 +585,7 @@ const Failure = ({ failure, handleClose }) => {
             onClick={copyText}
             color="inverted"
           >
-            {translate("make_campaign_card.failure_step.copy_info")}
+            {translate("make_campaign.failure_step.copy_info")}
           </Button>
         </Paper>
       )}
@@ -553,7 +597,7 @@ const Failure = ({ failure, handleClose }) => {
         color="inverted"
         variant="outlined"
       >
-        {translate("make_campaign_card.close")}
+        {translate("make_campaign.close")}
       </Button>
     </Alert>
   );

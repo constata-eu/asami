@@ -33,6 +33,8 @@ pub struct Campaign {
     total_spent: String,
     #[graphql(description = "The campaign total budget: remaining + spent")]
     total_budget: String,
+    #[graphql(description = "Campaign only available with users with a thumbs up from advertiser")]
+    thumbs_up_only: bool,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -155,6 +157,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
             total_collabs: d.attrs.total_collabs,
             total_spent: d.attrs.total_spent,
             total_budget: d.attrs.total_budget,
+            thumbs_up_only: d.attrs.thumbs_up_only,
         })
     }
 }
@@ -168,6 +171,7 @@ pub struct CreateCampaignFromLinkInput {
     pub price_per_point: String,
     pub max_individual_reward: String,
     pub min_individual_reward: String,
+    pub thumbs_up_only: bool,
 }
 
 impl CreateCampaignFromLinkInput {
@@ -183,6 +187,7 @@ impl CreateCampaignFromLinkInput {
                 parse_u256("price_per_point", &self.price_per_point)?,
                 parse_u256("max_individual_reward", &self.max_individual_reward)?,
                 parse_u256("min_individual_reward", &self.min_individual_reward)?,
+                self.thumbs_up_only
             )
             .await?;
 
