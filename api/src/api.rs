@@ -8,7 +8,7 @@ use rocket::{http::Status, serde::json::Json, State};
 use sqlx_models_orm::*;
 
 use super::{error::Error, models, *};
-use crate::models::{CampaignStatus, CollabStatus};
+use crate::models::{CampaignStatus, CollabStatus, CreateCampaignFromLinkInput};
 
 mod current_session;
 use current_session::*;
@@ -360,7 +360,8 @@ impl Mutation {
         context: &Context,
         input: CreateCampaignFromLinkInput,
     ) -> FieldResult<Campaign> {
-        input.process(context).await
+        let campaign = input.process(&context.app, &context.account().await?).await?;
+        Ok(Campaign::db_to_graphql(context, campaign).await?)
     }
 
     pub async fn update_campaign(context: &Context, id: i32) -> FieldResult<Campaign> {
@@ -415,7 +416,11 @@ impl Mutation {
         data.process(context, id).await
     }
 
-    pub async fn update_community_member(context: &Context, id: i32, data: EditCommunityMemberInput) -> FieldResult<CommunityMember> {
+    pub async fn update_community_member(
+        context: &Context,
+        id: i32,
+        data: EditCommunityMemberInput,
+    ) -> FieldResult<CommunityMember> {
         data.process(context, id).await
     }
 }
@@ -442,9 +447,4 @@ fn field_error(message: &str, second_message: &str) -> FieldError {
 
 fn into_like_search(i: Option<String>) -> Option<String> {
     i.map(|s| format!("%{s}%"))
-}
-
-fn parse_u256(fieldname: &str, value: &str) -> FieldResult<U256> {
-    use ethers::abi::AbiDecode;
-    Ok(U256::decode_hex(value).map_err(|_e| Error::validation(fieldname, "invalid_hex_encoded_u256_value"))?)
 }

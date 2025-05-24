@@ -69,20 +69,26 @@ impl CommunityMemberHub {
     }
 
     pub async fn create_or_update_from_collab(&self, collab: &Collab) -> AsamiResult<CommunityMember> {
-        let found = self.select().account_id_eq(collab.advertiser_id()).member_id_eq(collab.member_id()).optional().await?;
+        let found = self
+            .select()
+            .account_id_eq(collab.advertiser_id())
+            .member_id_eq(collab.member_id())
+            .optional()
+            .await?;
 
         match found {
             Some(membership) => membership.hydrate_report_columns().await,
-            None => {
-                Ok(self.insert(InsertCommunityMember {
+            None => Ok(self
+                .insert(InsertCommunityMember {
                     account_id: collab.advertiser_id().clone(),
                     member_id: collab.member_id().clone(),
                     collabs: 1,
                     rewards: collab.reward().clone(),
                     first_collab_date: *collab.created_at(),
                     last_collab_date: *collab.created_at(),
-                }).save().await?)
-            }
+                })
+                .save()
+                .await?),
         }
     }
 }
@@ -101,7 +107,8 @@ impl CommunityMember {
         let first_collab_date = all.iter().map(|c| *c.created_at()).min().unwrap_or(Utc::now());
         let last_collab_date = all.iter().map(|c| *c.created_at()).max().unwrap_or(Utc::now());
 
-        Ok(self.update()
+        Ok(self
+            .update()
             .collabs(collabs)
             .rewards(rewards.encode_hex())
             .first_collab_date(first_collab_date)
@@ -110,5 +117,3 @@ impl CommunityMember {
             .await?)
     }
 }
-
-

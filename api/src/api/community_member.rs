@@ -40,7 +40,10 @@ impl Showable<models::CommunityMember, CommunityMemberFilter> for CommunityMembe
         }
     }
 
-    fn filter_to_select(_context: &Context, filter: Option<CommunityMemberFilter>) -> FieldResult<models::SelectCommunityMember> {
+    fn filter_to_select(
+        _context: &Context,
+        filter: Option<CommunityMemberFilter>,
+    ) -> FieldResult<models::SelectCommunityMember> {
         if let Some(f) = filter {
             Ok(models::SelectCommunityMember {
                 id_in: f.ids,
@@ -70,7 +73,7 @@ impl Showable<models::CommunityMember, CommunityMemberFilter> for CommunityMembe
             collabs: d.attrs.collabs,
             rewards: d.attrs.rewards,
             first_collab_date: d.attrs.first_collab_date,
-            last_collab_date: d.attrs.last_collab_date
+            last_collab_date: d.attrs.last_collab_date,
         })
     }
 }
@@ -84,11 +87,14 @@ pub struct EditCommunityMemberInput {
 
 impl EditCommunityMemberInput {
     pub async fn process(self, context: &Context, community_member_id: i32) -> FieldResult<CommunityMember> {
-        let community_member = context.app.community_member()
+        let community_member = context
+            .app
+            .community_member()
             .select()
             .account_id_eq(context.account_id()?)
             .id_eq(community_member_id)
-            .one().await?;
+            .one()
+            .await?;
 
         let updated = community_member.update().rating(self.rating).save().await?;
 

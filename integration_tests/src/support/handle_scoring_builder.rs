@@ -1,8 +1,7 @@
-use api::models::{HandleScoring, HandleScoringStatus, InsertHandleScoring, Handle};
+use api::models::{Handle, HandleScoring, HandleScoringStatus, InsertHandleScoring};
 use rand::{thread_rng, Rng};
 use rocket::serde::json;
 use serde_json::Value;
-
 
 pub async fn pre_ingested_handle_scoring(
     handle: &Handle,

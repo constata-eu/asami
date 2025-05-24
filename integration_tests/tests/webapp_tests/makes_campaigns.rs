@@ -1,3 +1,48 @@
+use super::*;
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial_test::file_serial]
+async fn creates_campaign_using_stripe() {
+    TestHelper::with_web(|h| async move {
+        assert_eq!(h.a().app.account().select().count().await.unwrap(), 0);
+        let account = h.a().app.get_admin_own_account().await.unwrap();
+        assert_eq!(*account.addr().as_ref().unwrap(), h.a().app.on_chain.client.address().encode_hex());
+        assert_eq!(*account.addr().as_ref().unwrap(), "0x000000000000000000000000ed4e67213c7a375af60893fe8e0852d0f7040913");
+
+        let reloaded = h.a().app.get_admin_own_account().await.unwrap();
+        assert_eq!(account, reloaded);
+    }).await;
+}
+
+
+// -> I need a model that can track a user's CampaignRequest.
+// -> Has all fields from CreateCampaignFromLinkInput. 
+// -> Has a 'paid' flag.
+// -> Has a column for stripe's payment code, clearing code, or other details.
+// -> Once marked paid, a campaign is created (the campaign id is stored.)
+// -> Campaign creation is funded by the admin address itself, so it needs doc.
+// -> All draft campaigns require DOC to be available in the admin address?
+// -> These campaigns may take up to 24 hours to become active.
+// -> Any campaign that gets marked paid shoots out an email and report.
+//      - this report includes the DOC balance in the admin address and the total balance of all DRAFT and PAID campaigns.
+
+// I need a function that sets-up the admin as a user on its own.
+
+/*
+CampaignRequestStatus 
+
+requested: Request just received.
+paid: Payment on stripe done.
+draft: The inner campaign exists, and is in draft status.
+    -> Admin address pays the doc and marks submitted.
+submitted: The inner campaign exists, and is in submitted status.
+published: The inner campaign exists, and is in published status.
+created: A draft campaign has been created. 
+failed
+
+
+*/
+
 /*
 use models::CampaignStatus;
 

@@ -86,6 +86,25 @@ impl App {
 
         Ok(())
     }
+
+    pub async fn get_admin_own_account(&self) -> AsamiResult<Account> {
+        let addr = self.on_chain.client.address().encode_hex();
+        let found = self.account().select().addr_eq(&addr).optional().await?;
+
+        if let Some(account) = found {
+            return Ok(account);
+        }
+
+        self.on_chain.asami_contract.config_account(self.on_chain.client.address(), u("1"), wei("6000000000000"), u("0")).await?;
+
+        let account = self.account().insert(InsertAccount{
+            name: Some("Constata.eu Campaign Manager".to_string()),
+            addr: Some(addr)
+        }).save().await?;
+
+        Ok(account.update().status(AccountStatus::Claimed).save().await?)
+
+    }
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]

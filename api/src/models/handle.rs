@@ -396,12 +396,15 @@ impl Handle {
             return Err(Error::validation("topics", "handle_is_missing_topics"));
         }
 
-        let member_rating = self.state.community_member().select()
+        let member_rating = self
+            .state
+            .community_member()
+            .select()
             .account_id_eq(campaign.account_id())
             .member_id_eq(self.account_id())
             .optional()
             .await?
-            .map(|m| *m.rating() )
+            .map(|m| *m.rating())
             .unwrap_or(CommunityMemberRating::Normal);
 
         if *campaign.thumbs_up_only() && member_rating != CommunityMemberRating::Good {

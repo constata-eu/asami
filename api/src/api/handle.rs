@@ -166,7 +166,8 @@ impl AdminEditHandleInput {
             handle.add_topic(&t).await?;
         }
 
-        let updated = handle.update()
+        let updated = handle
+            .update()
             .online_engagement_override(self.online_engagement_override)
             .online_engagement_override_reason(self.online_engagement_override_reason)
             .offline_engagement_score(self.offline_engagement_score)

@@ -1,6 +1,6 @@
 use std::{
     path::Path,
-    process::{Child, Command}
+    process::{Child, Command},
 };
 
 use api::{lang, models, App};
@@ -17,10 +17,7 @@ pub struct Selenium {
 
 impl std::fmt::Debug for Selenium {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Selenium")
-            .field("app", &self.app)
-            .field("child", &self.child)
-            .finish()
+        f.debug_struct("Selenium").field("app", &self.app).field("child", &self.child).finish()
     }
 }
 
@@ -215,8 +212,7 @@ impl Selenium {
     }
 
     pub async fn signup_with_one_time_token(&self) {
-        self
-            .app
+        self.app
             .one_time_token()
             .insert(models::InsertOneTimeToken {
                 value: "user-token-1".to_string(),
@@ -270,8 +266,7 @@ impl Selenium {
     pub async fn login(&self, test_user: &TestUser) {
         let token = format!("web-login-{}", Utc::now().timestamp());
 
-        self
-            .app
+        self.app
             .one_time_token()
             .insert(models::InsertOneTimeToken {
                 value: token.clone(),
@@ -289,7 +284,7 @@ impl Selenium {
             .insert(models::InsertAuthMethod {
                 user_id: test_user.user_id(),
                 kind: models::AuthMethodKind::OneTimeToken,
-                lookup_key: token.clone()
+                lookup_key: token.clone(),
             })
             .save()
             .await
@@ -375,7 +370,13 @@ impl Selenium {
         Ok(())
     }
 
-    pub async fn open_and_fill_doc_campaign_form(&self, url: &str, budget: &str, thumbs_up_only: bool, needs_approval: bool) {
+    pub async fn open_and_fill_doc_campaign_form(
+        &self,
+        url: &str,
+        budget: &str,
+        thumbs_up_only: bool,
+        needs_approval: bool,
+    ) {
         self.click("#open-start-campaign-dialog").await;
         self.fill_in("input[name='contentUrl']", url).await;
         self.fill_in("input[name='budget']", budget).await;

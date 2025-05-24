@@ -66,7 +66,9 @@ impl SyncedEventHub {
     }
 
     pub async fn sync_asami_transfer_events(&self, from_block: U64, to_block: U64) -> anyhow::Result<()> {
-        let events = self.contract().transfer_filter()
+        let events = self
+            .contract()
+            .transfer_filter()
             .address(self.contract().address().into())
             .from_block(from_block)
             .to_block(to_block)
@@ -89,15 +91,18 @@ impl SyncedEventHub {
             match maybe_holder {
                 Some(holder) => {
                     holder.update().balance(balance.encode_hex()).save().await?;
-                },
+                }
                 None => {
                     let code = self.contract().client().get_code(address, None).await?;
                     let is_contract = !code.as_ref().is_empty();
-                    tx.holder().insert(InsertHolder{
-                        is_contract,
-                        address: address.encode_hex(),
-                        balance: balance.encode_hex(),
-                    }).save().await?;
+                    tx.holder()
+                        .insert(InsertHolder {
+                            is_contract,
+                            address: address.encode_hex(),
+                            balance: balance.encode_hex(),
+                        })
+                        .save()
+                        .await?;
                 }
             }
 

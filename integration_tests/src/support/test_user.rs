@@ -1,4 +1,4 @@
-// A test user has a wallet. 
+// A test user has a wallet.
 // And can sign up and start a session on the site using
 // the graphql client.
 // It can also start a web session through selenium.
@@ -21,7 +21,7 @@ use ethers::{
 };
 pub use galvanic_assert::{
     self,
-   matchers::{collection::*, variant::*, *},
+    matchers::{collection::*, variant::*, *},
     *,
 };
 pub use graphql_client::{self, GraphQLQuery};
@@ -57,7 +57,6 @@ pub struct TestUser {
 
 impl TestUser {
     pub async fn new(test_app: Arc<TestApp>) -> TestUser {
-
         let rsk = test_app.app.settings.rsk.clone();
         let wallet = test_app.make_wallet().await;
 
@@ -110,7 +109,13 @@ impl TestUser {
             )
             .await;
 
-        self.test_app.wait_for_job("Claiming advertiser address", OnChainJobKind::PromoteSubAccounts, OnChainJobStatus::Settled).await;
+        self.test_app
+            .wait_for_job(
+                "Claiming advertiser address",
+                OnChainJobKind::PromoteSubAccounts,
+                OnChainJobStatus::Settled,
+            )
+            .await;
 
         self
     }
@@ -122,7 +127,9 @@ impl TestUser {
 
         let poll = poll_json(1, 3, 4, 5);
 
-        let verified = self.test_app.app
+        let verified = self
+            .test_app
+            .app
             .handle()
             .insert(InsertHandle {
                 account_id: self.account_id().encode_hex(),
@@ -142,25 +149,25 @@ impl TestUser {
             .await
             .expect("could not verify handle");
 
-            pre_ingested_handle_scoring(
-                &verified,
-                me_json("347", true),
-                &[
-                    reply_to_own_tweet(500, 0, 2, 11, 1),
-                    quoting_someone_elses_tweet(300, 0, 2, 11, 1),
-                    tweet_hello_world(300, 0, 0, 11, 0),
-                    tweet_goodbye_world(550, 0, 1, 11, 0),
-                    tweet_foo_bar(50, 0, 0, 0, 1),
-                    tweet_poll(300, 0, 0, 3, 0),
-                ],
-                mentions_json(10, 16),
-                Some(poll),
-                reposts_json(),
-            )
-            .await
-            .apply()
-            .await
-            .unwrap();
+        pre_ingested_handle_scoring(
+            &verified,
+            me_json("347", true),
+            &[
+                reply_to_own_tweet(500, 0, 2, 11, 1),
+                quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+                tweet_hello_world(300, 0, 0, 11, 0),
+                tweet_goodbye_world(550, 0, 1, 11, 0),
+                tweet_foo_bar(50, 0, 0, 0, 1),
+                tweet_poll(300, 0, 0, 3, 0),
+            ],
+            mentions_json(10, 16),
+            Some(poll),
+            reposts_json(),
+        )
+        .await
+        .apply()
+        .await
+        .unwrap();
 
         let scored = verified.reloaded().await.unwrap();
 
@@ -549,7 +556,7 @@ impl TestUser {
         .await
     }
 
-    /* Create account in  
+    /* Create account in
     pub async fn create_account_in_db_only(&self) -> models::Account {
         let account = self
             .app

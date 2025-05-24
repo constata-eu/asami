@@ -91,16 +91,16 @@ impl OnChainJob {
                     account_ids.push(account.attrs.id);
                 }
             }
-            self.state.db.execute(sqlx::query!(
-                "UPDATE holders SET last_auto_paid_cycle = $1 WHERE id = ANY($2)",
-                current_cycle,
-                &ids
-            )).await?;
-
             self.state
-                .account()
-                .hydrate_on_chain_columns_for(account_ids.iter())
+                .db
+                .execute(sqlx::query!(
+                    "UPDATE holders SET last_auto_paid_cycle = $1 WHERE id = ANY($2)",
+                    current_cycle,
+                    &ids
+                ))
                 .await?;
+
+            self.state.account().hydrate_on_chain_columns_for(account_ids.iter()).await?;
         }
 
         Ok(self)

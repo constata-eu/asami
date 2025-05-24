@@ -5,7 +5,6 @@ use api::{
     on_chain, App, AppConfig,
 };
 use ethers::core::rand::thread_rng;
-pub use selenium::Selenium;
 pub use ethers::{
     abi::{AbiEncode, Address, Detokenize},
     middleware::{contract::FunctionCall, Middleware},
@@ -14,6 +13,7 @@ pub use ethers::{
     types::{transaction::eip2718::TypedTransaction, TransactionReceipt, TransactionRequest, H256, U64},
 };
 use rocket::{config::LogLevel, local::asynchronous::Client as RocketClient, Config};
+pub use selenium::Selenium;
 
 use super::*;
 use crate::support::Truffle;
@@ -436,7 +436,6 @@ impl TestApp {
         .await;
     }
 
-
     pub async fn batch_collabs(&self, mut campaign: models::Campaign, test_users: &[&TestUser]) {
         use api::models::{OnChainJobKind, OnChainJobStatus};
 
@@ -453,7 +452,7 @@ impl TestApp {
 
         let groups = [
             (OnChainJobKind::MakeCollabs, claimed_ids),
-            (OnChainJobKind::MakeSubAccountCollabs, managed_ids)
+            (OnChainJobKind::MakeSubAccountCollabs, managed_ids),
         ];
 
         for (job_kind, group) in groups {
@@ -471,12 +470,14 @@ impl TestApp {
 
             for id in group {
                 collabs.push(
-                    campaign.make_x_collab_with_user_id(id).await
+                    campaign
+                        .make_x_collab_with_user_id(id)
+                        .await
                         .expect("collab to execute correctly")
-                        .expect("collab creation to succeed")
+                        .expect("collab creation to succeed"),
                 );
             }
-            
+
             let job = self
                 .wait_for_job(
                     "Scheduling the collab-making job",
@@ -485,24 +486,15 @@ impl TestApp {
                 )
                 .await;
 
-            self.wait_for_job_status(
-                "Waiting for job to settle",
-                &job,
-                OnChainJobStatus::Settled,
-            )
-            .await;
+            self.wait_for_job_status("Waiting for job to settle", &job, OnChainJobStatus::Settled).await;
 
             for collab in collabs {
                 let cleared = collab.reloaded().await.unwrap();
-                assert_eq!(
-                    *cleared.status(),
-                    models::CollabStatus::Cleared,
-                    "Collab did not clear"
-                );
+                assert_eq!(*cleared.status(), models::CollabStatus::Cleared, "Collab did not clear");
             }
         }
     }
-    
+
     pub async fn register_collab(
         &self,
         context: &str,
@@ -835,7 +827,12 @@ impl TestApp {
         .unwrap();
     }
 
-    pub async fn try_until<T: std::future::Future<Output = bool>>(times: i32, sleep: u64, err: &str, call: impl Fn() -> T) {
+    pub async fn try_until<T: std::future::Future<Output = bool>>(
+        times: i32,
+        sleep: u64,
+        err: &str,
+        call: impl Fn() -> T,
+    ) {
         assert!(Self::wait_for(times, sleep, call).await, "{err}");
     }
 

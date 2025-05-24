@@ -1,3 +1,5 @@
+use juniper::GraphQLInputObject;
+
 /* Campaigns are created locally, then paid in the smart contract.
  * Campaigns could be paid on-chain without being reported in the contract, but it would not
  * have an effect in the front-end. These campaigns will be discarded.
@@ -142,83 +144,6 @@ impl CampaignHub {
         }
 
         Ok(())
-    }
-
-    pub async fn create_from_link(
-        &self,
-        account: &Account,
-        link: &str,
-        topics: &[Topic],
-        price_per_point: U256,
-        max_individual_reward: U256,
-        min_individual_reward: U256,
-        thumbs_up_only: bool,
-    ) -> AsamiResult<Campaign> {
-        use regex::Regex;
-        use url::Url;
-
-        let Some(advertiser_addr) = account.addr() else {
-            return Err(Error::validation("account", "need_an_address_to_create_campaigns"));
-        };
-
-        let u = Url::parse(link).map_err(|_| Error::validation("link", "invalid_url"))?;
-
-        let Some(path) = u.path_segments().map(|c| c.collect::<Vec<&str>>()) else {
-            return Err(Error::validation("link", "no_segments"));
-        };
-
-        let Some(briefing) = path.last() else {
-            return Err(Error::validation("link", "no_content_id"));
-        };
-
-        let Some(host) = u.host_str() else {
-            return Err(Error::validation("link", "no_host"));
-        };
-
-        let x_regex = Regex::new(r#"^\d+$"#).map_err(|_| Error::precondition("invalid_x_regex"))?;
-
-        if !((host.ends_with("twitter.com") || host.ends_with("x.com")) && x_regex.is_match(briefing)) {
-            return Err(Error::validation("link", "invalid_domain_or_route"));
-        }
-
-        let Ok(briefing_hash) = models::hasher::u256digest(briefing.as_bytes()) else {
-            return Err(Error::precondition(
-                "conversion_from_briefing_hash_to_u256_should_never_fail",
-            ));
-        };
-
-        let briefing_json =
-            serde_json::to_string(&briefing).map_err(|_| Error::precondition("briefing_is_always_json_encodeable"))?;
-
-        let campaign = self
-            .state
-            .campaign()
-            .insert(InsertCampaign {
-                account_id: account.attrs.id.clone(),
-                advertiser_addr: advertiser_addr.clone(),
-                budget: weihex("0"),
-                briefing_hash: briefing_hash.encode_hex(),
-                briefing_json,
-                price_per_point: price_per_point.encode_hex(),
-                max_individual_reward: max_individual_reward.encode_hex(),
-                min_individual_reward: min_individual_reward.encode_hex(),
-                thumbs_up_only
-            })
-            .save()
-            .await?;
-
-        for t in topics {
-            self.state
-                .campaign_topic()
-                .insert(InsertCampaignTopic {
-                    campaign_id: campaign.attrs.id,
-                    topic_id: t.attrs.id,
-                })
-                .save()
-                .await?;
-        }
-
-        Ok(campaign)
     }
 
     pub async fn sync_x_collabs(&self) -> anyhow::Result<Vec<Collab>> {
@@ -512,5 +437,87 @@ impl Campaign {
         } else {
             Ok(None)
         }
+    }
+}
+
+#[derive(Clone, GraphQLInputObject, Serialize, Deserialize)]
+#[graphql(description = "The input for creating a new CampaignRequest.")]
+#[serde(rename_all = "camelCase")]
+pub struct CreateCampaignFromLinkInput {
+    pub link: String,
+    pub topic_ids: Vec<i32>,
+    pub price_per_point: String,
+    pub max_individual_reward: String,
+    pub min_individual_reward: String,
+    pub thumbs_up_only: bool,
+}
+
+impl CreateCampaignFromLinkInput {
+    pub async fn process(self, app: &App, account: &Account) -> AsamiResult<Campaign> {
+        use regex::Regex;
+        use url::Url;
+
+        let topics = app.topic().select().id_in(&self.topic_ids).all().await?;
+
+        let Some(advertiser_addr) = account.addr() else {
+            return Err(Error::validation("account", "need_an_address_to_create_campaigns"));
+        };
+
+        let u = Url::parse(&self.link).map_err(|_| Error::validation("link", "invalid_url"))?;
+
+        let Some(path) = u.path_segments().map(|c| c.collect::<Vec<&str>>()) else {
+            return Err(Error::validation("link", "no_segments"));
+        };
+
+        let Some(briefing) = path.last() else {
+            return Err(Error::validation("link", "no_content_id"));
+        };
+
+        let Some(host) = u.host_str() else {
+            return Err(Error::validation("link", "no_host"));
+        };
+
+        let x_regex = Regex::new(r#"^\d+$"#).map_err(|_| Error::precondition("invalid_x_regex"))?;
+
+        if !((host.ends_with("twitter.com") || host.ends_with("x.com")) && x_regex.is_match(briefing)) {
+            return Err(Error::validation("link", "invalid_domain_or_route"));
+        }
+
+        let Ok(briefing_hash) = models::hasher::u256digest(briefing.as_bytes()) else {
+            return Err(Error::precondition(
+                "conversion_from_briefing_hash_to_u256_should_never_fail",
+            ));
+        };
+
+        let briefing_json =
+            serde_json::to_string(&briefing).map_err(|_| Error::precondition("briefing_is_always_json_encodeable"))?;
+
+        let campaign = app
+            .campaign()
+            .insert(InsertCampaign {
+                account_id: account.attrs.id.clone(),
+                advertiser_addr: advertiser_addr.clone(),
+                budget: weihex("0"),
+                briefing_hash: briefing_hash.encode_hex(),
+                briefing_json,
+                price_per_point: self.price_per_point.encode_hex(),
+                max_individual_reward: self.max_individual_reward.encode_hex(),
+                min_individual_reward: self.min_individual_reward.encode_hex(),
+                thumbs_up_only: self.thumbs_up_only,
+            })
+            .save()
+            .await?;
+
+        for t in topics {
+            app.campaign_topic()
+                .insert(InsertCampaignTopic {
+                    campaign_id: campaign.attrs.id,
+                    topic_id: t.attrs.id,
+                })
+                .save()
+                .await?;
+        }
+
+        Ok(campaign)
     }
 }

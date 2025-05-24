@@ -41,17 +41,26 @@ model! {
 }
 
 impl EstimatedFeePoolClaimHub {
-  pub async fn create_if_missing(&self, holder: &Holder, amount: U256, contract_cycle: U256) -> AsamiResult<()> {
-    if self.select().holder_id_eq(holder.id()).contract_cycle_eq(contract_cycle.encode_hex()).count().await? > 0 {
-      return Ok(());
+    pub async fn create_if_missing(&self, holder: &Holder, amount: U256, contract_cycle: U256) -> AsamiResult<()> {
+        if self
+            .select()
+            .holder_id_eq(holder.id())
+            .contract_cycle_eq(contract_cycle.encode_hex())
+            .count()
+            .await?
+            > 0
+        {
+            return Ok(());
+        }
+
+        self.insert(InsertEstimatedFeePoolClaim {
+            holder_id: *holder.id(),
+            amount: amount.encode_hex(),
+            contract_cycle: contract_cycle.encode_hex(),
+        })
+        .save()
+        .await?;
+
+        Ok(())
     }
-
-    self.insert(InsertEstimatedFeePoolClaim{
-      holder_id: *holder.id(),
-      amount: amount.encode_hex(),
-      contract_cycle: contract_cycle.encode_hex()
-    }).save().await?;
-
-    Ok(())
-  }
 }
