@@ -1,0 +1,173 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nlink as \"link!: String\", \nunit_amount as \"unit_amount!: i32\", \nprice_per_point as \"price_per_point!: String\", \nmin_individual_reward as \"min_individual_reward!: String\", \nmax_individual_reward as \"max_individual_reward!: String\", \nthumbs_up_only as \"thumbs_up_only!: bool\", \nstatus as \"status!: CampaignRequestStatus\", \nstripe_session_url as \"stripe_session_url!: Option < String >\", \nstripe_session_id as \"stripe_session_id!: Option < String >\", \ncampaign_id as \"campaign_id!: Option < i32 >\", \ncreated_at as \"created_at!: DateTime < Utc >\" FROM campaign_requests WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR link = $8::varchar) AND (NOT $9::boolean OR unit_amount = $10::int4) AND (NOT $11::boolean OR unit_amount > $12::int4) AND (NOT $13::boolean OR unit_amount < $14::int4) AND (NOT $15::boolean OR price_per_point = $16::varchar) AND (NOT $17::boolean OR price_per_point > $18::varchar) AND (NOT $19::boolean OR price_per_point < $20::varchar) AND (NOT $21::boolean OR min_individual_reward = $22::varchar) AND (NOT $23::boolean OR min_individual_reward > $24::varchar) AND (NOT $25::boolean OR min_individual_reward < $26::varchar) AND (NOT $27::boolean OR max_individual_reward = $28::varchar) AND (NOT $29::boolean OR max_individual_reward > $30::varchar) AND (NOT $31::boolean OR max_individual_reward < $32::varchar) AND (NOT $33::boolean OR thumbs_up_only = $34::boolean) AND (NOT $35::boolean OR status = $36::campaign_request_status) AND (NOT $37::boolean OR stripe_session_url = $38::varchar) AND (NOT $39::boolean OR stripe_session_id = $40::varchar) AND (NOT $41::boolean OR campaign_id = $42::int4) AND (NOT $43::boolean OR created_at = $44::timestamptz) ORDER BY \n      (CASE ($45 = 'Id' AND NOT $46) WHEN true THEN id ELSE NULL END),\n      (CASE ($45 = 'Id' AND $46) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($45 = 'AccountId' AND NOT $46) WHEN true THEN account_id ELSE NULL END),\n      (CASE ($45 = 'AccountId' AND $46) WHEN true THEN account_id ELSE NULL END) DESC\n    ,\n      (CASE ($45 = 'Link' AND NOT $46) WHEN true THEN link ELSE NULL END),\n      (CASE ($45 = 'Link' AND $46) WHEN true THEN link ELSE NULL END) DESC\n    ,\n      (CASE ($45 = 'UnitAmount' AND NOT $46) WHEN true THEN unit_amount ELSE NULL END),\n      (CASE ($45 = 'UnitAmount' AND $46) WHEN true THEN unit_amount ELSE NULL END) DESC\n    ,\n      (CASE ($45 = 'PricePerPoint' AND NOT $46) WHEN true THEN price_per_point ELSE NULL END),\n      (CASE ($45 = 'PricePerPoint' AND $46) WHEN true THEN price_per_point ELSE NULL END) DESC\n    ,\n      (CASE ($45 = 'MinIndividualReward' AND NOT $46) WHEN true THEN min_individual_reward ELSE NULL END),\n      (CASE ($45 = 'MinIndividualReward' AND $46) WHEN true THEN min_individual_reward ELSE NULL END) DESC\n    ,\n      (CASE ($45 = 'MaxIndividualReward' AND NOT $46) WHEN true THEN max_individual_reward ELSE NULL END),\n      (CASE ($45 = 'MaxIndividualReward' AND $46) WHEN true THEN max_individual_reward ELSE NULL END) DESC\n    ,\n      (CASE ($45 = 'ThumbsUpOnly' AND NOT $46) WHEN true THEN thumbs_up_only ELSE NULL END),\n      (CASE ($45 = 'ThumbsUpOnly' AND $46) WHEN true THEN thumbs_up_only ELSE NULL END) DESC\n    ,\n      (CASE ($45 = 'Status' AND NOT $46) WHEN true THEN status ELSE NULL END),\n      (CASE ($45 = 'Status' AND $46) WHEN true THEN status ELSE NULL END) DESC\n    ,\n      (CASE ($45 = 'StripeSessionUrl' AND NOT $46) WHEN true THEN stripe_session_url ELSE NULL END),\n      (CASE ($45 = 'StripeSessionUrl' AND $46) WHEN true THEN stripe_session_url ELSE NULL END) DESC\n    ,\n      (CASE ($45 = 'StripeSessionId' AND NOT $46) WHEN true THEN stripe_session_id ELSE NULL END),\n      (CASE ($45 = 'StripeSessionId' AND $46) WHEN true THEN stripe_session_id ELSE NULL END) DESC\n    ,\n      (CASE ($45 = 'CampaignId' AND NOT $46) WHEN true THEN campaign_id ELSE NULL END),\n      (CASE ($45 = 'CampaignId' AND $46) WHEN true THEN campaign_id ELSE NULL END) DESC\n    ,\n      (CASE ($45 = 'CreatedAt' AND NOT $46) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($45 = 'CreatedAt' AND $46) WHEN true THEN created_at ELSE NULL END) DESC\n     LIMIT $47 OFFSET $48 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "link!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "unit_amount!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "price_per_point!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "min_individual_reward!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "max_individual_reward!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "thumbs_up_only!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "status!: CampaignRequestStatus",
+        "type_info": {
+          "Custom": {
+            "name": "campaign_request_status",
+            "kind": {
+              "Enum": [
+                "requested",
+                "stripe_session_created",
+                "paid",
+                "draft",
+                "submitted",
+                "published",
+                "failed",
+                "refunded"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "stripe_session_url!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "stripe_session_id!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "campaign_id!: Option < i32 >",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "created_at!: DateTime < Utc >",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        {
+          "Custom": {
+            "name": "campaign_request_status",
+            "kind": {
+              "Enum": [
+                "requested",
+                "stripe_session_created",
+                "paid",
+                "draft",
+                "submitted",
+                "published",
+                "failed",
+                "refunded"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Timestamptz",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "5f26a7eef904aea1b9bad2ef4ea0da3dcc61db247e9bab76d414c0debc519bb6"
+}

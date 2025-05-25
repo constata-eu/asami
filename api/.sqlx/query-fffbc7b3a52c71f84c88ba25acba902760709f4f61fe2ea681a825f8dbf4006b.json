@@ -1,0 +1,81 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM campaign_requests WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR link = $8::varchar) AND (NOT $9::boolean OR unit_amount = $10::int4) AND (NOT $11::boolean OR unit_amount > $12::int4) AND (NOT $13::boolean OR unit_amount < $14::int4) AND (NOT $15::boolean OR price_per_point = $16::varchar) AND (NOT $17::boolean OR price_per_point > $18::varchar) AND (NOT $19::boolean OR price_per_point < $20::varchar) AND (NOT $21::boolean OR min_individual_reward = $22::varchar) AND (NOT $23::boolean OR min_individual_reward > $24::varchar) AND (NOT $25::boolean OR min_individual_reward < $26::varchar) AND (NOT $27::boolean OR max_individual_reward = $28::varchar) AND (NOT $29::boolean OR max_individual_reward > $30::varchar) AND (NOT $31::boolean OR max_individual_reward < $32::varchar) AND (NOT $33::boolean OR thumbs_up_only = $34::boolean) AND (NOT $35::boolean OR status = $36::campaign_request_status) AND (NOT $37::boolean OR stripe_session_url = $38::varchar) AND (NOT $39::boolean OR stripe_session_id = $40::varchar) AND (NOT $41::boolean OR campaign_id = $42::int4) AND (NOT $43::boolean OR created_at = $44::timestamptz)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        {
+          "Custom": {
+            "name": "campaign_request_status",
+            "kind": {
+              "Enum": [
+                "requested",
+                "stripe_session_created",
+                "paid",
+                "draft",
+                "submitted",
+                "published",
+                "failed",
+                "refunded"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "fffbc7b3a52c71f84c88ba25acba902760709f4f61fe2ea681a825f8dbf4006b"
+}
