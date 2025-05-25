@@ -28,6 +28,12 @@ pub struct TestApp {
     pub vite_preview: Option<VitePreview>,
     pub web: Option<Selenium>,
 }
+impl std::fmt::Debug for TestApp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("TestApp").finish()
+    }
+}
+
 use clap_builder::Parser;
 use sqlx_cli::*;
 

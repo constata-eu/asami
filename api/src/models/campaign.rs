@@ -423,7 +423,7 @@ impl Campaign {
             .await?)
     }
 
-    pub async fn mark_submitted(self) -> anyhow::Result<Self> {
+    pub async fn mark_submitted(self) -> AsamiResult<Self> {
         if *self.status() != CampaignStatus::Draft {
             return Ok(self);
         }
@@ -437,6 +437,10 @@ impl Campaign {
         } else {
             Ok(None)
         }
+    }
+
+    pub async fn campaign_request(&self) -> sqlx::Result<Option<CampaignRequest>> {
+        self.state.campaign_request().select().campaign_id_eq(self.id()).optional().await
     }
 }
 
@@ -453,17 +457,10 @@ pub struct CreateCampaignFromLinkInput {
 }
 
 impl CreateCampaignFromLinkInput {
-    pub async fn process(self, app: &App, account: &Account) -> AsamiResult<Campaign> {
+    pub fn validate_x_link_and_get_briefing(link: &str) -> AsamiResult<String> {
         use regex::Regex;
         use url::Url;
-
-        let topics = app.topic().select().id_in(&self.topic_ids).all().await?;
-
-        let Some(advertiser_addr) = account.addr() else {
-            return Err(Error::validation("account", "need_an_address_to_create_campaigns"));
-        };
-
-        let u = Url::parse(&self.link).map_err(|_| Error::validation("link", "invalid_url"))?;
+        let u = Url::parse(link).map_err(|_| Error::validation("link", "invalid_url"))?;
 
         let Some(path) = u.path_segments().map(|c| c.collect::<Vec<&str>>()) else {
             return Err(Error::validation("link", "no_segments"));
@@ -482,6 +479,18 @@ impl CreateCampaignFromLinkInput {
         if !((host.ends_with("twitter.com") || host.ends_with("x.com")) && x_regex.is_match(briefing)) {
             return Err(Error::validation("link", "invalid_domain_or_route"));
         }
+
+        Ok(briefing.to_string())
+    }
+
+    pub async fn process(self, app: &App, account: &Account) -> AsamiResult<Campaign> {
+        let topics = app.topic().select().id_in(&self.topic_ids).all().await?;
+
+        let Some(advertiser_addr) = account.addr() else {
+            return Err(Error::validation("account", "need_an_address_to_create_campaigns"));
+        };
+
+        let briefing = Self::validate_x_link_and_get_briefing(&self.link)?;
 
         let Ok(briefing_hash) = models::hasher::u256digest(briefing.as_bytes()) else {
             return Err(Error::precondition(

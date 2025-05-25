@@ -17,7 +17,7 @@ pub struct Selenium {
 
 impl std::fmt::Debug for Selenium {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Selenium").field("app", &self.app).field("child", &self.child).finish()
+        f.debug_struct("Selenium").field("child", &self.child).finish()
     }
 }
 

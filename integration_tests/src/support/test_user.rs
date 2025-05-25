@@ -16,8 +16,7 @@ use api::{
 };
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use ethers::{
-    abi::AbiEncode,
-    signers::{LocalWallet, Signer},
+    abi::AbiEncode, middleware::NonceManagerMiddleware, signers::{LocalWallet, Signer}
 };
 pub use galvanic_assert::{
     self,
@@ -61,7 +60,8 @@ impl TestUser {
         let wallet = test_app.make_wallet().await;
 
         let provider = Provider::<Http>::try_from(&rsk.rpc_url).unwrap().interval(std::time::Duration::from_millis(10));
-        let client = std::sync::Arc::new(SignerMiddleware::new(provider, wallet.clone()));
+        let nonce_manager = NonceManagerMiddleware::new(provider, wallet.address());
+        let client = std::sync::Arc::new(SignerMiddleware::new(nonce_manager, wallet.clone()));
 
         let legacy_address: Address = rsk.legacy_contract_address.parse().unwrap();
         let asami_address: Address = rsk.asami_contract_address.parse().unwrap();

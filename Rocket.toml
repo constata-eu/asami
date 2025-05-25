@@ -18,6 +18,12 @@ asami_user_id = 1688942981573685248
 score_cooldown_seconds = 0  # 180
 crawl_cooldown_minutes = 10
 
+[default.stripe]
+secret_key="xxxxxxx_yyyyyyyyy"
+public_key="yy_xxxxxxxxxxxxxx"
+events_secret="xxxxx_yyyyyyyyy"
+success_url="http://127.0.0.1:5173/stripe_success"
+cancel_url="http://127.0.0.1:5173/stripe_cancel"
 
 [default.recaptcha.v3]
 html_key="6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX"

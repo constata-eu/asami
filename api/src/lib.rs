@@ -82,6 +82,6 @@ pub fn custom_server(app: App, fig: figment::Figment) -> rocket::Rocket<rocket::
         .attach(ReCaptcha::fairing())
         .manage(new_graphql_schema())
         .attach(cors)
-        .mount("/", routes![x_login, x_grant_access, config])
+        .mount("/", routes![x_login, x_grant_access, config, api::campaign_request::handle_stripe_events])
         .mount("/graphql", routes![graphiql, post_handler, introspect, options])
 }

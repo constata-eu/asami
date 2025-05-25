@@ -29,6 +29,8 @@ model! {
     processed_for_legacy_claim: bool,
     #[sqlx_model_hints(boolean, default)]
     allows_gasless: bool,
+    #[sqlx_model_hints(varchar, default)]
+    stripe_customer_id: Option<String>,
 
     // These columns contain on-chain values that can be updated in a time based fashion.
     // They should at least be updated when a DOC transfer is done
@@ -331,6 +333,28 @@ impl Account {
 
     pub async fn disallow_gasless(self) -> AsamiResult<Self> {
         Ok(self.update().allows_gasless(false).save().await?)
+    }
+
+    pub async fn get_or_create_stripe_customer_id(&self) -> AsamiResult<stripe::CustomerId> {
+        use std::collections::HashMap;
+        use stripe::{CreateCustomer, Customer};
+
+        if let Some(id) = self.stripe_customer_id() {
+          return Ok(id.parse::<stripe::CustomerId>()?);
+        }
+
+        let mut metadata = HashMap::new();
+        metadata.insert("account_id".to_string(), self.attrs.id.to_string());
+        metadata.insert("account_id_as_number".to_string(), hex_to_i32(self.id())?.to_string());
+        let customer_id = Customer::create(&self.state.stripe_client, CreateCustomer{
+            name: self.name().as_deref(),
+            metadata: Some(metadata), 
+            ..Default::default()
+        }).await?.id;
+
+        self.clone().update().stripe_customer_id(Some(customer_id.to_string())).save().await?;
+
+        Ok(customer_id)
     }
 }
 

@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use ethers::middleware::NonceManagerMiddleware;
 pub use ethers::{
     prelude::{abigen, LogMeta, Middleware, SignerMiddleware},
     providers::{Http, PendingTransaction, Provider},
@@ -31,7 +32,7 @@ abigen!(
     derives(serde::Deserialize, serde::Serialize),
 );
 
-pub type AsamiMiddleware = SignerMiddleware<Provider<Http>, LocalWallet>;
+pub type AsamiMiddleware = SignerMiddleware<NonceManagerMiddleware<Provider<Http>>, LocalWallet>;
 pub type LegacyContract = LegacyContractCode<AsamiMiddleware>;
 pub type DocContract = IERC20<AsamiMiddleware>;
 pub type AsamiContract = AsamiContractCode<AsamiMiddleware>;
@@ -60,7 +61,9 @@ impl OnChain {
         let provider = Provider::<Http>::try_from(&config.rsk.rpc_url)
             .map_err(|_| Error::Init("Invalid rsk rpc_url in config".to_string()))?;
 
-        let signer_middleware = SignerMiddleware::new(provider, wallet.with_chain_id(config.rsk.chain_id));
+        let nonce_manager = NonceManagerMiddleware::new(provider, wallet.address());
+
+        let signer_middleware = SignerMiddleware::new(nonce_manager, wallet.with_chain_id(config.rsk.chain_id));
 
         let client = Arc::new(signer_middleware);
         let legacy_address: Address = config

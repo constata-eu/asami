@@ -70,6 +70,18 @@ impl<M: ethers::providers::Middleware, S: ethers::signers::Signer>
     }
 }
 
+impl From<stripe::Error> for Error {
+    fn from(err: stripe::Error) -> Error {
+        Error::Service("stripe".into(), err.to_string())
+    }
+}
+
+impl From<stripe::ParseIdError> for Error {
+    fn from(err: stripe::ParseIdError) -> Error {
+        Error::Service("stripe".into(), err.to_string())
+    }
+}
+
 impl From<ethers::providers::ProviderError> for Error {
     fn from(err: ethers::providers::ProviderError) -> Error {
         Error::Service("rsk_provider".into(), err.to_string())

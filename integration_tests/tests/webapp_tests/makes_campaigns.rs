@@ -14,9 +14,20 @@ async fn creates_campaign_using_stripe() {
     }).await;
 }
 
+#[tokio::test(flavor = "multi_thread")]
+#[serial_test::file_serial]
+async fn admin_address_has_an_account_too() {
+    TestHelper::run(|h| async move {
+        assert_eq!(h.a().app.account().select().count().await.unwrap(), 0);
+        let account = h.a().app.get_admin_own_account().await.unwrap();
+        assert_eq!(*account.addr().as_ref().unwrap(), h.a().app.on_chain.client.address().encode_hex());
+        assert_eq!(*account.addr().as_ref().unwrap(), "0x000000000000000000000000ed4e67213c7a375af60893fe8e0852d0f7040913");
 
-// -> I need a model that can track a user's CampaignRequest.
-// -> Has all fields from CreateCampaignFromLinkInput. 
+        let reloaded = h.a().app.get_admin_own_account().await.unwrap();
+        assert_eq!(account, reloaded);
+    }).await;
+}
+
 // -> Has a 'paid' flag.
 // -> Has a column for stripe's payment code, clearing code, or other details.
 // -> Once marked paid, a campaign is created (the campaign id is stored.)

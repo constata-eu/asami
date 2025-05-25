@@ -183,3 +183,49 @@ FROM collabs
 ON CONFLICT (account_id, member_id) DO NOTHING;
 
 ALTER TABLE campaigns ADD COLUMN thumbs_up_only BOOLEAN NOT NULL DEFAULT FALSE;
+
+
+DROP TYPE campaign_request_status CASCADE;
+
+CREATE TYPE campaign_request_status AS ENUM (
+    'requested',
+    'stripe_session_created',
+    'paid',
+    'draft',
+    'submitted',
+    'published',
+    'failed',
+    'refunded'
+);
+
+CREATE TABLE campaign_requests (
+    id SERIAL PRIMARY KEY NOT NULL,
+    account_id VARCHAR REFERENCES accounts(id) NOT NULL,
+    link TEXT NOT NULL,
+    unit_amount INT4 NOT NULL,
+    price_per_point VARCHAR NOT NULL,
+    min_individual_reward VARCHAR NOT NULL,
+    max_individual_reward VARCHAR NOT NULL,
+    thumbs_up_only BOOLEAN NOT NULL,
+    status campaign_request_status NOT NULL DEFAULT 'requested',
+    stripe_session_url VARCHAR NOT NULL,
+    stripe_session_id VARCHAR NOT NULL,
+    campaign_id INTEGER REFERENCES campaigns(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (account_id, link)
+);
+
+CREATE INDEX campaign_requests_account_id ON campaign_requests(account_id);
+CREATE INDEX campaign_requests_campaign_id ON campaign_requests(campaign_id);
+
+CREATE TABLE campaign_request_topics (
+    id SERIAL PRIMARY KEY NOT NULL,
+    campaign_request_id INTEGER REFERENCES campaign_requests(id) NOT NULL,
+    topic_id INTEGER REFERENCES topics(id) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX campaign_request_topics_campaign_request_id on campaign_request_topics(campaign_request_id);
+CREATE INDEX campaign_request_topics_topic_id on campaign_request_topics(topic_id);
+
+ALTER TABLE accounts ADD COLUMN stripe_customer_id VARCHAR;
