@@ -28,6 +28,7 @@ abigen!(
     function approve(address spender, uint256 value) public virtual returns (bool)
     function balanceOf(address account) external view returns (uint256)
     function transfer(address receiver, uint256 value) public virtual returns (bool)
+    function allowance(address owner, address spender) external view returns (uint256)
   ]"#,
     derives(serde::Deserialize, serde::Serialize),
 );
@@ -42,6 +43,7 @@ pub struct OnChain {
     pub client: Arc<AsamiMiddleware>,
     pub legacy_contract: LegacyContract,
     pub asami_contract: AsamiContract,
+    pub asami_address: Address,
     pub doc_contract: DocContract,
 }
 
@@ -86,7 +88,8 @@ impl OnChain {
 
         Ok(Self {
             legacy_contract: LegacyContract::new(legacy_address, client.clone()),
-            asami_contract: AsamiContract::new(asami_address, client.clone()),
+            asami_contract: AsamiContract::new(asami_address.clone(), client.clone()),
+            asami_address,
             doc_contract: IERC20::new(doc_address, client.clone()),
             client,
         })

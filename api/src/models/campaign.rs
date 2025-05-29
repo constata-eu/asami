@@ -14,6 +14,24 @@ model! {
     id: i32,
     #[sqlx_model_hints(varchar)]
     account_id: String,
+
+    #[sqlx_model_hints(boolean)]
+    managed_by_admin: bool,
+
+    // The amount charged to the user by the admin
+    // via stripe, to manage this campaign.
+    // This is before fees so it will be more than the
+    // campaign on-chain budget.
+    // The managed unit amount is what the user 
+    // entered in the form on the website.
+    #[sqlx_model_hints(int4, op_lt, op_gt)]
+    managed_unit_amount: Option<i32>,
+    #[sqlx_model_hints(varchar, default)]
+    stripe_session_url: Option<String>,
+    #[sqlx_model_hints(varchar, default)]
+    stripe_session_id: Option<String>,
+
+
     // We may allow an asami account to change their address
     // this should not affect any existing campaigns.
     #[sqlx_model_hints(varchar, op_like)]
@@ -24,6 +42,9 @@ model! {
     briefing_hash: String,
     #[sqlx_model_hints(varchar, op_like)]
     briefing_json: String,
+
+    // The budget is the DOC budget available on-chain
+    // for this campaign.
     #[sqlx_model_hints(varchar, op_lt, op_gt)]
     budget: String,
     #[sqlx_model_hints(varchar)]
@@ -32,15 +53,14 @@ model! {
     max_individual_reward: String,
     #[sqlx_model_hints(varchar)]
     min_individual_reward: String,
+    #[sqlx_model_hints(boolean)]
+    thumbs_up_only: bool,
     #[sqlx_model_hints(timestamptz, default)]
     valid_until: Option<UtcDateTime>,
     #[sqlx_model_hints(varchar, default)]
     report_hash: Option<String>,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
-
-    #[sqlx_model_hints(boolean)]
-    thumbs_up_only: bool,
 
     // These columns are part of the campaign activity report
     // they are denormalized and re-hydrated when:
@@ -94,9 +114,13 @@ model! {
 make_sql_enum![
     "campaign_status",
     pub enum CampaignStatus {
-        Draft,     // First step of creation, just to provide users with a briefing hash.
+        Draft,
+        // These are skipped for self-managed campaigns.
+        AwaitingPayment, // A stripe payment session was created.
+        Paid,            // Stripe told us this was paid.
         Submitted, // Campaign was apparently submitted on-chain by the user.
         Published, // Campaign has been seen on-chain.
+        Failed, // Something went wrong, a refund may or may not be needed.
     }
 ];
 
@@ -225,6 +249,61 @@ impl CampaignHub {
         // The basic plan allows 5 requests ever 15 minutes, that is, a 3 minute cooldown
         // between api calls.
         tokio::time::sleep(tokio::time::Duration::from_millis(3 * 60 * 1000)).await;
+    }
+
+    pub async fn set_paid_from_stripe_event(&self, e: &stripe::Event) -> AsamiResult<Option<Campaign>> {
+        use stripe::{EventObject, EventType};
+
+        let (EventType::PaymentIntentSucceeded, EventObject::PaymentIntent(i)) = (&e.event_type, &e.data.object) else {
+            return Ok(None);
+        };
+
+        let customer_id =
+            i.customer.as_ref().map(|c| c.id().to_string()).ok_or(Error::validation("customer", "missing"))?;
+        let Some(account) = self.state.account().select().stripe_customer_id_eq(customer_id).optional().await? else {
+            return Ok(None);
+        };
+
+        let Some(campaign_id) = i.metadata.get("campaign_id").and_then(|i| i.parse::<i32>().ok()) else {
+            return Err(Error::validation(
+                "campaign_id",
+                "no_request_id_on_stripe_event",
+            ));
+        };
+
+        let Some(campaign) = self
+            .state
+            .campaign()
+            .select()
+            .status_eq(CampaignStatus::AwaitingPayment)
+            .account_id_eq(account.id())
+            .id_eq(campaign_id)
+            .optional()
+            .await?
+        else {
+            return Err(Error::validation("campaign", "campaign_not_found"));
+        };
+
+        Ok(Some(
+            campaign.update().status(CampaignStatus::Paid).save().await?,
+        ))
+    }
+
+    pub async fn create_managed_on_chain_campaigns(&self) -> AsamiResult<()> {
+        for campaign in self.select().status_eq(CampaignStatus::Paid).all().await? {
+            let on_chain_balance =
+                self.state.on_chain.doc_contract.balance_of(self.state.on_chain.client.address()).call().await?;
+
+            if campaign.budget_from_unit_amount()? > on_chain_balance {
+                continue;
+            }
+
+            let tx = self.state.transactional().await?;
+            tx.campaign().find(campaign.id()).await?.create_managed_on_chain_campaign().await?;
+            tx.commit().await?;
+        }
+
+        Ok(())
     }
 }
 
@@ -406,11 +485,12 @@ impl Campaign {
         u256(self.briefing_hash())
     }
 
-    pub fn content_id(&self) -> anyhow::Result<String> {
-        serde_json::from_str::<serde_json::Value>(self.briefing_json())?
+    pub fn content_id(&self) -> AsamiResult<String> {
+        serde_json::from_str::<serde_json::Value>(self.briefing_json())
+            .map_err(|_| Error::precondition(&format!("parse_error_in_briefing_json: {}", self.id())))?
             .as_str()
             .map(|x| x.to_string())
-            .ok_or_else(|| anyhow::anyhow!("no_content_id_in_briefing"))
+            .ok_or(Error::precondition(&format!("no_content_id_in_briefing_json {}", self.id())))
     }
 
     pub async fn find_on_chain(&self) -> anyhow::Result<crate::on_chain::asami_contract_code::Campaign> {
@@ -424,9 +504,14 @@ impl Campaign {
     }
 
     pub async fn mark_submitted(self) -> AsamiResult<Self> {
-        if *self.status() != CampaignStatus::Draft {
+        if *self.managed_by_admin() {
+            if *self.status() != CampaignStatus::Paid {
+                return Ok(self);
+            }
+        } else if *self.status() != CampaignStatus::Draft {
             return Ok(self);
         }
+
         Ok(self.update().status(CampaignStatus::Submitted).save().await?)
     }
 
@@ -439,16 +524,115 @@ impl Campaign {
         }
     }
 
-    pub async fn campaign_request(&self) -> sqlx::Result<Option<CampaignRequest>> {
-        self.state.campaign_request().select().campaign_id_eq(self.id()).optional().await
+    pub async fn create_stripe_checkout_session(self) -> AsamiResult<Self> {
+        use serde_json::json;
+        use stripe::CheckoutSession;
+
+        if !self.managed_by_admin() {
+            return Err(Error::precondition("cannot_create_checkout_session_if_not_managed_by_admin"));
+        }
+        if *self.status() != CampaignStatus::Draft {
+            return Err(Error::precondition("cannot_create_checkout_session_if_not_draft"));
+        }
+
+        let Some(unit_amount) = self.managed_unit_amount().as_ref() else {
+            return Err(Error::precondition("cannot_create_checkout_session_with_no_unit_amount"));
+        };
+
+        let client = &self.state.stripe_client;
+        let settings = &self.state.settings.stripe;
+        let customer_id = self.account().await?.get_or_create_stripe_customer_id().await?;
+
+        let stripe_session: CheckoutSession = client
+            .post_form(
+                "/checkout/sessions",
+                json![{
+                  "success_url": settings.success_url,
+                  "cancel_url": settings.cancel_url,
+                  "customer": customer_id,
+                  "payment_method_types": ["card"],
+                  "mode": "payment",
+                  "payment_intent_data": {
+                    "metadata": {
+                      "campaign_id": self.id(),
+                    }
+                  },
+                  "line_items": [
+                    {
+                      "quantity": 1,
+                      "price_data": {
+                        "currency": "USD",
+                        "unit_amount": i64::from(*unit_amount), // This amount is expressed in cents.
+                        "product_data": {
+                          "name": "Managed Asami Campaign",
+                          "description": format!("Boost for post: https://x.com/user/status/{}", self.content_id()?),
+                        }
+                      }
+                    }
+                  ]
+                }],
+            )
+            .await?;
+
+        Ok(self
+            .update()
+            .status(CampaignStatus::AwaitingPayment)
+            .stripe_session_url(Some(stripe_session.url))
+            .stripe_session_id(Some(stripe_session.id.to_string()))
+            .save()
+            .await?)
+    }
+
+    // Transitions from "paid" to "submitted"
+    pub async fn create_managed_on_chain_campaign(self) -> AsamiResult<Self> {
+        if *self.status() != CampaignStatus::Paid {
+            return Err(Error::precondition("cannot_create_managed_campaign_when_not_in_paid_status"));
+        }
+
+        let chain = &self.state.on_chain;
+        // TODO: Configuring the admin in the contract is important.
+        // But we should do this elsewhere.
+        let _ = self.state.get_admin_own_account().await?;
+        let budget = self.budget_from_unit_amount()?;
+
+        let allowance = chain.doc_contract.allowance(chain.client.address(), chain.asami_address).call().await?;
+
+        if budget > allowance {
+            chain.doc_contract.approve(chain.asami_address, budget * 2).send().await?.await?;
+        }
+
+        chain
+            .asami_contract
+            .make_campaigns(vec![on_chain::MakeCampaignsParam {
+                budget: self.budget_from_unit_amount()?,
+                briefing_hash: self.decoded_briefing_hash(),
+                valid_until: models::utc_to_i(Utc::now() + chrono::Duration::days(15)),
+            }])
+            .send()
+            .await?;
+
+        self.mark_submitted().await
+    }
+
+    // For managed campaigns, there's a dinosaur tax of 20%.
+    // So only 80% of the funds received on stripe become campaign rewards.
+    pub fn budget_from_unit_amount(&self) -> AsamiResult<U256> {
+        let Some(unit_amount) = self.managed_unit_amount().as_ref() else {
+            return Err(Error::precondition("no_unit_amount_on_non_managed_campaigns"))
+        };
+
+        let processing_fee_percent = U256::from(20);
+        let amount_as_wei = U256::from(*unit_amount) * U256::from(10).pow(U256::from(16));
+        Ok(amount_as_wei * processing_fee_percent / U256::from(100))
     }
 }
 
 #[derive(Clone, GraphQLInputObject, Serialize, Deserialize)]
-#[graphql(description = "The input for creating a new CampaignRequest.")]
+#[graphql(description = "The input for creating a new Campaign.")]
 #[serde(rename_all = "camelCase")]
 pub struct CreateCampaignFromLinkInput {
     pub link: String,
+    pub managed_unit_amount: Option<i32>,
     pub topic_ids: Vec<i32>,
     pub price_per_point: String,
     pub max_individual_reward: String,
@@ -457,6 +641,61 @@ pub struct CreateCampaignFromLinkInput {
 }
 
 impl CreateCampaignFromLinkInput {
+    pub async fn process(self, app: &App, account: &Account) -> AsamiResult<Campaign> {
+        let topics = app.topic().select().id_in(&self.topic_ids).all().await?;
+
+        let advertiser_addr = if self.managed_unit_amount.is_some() {
+            app.on_chain.client.address().encode_hex()
+        } else {
+            account.addr().clone().ok_or(Error::validation("account", "need_an_address_to_create_campaigns"))?
+        };
+
+        let briefing = Self::validate_x_link_and_get_briefing(&self.link)?;
+
+        let Ok(briefing_hash) = models::hasher::u256digest(briefing.as_bytes()) else {
+            return Err(Error::precondition(
+                "conversion_from_briefing_hash_to_u256_should_never_fail",
+            ));
+        };
+
+        let briefing_json =
+            serde_json::to_string(&briefing).map_err(|_| Error::precondition("briefing_is_always_json_encodeable"))?;
+
+        let mut campaign = app
+            .campaign()
+            .insert(InsertCampaign {
+                managed_by_admin: self.managed_unit_amount.is_some(),
+                managed_unit_amount: self.managed_unit_amount,
+                account_id: account.attrs.id.clone(),
+                advertiser_addr,
+                budget: weihex("0"),
+                briefing_hash: briefing_hash.encode_hex(),
+                briefing_json,
+                price_per_point: self.price_per_point.encode_hex(),
+                max_individual_reward: self.max_individual_reward.encode_hex(),
+                min_individual_reward: self.min_individual_reward.encode_hex(),
+                thumbs_up_only: self.thumbs_up_only,
+            })
+            .save()
+            .await?;
+
+        for t in topics {
+            app.campaign_topic()
+                .insert(InsertCampaignTopic {
+                    campaign_id: campaign.attrs.id,
+                    topic_id: t.attrs.id,
+                })
+                .save()
+                .await?;
+        }
+
+        if *campaign.managed_by_admin() {
+            campaign = campaign.create_stripe_checkout_session().await?;
+        }
+
+        Ok(campaign)
+    }
+
     pub fn validate_x_link_and_get_briefing(link: &str) -> AsamiResult<String> {
         use regex::Regex;
         use url::Url;
@@ -483,50 +722,4 @@ impl CreateCampaignFromLinkInput {
         Ok(briefing.to_string())
     }
 
-    pub async fn process(self, app: &App, account: &Account) -> AsamiResult<Campaign> {
-        let topics = app.topic().select().id_in(&self.topic_ids).all().await?;
-
-        let Some(advertiser_addr) = account.addr() else {
-            return Err(Error::validation("account", "need_an_address_to_create_campaigns"));
-        };
-
-        let briefing = Self::validate_x_link_and_get_briefing(&self.link)?;
-
-        let Ok(briefing_hash) = models::hasher::u256digest(briefing.as_bytes()) else {
-            return Err(Error::precondition(
-                "conversion_from_briefing_hash_to_u256_should_never_fail",
-            ));
-        };
-
-        let briefing_json =
-            serde_json::to_string(&briefing).map_err(|_| Error::precondition("briefing_is_always_json_encodeable"))?;
-
-        let campaign = app
-            .campaign()
-            .insert(InsertCampaign {
-                account_id: account.attrs.id.clone(),
-                advertiser_addr: advertiser_addr.clone(),
-                budget: weihex("0"),
-                briefing_hash: briefing_hash.encode_hex(),
-                briefing_json,
-                price_per_point: self.price_per_point.encode_hex(),
-                max_individual_reward: self.max_individual_reward.encode_hex(),
-                min_individual_reward: self.min_individual_reward.encode_hex(),
-                thumbs_up_only: self.thumbs_up_only,
-            })
-            .save()
-            .await?;
-
-        for t in topics {
-            app.campaign_topic()
-                .insert(InsertCampaignTopic {
-                    campaign_id: campaign.attrs.id,
-                    topic_id: t.attrs.id,
-                })
-                .save()
-                .await?;
-        }
-
-        Ok(campaign)
-    }
 }

@@ -8,13 +8,13 @@ use rocket::{http::Status, serde::json::Json, State};
 use sqlx_models_orm::*;
 
 use super::{error::Error, models, *};
-use crate::models::{CampaignStatus, CollabStatus, CreateCampaignFromLinkInput, CreateCampaignRequestInput};
+use crate::models::{CampaignStatus, CollabStatus, CreateCampaignFromLinkInput};
 
 mod current_session;
 use current_session::*;
 mod account;
 use account::*;
-mod campaign;
+pub mod campaign;
 use campaign::*;
 mod session;
 use session::*;
@@ -38,8 +38,6 @@ mod handle_scoring;
 use handle_scoring::*;
 mod community_member;
 use community_member::*;
-pub mod campaign_request;
-use campaign_request::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -151,6 +149,10 @@ impl Context {
 
     pub fn account_id(&self) -> AsamiResult<String> {
         Ok(self.current_session()?.0.attrs.account_id.clone())
+    }
+
+    pub fn maybe_account_id(&self) -> Option<&str> {
+        self.current_session.as_ref().map(|s| s.0.attrs.account_id.as_str() )
     }
 
     pub async fn account(&self) -> AsamiResult<models::Account> {
@@ -364,14 +366,6 @@ impl Mutation {
     ) -> FieldResult<Campaign> {
         let campaign = input.process(&context.app, &context.account().await?).await?;
         Ok(Campaign::db_to_graphql(context, campaign).await?)
-    }
-
-    pub async fn create_campaign_request(
-        context: &Context,
-        input: CreateCampaignRequestInput,
-    ) -> FieldResult<CampaignRequest> {
-        let request = input.process(&context.app, &context.account().await?).await?;
-        Ok(CampaignRequest::db_to_graphql(context, request).await?)
     }
 
     pub async fn update_campaign(context: &Context, id: i32) -> FieldResult<Campaign> {

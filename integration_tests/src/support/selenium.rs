@@ -292,7 +292,6 @@ impl Selenium {
 
         self.goto("http://127.0.0.1:5173/").await;
         self.goto(&format!("http://127.0.0.1:5173/#/one_time_token_login?token={token}")).await;
-        self.click("#menu-my-collabs").await;
         self.wait_for("#member-dashboard").await;
     }
 

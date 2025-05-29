@@ -16,10 +16,10 @@ mutation CreateCampaignFromLink($input: CreateCampaignFromLinkInput!) {
     id
     accountId
     budget
+    isPublished
     briefingJson
     briefingHash
     validUntil
-    status
     createdAt
     topicIds
     youWouldReceive
@@ -27,6 +27,14 @@ mutation CreateCampaignFromLink($input: CreateCampaignFromLinkInput!) {
     totalSpent
     totalBudget
     thumbsUpOnly
+    privateFields {
+      managedByAdmin
+      managedUnitAmount
+      stripeSessionUrl
+      stripeSessionId
+      status
+      __typename
+    }
     __typename
   }
 }
@@ -35,10 +43,10 @@ mutation UpdateCampaign($id: Int!) {
     id
     accountId
     budget
+    isPublished
     briefingJson
     briefingHash
     validUntil
-    status
     createdAt
     topicIds
     youWouldReceive
@@ -46,6 +54,14 @@ mutation UpdateCampaign($id: Int!) {
     totalSpent
     totalBudget
     thumbsUpOnly
+    privateFields {
+      managedByAdmin
+      managedUnitAmount
+      stripeSessionUrl
+      stripeSessionId
+      status
+      __typename
+    }
     __typename
   }
 }
@@ -230,10 +246,10 @@ query Campaign($id: Int!) {
     id
     accountId
     budget
+    isPublished
     briefingJson
     briefingHash
     validUntil
-    status
     createdAt
     topicIds
     youWouldReceive
@@ -241,6 +257,14 @@ query Campaign($id: Int!) {
     totalSpent
     totalBudget
     thumbsUpOnly
+    privateFields {
+      managedByAdmin
+      managedUnitAmount
+      stripeSessionUrl
+      stripeSessionId
+      status
+      __typename
+    }
     __typename
   }
 }
@@ -249,10 +273,10 @@ query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: St
     id
     accountId
     budget
+    isPublished
     briefingJson
     briefingHash
     validUntil
-    status
     createdAt
     topicIds
     youWouldReceive
@@ -260,6 +284,14 @@ query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: St
     totalSpent
     totalBudget
     thumbsUpOnly
+    privateFields {
+      managedByAdmin
+      managedUnitAmount
+      stripeSessionUrl
+      stripeSessionId
+      status
+      __typename
+    }
     __typename
   }
 }

@@ -1,10 +1,8 @@
-import { useEffect } from "react";
 import {
   useUpdate,
   useNotify,
   useRefresh,
   useAuthenticated,
-  useSafeSetState,
   useGetOne,
   ListView,
   ListBase,
@@ -18,27 +16,20 @@ import {
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Container,
   IconButton,
   Skeleton,
   Stack,
   Typography,
 } from "@mui/material";
-import { formatEther } from "ethers";
-import { ColumnsContainer, DeckCard } from "../layout";
-import { CardTitle, Head1, Head2, Lead, green } from "../../components/theme";
-import { contentId, viewPostUrl } from "../../lib/campaign";
-import { Pagination, Datagrid, TextField, FunctionField } from "react-admin";
-import { Link } from "react-router-dom";
-import {
-  useListController,
-  ListContextProvider,
-  useTranslate,
-} from "react-admin";
+import { ColumnsContainer } from "../layout";
+import { Head1, Head2, Lead } from "../../components/theme";
+import { contentId } from "../../lib/campaign";
+import { Datagrid, TextField, FunctionField } from "react-admin";
+import { useListController, useTranslate } from "react-admin";
 import { getAuthKeys } from "../../lib/auth_provider";
 import { MakeCampaignWithDocCard } from "./make_campaign_card";
+import { MakeCampaignStripe } from "./make_campaign_stripe";
 import BalanceCard from "../balance_card";
 import { ResponsiveAppBar } from "../responsive_app_bar";
 import { AmountField } from "../../components/custom_fields";
@@ -69,7 +60,7 @@ const Dashboard = () => {
     resource: "Campaign",
   });
 
-  if (isLoading || !data) {
+  if (isLoading || listContext.isLoading || !data) {
     return (
       <Container maxWidth="md">
         <Skeleton animation="wave" />
@@ -81,12 +72,15 @@ const Dashboard = () => {
     <Box p="1em" id="advertiser-dashboard">
       <ResponsiveAppBar />
       <ColumnsContainer>
-        <AdvertiserHelpCard account={data} />
+        <AdvertiserHelpCard />
         <MakeCampaignWithDocCard
           account={data}
           onCreate={() => listContext.refetch()}
         />
-        <MakeCampaignWithStripeCard />
+        <MakeCampaignStripe
+          account={data}
+          onCreate={() => listContext.refetch()}
+        />
         {data.status == "CLAIMED" && <BalanceCard />}
       </ColumnsContainer>
 
@@ -96,8 +90,8 @@ const Dashboard = () => {
   );
 };
 
-const AdvertiserHelpCard = ({ account }) => {
-  const translate = useTranslate();
+const AdvertiserHelpCard = () => {
+  const t = useTranslate();
   return (
     <Box
       id="advertiser-help-card"
@@ -106,31 +100,15 @@ const AdvertiserHelpCard = ({ account }) => {
       p="0.5em"
     >
       <Head1 sx={{ mb: "0.5em", color: "primary.main" }}>
-        {translate("advertiser_help.title")}
+        {t("advertiser_help.title")}
       </Head1>
-      <Lead>{translate("advertiser_help.text")}</Lead>
+      <Lead>{t("advertiser_help.text")}</Lead>
     </Box>
   );
 };
 
-export const MakeCampaignWithStripeCard = () => {
-  const t = useTranslate();
-
-  return (
-    <DeckCard>
-      <CardContent>
-        <Head2>{t("make_campaign.with_stripe.title")}</Head2>
-        <Typography my="1em">{t("make_campaign.with_stripe.text")}</Typography>
-        <Button fullWidth color="primary" disabled variant="outlined">
-          {t("make_campaign.with_stripe.coming_soon")}
-        </Button>
-      </CardContent>
-    </DeckCard>
-  );
-};
-
 const CampaignList = ({ listContext }) => {
-  const translate = useTranslate();
+  const t = useTranslate();
 
   if (listContext.total < 1) {
     return <></>;
@@ -140,16 +118,26 @@ const CampaignList = ({ listContext }) => {
     <Box id="campaign-list" sx={{ mt: "2em", mb: "2em" }}>
       <ListBase disableAuthentication disableSyncWithLocation {...listContext}>
         <Stack gap="1em" mb="1em" alignItems="baseline" direction="row">
-          <Head2>{translate("campaign_list.title")}.</Head2>
+          <Head2>{t("campaign_list.title")}.</Head2>
           <ExportButton
             disabled={listContext.total === 0}
             resource="Campaign"
           />
         </Stack>
         <ListView filters={false} actions={false}>
-          <Datagrid resource="Campaign" bulkActionButtons={false}>
+          <Datagrid
+            rowClick={false}
+            resource="Campaign"
+            bulkActionButtons={false}
+          >
             <FunctionField source="briefingJson" render={contentId} />
-            <TextField source="status" sortable={false} />
+            <FunctionField
+              source="status"
+              render={(r) =>
+                t(`resources.Campaign.statuses.${r.privateFields.status}`)
+              }
+              sortable={false}
+            />
             <NumberField source="totalCollabs" />
             <AmountField textAlign="right" currency="" source="budget" />
             <AmountField textAlign="right" currency="" source="totalSpent" />
@@ -157,7 +145,28 @@ const CampaignList = ({ listContext }) => {
             <DateField source="validUntil" />
             <DateField source="createdAt" />
             <TextField source="id" />
-            <ShowButton />
+            <FunctionField
+              render={(r) => (
+                <>
+                  {r.privateFields.status == "PUBLISHED" && <ShowButton />}
+                  {r.privateFields.status == "AWAITING_PAYMENT" && (
+                    <FunctionField
+                      source="stripeSessionUrl"
+                      render={(r) => (
+                        <Button
+                          id={`btn-go-to-checkout-for-${r.id}`}
+                          onClick={false}
+                          href={r.privateFields.stripeSessionUrl}
+                          target="_blank"
+                        >
+                          {t("campaign_request_list.go_to_stripe")}
+                        </Button>
+                      )}
+                    />
+                  )}
+                </>
+              )}
+            />
           </Datagrid>
         </ListView>
       </ListBase>
@@ -180,8 +189,6 @@ const Community = () => {
   if (listContext.isPending || listContext.total == 0) {
     return <></>;
   }
-
-  const toggleRating = (newRating) => {};
 
   return (
     <Box my="0.5em">

@@ -67,16 +67,29 @@ export default () => {
           <Lead>{t("landing.built_on_fairness")}</Lead>
         </Stack>
         <JoinNow key="join-now" loginAs={loginAs} />
+        <YourPostHere loginAs={loginAs} />
         {pubDataProvider && (
           <CoreAdminContext
             i18nProvider={i18nProvider}
             dataProvider={pubDataProvider}
           >
-            <PublicCampaignList loginAs={loginAs} />
             <StatsCard />
           </CoreAdminContext>
         )}
+        <AboutToken />
       </CardTable>
+      <Box mt="1em">
+        <CardTable>
+          {pubDataProvider && (
+            <CoreAdminContext
+              i18nProvider={i18nProvider}
+              dataProvider={pubDataProvider}
+            >
+              <PublicCampaignList loginAs={loginAs} />
+            </CoreAdminContext>
+          )}
+        </CardTable>
+      </Box>
     </>
   );
 };
@@ -103,7 +116,9 @@ const PublicCampaignList = ({ loginAs }) => {
   }
 
   const items = flatten(
-    chunk(listContext.data, 4).map((i) => [{ yourPostHere: true }, ...i]),
+    chunk(listContext.data, 4).map((i) =>
+      i.length == 4 ? [...i, { yourPostHere: true }] : i,
+    ),
   );
 
   return (
@@ -182,6 +197,56 @@ const JoinNow = ({ loginAs }) => {
         >
           {translate("join_now.button")}
         </Button>
+      </CardContent>
+    </DeckCard>
+  );
+};
+
+/*
+Landing ideas:
+- Add other stats to club stats:
+    * Total reach : 100000 PEOPLE
+    * Largest campaign: 
+    * User with most rewards: 
+
+    * Highest 
+*/
+
+const AboutToken = () => {
+  const translate = useTranslate();
+
+  return (
+    <DeckCard color="primary.main">
+      <CardContent>
+        <Lead sx={{ color: "primary.main", mb: "0.2em" }}>
+          Invest in Asami’s growth
+        </Lead>
+        <Head2 sx={{ color: "primary.main" }}>Hold ASAMI Tokens</Head2>
+        <Lead sx={{ color: "primary.main", my: "1em" }}>
+          Support the project and earn passively—no need to run campaigns or
+          collaborate. With a fixed supply of 21 million tokens and no premine,
+          ASAMI holders receive a share of club fees every 15 days.
+        </Lead>
+        <Stack gap="1em">
+          <Button
+            fullWidth
+            size="large"
+            color="primary"
+            variant="outlined"
+            onClick={() => loginAs("member")}
+          >
+            Learn more
+          </Button>
+          <Button
+            fullWidth
+            size="large"
+            color="primary"
+            variant="contained"
+            onClick={() => loginAs("member")}
+          >
+            Trade ASAMI on OKU
+          </Button>
+        </Stack>
       </CardContent>
     </DeckCard>
   );

@@ -43,7 +43,7 @@ impl App {
             db,
             on_chain,
             settings: Box::new(config),
-            stripe_client: Box::new(stripe_client)
+            stripe_client: Box::new(stripe_client),
         })
     }
 
@@ -100,15 +100,21 @@ impl App {
             return Ok(account);
         }
 
-        self.on_chain.asami_contract.config_account(self.on_chain.client.address(), u("1"), wei("6000000000000"), u("0")).await?;
+        self.on_chain
+            .asami_contract
+            .config_account(self.on_chain.client.address(), u("1"), wei("6000000000000"), u("0"))
+            .await?;
 
-        let account = self.account().insert(InsertAccount{
-            name: Some("Constata.eu Campaign Manager".to_string()),
-            addr: Some(addr)
-        }).save().await?;
+        let account = self
+            .account()
+            .insert(InsertAccount {
+                name: Some("Constata.eu Campaign Manager".to_string()),
+                addr: Some(addr),
+            })
+            .save()
+            .await?;
 
         Ok(account.update().status(AccountStatus::Claimed).save().await?)
-
     }
 }
 
@@ -121,7 +127,7 @@ pub struct AppConfig {
     pub x: XConfig,
     pub sendgrid_api_key: String,
     pub internal_alerts_email: String,
-    pub stripe: StripeSettings, 
+    pub stripe: StripeSettings,
 }
 
 impl AppConfig {
@@ -185,10 +191,9 @@ pub struct Rsk {
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct StripeSettings {
-  pub secret_key: String,
-  pub public_key: String,
-  pub events_secret: String,
-  pub success_url: String,
-  pub cancel_url: String,
+    pub secret_key: String,
+    pub public_key: String,
+    pub events_secret: String,
+    pub success_url: String,
+    pub cancel_url: String,
 }
-

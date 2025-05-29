@@ -50,7 +50,6 @@ export const defaultDataProvider = async () => {
     cache: new InMemoryCache(),
   });
   const myBuildQuery = (introspection) => (fetchType, resource, params) => {
-    console.log(params);
     if (resource === "CreateCampaignFromLink") {
       const parser = function (data) {
         return buildQuery(introspection)(
@@ -76,6 +75,13 @@ export const defaultDataProvider = async () => {
               createdAt
               topicIds
               thumbsUpOnly
+              privateFields {
+                managedByAdmin
+                managedUnitAmount
+                stripeSessionUrl
+                stripeSessionId
+                status
+              }
             }
           }
         `,

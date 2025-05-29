@@ -3,22 +3,25 @@
 // It also contains all the shortcuts for easily establishing
 // test scenarios without repetition.
 
+pub mod handle_scoring_builder;
 pub mod selenium;
 pub mod test_api_server;
 pub mod test_app;
 pub mod truffle;
 pub mod vite_preview;
-pub mod handle_scoring_builder;
 
 use std::{
-    future::Future, io::{self, BufRead, Write}, os::fd::AsRawFd, sync::Arc
+    future::Future,
+    io::{self, BufRead, Write},
+    os::fd::AsRawFd,
+    sync::Arc,
 };
 
 use nix::unistd::isatty;
 pub use selenium::Selenium;
-pub use test_user::{TestUser, ApiError};
 pub use test_api_server::*;
 pub use test_app::*;
+pub use test_user::{ApiError, TestUser};
 use tokio::task::{self, JoinHandle};
 pub use truffle::*;
 pub use vite_preview::*;
@@ -40,11 +43,15 @@ pub struct TestHelper {
 
 impl TestHelper {
     pub async fn new() -> Self {
-        Self { test_app: Arc::new(TestApp::init().await) }
+        Self {
+            test_app: Arc::new(TestApp::init().await),
+        }
     }
 
     pub async fn for_web() -> Self {
-        Self { test_app: Arc::new(TestApp::init().await.with_web().await) }
+        Self {
+            test_app: Arc::new(TestApp::init().await.with_web().await),
+        }
     }
 
     pub async fn run<F, Fut>(f: F)

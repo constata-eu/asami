@@ -55,6 +55,14 @@
         "accountIdEq": "por miembro",
         "statusEq": "estado es",
         "statusNe": "estado no es"
+      },
+      "statuses": {
+        "DRAFT": "Borrador",
+        "AWAITING_PAYMENT": "Pendiente de pago",
+        "PAID": "Pago recibido",
+        "SUBMITTED": "Enviado a la red",
+        "PUBLISHED": "Camaña activa",
+        "FAILED": "Error al publicar"
       }
     },
     "Handle": {
@@ -137,6 +145,10 @@
       "stopped": "Detenida."
     }
   },
+  "campaign_request_list": {
+    "title": "Pagos en Stripe",
+    "go_to_stripe": "Pagar"
+  },
   "claim_account": {
     "success": "El administrador the entregará el control de tu cuenta pronto.",
     "error": "Ups, no pudimos recibir tu pedido. Por favor contáctate con el administrador en X."
@@ -187,18 +199,31 @@
     "with_stripe": {
       "title": "Usar Stripe",
       "text": "Puedes pagar tu campaña con tarjeta de crédito o débito. Una parte del presupuesto se usará para cubrir comisiones por el procesamiento del pago, y no recibirás tokens Asami — pero los colaboradores igual serán pagados en DOC, igual que en las campañas on-chain.",
-      "coming_soon": "Próximamente"
+      "create_button": "Pagar con Stripe",
+      "form_title": "Lo que debes saber antes de lanzar",
+      "service_summary": "Tu campaña se activará en cuanto la envíes. Es posible que tu wallet te pida autorización para usar DOC antes de continuar. Las campañas duran 15 días, y cualquier DOC no utilizado se devolverá automáticamente a tu wallet al finalizar.<br/>Los colaboradores reciben pagos en DOC según su nivel de influencia, lo que te ayuda a llegar a las audiencias más relevantes.<br/><strong>Importante: no hay reembolsos — incluso si no estás satisfecho con los resultados.</strong> Te recomendamos empezar con un presupuesto pequeño de 50 DOC para ver cómo funciona Asami según tus objetivos.",
+      "done": {
+        "title": "Solo falto un paso",
+        "text": "Hemos recibido los detalles de tu campaña. Solo falta completar el pago. Una vez recibido, la campaña puede tardar hasta 24 horas en activarse.",
+        "go_to_stripe": "Continuar el pago"
+      }
     },
     "with_doc": {
       "title": "Usar DOC",
-      "claim_to_use": "Pagar tu campaña con DOC cuesta 25% menos y además ganas tokens ASAMI por cada repost. DOC es una stablecoin totalmente descentralizada en la blockchain de Rootstock, así que necesitarás una wallet compatible — como Beexo, MetaMask, Enkrypt o Rabby — para poder usarlo.",
+      "claim_to_use": "Pagar tu campaña con DOC cuesta 20% menos y además ganas tokens ASAMI por cada repost. DOC es una stablecoin totalmente descentralizada en la blockchain de Rootstock, así que necesitarás una wallet compatible — como Beexo, MetaMask, Enkrypt o Rabby — para poder usarlo.",
       "claim_to_use_button": "Conecta tu wallet para continuar",
       "claim_in_progress": "Estamos vinculando tu wallet... Muy pronto podrás crear campañas y aprovechar todos los beneficios de usar DOC — como menores costos y recompensas en ASAMI.",
       "create_text": "¿Quieres aprovechar mejor tu presupuesto? Usa DOC para lanzar campañas con menor costo y recibir tokens ASAMI en cada colaboración.",
       "create_button": "Lanzar con DOC",
       "doc_funded": "Aún no tienes DOC en tu wallet. Para comenzar, puedes mintearlo con RBTC o hacer un swap usando protocolos compatibles.",
       "get_doc": "Conseguir DOC ahora",
-      "form_title": "Lo que debes saber antes de lanzar"
+      "form_title": "Lo que debes saber antes de lanzar",
+      "service_summary": "Tu campaña se activará en cuanto la envíes. Es posible que tu wallet te pida autorización para usar DOC antes de continuar. Las campañas duran 15 días, y cualquier DOC no utilizado se devolverá automáticamente a tu wallet al finalizar.<br/>Los colaboradores reciben pagos en DOC según su nivel de influencia, lo que te ayuda a llegar a las audiencias más relevantes.<br/><strong>Importante: no hay reembolsos — incluso si no estás satisfecho con los resultados.</strong>. Recomendamos comenzar con un presupuesto pequeño de 30 DOC para ver cómo funciona Asami según tus objetivos.",
+      "done": {
+        "title": "Campaña creada",
+        "text": "Tu campaña ha sido creada. Puede tardar unos minutos en aparecer en tu panel de control.",
+        "see_in_explorer": "Ver transacción en el explorador de bloques"
+      }
     },
     "pay_members": "Paga a los miembros del club para repostear cualquier post de X.",
     "start_campaign": "Iniciar campaña",
@@ -221,9 +246,11 @@
     "form_step": {
       "content_url": "Enlace al post de X que deseas promocionar",
       "content_url_help": "Pega el enlace aquí. Lo encontrarás en el menú “Compartir” de X. <a target='_blank' href='https://help.x.com/es/using-x/post-and-moment-url'>¿Necesitas ayuda?</a>",
-      "budget": "Presupuesto total de la campaña (en DOC)",
+      "budget": "Presupuesto total de la campaña en DOC)",
+      "budget_help": "Minimum is 1 DOC, but we usually recommend 30–250 DOC.",
+      "managed_amount": "USD a gastar",
+      "managed_amount_help": "Minimum is $10, but we usually recommend $50–$300.",
       "start_campaign": "Iniciar campaña",
-      "service_summary": "Tu campaña se activará en cuanto la envíes. Es posible que tu wallet te pida autorización para usar DOC antes de continuar. Las campañas duran 15 días, y cualquier DOC no utilizado se devolverá automáticamente a tu wallet al finalizar.<br/>Los colaboradores reciben pagos en DOC según su nivel de influencia, lo que te ayuda a llegar a las audiencias más relevantes.<br/><strong>Importante: no hay reembolsos — incluso si no estás satisfecho con los resultados.</strong> Te recomendamos empezar con un presupuesto pequeño para familiarizarte con cómo funciona el sistema.",
       "price_per_point": "DOC por punto de influencia.",
       "price_per_point_help": "Define cuánto deseas pagar por el alcance. Cada punto estima una persona que recibe tu mensaje. 0.01 significa que pagas 10 DOC por aproximadamente 1.000 personas alcanzadas.",
       "max_individual_reward": "Máximo por colaborador",
@@ -243,11 +270,6 @@
       "waiting_for_tx": "Esperando que la transacción se confirme",
       "see_in_explorer": "Ver transacción en el explorador de bloques",
       "close": "Cerrar"
-    },
-    "done": {
-      "title": "Campaña creada",
-      "text": "Tu campaña ha sido creada. Puede tardar unos minutos en aparecer en tu panel de control.",
-      "see_in_explorer": "Ver transacción en el explorador de bloques"
     },
     "failure_step": {
       "action_rejected": "Parece que cancelaste la creación de la campaña en tu cartera, intenta de nuevo si todavía estás interesado.",

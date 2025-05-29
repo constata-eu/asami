@@ -4,14 +4,46 @@ use super::*;
 #[serial_test::file_serial]
 async fn creates_campaign_using_stripe() {
     TestHelper::with_web(|h| async move {
-        assert_eq!(h.a().app.account().select().count().await.unwrap(), 0);
-        let account = h.a().app.get_admin_own_account().await.unwrap();
-        assert_eq!(*account.addr().as_ref().unwrap(), h.a().app.on_chain.client.address().encode_hex());
-        assert_eq!(*account.addr().as_ref().unwrap(), "0x000000000000000000000000ed4e67213c7a375af60893fe8e0852d0f7040913");
+        let advertiser = h.user().await;
+        advertiser.login_to_web_with_otp().await;
+        h.web().navigate("/dashboard?role=advertiser").await;
+        h.web().click("#open-start-campaign-stripe-dialog").await;
+        h.web().fill_in("input[name='contentUrl']",
+            "https://x.com/rootstock_io/status/1922301351725261191"
+        ).await;
+        h.web().fill_in("input[name='budget']", "200").await;
+        h.web().click("#submit-start-campaign-form").await;
+        h.web().click("#campaign-done-close").await;
+        h.web().wait_for_text("td.column-status span", "Awaiting Payment").await;
 
-        let reloaded = h.a().app.get_admin_own_account().await.unwrap();
-        assert_eq!(account, reloaded);
-    }).await;
+        h.web().wait_for("#btn-go-to-checkout-for-1").await;
+
+        TestApp::try_until(100, 50, "No campaign created", || async {
+            h.test_app.app.campaign().select().count().await.unwrap() > 0
+        }).await;
+
+
+        let campaign = h.test_app.app.campaign().select().one().await.unwrap();
+
+        send_test_stripe_event_sync(
+            &h.test_app.app.settings.stripe.events_secret,
+            advertiser.account().await.stripe_customer_id().as_deref().unwrap(),
+            *campaign.id()).unwrap();
+
+        h.web().wait_until_gone("#btn-go-to-checkout-for-1").await;
+
+        h.test_app.start_mining().await;
+        h.test_app.app.campaign().create_managed_on_chain_campaigns().await.unwrap();
+        h.test_app.stop_mining().await;
+
+        h.test_app
+            .sync_events_until("Campaign should be published", || async {
+                *campaign.reloaded().await.unwrap().status() == models::CampaignStatus::Published 
+            })
+            .await;
+        h.web().wait_for_text("td.column-status span", "Live Campaign").await;
+    })
+    .await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -20,12 +52,93 @@ async fn admin_address_has_an_account_too() {
     TestHelper::run(|h| async move {
         assert_eq!(h.a().app.account().select().count().await.unwrap(), 0);
         let account = h.a().app.get_admin_own_account().await.unwrap();
-        assert_eq!(*account.addr().as_ref().unwrap(), h.a().app.on_chain.client.address().encode_hex());
-        assert_eq!(*account.addr().as_ref().unwrap(), "0x000000000000000000000000ed4e67213c7a375af60893fe8e0852d0f7040913");
+        assert_eq!(
+            *account.addr().as_ref().unwrap(),
+            h.a().app.on_chain.client.address().encode_hex()
+        );
+        assert_eq!(
+            *account.addr().as_ref().unwrap(),
+            "0x000000000000000000000000ed4e67213c7a375af60893fe8e0852d0f7040913"
+        );
 
         let reloaded = h.a().app.get_admin_own_account().await.unwrap();
         assert_eq!(account, reloaded);
-    }).await;
+    })
+    .await;
+}
+
+pub fn send_test_stripe_event_sync(
+    webhook_secret: &str,
+    customer: &str,
+    campaign_id: i32,
+) -> Result<(), Box<dyn std::error::Error>> {
+    use hmac::{Hmac, Mac};
+    use sha2::Sha256;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    use serde_json::json;
+    type HmacSha256 = Hmac<Sha256>;
+
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)?
+        .as_secs()
+        .to_string();
+
+    let payload = json!({
+        "id": "evt_test_payment_intent_succeeded",
+        "object": "event",
+        "type": "payment_intent.succeeded",
+        "data": {
+            "object": {
+                "id": "pi_test_123456789",
+                "object": "payment_intent",
+                "amount": 2000,
+                "currency": "usd",
+                "status": "succeeded",
+                "metadata": {
+                    "campaign_id": campaign_id.to_string()
+                },
+                "capture_method": "automatic",
+                "confirmation_method": "automatic",
+                "customer": customer,
+                "created": timestamp.parse::<u64>()?,
+                "livemode": false,
+                "payment_method_types": ["card"]
+            }
+        },
+        "livemode": false,
+        "created": timestamp.parse::<u64>()?,
+    });
+
+    let payload_string = payload.to_string();
+    let signed_payload = format!("{}.{}", timestamp, payload_string);
+
+    let mut mac = HmacSha256::new_from_slice(webhook_secret.as_bytes())?;
+    mac.update(signed_payload.as_bytes());
+    let signature = hex::encode(mac.finalize().into_bytes());
+
+    let stripe_signature_header = format!("t={},v1={}", timestamp, signature);
+
+    let response_result = ureq::post("http://127.0.0.1:8000/handle_stripe_events")
+        .set("Content-Type", "application/json")
+        .set("Stripe-Signature", &stripe_signature_header)
+        .send_string(&payload_string);
+
+    match response_result {
+        Ok(response) => {
+            let status = response.status();
+            let body = response.into_string().unwrap_or_else(|_| "<could not read body>".into());
+            println!("→ Sent fake event. Status: {}, Body: {}", status, body);
+        }
+        Err(ureq::Error::Status(code, response)) => {
+            let body = response.into_string().unwrap_or_else(|_| "<could not read body>".into());
+            eprintln!("→ Error response. Status: {}, Body: {}", code, body);
+        }
+        Err(e) => {
+            eprintln!("→ Request failed: {}", e);
+        }
+    }
+    Ok(())
 }
 
 // -> Has a 'paid' flag.
@@ -40,7 +153,7 @@ async fn admin_address_has_an_account_too() {
 // I need a function that sets-up the admin as a user on its own.
 
 /*
-CampaignRequestStatus 
+CampaignRequestStatus
 
 requested: Request just received.
 paid: Payment on stripe done.
@@ -48,7 +161,7 @@ draft: The inner campaign exists, and is in draft status.
     -> Admin address pays the doc and marks submitted.
 submitted: The inner campaign exists, and is in submitted status.
 published: The inner campaign exists, and is in published status.
-created: A draft campaign has been created. 
+created: A draft campaign has been created.
 failed
 
 

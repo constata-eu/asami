@@ -1,0 +1,119 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM campaigns WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR managed_by_admin = $8::boolean) AND (NOT $9::boolean OR managed_unit_amount = $10::int4) AND (NOT $11::boolean OR managed_unit_amount > $12::int4) AND (NOT $13::boolean OR managed_unit_amount < $14::int4) AND (NOT $15::boolean OR stripe_session_url = $16::varchar) AND (NOT $17::boolean OR stripe_session_id = $18::varchar) AND (NOT $19::boolean OR advertiser_addr = $20::varchar) AND (NOT $21::boolean OR advertiser_addr LIKE $22::varchar) AND (NOT $23::boolean OR status = $24::campaign_status) AND (NOT $25::boolean OR status != $26::campaign_status) AND (NOT $27::boolean OR briefing_hash = $28::varchar) AND (NOT $29::boolean OR briefing_hash LIKE $30::varchar) AND (NOT $31::boolean OR briefing_json = $32::varchar) AND (NOT $33::boolean OR briefing_json LIKE $34::varchar) AND (NOT $35::boolean OR budget = $36::varchar) AND (NOT $37::boolean OR budget > $38::varchar) AND (NOT $39::boolean OR budget < $40::varchar) AND (NOT $41::boolean OR price_per_point = $42::varchar) AND (NOT $43::boolean OR max_individual_reward = $44::varchar) AND (NOT $45::boolean OR min_individual_reward = $46::varchar) AND (NOT $47::boolean OR thumbs_up_only = $48::boolean) AND (NOT $49::boolean OR valid_until = $50::timestamptz) AND (NOT $51::boolean OR report_hash = $52::varchar) AND (NOT $53::boolean OR created_at = $54::timestamptz) AND (NOT $55::boolean OR force_hydrate = $56::boolean) AND (NOT $57::boolean OR total_collabs = $58::int4) AND (NOT $59::boolean OR total_spent = $60::varchar) AND (NOT $61::boolean OR total_budget = $62::varchar) AND (NOT $63::boolean OR impression_count = $64::int4) AND (NOT $65::boolean OR reply_count = $66::int4) AND (NOT $67::boolean OR repost_count = $68::int4) AND (NOT $69::boolean OR like_count = $70::int4)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "campaign_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "awaiting_payment",
+                "paid",
+                "submitted",
+                "published",
+                "failed"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "campaign_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "awaiting_payment",
+                "paid",
+                "submitted",
+                "published",
+                "failed"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "49850d81efef8b0bee31451373e958ca823abf3a938ad848eb4abb9e2242900a"
+}

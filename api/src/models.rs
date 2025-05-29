@@ -49,8 +49,6 @@ pub mod handle_scoring;
 pub use handle_scoring::*;
 pub mod community_member;
 pub use community_member::*;
-pub mod campaign_request;
-pub use campaign_request::*;
 
 #[macro_export]
 macro_rules! make_sql_enum {
@@ -60,16 +58,6 @@ macro_rules! make_sql_enum {
     pub enum $name { $($variants),* }
   )
 }
-
-make_sql_enum![
-    "generic_request_status",
-    pub enum GenericRequestStatus {
-        Received,
-        Submitted,
-        Failed,
-        Done,
-    }
-];
 
 model! {
   state: App,

@@ -16,7 +16,9 @@ use api::{
 };
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use ethers::{
-    abi::AbiEncode, middleware::NonceManagerMiddleware, signers::{LocalWallet, Signer}
+    abi::AbiEncode,
+    middleware::NonceManagerMiddleware,
+    signers::{LocalWallet, Signer},
 };
 pub use galvanic_assert::{
     self,
@@ -343,6 +345,7 @@ impl TestUser {
                 &gql::CreateCampaignFromLink::build_query(Variables {
                     input: CreateCampaignFromLinkInput {
                         link: link.to_string(),
+                        managed_unit_amount: None,
                         topic_ids: topic_ids.iter().map(|x| *x as i64).collect(),
                         price_per_point: milli("1").encode_hex(),
                         max_individual_reward: milli("20000").encode_hex(),
@@ -537,6 +540,8 @@ impl TestUser {
                     ),
                     ids: None,
                     id_eq: None,
+                    is_published_eq: None,
+                    managed_by_admin_eq: None,
                     account_id_eq: None,
                     briefing_hash_like: None,
                     briefing_json_like: None,

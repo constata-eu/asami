@@ -18,7 +18,6 @@ pub use selenium::Selenium;
 use super::*;
 use crate::support::Truffle;
 
-#[derive(Debug)]
 pub struct TestApp {
     pub app: App,
     pub truffle: Truffle,

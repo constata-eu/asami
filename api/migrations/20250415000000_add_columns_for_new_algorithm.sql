@@ -81,6 +81,7 @@ CREATE TABLE handle_scorings (
 CREATE INDEX idx_handle_scorings_handle_id ON handle_scorings(handle_id);
 CREATE INDEX idx_handle_scorings_status ON handle_scorings(status);
 
+DELETE FROM handle_topics WHERE handle_id IN (SELECT id FROM handles WHERE user_id IS NULL);
 DELETE FROM handles WHERE user_id IS NULL;
 
 ALTER TABLE handles
@@ -182,50 +183,17 @@ SELECT DISTINCT advertiser_id, member_id, '0x00000000000000000000000000000000000
 FROM collabs
 ON CONFLICT (account_id, member_id) DO NOTHING;
 
-ALTER TABLE campaigns ADD COLUMN thumbs_up_only BOOLEAN NOT NULL DEFAULT FALSE;
-
+ALTER TABLE campaigns
+    ADD COLUMN thumbs_up_only BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN managed_by_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    ADD COLUMN managed_unit_amount INT4,
+    ADD COLUMN stripe_session_url VARCHAR,
+    ADD COLUMN stripe_session_id VARCHAR; 
 
 DROP TYPE campaign_request_status CASCADE;
 
-CREATE TYPE campaign_request_status AS ENUM (
-    'requested',
-    'stripe_session_created',
-    'paid',
-    'draft',
-    'submitted',
-    'published',
-    'failed',
-    'refunded'
-);
-
-CREATE TABLE campaign_requests (
-    id SERIAL PRIMARY KEY NOT NULL,
-    account_id VARCHAR REFERENCES accounts(id) NOT NULL,
-    link TEXT NOT NULL,
-    unit_amount INT4 NOT NULL,
-    price_per_point VARCHAR NOT NULL,
-    min_individual_reward VARCHAR NOT NULL,
-    max_individual_reward VARCHAR NOT NULL,
-    thumbs_up_only BOOLEAN NOT NULL,
-    status campaign_request_status NOT NULL DEFAULT 'requested',
-    stripe_session_url VARCHAR NOT NULL,
-    stripe_session_id VARCHAR NOT NULL,
-    campaign_id INTEGER REFERENCES campaigns(id),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (account_id, link)
-);
-
-CREATE INDEX campaign_requests_account_id ON campaign_requests(account_id);
-CREATE INDEX campaign_requests_campaign_id ON campaign_requests(campaign_id);
-
-CREATE TABLE campaign_request_topics (
-    id SERIAL PRIMARY KEY NOT NULL,
-    campaign_request_id INTEGER REFERENCES campaign_requests(id) NOT NULL,
-    topic_id INTEGER REFERENCES topics(id) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE INDEX campaign_request_topics_campaign_request_id on campaign_request_topics(campaign_request_id);
-CREATE INDEX campaign_request_topics_topic_id on campaign_request_topics(topic_id);
+ALTER TYPE campaign_status ADD VALUE IF NOT EXISTS 'awaiting_payment' AFTER 'draft';
+ALTER TYPE campaign_status ADD VALUE IF NOT EXISTS 'paid' AFTER 'awaiting_payment';
+ALTER TYPE campaign_status ADD VALUE IF NOT EXISTS 'failed' AFTER 'published';
 
 ALTER TABLE accounts ADD COLUMN stripe_customer_id VARCHAR;

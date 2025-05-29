@@ -31,12 +31,6 @@ import XIcon from "@mui/icons-material/X";
 export const CampaignList = () => {
   const t = useTranslate();
 
-  const statusChoices = [
-    { id: "DRAFT", name: "DRAFT" },
-    { id: "SUBMITTED", name: "SUBMITTED" },
-    { id: "PUBLISHED", name: "PUBLISHED" },
-  ];
-
   const filters = [
     <TextInput source="idEq" alwaysOn />,
     <TextInput source="briefingJsonLike" />,
@@ -44,8 +38,6 @@ export const CampaignList = () => {
     <ReferenceInput source="accountIdEq" reference="Account">
       <NumberInput source="accountIdEq" size="small" />
     </ReferenceInput>,
-    <SelectInput source="statusEq" choices={statusChoices} />,
-    <SelectInput source="statusNe" choices={statusChoices} />,
     <AmountInput source="budgetLt" />,
     <AmountInput source="budgetGt" />,
     <AmountInput source="budgetEq" />,
@@ -57,13 +49,13 @@ export const CampaignList = () => {
       <Lead>{t("explorer.campaigns.description")}</Lead>
       <List
         disableAuthentication
+        filter={{ isPublishedEq: true }}
         filters={filters}
         sort={{ field: "createdAt", order: "DESC" }}
       >
         <Datagrid bulkActionButtons={false} expand={<ExpandCampaign />}>
           <FunctionField source="briefingJson" render={contentId} />
           <ReferenceField source="accountId" reference="Account" link="show" />
-          <TextField source="status" sortable={false} />
           <NumberField source="totalCollabs" />
           <AmountField textAlign="right" currency="" source="budget" />
           <AmountField textAlign="right" currency="" source="totalSpent" />

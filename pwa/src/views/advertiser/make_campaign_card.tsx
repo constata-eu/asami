@@ -1,15 +1,7 @@
-import {
-  useSafeSetState,
-  useDataProvider,
-  useTranslate,
-  ReferenceArrayInput,
-  AutocompleteArrayInput,
-  BooleanInput,
-} from "react-admin";
+import { useSafeSetState, useDataProvider, useTranslate } from "react-admin";
 
 import {
   LinearProgress,
-  Alert,
   Box,
   Button,
   CardContent,
@@ -17,21 +9,17 @@ import {
 } from "@mui/material";
 import { Dialog } from "@mui/material";
 import { formatAddress } from "../../lib/formatters";
-import { toBeHex, zeroPadValue, parseEther } from "ethers";
+import { toBeHex, parseEther } from "ethers";
 import { DeckCard } from "../layout";
 import { useContracts } from "../../components/contracts_context";
-import { Head2, Head3, light } from "../../components/theme";
-import { validateCampaignLink, defaultValidUntil } from "../../lib/campaign";
-import Paper from "@mui/material/Paper";
-import { Form, TextInput, SaveButton, useNotify } from "react-admin";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { Head2 } from "../../components/theme";
+import { useNotify } from "react-admin";
 import LaunchIcon from "@mui/icons-material/Launch";
 import { Stack } from "@mui/material";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import ClaimAccountButton from "../claim_account";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
-import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
-import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import { CampaignForm, Banned, Done, Failure } from "./make_campaign_shared";
 
 export const MakeCampaignWithDocCard = ({ account, onCreate }) => {
   const t = useTranslate();
@@ -78,18 +66,6 @@ const ClaimInProgress = () => {
     </Stack>
   );
 };
-
-const Banned = () => (
-  <Stack alignItems="center">
-    <RemoveCircleOutlineIcon
-      sx={{
-        fontSize: "7em",
-        my: "1rem",
-        color: "error.main",
-      }}
-    />
-  </Stack>
-);
 
 const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
   const translate = useTranslate();
@@ -164,81 +140,6 @@ const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
     }
   };
 
-  const parseNumber = (value, min_allowed, too_low_msg, nan_message) => {
-    try {
-      const parsed = parseEther(value);
-      if (parsed < parseEther(min_allowed)) {
-        return {
-          error: translate(`make_campaign.errors.${too_low_message}`),
-        };
-      }
-      return { ok: BigInt(zeroPadValue(toBeHex(parsed), 32)) };
-    } catch {
-      return { error: translate(`make_campaign.errors.${nan_message}`) };
-    }
-  };
-
-  const validate = (values) => {
-    let input = {
-      duration: 15,
-    };
-
-    const error = validateCampaignLink(values.contentUrl);
-    if (error) {
-      return { contentUrl: translate(`make_campaign.errors.${error}`) };
-    }
-    input.link = values.contentUrl;
-    input.topicIds = values.topic_ids;
-    input.pricePerPoint = values.pricePerPoint;
-    input.thumbsUpOnly = !!values.thumbsUpOnly;
-
-    const budget = parseNumber(
-      values.budget,
-      "1",
-      "budget_too_low",
-      "budget_not_a_number",
-    );
-    if (budget.error) {
-      return { budget: budget.error };
-    }
-    input.budget = budget.ok;
-
-    const ppp = parseNumber(
-      values.pricePerPoint,
-      "0.001",
-      "price_per_point_too_low",
-      "price_per_point_not_a_number",
-    );
-    if (ppp.error) {
-      return { pricePerPoint: ppp.error };
-    }
-    input.pricePerPoint = ppp.ok;
-
-    const max = parseNumber(
-      values.maxIndividualReward,
-      "0",
-      "max_too_low",
-      "max_not_a_number",
-    );
-    if (max.error) {
-      return { maxIndividualReward: max.error };
-    }
-    input.maxIndividualReward = max.ok;
-
-    const min = parseNumber(
-      values.minIndividualReward,
-      "0",
-      "min_too_low",
-      "min_not_a_number",
-    );
-    if (min.error) {
-      return { minIndividualReward: min.error };
-    }
-    input.minIndividualReward = min.ok;
-
-    values.makeCampaignInput = input;
-  };
-
   const hasDoc = BigInt(account.docBalance) >= parseEther("1");
 
   return (
@@ -280,8 +181,12 @@ const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
       >
         {step == "FORM" && (
           <CampaignForm
+            helpTitle="make_campaign.with_doc.form_title"
+            helpText="make_campaign.with_doc.service_summary"
+            amountLabel="make_campaign.form_step.budget"
+            amountHelp="make_campaign.form_step.budget_help"
+            minAmount="1"
             onSubmit={onSubmit}
-            validate={validate}
             handleClose={handleClose}
           />
         )}
@@ -301,166 +206,21 @@ const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
             id="creation-waiter"
           />
         )}
-        {step == "DONE" && <Done tx={creationTx} handleClose={handleClose} />}
+        {step == "DONE" && (
+          <Done
+            title={"make_campaign.with_doc.done.title"}
+            leadText={"make_campaign.with_doc.done.text"}
+            primaryLink={`https://explorer.rootstock.io/tx/${creationTx?.hash}`}
+            primaryText={translate(
+              "make_campaign.with_doc.done.see_in_explorer",
+            )}
+            handleClose={handleClose}
+          />
+        )}
         {step == "ERROR" && (
-          <Failure failure={failure} handleClose={handleClose} />
+          <OnChainFailure failure={failure} handleClose={handleClose} />
         )}
       </Dialog>
-    </Box>
-  );
-};
-
-const CampaignForm = ({ onSubmit, validate, handleClose }) => {
-  const translate = useTranslate();
-  const defaultValues = {
-    pricePerPoint: "0.01",
-    maxIndividualReward: "5",
-    minIndividualReward: "0.1",
-  };
-  return (
-    <Box p="1em" id="campaign-form">
-      <Form
-        defaultValues={defaultValues}
-        sanitizeEmptyValues
-        validate={validate}
-        onSubmit={onSubmit}
-      >
-        <Stack direction="row" gap="1em" flexWrap="wrap">
-          <Stack flex="1 1 450px" gap="0.5em">
-            <TextInput
-              fullWidth
-              required={true}
-              size="small"
-              variant="filled"
-              source="contentUrl"
-              label={translate("make_campaign.form_step.content_url")}
-              helperText={
-                <Box
-                  dangerouslySetInnerHTML={{
-                    __html: translate(
-                      "make_campaign.form_step.content_url_help",
-                    ),
-                  }}
-                />
-              }
-            />
-            <TextInput
-              fullWidth
-              required={true}
-              size="small"
-              variant="filled"
-              source="budget"
-              label={translate("make_campaign.form_step.budget")}
-              helperText={false}
-              sx={{ mb: "0.5em" }}
-            />
-
-            <TextInput
-              fullWidth
-              required={true}
-              value="0.005"
-              size="small"
-              variant="filled"
-              source="pricePerPoint"
-              helperText={translate(
-                "make_campaign.form_step.price_per_point_help",
-              )}
-              sx={{ mb: "0.5em" }}
-              label={translate("make_campaign.form_step.price_per_point")}
-            />
-            <Stack flexWrap="wrap" direction="row" gap="1em" mb="0.5em">
-              <TextInput
-                required={true}
-                size="small"
-                variant="filled"
-                source="maxIndividualReward"
-                helperText={translate(
-                  "make_campaign.form_step.max_individual_reward_help",
-                )}
-                label={translate(
-                  "make_campaign.form_step.max_individual_reward",
-                )}
-                sx={{ flex: "1 1 200px" }}
-              />
-              <TextInput
-                required={true}
-                size="small"
-                variant="filled"
-                source="minIndividualReward"
-                helperText={translate(
-                  "make_campaign.form_step.min_individual_reward_help",
-                )}
-                label={translate(
-                  "make_campaign.form_step.min_individual_reward",
-                )}
-                sx={{ flex: "1 1 200px" }}
-              />
-            </Stack>
-            <Stack
-              flexWrap="wrap"
-              direction="row"
-              gap="1em"
-              mb="0.5em"
-              alignItems="flex-end"
-            >
-              <Box flex="0 1 50%">
-                <ReferenceArrayInput
-                  size="large"
-                  variant="filled"
-                  source="topic_ids"
-                  reference="Topic"
-                >
-                  <AutocompleteArrayInput
-                    label={translate("make_campaign.form_step.topics")}
-                    helperText={translate(
-                      "make_campaign.form_step.topics_help",
-                    )}
-                    size="small"
-                    variant="filled"
-                    optionText={(x) =>
-                      translate(`resources.Topic.names.${x.name}`)
-                    }
-                  />
-                </ReferenceArrayInput>
-              </Box>
-              <BooleanInput
-                source="thumbsUpOnly"
-                label={
-                  <Stack direction="row" gap="0.5em">
-                    {translate("make_campaign.form_step.thumbs_up_only")}
-                    <ThumbUpIcon color="primary" fontSize="small" />
-                  </Stack>
-                }
-                helperText={translate(
-                  "make_campaign.form_step.thumbs_up_only_help",
-                )}
-              />
-            </Stack>
-          </Stack>
-          <Stack gap="0.5em" flex="1 1 250px">
-            <Head3 sx={{ color: "primary.main", mb: "0.5em" }}>
-              {translate("make_campaign.with_doc.form_title")}
-            </Head3>
-            <Typography
-              mb="1em"
-              dangerouslySetInnerHTML={{
-                __html: translate("make_campaign.form_step.service_summary"),
-              }}
-            />
-            <Box flexGrow={1} />
-            <SaveButton
-              fullWidth
-              id="submit-start-campaign-form"
-              size="large"
-              label={translate("make_campaign.form_step.start_campaign")}
-              icon={<CampaignIcon />}
-            />
-            <Button fullWidth color="secondary" onClick={handleClose}>
-              {translate("make_campaign.i_changed_my_mind")}
-            </Button>
-          </Stack>
-        </Stack>
-      </Form>
     </Box>
   );
 };
@@ -494,48 +254,7 @@ const TxWaiter = ({ title, text, tx, id }) => {
   );
 };
 
-const Done = ({ tx, handleClose }) => {
-  const translate = useTranslate();
-
-  return (
-    <Alert
-      id="campaign-done"
-      sx={{
-        color: light,
-        backgroundColor: (theme) => theme.palette.primary.main,
-      }}
-      variant="filled"
-      icon={false}
-    >
-      <Head2 sx={{ color: "inverted.main" }}>
-        {translate("make_campaign.done.title")}
-      </Head2>
-      <Typography my="1em">{translate("make_campaign.done.text")}</Typography>
-      <Button
-        fullWidth
-        color="inverted"
-        variant="text"
-        startIcon={<LaunchIcon />}
-        href={`https://explorer.rootstock.io/tx/${tx.hash}`}
-        target="_blank"
-      >
-        {translate("make_campaign.done.see_in_explorer")}
-      </Button>
-      <Button
-        id="campaign-done-close"
-        sx={{ mt: "1em" }}
-        fullWidth
-        onClick={handleClose}
-        color="inverted"
-        variant="outlined"
-      >
-        {translate("make_campaign.close")}
-      </Button>
-    </Alert>
-  );
-};
-
-const Failure = ({ failure, handleClose }) => {
+const OnChainFailure = ({ failure, handleClose }) => {
   const notify = useNotify();
   const translate = useTranslate();
 
@@ -556,49 +275,5 @@ const Failure = ({ failure, handleClose }) => {
       : failure.toString();
   }
 
-  const copyText = async () => {
-    notify("make_campaign.failure_step.info_copied", {
-      anchorOrigin: { vertical: "top", horizontal: "center" },
-    });
-    await navigator.clipboard.writeText(info);
-  };
-
-  return (
-    <Alert severity="error" variant="filled" icon={false}>
-      <Head2 sx={{ mb: "0.5em", color: "inverted.main" }}>
-        {translate("make_campaign.failure_step.title")}
-      </Head2>
-      {msg}
-      {info && (
-        <Paper sx={{ mt: "1em", p: "0.5em" }}>
-          <Typography
-            component="pre"
-            variant="body2"
-            sx={{ whiteSpace: "break-spaces", lineBreak: "anywhere" }}
-          >
-            {info}
-          </Typography>
-          <Button
-            sx={{ mt: "1em" }}
-            fullWidth
-            startIcon={<ContentCopyIcon />}
-            onClick={copyText}
-            color="inverted"
-          >
-            {translate("make_campaign.failure_step.copy_info")}
-          </Button>
-        </Paper>
-      )}
-
-      <Button
-        sx={{ mt: "1em" }}
-        fullWidth
-        onClick={handleClose}
-        color="inverted"
-        variant="outlined"
-      >
-        {translate("make_campaign.close")}
-      </Button>
-    </Alert>
-  );
+  return <Failure msg={msg} info={info} handleClose={handleClose} />;
 };

@@ -55,6 +55,14 @@
         "accountIdEq": "by member ID",
         "statusEq": "status is",
         "statusNe": "status is not"
+      },
+      "statuses": {
+        "DRAFT": "Draft",
+        "AWAITING_PAYMENT": "Awaiting Payment",
+        "PAID": "Payment received",
+        "SUBMITTED": "Submitted On-Chain",
+        "PUBLISHED": "Live Campaign",
+        "FAILED": "Failed to Publish"
       }
     },
     "Handle": {
@@ -137,6 +145,10 @@
       "stopped": "Not running."
     }
   },
+  "campaign_request_list": {
+    "title": "Stripe payments",
+    "go_to_stripe": "Go to checkout"
+  },
   "claim_account": {
     "success": "The admin will hand over control of your account to you soon.",
     "error": "Oops, we could not receive your request. Please try again or contact the admin on X."
@@ -187,18 +199,31 @@
     "with_stripe": {
       "title": "Use Stripe",
       "text": "You can fund your campaign using a credit or debit card. A portion of your budget will go to payment processing fees, and you won’t receive Asami tokens — but collaborators will still be paid in DOC, just like with on-chain campaigns.",
-      "coming_soon": "Coming Soon"
+      "create_button": "Launch Campaign",
+      "form_title": "What to know before you launch.",
+      "service_summary": "Campaigns paid via Stripe include a 20% fee for processing and budget management. The rest is converted to DOC and fully used to fund your campaign and reward collaborators. You may want to consider funding directly in DOC to avoid this fee. Campaigns run until the full budget is spent, with collaborators paid based on their influence to help you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small $50 budget to see how Asami works for your goals.",
+      "done": {
+        "title": "One Last Step",
+        "text": "We’ve received your campaign details. All that’s left is to complete the payment. Once we receive it, your campaign may take up to 24 hours to go live.",
+        "go_to_stripe": "Go to checkout"
+      }
     },
     "with_doc": {
       "title": "Use DOC",
-      "claim_to_use": "Funding your campaign with DOC is 25% cheaper and earns you Asami tokens for every repost. DOC is a fully decentralized stablecoin on the Rootstock blockchain, so you’ll need a compatible wallet — like Beexo, MetaMask, Enkrypt, or Rabby — to use it.",
+      "claim_to_use": "Funding your campaign with DOC is 20% cheaper and earns you Asami tokens for every repost. DOC is a fully decentralized stablecoin on the Rootstock blockchain, so you’ll need a compatible wallet — like Beexo, MetaMask, Enkrypt, or Rabby — to use it.",
       "claim_to_use_button": "Connect Wallet to Continue",
       "claim_in_progress": "Linking your wallet... Soon you'll be able to create campaigns and enjoy all the benefits of using DOC — including lower costs and Asami rewards.",
       "create_text": "Want more for your budget? Use DOC to launch campaigns at lower cost and collect Asami tokens with every collaboration.",
       "create_button": "Launch with DOC",
       "doc_funded": "You don't have any DOC in your wallet yet. To get started, you can mint it using RBTC or swap for it using supported protocols.",
       "get_doc": "Get DOC now",
-      "form_title": "What to know before you launch."
+      "form_title": "What to know before you launch.",
+      "service_summary": "Your campaign will go live as soon as it’s submitted. Your wallet may ask for DOC spending authorization before it can proceed. Campaigns run for 15 days, and any unused DOC will be automatically returned to your wallet at the end.<br/> Collaborators are paid in DOC based on their influence level, which helps you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small 30 DOC budget to see how Asami works for your goals.",
+      "done": {
+        "title": "Campaign created",
+        "text": "Your campaign has been created. It may take a few minutes to show up in your dashboard.",
+        "see_in_explorer": "See transaction in block explorer"
+      }
     },
     "pay_members": "Pay club members to repost any X post.",
     "start_campaign": "Start Campaign",
@@ -221,9 +246,11 @@
     "form_step": {
       "content_url": "X post link to boost",
       "content_url_help": "Paste the link here. Find it on the “Share Post” menu on X. <a target='_blank' href='https://help.x.com/en/using-x/post-and-moment-url'>Need help?</a>",
-      "budget": "Total campaign budget (in DOC)",
+      "budget": "Total campaign budget in DOC (USD)",
+      "budget_help": "Minimum is 1 DOC, but we usually recommend 30–250 DOC.",
+      "managed_amount": "USD to spend",
+      "managed_amount_help": "Minimum is $10, but we usually recommend $50–$300.",
       "start_campaign": "Start Campaign",
-      "service_summary": "Your campaign will go live as soon as it’s submitted. Your wallet may ask for DOC spending authorization before it can proceed. Campaigns run for 15 days, and any unused DOC will be automatically returned to your wallet at the end.<br/> Collaborators are paid in DOC based on their influence level, which helps you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small budget to get a feel for how the system works.",
       "price_per_point": "DOC per influence point.",
       "price_per_point_help": "Sets how much to reward for reach. Each point estimates one person getting your message. 0.01 means you pay 10 DOC for approximately 1,000 people meaningfully reached.",
       "max_individual_reward": "Max per collaborator",
@@ -243,11 +270,6 @@
       "waiting_for_tx": "Waiting for transaction to confirm",
       "see_in_explorer": "See transaction in block explorer",
       "close": "Close"
-    },
-    "done": {
-      "title": "Campaign created",
-      "text": "Your campaign has been created. It may take a few minutes to show up in your dashboard.",
-      "see_in_explorer": "See transaction in block explorer"
     },
     "failure_step": {
       "action_rejected": "It looks like you cancelled the campaign creation in your wallet, try again if you're still interested.",

@@ -340,17 +340,22 @@ impl Account {
         use stripe::{CreateCustomer, Customer};
 
         if let Some(id) = self.stripe_customer_id() {
-          return Ok(id.parse::<stripe::CustomerId>()?);
+            return Ok(id.parse::<stripe::CustomerId>()?);
         }
 
         let mut metadata = HashMap::new();
         metadata.insert("account_id".to_string(), self.attrs.id.to_string());
         metadata.insert("account_id_as_number".to_string(), hex_to_i32(self.id())?.to_string());
-        let customer_id = Customer::create(&self.state.stripe_client, CreateCustomer{
-            name: self.name().as_deref(),
-            metadata: Some(metadata), 
-            ..Default::default()
-        }).await?.id;
+        let customer_id = Customer::create(
+            &self.state.stripe_client,
+            CreateCustomer {
+                name: self.name().as_deref(),
+                metadata: Some(metadata),
+                ..Default::default()
+            },
+        )
+        .await?
+        .id;
 
         self.clone().update().stripe_customer_id(Some(customer_id.to_string())).save().await?;
 
