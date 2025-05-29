@@ -49,6 +49,7 @@ pub mod handle_scoring;
 pub use handle_scoring::*;
 pub mod community_member;
 pub use community_member::*;
+pub mod poll_texts;
 
 #[macro_export]
 macro_rules! make_sql_enum {

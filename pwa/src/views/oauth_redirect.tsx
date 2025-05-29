@@ -77,7 +77,9 @@ const RegularLogin = ({ authData, authMethodKind }) => {
   return !error ? (
     <>
       <CircularProgress sx={{ mb: 3 }} />
-      <Head2>Logging you in, this won&apos;t take long.</Head2>
+      <Head2 sx={{ color: "primary.main" }}>
+        {translate("oauth_redirect.logging_you_in")}
+      </Head2>
       <GoogleReCaptcha onVerify={onVerify} />
     </>
   ) : (
@@ -143,7 +145,7 @@ export const XGrantAccess = () => {
 
   useEffect(() => {
     if (hasRun.current) {
-      redirect("/dashboard");
+      return redirect("/dashboard");
     }
     hasRun.current = true;
 
@@ -170,7 +172,9 @@ export const XGrantAccess = () => {
       {!error ? (
         <>
           <CircularProgress sx={{ mb: 3 }} />
-          <Head2>{translate("oauth_redirect.x_waiting_for_access")}</Head2>
+          <Head2 sx={{ color: "primary.main" }}>
+            {translate("oauth_redirect.x_waiting_for_access")}
+          </Head2>
         </>
       ) : (
         <Errors error={error} />

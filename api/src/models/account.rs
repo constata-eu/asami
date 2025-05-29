@@ -31,6 +31,8 @@ model! {
     allows_gasless: bool,
     #[sqlx_model_hints(varchar, default)]
     stripe_customer_id: Option<String>,
+    #[sqlx_model_hints(language)]
+    lang: super::Lang,
 
     // These columns contain on-chain values that can be updated in a time based fashion.
     // They should at least be updated when a DOC transfer is done

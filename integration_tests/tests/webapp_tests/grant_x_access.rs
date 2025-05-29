@@ -1,4 +1,3 @@
-/*
 use models::HandleScoringStatus;
 
 use super::*;
@@ -8,7 +7,7 @@ use super::*;
 async fn grant_x_access() {
     let h = TestHelper::for_web().await;
     let w = h.web();
-    let a = &h.app.app;
+    let a = &h.test_app.app;
 
     let tester_user = std::env::var("X_TESTER_USERNAME").unwrap();
     let tester_pass = std::env::var("X_TESTER_PASSWORD").unwrap();
@@ -39,6 +38,7 @@ async fn grant_x_access() {
     handle.reload().await.unwrap();
 
     assert_eq!(handle.handle_scoring_scope().count().await.unwrap(), 1);
+
     let scoring = handle.handle_scoring().await.unwrap().expect("expected a scoring");
 
     assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
@@ -50,7 +50,7 @@ async fn grant_x_access() {
 
     assert!(scoring.tweets_payload().unwrap().unwrap().data.unwrap().first().unwrap().organic_metrics.is_some());
 
-    assert!(!scoring.mentions_payload().unwrap().unwrap().data.unwrap().is_empty());
+    assert!(!scoring.mentions_payload().unwrap().unwrap().data().is_none());
 
     w.driver.refresh().await.unwrap();
     w.wait_for("#existing-x-handle-stats").await;
@@ -71,4 +71,3 @@ async fn grant_x_access() {
 
     h.stop().await;
 }
-*/

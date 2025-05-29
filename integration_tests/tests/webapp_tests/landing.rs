@@ -15,9 +15,9 @@ async fn shows_landing() {
             "1758192965703647443",
             "1758506690213732795",
         ] {
-            advertiser.start_and_pay_campaign(
-                &format!("https://x.com/somebody/status/{post}"), u("100"), 10, &[]
-            ).await;
+            advertiser
+                .start_and_pay_campaign(&format!("https://x.com/somebody/status/{post}"), u("100"), 10, &[])
+                .await;
         }
 
         assert_eq!(h.test_app.app.campaign().select().count().await.unwrap(), 7);
@@ -25,5 +25,6 @@ async fn shows_landing() {
         h.web().navigate("/").await;
 
         TestApp::wait_for_enter("shows landing").await;
-    }).await;
+    })
+    .await;
 }

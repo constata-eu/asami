@@ -110,6 +110,7 @@ impl App {
             .insert(InsertAccount {
                 name: Some("Constata.eu Campaign Manager".to_string()),
                 addr: Some(addr),
+                lang: Lang::En,
             })
             .save()
             .await?;

@@ -152,7 +152,7 @@ impl Context {
     }
 
     pub fn maybe_account_id(&self) -> Option<&str> {
-        self.current_session.as_ref().map(|s| s.0.attrs.account_id.as_str() )
+        self.current_session.as_ref().map(|s| s.0.attrs.account_id.as_str())
     }
 
     pub async fn account(&self) -> AsamiResult<models::Account> {

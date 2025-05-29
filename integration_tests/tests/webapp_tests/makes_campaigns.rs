@@ -8,9 +8,12 @@ async fn creates_campaign_using_stripe() {
         advertiser.login_to_web_with_otp().await;
         h.web().navigate("/dashboard?role=advertiser").await;
         h.web().click("#open-start-campaign-stripe-dialog").await;
-        h.web().fill_in("input[name='contentUrl']",
-            "https://x.com/rootstock_io/status/1922301351725261191"
-        ).await;
+        h.web()
+            .fill_in(
+                "input[name='contentUrl']",
+                "https://x.com/rootstock_io/status/1922301351725261191",
+            )
+            .await;
         h.web().fill_in("input[name='budget']", "200").await;
         h.web().click("#submit-start-campaign-form").await;
         h.web().click("#campaign-done-close").await;
@@ -20,15 +23,17 @@ async fn creates_campaign_using_stripe() {
 
         TestApp::try_until(100, 50, "No campaign created", || async {
             h.test_app.app.campaign().select().count().await.unwrap() > 0
-        }).await;
-
+        })
+        .await;
 
         let campaign = h.test_app.app.campaign().select().one().await.unwrap();
 
         send_test_stripe_event_sync(
             &h.test_app.app.settings.stripe.events_secret,
             advertiser.account().await.stripe_customer_id().as_deref().unwrap(),
-            *campaign.id()).unwrap();
+            *campaign.id(),
+        )
+        .unwrap();
 
         h.web().wait_until_gone("#btn-go-to-checkout-for-1").await;
 
@@ -38,7 +43,7 @@ async fn creates_campaign_using_stripe() {
 
         h.test_app
             .sync_events_until("Campaign should be published", || async {
-                *campaign.reloaded().await.unwrap().status() == models::CampaignStatus::Published 
+                *campaign.reloaded().await.unwrap().status() == models::CampaignStatus::Published
             })
             .await;
         h.web().wait_for_text("td.column-status span", "Live Campaign").await;
@@ -79,10 +84,7 @@ pub fn send_test_stripe_event_sync(
     use serde_json::json;
     type HmacSha256 = Hmac<Sha256>;
 
-    let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)?
-        .as_secs()
-        .to_string();
+    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs().to_string();
 
     let payload = json!({
         "id": "evt_test_payment_intent_succeeded",

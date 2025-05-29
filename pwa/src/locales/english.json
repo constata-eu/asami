@@ -498,7 +498,7 @@
     }
   },
   "oauth_redirect": {
-    "logging_you_in": "Logging you in, this won&apos;t take long.",
+    "logging_you_in": "Logging you in, this won't take long.",
     "invalid_redirect_state": "This link has expired or the redirect url is invalid. Did you copy it manually?. Please try again.",
     "unexpected_error": "An unexpected error ocurred while starting your session",
     "error_description_title": "We have a description for the error:",

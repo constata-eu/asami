@@ -10,1026 +10,865 @@ use super::*;
 #[tokio::test]
 #[serial_test::file_serial]
 async fn full_authority_scoring() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
-    handle = handle
-        .update()
-        .poll_id(Some(poll_tweet_id()))
-        .referrer_score_override(Some(true))
-        .holder_score_override(Some(true))
-        .offline_engagement_score(EngagementScore::High)
-        .save()
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
+        handle = handle
+            .update()
+            .poll_id(Some(poll_tweet_id()))
+            .referrer_score_override(Some(true))
+            .holder_score_override(Some(true))
+            .offline_engagement_score(EngagementScore::High)
+            .save()
+            .await
+            .unwrap();
+
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("347", true),
+            &[
+                reply_to_own_tweet(500, 0, 2, 11, 1),
+                quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+                tweet_hello_world(300, 0, 0, 11, 0),
+                tweet_goodbye_world(550, 0, 1, 11, 0),
+                tweet_foo_bar(50, 0, 0, 0, 1),
+                tweet_poll(300, 0, 0, 3, 0),
+            ],
+            mentions_json(10, 16),
+            Some(poll_json(1, 3, 4, 5)),
+            reposts_json(),
+        )
+        .await
+        .apply()
         .await
         .unwrap();
 
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("347", true),
-        &[
-            reply_to_own_tweet(500, 0, 2, 11, 1),
-            quoting_someone_elses_tweet(300, 0, 2, 11, 1),
-            tweet_hello_world(300, 0, 0, 11, 0),
-            tweet_goodbye_world(550, 0, 1, 11, 0),
-            tweet_foo_bar(50, 0, 0, 0, 1),
-            tweet_poll(300, 0, 0, 3, 0),
-        ],
-        mentions_json(10, 16),
-        Some(poll_json(1, 3, 4, 5)),
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
+        handle.reload().await.unwrap();
 
-    handle.reload().await.unwrap();
+        ScoringExpectations {
+            ..Default::default()
+        }.assert_matches(&scoring, &handle);
 
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 316);
-    assert!(!scoring.repost_fatigue());
-    assert!(!scoring.ghost_account());
-    assert!(!scoring.indeterminate_audience());
-    assert!(*scoring.followed());
-    assert!(*scoring.liked());
-    assert!(*scoring.replied());
-    assert!(*scoring.reposted());
-    assert!(*scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::High);
-    assert_eq!(*scoring.offline_engagement_score(), EngagementScore::High);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Enhanced);
-    assert!(scoring.referrer_score_override().as_ref().unwrap());
-    assert!(scoring.holder_score_override().as_ref().unwrap());
-
-    assert_eq!(*scoring.authority(), 100);
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("316"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
+        assert_eq!(handle.score(), scoring.score());
+    })
+    .await;
 }
 
 #[tokio::test]
 #[serial_test::file_serial]
 async fn applies_empty_score() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
-    handle = handle
-        .update()
-        .poll_id(Some(poll_tweet_id()))
-        .referrer_score_override(Some(true))
-        .holder_score_override(Some(true))
-        .offline_engagement_score(EngagementScore::High)
-        .save()
-        .await
-        .unwrap();
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
+        handle = handle
+            .update()
+            .poll_id(Some(poll_tweet_id()))
+            .referrer_score_override(Some(true))
+            .holder_score_override(Some(true))
+            .offline_engagement_score(EngagementScore::High)
+            .save()
+            .await
+            .unwrap();
 
-    let scoring = handle
-        .state
-        .handle_scoring()
-        .insert(InsertHandleScoring {
-            handle_id: *handle.id(),
-        })
-        .save()
+        let scoring = handle
+            .state
+            .handle_scoring()
+            .insert(InsertHandleScoring {
+                handle_id: *handle.id(),
+            })
+            .save()
+            .await
+            .unwrap()
+            .update()
+            .status(HandleScoringStatus::Ingested)
+            .save()
+            .await
+            .unwrap()
+            .apply()
+            .await
+            .unwrap();
+
+        handle.reload().await.unwrap();
+
+        assert_eq!(*scoring.status(), HandleScoringStatus::Discarded);
+        assert_eq!(*scoring.audience_size(), 0);
+        assert_eq!(*scoring.authority(), 0);
+        assert!(scoring.score().is_none());
+
+        assert!(handle.current_scoring_id().is_none());
+        assert!(handle.last_scoring().is_none());
+        assert_eq!(*handle.status(), HandleStatus::Unverified);
+        assert_eq!(handle.score(), &Some(weihex("0")));
+
+        let applied_scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("347", true),
+            &[
+                reply_to_own_tweet(500, 0, 2, 11, 1),
+                quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+                tweet_hello_world(300, 0, 0, 11, 0),
+                tweet_goodbye_world(550, 0, 1, 11, 0),
+                tweet_foo_bar(50, 0, 0, 0, 1),
+                tweet_poll(300, 0, 0, 3, 0),
+            ],
+            mentions_json(10, 16),
+            Some(poll_json(1, 3, 4, 5)),
+            reposts_json(),
+        )
         .await
-        .unwrap()
-        .update()
-        .status(HandleScoringStatus::Ingested)
-        .save()
-        .await
-        .unwrap()
         .apply()
         .await
         .unwrap();
 
-    handle.reload().await.unwrap();
+        handle.reload().await.unwrap();
 
-    assert_eq!(*scoring.status(), HandleScoringStatus::Discarded);
-    assert_eq!(*scoring.audience_size(), 0);
-    assert_eq!(*scoring.authority(), 0);
-    assert!(scoring.score().is_none());
+        assert_eq!(*applied_scoring.status(), HandleScoringStatus::Applied);
+        assert_eq!(*applied_scoring.audience_size(), 316);
+        assert_eq!(*applied_scoring.authority(), 100);
+        assert_eq!(*applied_scoring.score().as_ref().unwrap(), weihex("316"));
 
-    assert!(handle.current_scoring_id().is_none());
-    assert!(handle.last_scoring().is_none());
-    assert_eq!(*handle.status(), HandleStatus::Verified);
-    assert_eq!(handle.score(), &Some(weihex("0")));
+        assert_eq!(handle.current_scoring_id().unwrap(), *applied_scoring.id());
+        assert_eq!(handle.last_scoring().unwrap(), *applied_scoring.created_at());
+        assert_eq!(*handle.status(), HandleStatus::Active);
+        assert_eq!(handle.score(), applied_scoring.score());
 
-    let applied_scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("347", true),
-        &[
-            reply_to_own_tweet(500, 0, 2, 11, 1),
-            quoting_someone_elses_tweet(300, 0, 2, 11, 1),
-            tweet_hello_world(300, 0, 0, 11, 0),
-            tweet_goodbye_world(550, 0, 1, 11, 0),
-            tweet_foo_bar(50, 0, 0, 0, 1),
-            tweet_poll(300, 0, 0, 3, 0),
-        ],
-        mentions_json(10, 16),
-        Some(poll_json(1, 3, 4, 5)),
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
+        let next_scoring = handle
+            .state
+            .handle_scoring()
+            .insert(InsertHandleScoring {
+                handle_id: *handle.id(),
+            })
+            .save()
+            .await
+            .unwrap()
+            .update()
+            .status(HandleScoringStatus::Ingested)
+            .save()
+            .await
+            .unwrap()
+            .apply()
+            .await
+            .unwrap();
 
-    handle.reload().await.unwrap();
+        assert_eq!(*next_scoring.status(), HandleScoringStatus::Discarded);
+        assert_eq!(*next_scoring.audience_size(), 0);
+        assert_eq!(*next_scoring.authority(), 0);
+        assert!(next_scoring.score().is_none());
 
-    assert_eq!(*applied_scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*applied_scoring.audience_size(), 316);
-    assert_eq!(*applied_scoring.authority(), 100);
-    assert_eq!(*applied_scoring.score().as_ref().unwrap(), weihex("316"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *applied_scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *applied_scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), applied_scoring.score());
-
-    let next_scoring = handle
-        .state
-        .handle_scoring()
-        .insert(InsertHandleScoring {
-            handle_id: *handle.id(),
-        })
-        .save()
-        .await
-        .unwrap()
-        .update()
-        .status(HandleScoringStatus::Ingested)
-        .save()
-        .await
-        .unwrap()
-        .apply()
-        .await
-        .unwrap();
-
-    assert_eq!(*next_scoring.status(), HandleScoringStatus::Discarded);
-    assert_eq!(*next_scoring.audience_size(), 0);
-    assert_eq!(*next_scoring.authority(), 0);
-    assert!(next_scoring.score().is_none());
-
-    handle.reload().await.unwrap();
-    assert_eq!(handle.current_scoring_id().unwrap(), *applied_scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *applied_scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), applied_scoring.score());
+        handle.reload().await.unwrap();
+        assert_eq!(handle.current_scoring_id().unwrap(), *applied_scoring.id());
+        assert_eq!(handle.last_scoring().unwrap(), *applied_scoring.created_at());
+        assert_eq!(*handle.status(), HandleStatus::Active);
+        assert_eq!(handle.score(), applied_scoring.score());
+    })
+    .await;
 }
 
 #[tokio::test]
 #[serial_test::file_serial]
 async fn average_authority_scoring() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
 
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("5", false),
-        &[
-            reply_to_own_tweet(50, 0, 0, 1, 0),
-            quoting_someone_elses_tweet(31, 0, 0, 1, 1),
-            tweet_hello_world(31, 0, 0, 1, 0),
-            tweet_goodbye_world(55, 0, 0, 1, 0),
-            tweet_foo_bar(5, 0, 0, 0, 0),
-            tweet_poll(31, 0, 0, 3, 0),
-        ],
-        tweets_json([]),
-        None,
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("5", false),
+            &[
+                reply_to_own_tweet(50, 0, 0, 1, 0),
+                quoting_someone_elses_tweet(31, 0, 0, 1, 1),
+                tweet_hello_world(31, 0, 0, 1, 0),
+                tweet_goodbye_world(55, 0, 0, 1, 0),
+                tweet_foo_bar(5, 0, 0, 0, 0),
+                tweet_poll(31, 0, 0, 3, 0),
+            ],
+            tweets_json([]),
+            None,
+            reposts_json(),
+        )
+        .await
+        .apply()
+        .await
+        .unwrap();
 
-    handle.reload().await.unwrap();
+        handle.reload().await.unwrap();
 
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 32);
-    assert!(!scoring.repost_fatigue());
-    assert!(!scoring.ghost_account());
-    assert!(!scoring.indeterminate_audience());
-    assert!(!scoring.followed());
-    assert!(!scoring.liked());
-    assert!(!scoring.replied());
-    assert!(!scoring.reposted());
-    assert!(!scoring.mentioned());
+        ScoringExpectations::average().assert_matches(&scoring, &handle);
 
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::Average);
-    assert_eq!(*scoring.offline_engagement_score(), EngagementScore::None);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Normal);
+        assert_eq!(handle.score(), scoring.score());
+    })
+    .await;
+}
 
-    assert_eq!(*scoring.authority(), 25);
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("8"));
+#[tokio::test]
+#[serial_test::file_serial]
+async fn can_attempt_scoring_with_no_mentions_and_no_reposts() {
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
 
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("5", false),
+            &[
+                reply_to_own_tweet(50, 0, 0, 1, 0),
+                quoting_someone_elses_tweet(31, 0, 0, 1, 1),
+                tweet_hello_world(31, 0, 0, 1, 0),
+                tweet_goodbye_world(55, 0, 0, 1, 0),
+                tweet_foo_bar(5, 0, 0, 0, 0),
+                tweet_poll(31, 0, 0, 3, 0),
+            ],
+            empty_result_set(),
+            None,
+            empty_result_set(),
+        )
+        .await
+        .apply()
+        .await
+        .unwrap();
+
+        handle.reload().await.unwrap();
+
+        ScoringExpectations::average().assert_matches(&scoring, &handle);
+        assert_eq!(handle.score(), scoring.score());
+    })
+    .await;
 }
 
 #[tokio::test]
 #[serial_test::file_serial]
 async fn ghost_account_for_short_tweets() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
 
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("5", false),
-        &[
-            reply_to_own_tweet(50, 0, 0, 1, 0),
-            quoting_someone_elses_tweet(31, 0, 0, 1, 1),
-            tweet_hello_world(31, 0, 0, 1, 0),
-            tweet_goodbye_world(55, 0, 0, 1, 0),
-            make_own_tweet("GM", 20000, 1, 1, 1, 1),
-            make_own_tweet("My friends!", 20000, 1, 1, 1, 1),
-            make_own_tweet("LFG", 10000, 0, 0, 0, 0),
-        ],
-        tweets_json([]),
-        None,
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("5", false),
+            &[
+                reply_to_own_tweet(50, 0, 0, 1, 0),
+                quoting_someone_elses_tweet(31, 0, 0, 1, 1),
+                tweet_hello_world(31, 0, 0, 1, 0),
+                tweet_goodbye_world(55, 0, 0, 1, 0),
+                make_own_tweet("GM", 20000, 1, 1, 1, 1),
+                make_own_tweet("My friends!", 20000, 1, 1, 1, 1),
+                make_own_tweet("LFG", 10000, 0, 0, 0, 0),
+            ],
+            empty_result_set(),
+            None,
+            reposts_json(),
+        )
+        .await
+        .apply()
+        .await
+        .unwrap();
 
-    handle.reload().await.unwrap();
+        handle.reload().await.unwrap();
 
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 3610);
-    assert!(!scoring.repost_fatigue());
-    assert!(scoring.ghost_account());
-    assert!(!scoring.indeterminate_audience());
-    assert!(!scoring.followed());
-    assert!(!scoring.liked());
-    assert!(!scoring.replied());
-    assert!(!scoring.reposted());
-    assert!(!scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::None);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Normal);
-
-    assert_eq!(*scoring.authority(), 0);
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("0"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
+        ScoringExpectations {
+            audience_size: 3610,
+            ghost_account: true,
+            online_engagement_score: EngagementScore::None,
+            authority: 0,
+            score: weihex("0"),
+            handle_score: weihex("0"),
+            ..ScoringExpectations::average()
+        }.assert_matches(&scoring, &handle);
+    })
+    .await;
 }
 
 #[tokio::test]
 #[serial_test::file_serial]
 async fn ghost_account_for_low_impressions() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
 
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("5", false),
-        &[
-            reply_to_own_tweet(50, 0, 0, 1, 0),
-            quoting_someone_elses_tweet(50, 0, 0, 1, 1),
-            tweet_hello_world(50, 0, 0, 1, 0),
-            tweet_goodbye_world(50, 0, 0, 1, 0),
-            tweet_foo_bar(30, 0, 0, 0, 0),
-            tweet_poll(30, 0, 0, 3, 0),
-        ],
-        tweets_json([]),
-        None,
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("5", false),
+            &[
+                reply_to_own_tweet(50, 0, 0, 1, 0),
+                quoting_someone_elses_tweet(50, 0, 0, 1, 1),
+                tweet_hello_world(50, 0, 0, 1, 0),
+                tweet_goodbye_world(50, 0, 0, 1, 0),
+                tweet_foo_bar(30, 0, 0, 0, 0),
+                tweet_poll(30, 0, 0, 3, 0),
+            ],
+            tweets_json([]),
+            None,
+            reposts_json(),
+        )
+        .await
+        .apply()
+        .await
+        .unwrap();
 
-    handle.reload().await.unwrap();
+        handle.reload().await.unwrap();
 
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 46);
-    assert!(!scoring.repost_fatigue());
-    assert!(scoring.ghost_account());
-    assert!(!scoring.indeterminate_audience());
-    assert!(!scoring.followed());
-    assert!(!scoring.liked());
-    assert!(!scoring.replied());
-    assert!(!scoring.reposted());
-    assert!(!scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::None);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Normal);
-
-    assert_eq!(*scoring.authority(), 0);
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("0"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
+        ScoringExpectations {
+            audience_size: 46,
+            ghost_account: true,
+            online_engagement_score: EngagementScore::None,
+            authority: 0,
+            score: weihex("0"),
+            handle_score: weihex("0"),
+            ..ScoringExpectations::average()
+        }.assert_matches(&scoring, &handle);
+    })
+    .await;
 }
 
 #[tokio::test]
 #[serial_test::file_serial]
 async fn repost_fatigue() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
 
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("5", false),
-        &[
-            tweet_hello_world(50, 0, 0, 1, 0),
-            tweet_hello_world(50, 0, 0, 1, 0),
-            tweet_hello_world(50, 0, 0, 1, 0),
-            tweet_hello_world(50, 0, 0, 1, 0),
-        ],
-        tweets_json([]),
-        None,
-        tweets_json([
-            make_retweet(&make_random_id()),
-            make_retweet(&make_random_id()),
-            make_retweet(&make_random_id()),
-            make_retweet(&make_random_id()),
-            make_retweet(&make_random_id()),
-            make_retweet(&make_random_id()),
-        ]),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("5", false),
+            &[
+                tweet_hello_world(50, 0, 0, 1, 0),
+                tweet_hello_world(50, 0, 0, 1, 0),
+                tweet_hello_world(50, 0, 0, 1, 0),
+                tweet_hello_world(50, 0, 0, 1, 0),
+            ],
+            tweets_json([]),
+            None,
+            tweets_json([
+                make_retweet(&make_random_id()),
+                make_retweet(&make_random_id()),
+                make_retweet(&make_random_id()),
+                make_retweet(&make_random_id()),
+                make_retweet(&make_random_id()),
+                make_retweet(&make_random_id()),
+            ]),
+        )
+        .await
+        .apply()
+        .await
+        .unwrap();
 
-    handle.reload().await.unwrap();
+        handle.reload().await.unwrap();
 
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 50);
-    assert!(scoring.repost_fatigue());
-    assert!(scoring.ghost_account());
-    assert!(!scoring.indeterminate_audience());
-    assert!(!scoring.followed());
-    assert!(!scoring.liked());
-    assert!(!scoring.replied());
-    assert!(!scoring.reposted());
-    assert!(!scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::None);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Normal);
-
-    assert_eq!(*scoring.authority(), 0);
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("0"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
+        ScoringExpectations {
+            audience_size: 50,
+            repost_fatigue: true,
+            ghost_account: true,
+            online_engagement_score: EngagementScore::None,
+            authority: 0,
+            score: weihex("0"),
+            handle_score: weihex("0"),
+            ..ScoringExpectations::average()
+        }.assert_matches(&scoring, &handle);
+    })
+    .await;
 }
 
 #[tokio::test]
 #[serial_test::file_serial]
 async fn full_authority_overrides_to_none() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
-    handle = handle
-        .update()
-        .poll_id(Some(poll_tweet_id()))
-        .online_engagement_override(Some(EngagementScore::None))
-        .referrer_score_override(Some(true))
-        .holder_score_override(Some(true))
-        .save()
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
+        handle = handle
+            .update()
+            .poll_id(Some(poll_tweet_id()))
+            .online_engagement_override(Some(EngagementScore::None))
+            .referrer_score_override(Some(true))
+            .holder_score_override(Some(true))
+            .save()
+            .await
+            .unwrap();
+
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("347", true),
+            &[
+                reply_to_own_tweet(500, 0, 2, 11, 1),
+                quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+                tweet_hello_world(300, 0, 0, 11, 0),
+                tweet_goodbye_world(550, 0, 1, 11, 0),
+                tweet_foo_bar(50, 0, 0, 0, 1),
+                tweet_poll(300, 0, 0, 3, 0),
+            ],
+            mentions_json(10, 16),
+            Some(poll_json(1, 3, 4, 5)),
+            reposts_json(),
+        )
+        .await
+        .apply()
         .await
         .unwrap();
 
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("347", true),
-        &[
-            reply_to_own_tweet(500, 0, 2, 11, 1),
-            quoting_someone_elses_tweet(300, 0, 2, 11, 1),
-            tweet_hello_world(300, 0, 0, 11, 0),
-            tweet_goodbye_world(550, 0, 1, 11, 0),
-            tweet_foo_bar(50, 0, 0, 0, 1),
-            tweet_poll(300, 0, 0, 3, 0),
-        ],
-        mentions_json(10, 16),
-        Some(poll_json(1, 3, 4, 5)),
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
+        handle.reload().await.unwrap();
 
-    handle.reload().await.unwrap();
-
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 316);
-    assert!(!scoring.repost_fatigue());
-    assert!(!scoring.ghost_account());
-    assert!(!scoring.indeterminate_audience());
-    assert!(*scoring.followed());
-    assert!(*scoring.liked());
-    assert!(*scoring.replied());
-    assert!(*scoring.reposted());
-    assert!(*scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::High);
-    assert_eq!(*scoring.offline_engagement_score(), EngagementScore::None);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Enhanced);
-    assert!(*scoring.referrer_score_override().as_ref().unwrap());
-    assert!(*scoring.holder_score_override().as_ref().unwrap());
-
-    assert_eq!(*scoring.authority(), 0);
-
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("0"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
+        ScoringExpectations {
+            offline_engagement_score: EngagementScore::None,
+            authority: 0,
+            score: weihex("0"),
+            handle_score: weihex("0"),
+            ..ScoringExpectations::default()
+        }.assert_matches(&scoring, &handle);
+    })
+    .await;
 }
 
 #[tokio::test]
 #[serial_test::file_serial]
 async fn full_authority_overrides_to_none_for_operational_status() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
-    handle = handle
-        .update()
-        .poll_id(Some(poll_tweet_id()))
-        .operational_status_override(Some(OperationalStatus::Shadowbanned))
-        .referrer_score_override(Some(true))
-        .holder_score_override(Some(true))
-        .save()
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
+        handle = handle
+            .update()
+            .poll_id(Some(poll_tweet_id()))
+            .operational_status_override(Some(OperationalStatus::Shadowbanned))
+            .referrer_score_override(Some(true))
+            .holder_score_override(Some(true))
+            .save()
+            .await
+            .unwrap();
+
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("347", true),
+            &[
+                reply_to_own_tweet(500, 0, 2, 11, 1),
+                quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+                tweet_hello_world(300, 0, 0, 11, 0),
+                tweet_goodbye_world(550, 0, 1, 11, 0),
+                tweet_foo_bar(50, 0, 0, 0, 1),
+                tweet_poll(300, 0, 0, 3, 0),
+            ],
+            mentions_json(10, 16),
+            Some(poll_json(1, 3, 4, 5)),
+            reposts_json(),
+        )
+        .await
+        .apply()
         .await
         .unwrap();
 
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("347", true),
-        &[
-            reply_to_own_tweet(500, 0, 2, 11, 1),
-            quoting_someone_elses_tweet(300, 0, 2, 11, 1),
-            tweet_hello_world(300, 0, 0, 11, 0),
-            tweet_goodbye_world(550, 0, 1, 11, 0),
-            tweet_foo_bar(50, 0, 0, 0, 1),
-            tweet_poll(300, 0, 0, 3, 0),
-        ],
-        mentions_json(10, 16),
-        Some(poll_json(1, 3, 4, 5)),
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
-
-    handle.reload().await.unwrap();
-
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 316);
-    assert!(!scoring.repost_fatigue());
-    assert!(!scoring.ghost_account());
-    assert!(!scoring.indeterminate_audience());
-    assert!(*scoring.followed());
-    assert!(*scoring.liked());
-    assert!(*scoring.replied());
-    assert!(*scoring.reposted());
-    assert!(*scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::High);
-    assert_eq!(*scoring.offline_engagement_score(), EngagementScore::None);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Enhanced);
-    assert!(*scoring.referrer_score_override().as_ref().unwrap());
-    assert!(*scoring.holder_score_override().as_ref().unwrap());
-
-    assert_eq!(*scoring.authority(), 0);
-
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("0"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
+        handle.reload().await.unwrap();
+        ScoringExpectations {
+            offline_engagement_score: EngagementScore::None,
+            authority: 0,
+            score: weihex("0"),
+            handle_score: weihex("0"),
+            ..ScoringExpectations::default()
+        }.assert_matches(&scoring, &handle);
+    })
+    .await;
 }
 
 #[tokio::test]
 #[serial_test::file_serial]
 async fn overrides_audience_size() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
-    handle = handle
-        .update()
-        .poll_id(Some(poll_tweet_id()))
-        .offline_engagement_score(EngagementScore::High)
-        .referrer_score_override(Some(true))
-        .holder_score_override(Some(true))
-        .audience_size_override(Some(10))
-        .save()
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
+        handle = handle
+            .update()
+            .poll_id(Some(poll_tweet_id()))
+            .offline_engagement_score(EngagementScore::High)
+            .referrer_score_override(Some(true))
+            .holder_score_override(Some(true))
+            .audience_size_override(Some(10))
+            .save()
+            .await
+            .unwrap();
+
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("347", true),
+            &[
+                reply_to_own_tweet(500, 0, 2, 11, 1),
+                quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+                tweet_hello_world(300, 0, 0, 11, 0),
+                tweet_goodbye_world(550, 0, 1, 11, 0),
+                tweet_foo_bar(50, 0, 0, 0, 1),
+                tweet_poll(300, 0, 0, 3, 0),
+            ],
+            mentions_json(10, 16),
+            Some(poll_json(1, 3, 4, 5)),
+            reposts_json(),
+        )
+        .await
+        .apply()
         .await
         .unwrap();
 
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("347", true),
-        &[
-            reply_to_own_tweet(500, 0, 2, 11, 1),
-            quoting_someone_elses_tweet(300, 0, 2, 11, 1),
-            tweet_hello_world(300, 0, 0, 11, 0),
-            tweet_goodbye_world(550, 0, 1, 11, 0),
-            tweet_foo_bar(50, 0, 0, 0, 1),
-            tweet_poll(300, 0, 0, 3, 0),
-        ],
-        mentions_json(10, 16),
-        Some(poll_json(1, 3, 4, 5)),
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
+        handle.reload().await.unwrap();
 
-    handle.reload().await.unwrap();
-
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 316);
-    assert!(!scoring.repost_fatigue());
-    assert!(!scoring.ghost_account());
-    assert!(!scoring.indeterminate_audience());
-    assert!(*scoring.followed());
-    assert!(*scoring.liked());
-    assert!(*scoring.replied());
-    assert!(*scoring.reposted());
-    assert!(*scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::High);
-    assert_eq!(*scoring.offline_engagement_score(), EngagementScore::High);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Enhanced);
-    assert!(*scoring.referrer_score_override().as_ref().unwrap());
-    assert!(*scoring.holder_score_override().as_ref().unwrap());
-
-    assert_eq!(*scoring.authority(), 100);
-    assert_eq!(*scoring.audience_size(), 316);
-    assert_eq!(scoring.audience_size_override().unwrap(), 10);
-
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("10"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
+        ScoringExpectations {
+            score: weihex("10"),
+            handle_score: weihex("10"),
+            ..ScoringExpectations::default()
+        }.assert_matches(&scoring, &handle);
+    })
+    .await;
 }
 
 #[tokio::test]
 #[serial_test::file_serial]
 async fn full_authority_overrides_to_average() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
 
-    handle = handle
-        .update()
-        .poll_id(Some(poll_tweet_id()))
-        .online_engagement_override(Some(EngagementScore::Average))
-        .poll_override(Some(PollScore::None))
-        .referrer_score_override(Some(false))
-        .holder_score_override(Some(false))
-        .operational_status_override(Some(OperationalStatus::Normal))
-        .offline_engagement_score(EngagementScore::None)
-        .save()
+        handle = handle
+            .update()
+            .poll_id(Some(poll_tweet_id()))
+            .online_engagement_override(Some(EngagementScore::Average))
+            .poll_override(Some(PollScore::None))
+            .referrer_score_override(Some(false))
+            .holder_score_override(Some(false))
+            .operational_status_override(Some(OperationalStatus::Normal))
+            .offline_engagement_score(EngagementScore::None)
+            .save()
+            .await
+            .unwrap();
+
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("347", true),
+            &[
+                reply_to_own_tweet(500, 0, 2, 11, 1),
+                quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+                tweet_hello_world(300, 0, 0, 11, 0),
+                tweet_goodbye_world(550, 0, 1, 11, 0),
+                tweet_foo_bar(50, 0, 0, 0, 1),
+                tweet_poll(300, 0, 0, 3, 0),
+            ],
+            mentions_json(10, 16),
+            Some(poll_json(1, 3, 4, 5)),
+            reposts_json(),
+        )
+        .await
+        .apply()
         .await
         .unwrap();
 
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("347", true),
-        &[
-            reply_to_own_tweet(500, 0, 2, 11, 1),
-            quoting_someone_elses_tweet(300, 0, 2, 11, 1),
-            tweet_hello_world(300, 0, 0, 11, 0),
-            tweet_goodbye_world(550, 0, 1, 11, 0),
-            tweet_foo_bar(50, 0, 0, 0, 1),
-            tweet_poll(300, 0, 0, 3, 0),
-        ],
-        mentions_json(10, 16),
-        Some(poll_json(1, 3, 4, 5)),
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
+        handle.reload().await.unwrap();
 
-    handle.reload().await.unwrap();
-
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 316);
-    assert!(!scoring.repost_fatigue());
-    assert!(!scoring.ghost_account());
-    assert!(!scoring.indeterminate_audience());
-    assert!(*scoring.followed());
-    assert!(*scoring.liked());
-    assert!(*scoring.replied());
-    assert!(*scoring.reposted());
-    assert!(*scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::High);
-    assert_eq!(*scoring.offline_engagement_score(), EngagementScore::None);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Enhanced);
-    assert!(!scoring.referrer_score_override().unwrap());
-    assert!(!scoring.holder_score_override().unwrap());
-
-    assert_eq!(*scoring.authority(), 25);
-
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("79"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
+        ScoringExpectations {
+            offline_engagement_score: EngagementScore::None,
+            referrer_score_override: Some(false),
+            holder_score_override: Some(false),
+            authority: 25,
+            score: weihex("79"),
+            handle_score: weihex("79"),
+            ..ScoringExpectations::default()
+        }.assert_matches(&scoring, &handle);
+    })
+    .await;
 }
 
 #[tokio::test]
 #[serial_test::file_serial]
 async fn ghost_account_overrides_to_full() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
-    handle = handle
-        .update()
-        .poll_override(Some(PollScore::High))
-        .referrer_score_override(Some(true))
-        .holder_score_override(Some(true))
-        .offline_engagement_score(EngagementScore::High)
-        .online_engagement_override(Some(EngagementScore::High))
-        .save()
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
+        handle = handle
+            .update()
+            .poll_override(Some(PollScore::High))
+            .referrer_score_override(Some(true))
+            .holder_score_override(Some(true))
+            .offline_engagement_score(EngagementScore::High)
+            .online_engagement_override(Some(EngagementScore::High))
+            .save()
+            .await
+            .unwrap();
+
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("0", false),
+            &[
+                reply_to_own_tweet(50, 0, 0, 1, 0),
+                quoting_someone_elses_tweet(31, 0, 0, 1, 0),
+                tweet_hello_world(31, 0, 0, 1, 0),
+                tweet_goodbye_world(55, 0, 0, 1, 0),
+                make_own_tweet("GM", 20, 1, 0, 1, 0),
+                make_own_tweet("My friends!", 20, 1, 0, 1, 0),
+                make_own_tweet("LFG", 10, 0, 0, 0, 0),
+            ],
+            tweets_json([]),
+            None,
+            reposts_json(),
+        )
+        .await
+        .apply()
         .await
         .unwrap();
 
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("0", false),
-        &[
-            reply_to_own_tweet(50, 0, 0, 1, 0),
-            quoting_someone_elses_tweet(31, 0, 0, 1, 0),
-            tweet_hello_world(31, 0, 0, 1, 0),
-            tweet_goodbye_world(55, 0, 0, 1, 0),
-            make_own_tweet("GM", 20, 1, 0, 1, 0),
-            make_own_tweet("My friends!", 20, 1, 0, 1, 0),
-            make_own_tweet("LFG", 10, 0, 0, 0, 0),
-        ],
-        tweets_json([]),
-        None,
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
+        handle.reload().await.unwrap();
 
-    handle.reload().await.unwrap();
-
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 31);
-    assert!(!scoring.repost_fatigue());
-    assert!(scoring.ghost_account());
-    assert!(scoring.indeterminate_audience());
-    assert!(!scoring.followed());
-    assert!(!scoring.liked());
-    assert!(!scoring.replied());
-    assert!(!scoring.reposted());
-    assert!(!scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::None);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Normal);
-
-    assert_eq!(*scoring.authority(), 100);
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("31"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
+        ScoringExpectations {
+            audience_size: 31,
+            online_engagement_score: EngagementScore::None,
+            offline_engagement_score: EngagementScore::High,
+            referrer_score_override: Some(true),
+            holder_score_override: Some(true),
+            poll_score: Some(PollScore::None),
+            ghost_account: true,
+            indeterminate_audience: true,
+            authority: 100,
+            score: weihex("31"),
+            handle_score: weihex("31"),
+            ..ScoringExpectations::average()
+        }.assert_matches(&scoring, &handle);
+    })
+    .await;
 }
 
 #[tokio::test]
 #[serial_test::file_serial]
 async fn average_poll_score() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
-    handle = handle
-        .update()
-        .poll_id(Some(poll_tweet_id()))
-        .referrer_score_override(Some(true))
-        .holder_score_override(Some(true))
-        .offline_engagement_score(EngagementScore::High)
-        .save()
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
+        handle = handle
+            .update()
+            .poll_id(Some(poll_tweet_id()))
+            .referrer_score_override(Some(true))
+            .holder_score_override(Some(true))
+            .offline_engagement_score(EngagementScore::High)
+            .save()
+            .await
+            .unwrap();
+
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("347", false),
+            &[
+                reply_to_own_tweet(500, 0, 2, 11, 1),
+                quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+                tweet_hello_world(300, 0, 0, 11, 0),
+                tweet_goodbye_world(550, 0, 1, 11, 0),
+                tweet_foo_bar(50, 0, 0, 0, 1),
+                tweet_poll(300, 0, 0, 3, 0),
+            ],
+            mentions_json(10, 16),
+            Some(poll_json(1, 4, 3, 5)),
+            reposts_json(),
+        )
+        .await
+        .apply()
         .await
         .unwrap();
 
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("347", false),
-        &[
+        handle.reload().await.unwrap();
+
+        ScoringExpectations {
+            audience_size: 316,
+            poll_score: Some(PollScore::Average),
+            authority: 90,
+            score: weihex("284"),
+            handle_score: weihex("284"),
+            operational_status_score: OperationalStatus::Normal,
+            ..ScoringExpectations::default()
+        }.assert_matches(&scoring, &handle);
+    })
+    .await;
+}
+
+#[tokio::test]
+#[serial_test::file_serial]
+async fn reverse_poll_score() {
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
+        handle = handle.update().poll_id(Some(poll_tweet_id())).save().await.unwrap();
+
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("0", false),
+            &[
+                reply_to_own_tweet(50, 0, 0, 11, 0),
+                quoting_someone_elses_tweet(50, 0, 0, 11, 0),
+                tweet_hello_world(30, 0, 0, 11, 0),
+                tweet_goodbye_world(55, 0, 1, 11, 0),
+                tweet_foo_bar(50, 0, 0, 0, 1),
+                tweet_poll(50, 0, 0, 3, 0),
+            ],
+            mentions_json(0, 0),
+            Some(poll_json(1, 3, 4, 8)),
+            reposts_json(),
+        )
+        .await
+        .apply()
+        .await
+        .unwrap();
+
+        handle.reload().await.unwrap();
+
+        ScoringExpectations {
+            audience_size: 48,
+            poll_score: Some(PollScore::Reverse),
+            indeterminate_audience: true,
+            authority: 12,
+            score: weihex("5"),
+            handle_score: weihex("5"),
+            ..ScoringExpectations::average()
+        }.assert_matches(&scoring, &handle);
+    })
+    .await;
+}
+
+#[tokio::test]
+#[serial_test::file_serial]
+async fn none_poll_score() {
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
+        handle = handle.update().poll_id(Some(poll_tweet_id())).save().await.unwrap();
+
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("0", false),
+            &[
+                reply_to_own_tweet(50, 0, 0, 11, 0),
+                quoting_someone_elses_tweet(50, 0, 0, 11, 0),
+                tweet_hello_world(30, 0, 0, 11, 0),
+                tweet_goodbye_world(55, 0, 1, 11, 0),
+                tweet_foo_bar(50, 0, 0, 0, 1),
+                tweet_poll(50, 0, 0, 3, 0),
+            ],
+            mentions_json(0, 0),
+            Some(poll_json(10, 3, 4, 8)),
+            reposts_json(),
+        )
+        .await
+        .apply()
+        .await
+        .unwrap();
+
+        handle.reload().await.unwrap();
+
+        ScoringExpectations {
+            audience_size: 48,
+            poll_score: Some(PollScore::None),
+            indeterminate_audience: true,
+            authority: 25,
+            score: weihex("12"),
+            handle_score: weihex("12"),
+            ..ScoringExpectations::average()
+        }.assert_matches(&scoring, &handle);
+    })
+    .await;
+}
+
+#[tokio::test]
+#[serial_test::file_serial]
+async fn override_poll_score() {
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
+        handle = handle
+            .update()
+            .poll_id(Some(poll_tweet_id()))
+            .poll_override(Some(PollScore::High))
+            .save()
+            .await
+            .unwrap();
+
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("0", false),
+            &[
+                reply_to_own_tweet(50, 0, 0, 11, 0),
+                quoting_someone_elses_tweet(50, 0, 0, 11, 0),
+                tweet_hello_world(30, 0, 0, 11, 0),
+                tweet_goodbye_world(55, 0, 1, 11, 0),
+                tweet_foo_bar(50, 0, 0, 0, 1),
+                tweet_poll(50, 0, 0, 3, 0),
+            ],
+            mentions_json(0, 0),
+            Some(poll_json(1, 3, 4, 8)),
+            reposts_json(),
+        )
+        .await
+        .apply()
+        .await
+        .unwrap();
+
+        handle.reload().await.unwrap();
+
+        ScoringExpectations {
+            audience_size: 48,
+            poll_score: Some(PollScore::Reverse),
+            indeterminate_audience: true,
+            authority: 45,
+            score: weihex("21"),
+            handle_score: weihex("21"),
+            ..ScoringExpectations::average()
+        }.assert_matches(&scoring, &handle);
+    })
+    .await;
+}
+
+#[tokio::test]
+#[serial_test::file_serial]
+async fn does_not_count_own_replies_and_reposts() {
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
+        handle = handle
+            .update()
+            .poll_id(Some(poll_tweet_id()))
+            .referrer_score_override(Some(true))
+            .holder_score_override(Some(true))
+            .offline_engagement_score(EngagementScore::High)
+            .save()
+            .await
+            .unwrap();
+
+        let posts = [
             reply_to_own_tweet(500, 0, 2, 11, 1),
             quoting_someone_elses_tweet(300, 0, 2, 11, 1),
             tweet_hello_world(300, 0, 0, 11, 0),
             tweet_goodbye_world(550, 0, 1, 11, 0),
             tweet_foo_bar(50, 0, 0, 0, 1),
             tweet_poll(300, 0, 0, 3, 0),
-        ],
-        mentions_json(10, 16),
-        Some(poll_json(1, 4, 3, 5)),
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
+        ];
 
-    handle.reload().await.unwrap();
+        let referenced = [
+            make_reply(posts[0]["id"].as_str().unwrap()),
+            make_reply(posts[0]["id"].as_str().unwrap()),
+            make_quote(posts[0]["id"].as_str().unwrap()),
+            make_reply(posts[1]["id"].as_str().unwrap()),
+            make_reply(posts[1]["id"].as_str().unwrap()),
+            make_quote(posts[1]["id"].as_str().unwrap()),
+        ];
 
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 316);
-    assert!(!scoring.repost_fatigue());
-    assert!(!scoring.ghost_account());
-    assert!(!scoring.indeterminate_audience());
-    assert!(*scoring.followed());
-    assert!(*scoring.liked());
-    assert!(*scoring.replied());
-    assert!(*scoring.reposted());
-    assert!(*scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::High);
-    assert_eq!(*scoring.offline_engagement_score(), EngagementScore::High);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Normal);
-    assert_eq!(*scoring.poll_score(), Some(PollScore::Average));
-    assert!(scoring.referrer_score_override().as_ref().unwrap());
-    assert!(scoring.holder_score_override().as_ref().unwrap());
-
-    assert_eq!(*scoring.authority(), 90);
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("284"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
-}
-
-#[tokio::test]
-#[serial_test::file_serial]
-async fn reverse_poll_score() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
-    handle = handle.update().poll_id(Some(poll_tweet_id())).save().await.unwrap();
-
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("0", false),
-        &[
-            reply_to_own_tweet(50, 0, 0, 11, 0),
-            quoting_someone_elses_tweet(50, 0, 0, 11, 0),
-            tweet_hello_world(30, 0, 0, 11, 0),
-            tweet_goodbye_world(55, 0, 1, 11, 0),
-            tweet_foo_bar(50, 0, 0, 0, 1),
-            tweet_poll(50, 0, 0, 3, 0),
-        ],
-        mentions_json(0, 0),
-        Some(poll_json(1, 3, 4, 8)),
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
-
-    handle.reload().await.unwrap();
-
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 48);
-    assert!(!scoring.repost_fatigue());
-    assert!(!scoring.ghost_account());
-    assert!(*scoring.indeterminate_audience());
-    assert!(!scoring.followed());
-    assert!(!scoring.liked());
-    assert!(!scoring.replied());
-    assert!(!scoring.reposted());
-    assert!(!scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::Average);
-    assert_eq!(*scoring.offline_engagement_score(), EngagementScore::None);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Normal);
-
-    assert_eq!(*scoring.authority(), 12);
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("5"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
-}
-
-#[tokio::test]
-#[serial_test::file_serial]
-async fn none_poll_score() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
-    handle = handle.update().poll_id(Some(poll_tweet_id())).save().await.unwrap();
-
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("0", false),
-        &[
-            reply_to_own_tweet(50, 0, 0, 11, 0),
-            quoting_someone_elses_tweet(50, 0, 0, 11, 0),
-            tweet_hello_world(30, 0, 0, 11, 0),
-            tweet_goodbye_world(55, 0, 1, 11, 0),
-            tweet_foo_bar(50, 0, 0, 0, 1),
-            tweet_poll(50, 0, 0, 3, 0),
-        ],
-        mentions_json(0, 0),
-        Some(poll_json(10, 3, 4, 8)),
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
-
-    handle.reload().await.unwrap();
-
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 48);
-    assert!(!scoring.repost_fatigue());
-    assert!(!scoring.ghost_account());
-    assert!(*scoring.indeterminate_audience());
-    assert!(!scoring.followed());
-    assert!(!scoring.liked());
-    assert!(!scoring.replied());
-    assert!(!scoring.reposted());
-    assert!(!scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::Average);
-    assert_eq!(*scoring.offline_engagement_score(), EngagementScore::None);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Normal);
-
-    assert_eq!(*scoring.authority(), 25);
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("12"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
-}
-
-#[tokio::test]
-#[serial_test::file_serial]
-async fn override_poll_score() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
-    handle = handle
-        .update()
-        .poll_id(Some(poll_tweet_id()))
-        .poll_override(Some(PollScore::High))
-        .save()
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("347", true),
+            &posts,
+            mentions_json(10, 16),
+            Some(poll_json(1, 3, 4, 5)),
+            tweets_json(referenced),
+        )
+        .await
+        .apply()
         .await
         .unwrap();
 
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("0", false),
-        &[
-            reply_to_own_tweet(50, 0, 0, 11, 0),
-            quoting_someone_elses_tweet(50, 0, 0, 11, 0),
-            tweet_hello_world(30, 0, 0, 11, 0),
-            tweet_goodbye_world(55, 0, 1, 11, 0),
-            tweet_foo_bar(50, 0, 0, 0, 1),
-            tweet_poll(50, 0, 0, 3, 0),
-        ],
-        mentions_json(0, 0),
-        Some(poll_json(1, 3, 4, 8)),
-        reposts_json(),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
+        handle.reload().await.unwrap();
 
-    handle.reload().await.unwrap();
-
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 48);
-    assert!(!scoring.repost_fatigue());
-    assert!(!scoring.ghost_account());
-    assert!(*scoring.indeterminate_audience());
-    assert!(!scoring.followed());
-    assert!(!scoring.liked());
-    assert!(!scoring.replied());
-    assert!(!scoring.reposted());
-    assert!(!scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::Average);
-    assert_eq!(*scoring.offline_engagement_score(), EngagementScore::None);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Normal);
-
-    assert_eq!(*scoring.authority(), 45);
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("21"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
-}
-
-#[tokio::test]
-#[serial_test::file_serial]
-async fn does_not_count_own_replies_and_reposts() {
-    let h = TestHelper::for_model().await;
-    let account = h.app.create_account().await;
-    let mut handle = h.app.create_handle(&account.attrs.id, "asami_tester", user_id(), u("0")).await;
-    handle = handle
-        .update()
-        .poll_id(Some(poll_tweet_id()))
-        .referrer_score_override(Some(true))
-        .holder_score_override(Some(true))
-        .offline_engagement_score(EngagementScore::High)
-        .save()
-        .await
-        .unwrap();
-
-    let posts = [
-        reply_to_own_tweet(500, 0, 2, 11, 1),
-        quoting_someone_elses_tweet(300, 0, 2, 11, 1),
-        tweet_hello_world(300, 0, 0, 11, 0),
-        tweet_goodbye_world(550, 0, 1, 11, 0),
-        tweet_foo_bar(50, 0, 0, 0, 1),
-        tweet_poll(300, 0, 0, 3, 0),
-    ];
-
-    let referenced = [
-        make_reply(posts[0]["id"].as_str().unwrap()),
-        make_reply(posts[0]["id"].as_str().unwrap()),
-        make_quote(posts[0]["id"].as_str().unwrap()),
-        make_reply(posts[1]["id"].as_str().unwrap()),
-        make_reply(posts[1]["id"].as_str().unwrap()),
-        make_quote(posts[1]["id"].as_str().unwrap()),
-    ];
-
-    let scoring = pre_ingested_handle_scoring(
-        &handle,
-        me_json("347", true),
-        &posts,
-        mentions_json(10, 16),
-        Some(poll_json(1, 3, 4, 5)),
-        tweets_json(referenced),
-    )
-    .await
-    .apply()
-    .await
-    .unwrap();
-
-    handle.reload().await.unwrap();
-
-    assert_eq!(*scoring.status(), HandleScoringStatus::Applied);
-    assert_eq!(*scoring.audience_size(), 316);
-    assert!(!scoring.repost_fatigue());
-    assert!(!scoring.ghost_account());
-    assert!(!scoring.indeterminate_audience());
-    assert!(*scoring.followed());
-    assert!(*scoring.liked());
-    assert!(!scoring.replied());
-    assert!(!scoring.reposted());
-    assert!(*scoring.mentioned());
-
-    assert_eq!(*scoring.online_engagement_score(), EngagementScore::High);
-    assert_eq!(*scoring.offline_engagement_score(), EngagementScore::High);
-    assert_eq!(*scoring.operational_status_score(), OperationalStatus::Enhanced);
-    assert!(scoring.referrer_score_override().as_ref().unwrap());
-    assert!(scoring.holder_score_override().as_ref().unwrap());
-
-    assert_eq!(*scoring.authority(), 100);
-    assert_eq!(*scoring.score().as_ref().unwrap(), weihex("316"));
-
-    assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
-    assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
-    assert_eq!(*handle.status(), HandleStatus::Active);
-    assert_eq!(handle.score(), scoring.score());
+        ScoringExpectations {
+            poll_score: Some(PollScore::High),
+            replied: false,
+            reposted: false,
+            ..ScoringExpectations::default()
+        }.assert_matches(&scoring, &handle);
+    })
+    .await;
 }
 
 async fn pre_ingested_handle_scoring(
@@ -1093,14 +932,19 @@ fn me_json(followers: &str, verified: bool) -> Value {
 }
 
 fn tweets_json(data: impl AsRef<[Value]>) -> Value {
+    let val = data.as_ref();
     json::json![{
-      "data": data.as_ref(),
+      "data": val,
       "meta": {
-        "result_count": 6,
+        "result_count": val.len(),
         "newest_id": "1915364366796444108",
         "oldest_id": "1913185659373707387"
       }
     }]
+}
+
+fn empty_result_set() -> Value {
+    json::json![{"meta":{"result_count":0}}]
 }
 
 fn mentions_json(retweets: u64, likes: u64) -> Value {
@@ -1505,4 +1349,104 @@ pub fn tweet_poll(
         "attachments": { "poll_ids": ["1913187163258130432"] },
         "conversation_id": "1913187163358835110"
     })
+}
+
+pub struct ScoringExpectations {
+    pub status: HandleScoringStatus,
+    pub audience_size: i32,
+    pub repost_fatigue: bool,
+    pub ghost_account: bool,
+    pub indeterminate_audience: bool,
+    pub followed: bool,
+    pub liked: bool,
+    pub replied: bool,
+    pub reposted: bool,
+    pub mentioned: bool,
+    pub online_engagement_score: EngagementScore,
+    pub offline_engagement_score: EngagementScore,
+    pub operational_status_score: OperationalStatus,
+    pub poll_score: Option<PollScore>,
+    pub referrer_score_override: Option<bool>,
+    pub holder_score_override: Option<bool>,
+    pub authority: i32,
+    pub score: String,
+    pub handle_status: HandleStatus,
+    pub handle_score: String,
+}
+
+impl ScoringExpectations {
+    fn average() -> Self {
+        ScoringExpectations {
+            audience_size: 32,
+            followed: false,
+            liked: false,
+            replied: false,
+            reposted: false,
+            mentioned: false,
+            poll_score: Some(PollScore::None),
+            online_engagement_score: EngagementScore::Average,
+            offline_engagement_score: EngagementScore::None,
+            operational_status_score: OperationalStatus::Normal,
+            referrer_score_override: None,
+            holder_score_override: None,
+            authority: 25,
+            score: weihex("8"),
+            handle_score: weihex("8"),
+            ..Default::default()
+        }
+    }
+}
+
+impl Default for ScoringExpectations {
+    fn default() -> Self {
+        Self {
+            status: HandleScoringStatus::Applied,
+            audience_size: 316,
+            repost_fatigue: false,
+            ghost_account: false,
+            indeterminate_audience: false,
+            followed: true,
+            liked: true,
+            replied: true,
+            reposted: true,
+            mentioned: true,
+            online_engagement_score: EngagementScore::High,
+            offline_engagement_score: EngagementScore::High,
+            operational_status_score: OperationalStatus::Enhanced,
+            poll_score: Some(PollScore::High),
+            referrer_score_override: Some(true),
+            holder_score_override: Some(true),
+            authority: 100,
+            score: weihex("316"),
+            handle_status: HandleStatus::Active,
+            handle_score: weihex("316"),
+        }
+    }
+}
+
+impl ScoringExpectations {
+    pub fn assert_matches(&self, scoring: &HandleScoring, handle: &Handle) {
+        assert_eq!(*scoring.status(), self.status);
+        assert_eq!(*scoring.audience_size(), self.audience_size);
+        assert_eq!(*scoring.repost_fatigue(), self.repost_fatigue);
+        assert_eq!(*scoring.ghost_account(), self.ghost_account);
+        assert_eq!(*scoring.indeterminate_audience(), self.indeterminate_audience);
+        assert_eq!(*scoring.followed(), self.followed);
+        assert_eq!(*scoring.liked(), self.liked);
+        assert_eq!(*scoring.replied(), self.replied);
+        assert_eq!(*scoring.reposted(), self.reposted);
+        assert_eq!(*scoring.mentioned(), self.mentioned);
+        assert_eq!(*scoring.online_engagement_score(), self.online_engagement_score);
+        assert_eq!(*scoring.offline_engagement_score(), self.offline_engagement_score);
+        assert_eq!(*scoring.operational_status_score(), self.operational_status_score);
+        assert_eq!(*scoring.poll_score(), self.poll_score);
+        assert_eq!(*scoring.referrer_score_override(), self.referrer_score_override);
+        assert_eq!(*scoring.holder_score_override(), self.holder_score_override);
+        assert_eq!(*scoring.authority(), self.authority);
+        assert_eq!(scoring.score().as_ref().unwrap(), &self.score);
+        assert_eq!(handle.current_scoring_id().unwrap(), *scoring.id());
+        assert_eq!(handle.last_scoring().unwrap(), *scoring.created_at());
+        assert_eq!(*handle.status(), self.handle_status);
+        assert_eq!(handle.score().as_ref().unwrap(), &self.handle_score);
+    }
 }

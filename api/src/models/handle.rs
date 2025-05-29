@@ -252,11 +252,16 @@ impl HandleHub {
                 continue;
             };
 
+            let idx = usize::try_from(*handle.id()).unwrap_or(0) % 20;
+            let texts = match handle.account().await?.lang() {
+                Lang::Es => &super::poll_texts::POLL_TEXTS_ES[idx],
+                Lang::En => &super::poll_texts::POLL_TEXTS_EN[idx],
+            };
             let post_result = twitter
                 .post_tweet()
-                .text("What would you do".to_string())
+                .text(texts.text.to_string())
                 .poll(
-                    vec!["option1", "option2", "option3", "option4"],
+                    texts.options.to_vec(),
                     std::time::Duration::from_secs(60 * 60 * 24 * 7),
                 )
                 .send()

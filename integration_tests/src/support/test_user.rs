@@ -122,6 +122,29 @@ impl TestUser {
         self
     }
 
+    pub async fn unverified(mut self, username: &str, user_id: &str) -> Self {
+        let x_user_id = rand::thread_rng().gen_range(10000..=99999).to_string();
+
+        let handle = self
+            .test_app
+            .app
+            .handle()
+            .insert(InsertHandle {
+                account_id: self.account_id().encode_hex(),
+                username: username.to_string(),
+                user_id: user_id.to_string(),
+                x_refresh_token: Some("invalid_refresh_token".to_string()),
+            })
+            .save()
+            .await
+            .expect("could not save handle");
+
+        self.handle = Some(handle);
+        self.x_user_id = Some(x_user_id);
+
+        self
+    }
+
     pub async fn active(mut self, score: i32) -> Self {
         use super::handle_scoring_builder::*;
 
@@ -560,42 +583,6 @@ impl TestUser {
         )
         .await
     }
-
-    /* Create account in
-    pub async fn create_account_in_db_only(&self) -> models::Account {
-        let account = self
-            .app
-            .account()
-            .insert(InsertAccount {
-                name: Some("account".to_string()),
-                addr: None,
-            })
-            .save()
-            .await
-            .unwrap();
-        let user = self
-            .app
-            .user()
-            .insert(InsertUser {
-                name: "user".to_string(),
-            })
-            .save()
-            .await
-            .unwrap();
-
-        self.app
-            .account_user()
-            .insert(InsertAccountUser {
-                account_id: account.attrs.id.clone(),
-                user_id: user.attrs.id,
-            })
-            .save()
-            .await
-            .unwrap();
-
-        account
-    }
-    */
 }
 
 macro_rules! make_graphql_queries {

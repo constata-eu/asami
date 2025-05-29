@@ -22,7 +22,7 @@ model! {
     // via stripe, to manage this campaign.
     // This is before fees so it will be more than the
     // campaign on-chain budget.
-    // The managed unit amount is what the user 
+    // The managed unit amount is what the user
     // entered in the form on the website.
     #[sqlx_model_hints(int4, op_lt, op_gt)]
     managed_unit_amount: Option<i32>,
@@ -118,9 +118,9 @@ make_sql_enum![
         // These are skipped for self-managed campaigns.
         AwaitingPayment, // A stripe payment session was created.
         Paid,            // Stripe told us this was paid.
-        Submitted, // Campaign was apparently submitted on-chain by the user.
-        Published, // Campaign has been seen on-chain.
-        Failed, // Something went wrong, a refund may or may not be needed.
+        Submitted,       // Campaign was apparently submitted on-chain by the user.
+        Published,       // Campaign has been seen on-chain.
+        Failed,          // Something went wrong, a refund may or may not be needed.
     }
 ];
 
@@ -265,10 +265,7 @@ impl CampaignHub {
         };
 
         let Some(campaign_id) = i.metadata.get("campaign_id").and_then(|i| i.parse::<i32>().ok()) else {
-            return Err(Error::validation(
-                "campaign_id",
-                "no_request_id_on_stripe_event",
-            ));
+            return Err(Error::validation("campaign_id", "no_request_id_on_stripe_event"));
         };
 
         let Some(campaign) = self
@@ -284,9 +281,7 @@ impl CampaignHub {
             return Err(Error::validation("campaign", "campaign_not_found"));
         };
 
-        Ok(Some(
-            campaign.update().status(CampaignStatus::Paid).save().await?,
-        ))
+        Ok(Some(campaign.update().status(CampaignStatus::Paid).save().await?))
     }
 
     pub async fn create_managed_on_chain_campaigns(&self) -> AsamiResult<()> {
@@ -490,7 +485,10 @@ impl Campaign {
             .map_err(|_| Error::precondition(&format!("parse_error_in_briefing_json: {}", self.id())))?
             .as_str()
             .map(|x| x.to_string())
-            .ok_or(Error::precondition(&format!("no_content_id_in_briefing_json {}", self.id())))
+            .ok_or(Error::precondition(&format!(
+                "no_content_id_in_briefing_json {}",
+                self.id()
+            )))
     }
 
     pub async fn find_on_chain(&self) -> anyhow::Result<crate::on_chain::asami_contract_code::Campaign> {
@@ -529,14 +527,18 @@ impl Campaign {
         use stripe::CheckoutSession;
 
         if !self.managed_by_admin() {
-            return Err(Error::precondition("cannot_create_checkout_session_if_not_managed_by_admin"));
+            return Err(Error::precondition(
+                "cannot_create_checkout_session_if_not_managed_by_admin",
+            ));
         }
         if *self.status() != CampaignStatus::Draft {
             return Err(Error::precondition("cannot_create_checkout_session_if_not_draft"));
         }
 
         let Some(unit_amount) = self.managed_unit_amount().as_ref() else {
-            return Err(Error::precondition("cannot_create_checkout_session_with_no_unit_amount"));
+            return Err(Error::precondition(
+                "cannot_create_checkout_session_with_no_unit_amount",
+            ));
         };
 
         let client = &self.state.stripe_client;
@@ -586,7 +588,9 @@ impl Campaign {
     // Transitions from "paid" to "submitted"
     pub async fn create_managed_on_chain_campaign(self) -> AsamiResult<Self> {
         if *self.status() != CampaignStatus::Paid {
-            return Err(Error::precondition("cannot_create_managed_campaign_when_not_in_paid_status"));
+            return Err(Error::precondition(
+                "cannot_create_managed_campaign_when_not_in_paid_status",
+            ));
         }
 
         let chain = &self.state.on_chain;
@@ -618,7 +622,7 @@ impl Campaign {
     // So only 80% of the funds received on stripe become campaign rewards.
     pub fn budget_from_unit_amount(&self) -> AsamiResult<U256> {
         let Some(unit_amount) = self.managed_unit_amount().as_ref() else {
-            return Err(Error::precondition("no_unit_amount_on_non_managed_campaigns"))
+            return Err(Error::precondition("no_unit_amount_on_non_managed_campaigns"));
         };
 
         let processing_fee_percent = U256::from(20);
@@ -721,5 +725,4 @@ impl CreateCampaignFromLinkInput {
 
         Ok(briefing.to_string())
     }
-
 }

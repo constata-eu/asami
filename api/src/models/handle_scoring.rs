@@ -257,22 +257,39 @@ impl HandleScoring {
         let handle = self.handle().await?;
 
         let Some(me) = self.me_payload()?.and_then(|x| x.into_data()) else {
+            let _ = self.fail("me_payload_missing", ()).await;
             return self.discard_or_apply_empty().await;
         };
 
         let Some(tweets) = self.tweets_payload()?.and_then(|x| x.into_data()) else {
+            let _ = self.fail("tweets_missing", ()).await;
             return self.discard_or_apply_empty().await;
         };
 
-        let Some(mentions) = self.mentions_payload()?.and_then(|x| x.into_data()) else {
-            return self.discard_or_apply_empty().await;
+        let mentions = match self.mentions_payload()? {
+            None => vec![],
+            Some(payload) => {
+                if payload.errors().is_some() {
+                    let _ = self.fail("errors_on_mentions", ()).await;
+                    return self.discard_or_apply_empty().await;
+                }
+                payload.into_data().unwrap_or(vec![])
+            }
         };
 
-        let Some(reposts) = self.reposts_payload()?.and_then(|x| x.into_data()) else {
-            return self.discard_or_apply_empty().await;
+        let reposts = match self.reposts_payload()? {
+            None => vec![],
+            Some(payload) => {
+                if payload.errors().is_some() {
+                    let _ = self.fail("errors_on_reposts", ()).await;
+                    return self.discard_or_apply_empty().await;
+                }
+                payload.into_data().unwrap_or(vec![])
+            }
         };
 
         let Some(poll_score) = Self::get_poll_score(&self.poll_payload()?) else {
+            let _ = self.fail("poll_score_missing", ()).await;
             return self.discard_or_apply_empty().await;
         };
 

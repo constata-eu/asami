@@ -196,4 +196,13 @@ ALTER TYPE campaign_status ADD VALUE IF NOT EXISTS 'awaiting_payment' AFTER 'dra
 ALTER TYPE campaign_status ADD VALUE IF NOT EXISTS 'paid' AFTER 'awaiting_payment';
 ALTER TYPE campaign_status ADD VALUE IF NOT EXISTS 'failed' AFTER 'published';
 
-ALTER TABLE accounts ADD COLUMN stripe_customer_id VARCHAR;
+ALTER TABLE accounts
+ADD COLUMN stripe_customer_id VARCHAR,
+ADD COLUMN lang language NOT NULL DEFAULT 'en';
+
+UPDATE accounts SET lang = 'es' WHERE id IN
+    ( SELECT account_id FROM handles WHERE id IN
+       (SELECT handle_id FROM handle_topics WHERE topic_id = 2)
+    );
+
+UPDATE handles SET status = 'unverified';

@@ -88,7 +88,7 @@ impl OnChain {
 
         Ok(Self {
             legacy_contract: LegacyContract::new(legacy_address, client.clone()),
-            asami_contract: AsamiContract::new(asami_address.clone(), client.clone()),
+            asami_contract: AsamiContract::new(asami_address, client.clone()),
             asami_address,
             doc_contract: IERC20::new(doc_address, client.clone()),
             client,

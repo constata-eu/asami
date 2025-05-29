@@ -1,4 +1,7 @@
-use rocket::{data::{self, FromData, ToByteUnit}, Data, Request};
+use rocket::{
+    data::{self, FromData, ToByteUnit},
+    Data, Request,
+};
 
 use super::{
     models::{self, *},
@@ -131,9 +134,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
         if let Some(f) = filter {
             // Managed by admin filter requires a logged in user, and implicitly filters
             // only the current user campaigns.
-            let private_filters = f.managed_by_admin_eq.is_some() ||
-                f.status_eq.is_some() ||
-                f.status_ne.is_some();
+            let private_filters = f.managed_by_admin_eq.is_some() || f.status_eq.is_some() || f.status_ne.is_some();
 
             let account_id_eq = if private_filters {
                 Some(context.account_id()?)
@@ -143,8 +144,8 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
 
             let (status_eq, status_ne) = match f.is_published_eq {
                 Some(true) => (Some(CampaignStatus::Published), None),
-                Some(false) => (None, Some(CampaignStatus::Published)), 
-                _ => (f.status_eq, f.status_ne)
+                Some(false) => (None, Some(CampaignStatus::Published)),
+                _ => (f.status_eq, f.status_ne),
             };
 
             Ok(models::SelectCampaign {
@@ -193,7 +194,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
         } else {
             None
         };
-        
+
         Ok(Campaign {
             id: d.attrs.id,
             account_id: hex_to_i32(&d.attrs.account_id)?,
@@ -255,9 +256,10 @@ impl<'r> FromData<'r> for StripeWebhook {
 
         match stripe::Webhook::construct_event(&bytes, sig, &secret) {
             Ok(event) => Outcome::Success(StripeWebhook { event }),
-            Err(e) => {
-                Outcome::Error((Status::BadRequest, Error::validation("body", "could not construct event")))
-            }
+            Err(_) => Outcome::Error((
+                Status::BadRequest,
+                Error::validation("body", "could not construct event"),
+            )),
         }
     }
 }
