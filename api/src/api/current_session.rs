@@ -47,7 +47,7 @@ impl From<sqlx::Error> for ApiAuthError {
 
 macro_rules! auth_try {
     ($expr:expr, $error:literal) => {
-        $expr.map_err(|_| ApiAuthError::Fail($error.to_string()))?
+        $expr.map_err(|e|{ dbg!(e); ApiAuthError::Fail($error.to_string()) })?
     };
 }
 
@@ -245,22 +245,20 @@ impl CurrentSession {
                 (key, None)
             }
             AuthMethodKind::X => {
+                let client = auth_try!(app.settings.x.oauth_client("/x_login"), "could_not_make_oauth_client");
+
                 let oauth_data: OauthCodeAndVerifier =
                     auth_try!(serde_json::from_str(auth_data), "could_not_parse_oauth_data");
-
-                let verifier = twitter_v2::oauth2::PkceCodeVerifier::new(oauth_data.oauth_verifier);
-                let cb_url = auth_try!(app.settings.x.redirect_uri.parse(), "could_not_parse_cb_url");
-
-                let client = twitter_v2::authorization::Oauth2Client::new(
-                    app.settings.x.client_id.clone(),
-                    app.settings.x.client_secret.clone(),
-                    cb_url,
-                );
-
                 let auth_code = twitter_v2::oauth2::AuthorizationCode::new(oauth_data.code);
+                let verifier = twitter_v2::oauth2::PkceCodeVerifier::new(oauth_data.oauth_verifier);
+
                 let res = client.request_token(auth_code, verifier).await;
                 let token = auth_try!(res, "could_not_fetch_oauth_token");
+                
+                dbg!(&token.access_token().secret());
                 let twitter = twitter_v2::TwitterApi::new(token);
+                dbg!(&twitter);
+
 
                 let x = auth_try!(twitter.get_users_me().send().await, "could_not_find_twitter_me");
                 let user = auth_some!(x.into_data(), "no_twitter_payload_data");

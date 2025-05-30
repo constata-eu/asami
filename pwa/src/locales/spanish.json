@@ -512,7 +512,7 @@
     "try_again": "Intentar de nuevo",
     "contact_us": "Contáctanos",
     "x_grant_access_success": "¡Éxito! Ahora estamos verificando tu influencia — pronto podrás unirte a campañas.",
-    "x_gant_access_error": "No pudimos vincular tu cuenta de X. Intenta de nuevo o contacta a soporte si el problema continúa.",
+    "x_grant_access_error": "No pudimos vincular tu cuenta de X. Intenta de nuevo o contacta a soporte si el problema continúa.",
     "x_waiting_for_access": "Esperando acceso a X."
   },
   "account_show": {

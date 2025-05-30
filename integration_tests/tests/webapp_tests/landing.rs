@@ -23,6 +23,7 @@ async fn shows_landing() {
         assert_eq!(h.test_app.app.campaign().select().count().await.unwrap(), 7);
 
         h.web().navigate("/").await;
+        TestApp::wait_for_enter("login_with_x").await;
     })
     .await;
 }

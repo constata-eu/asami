@@ -25,12 +25,8 @@ const development = {
     ],
   },
   x: {
-    clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",
+    clientId: "REVmR09KdlhzNzVPcHpId2tVUWc6MTpjaQ",
     redirectUri: "http://127.0.0.1:8000",
-  },
-  facebook: {
-    appId: "376919484899990",
-    redirectUri: "http://localhost:8000/facebook_login",
   },
 };
 
@@ -64,14 +60,10 @@ const staging = {
     clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",
     redirectUri: "https://asami-staging.constata.eu",
   },
-  facebook: {
-    appId: "376919484899990",
-    redirectUri: "https://asami-staging.constata.eu/facebook_login",
-  },
 };
 
 const production = {
-  apiDomain: "https://asami.constata.eu",
+  apiDomain: "https://api.asami.club",
   environment: "production",
   recaptchaSiteKey: "6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX",
   rsk: {
@@ -98,11 +90,7 @@ const production = {
   },
   x: {
     clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",
-    redirectUri: "https://asami.constata.eu",
-  },
-  facebook: {
-    appId: "376919484899990",
-    redirectUri: "https://asami.constata.eu/facebook_login",
+    redirectUri: "https://api.asami.club",
   },
 };
 
