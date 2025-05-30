@@ -71,18 +71,42 @@ const Dashboard = () => {
   return (
     <Box id="advertiser-dashboard">
       <ResponsiveAppBar />
-      <ColumnsContainer>
-        <AdvertiserHelpCard />
-        <MakeCampaignWithDocCard
-          account={data}
-          onCreate={() => listContext.refetch()}
-        />
-        <MakeCampaignStripe
-          account={data}
-          onCreate={() => listContext.refetch()}
-        />
-        {data.status == "CLAIMED" && <BalanceCard />}
-      </ColumnsContainer>
+      <Stack
+        my="3em"
+        gap="2em"
+        direction="row"
+        flexWrap="wrap"
+        alignItems="stretch"
+      >
+        <Box flex="1 1 350px" display="flex">
+          <AdvertiserHelpCard />
+        </Box>
+        <Box
+          flex="1 1 800px"
+          alignItems="stretch"
+          display="flex"
+          flexWrap="wrap"
+          gap="1em"
+        >
+          <Box display="flex" flex="1 1 270px">
+            <MakeCampaignWithDocCard
+              account={data}
+              onCreate={() => listContext.refetch()}
+            />
+          </Box>
+          <Box display="flex" flex="1 1 270px">
+            <MakeCampaignStripe
+              account={data}
+              onCreate={() => listContext.refetch()}
+            />
+          </Box>
+          {data.status == "CLAIMED" && (
+            <Box display="flex" flex="1 1 270px" display="flex">
+              <BalanceCard />
+            </Box>
+          )}
+        </Box>
+      </Stack>
 
       <CampaignList listContext={listContext} />
       <Community />

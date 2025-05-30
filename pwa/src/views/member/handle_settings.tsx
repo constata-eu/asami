@@ -252,7 +252,7 @@ const HandleSubmissionInProgress = ({ handle }) => {
             fullWidth
             onClick={handleClose}
           >
-            Got it
+            {translate("handle_settings.x.in_progress.got_it")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -343,7 +343,9 @@ const GrantPermissionsAndMakePost = () => {
             fullWidth
             onClick={() => setOpen(false)}
           >
-            I'll do this later
+            {translate(
+              "handle_settings.x.grant_permissions_and_make_posts.will_do_it_later",
+            )}
           </Button>
           <Button
             id="button-grant-permission-and-make-post"
@@ -351,7 +353,9 @@ const GrantPermissionsAndMakePost = () => {
             variant="contained"
             onClick={startXLogin}
           >
-            Let's Go
+            {translate(
+              "handle_settings.x.grant_permissions_and_make_posts.lets_go",
+            )}
           </Button>
         </DialogActions>
       </Dialog>

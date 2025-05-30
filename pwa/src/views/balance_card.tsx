@@ -43,7 +43,7 @@ const BalanceCard = () => {
   }
 
   return (
-    <Card sx={{ mb: "1em" }} id="balance-card">
+    <Card sx={{ width: "100%" }} id="balance-card">
       {content}
     </Card>
   );
@@ -53,7 +53,15 @@ const Unclaimed = ({ account }) => {
   const translate = useTranslate();
   return (
     <Stack height="100%">
-      <CardContent sx={{ pb: 0 }}>
+      <CardContent
+        sx={{
+          pb: 0,
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
         <Head3 sx={{ mb: "1em" }}>
           {translate("balance_card.unclaimed.title")}
         </Head3>
@@ -117,7 +125,13 @@ const Done = ({ account }) => {
   return (
     <>
       <CardContent
-        sx={{ height: "100%", display: "flex", flexDirection: "column" }}
+        sx={{
+          pb: 0,
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
       >
         <Head2>{translate("balance_card.claimed.title")}</Head2>
 

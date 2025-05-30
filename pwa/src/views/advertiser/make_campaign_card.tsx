@@ -6,6 +6,7 @@ import {
   Button,
   CardContent,
   Typography,
+  Card,
 } from "@mui/material";
 import { Dialog } from "@mui/material";
 import { formatAddress } from "../../lib/formatters";
@@ -26,8 +27,15 @@ export const MakeCampaignWithDocCard = ({ account, onCreate }) => {
   const status = account.status;
 
   return (
-    <DeckCard>
-      <CardContent>
+    <Card>
+      <CardContent
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
         <Head2>{t("make_campaign.with_doc.title")}</Head2>
         {status == "MANAGED" && <ClaimAccountToUseDoc />}
         {status == "CLAIMING" && <ClaimInProgress />}
@@ -36,7 +44,7 @@ export const MakeCampaignWithDocCard = ({ account, onCreate }) => {
           <MakeCampaignWithDocDialog account={account} onCreate={onCreate} />
         )}
       </CardContent>
-    </DeckCard>
+    </Card>
   );
 };
 

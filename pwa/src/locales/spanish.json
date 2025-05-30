@@ -322,13 +322,16 @@
         "we_will_post_a_poll": "Publicaremos una encuesta en tu nombre para que tu audiencia pueda valorar tu influencia. Puedes eliminarla si no quieres participar, pero eso podría afectar tu puntaje.",
         "you_will_earn_rewards": "Después de eso, vas a ver campañas que puedes repostear para empezar a ganar recompensas.",
         "you_can_revoke": "Puedes revocar los permisos en cualquier momento desde X y reiniciar tu influencia.",
-        "help_text": "¿Necesitas ayuda? Pregunta a nuestro <a href=\"https://robot.asami.club\" target=\"_blank\" rel=\"noopener\">chatbot</a> o únete a nuestro <a href=\"https://t.me/asami_club\" target=\"_blank\" rel=\"noopener\">grupo de Telegram</a>."
+        "help_text": "¿Necesitas ayuda? Pregunta a nuestro <a href=\"https://robot.asami.club\" target=\"_blank\" rel=\"noopener\">chatbot</a> o únete a nuestro <a href=\"https://t.me/asami_club\" target=\"_blank\" rel=\"noopener\">grupo de Telegram</a>.",
+        "lets_go": "Hagámoslo ahora",
+        "will_do_it_later": "Lo haré luego"
       },
       "in_progress": {
         "summary": "Estamos midiendo tu influencia @%{username}, esto puede tardar hasta una hora.",
         "dialog_title": "Midiendo la influencia de @%{username}",
         "may_take_up_to_an_hour": "Tu puntaje puede tardar hasta una hora en estar listo.",
-        "check_the_poll": "Mientras tanto, revisa tu perfil de X para ver la encuesta que acabamos de publicar por ti — los votos de tu audiencia ayudarán a definir tu puntaje."
+        "check_the_poll": "Mientras tanto, revisa tu perfil de X para ver la encuesta que acabamos de publicar por ti — los votos de tu audiencia ayudarán a definir tu puntaje.",
+        "got_it": "Entendido"
       },
       "grant_permissions_again": {
         "summary": "Perdimos acceso a tu cuenta de X. Vuelve a conectarla para seguir colaborando.",
@@ -346,7 +349,7 @@
   "balance_card": {
     "account_id_label": "ID de la Cuenta",
     "unclaimed": {
-      "title": "Empezar sin wallet",
+      "title": "Acumulas, pero no retiras.",
       "doc_label": "Recompensas en DOC bloqueadas",
       "asami_label": "Tokens ASAMI bloqueados",
       "not_requested": "Estás usando una cuenta administrada — por ahora no necesitas una wallet. Cuando estés listo, conecta tu wallet de RSK para tomar el control total. Tus fondos se moverán a un contrato inteligente al que solo tú tendrás acceso. Solo recuerda mantener tu wallet segura — si la pierdes, también perderás tus fondos.",
@@ -397,7 +400,7 @@
   },
   "your_post_here": {
     "lead": "Fondea • Impulsa • Crece",
-    "title": "Impulsa tus publicaciones con energía boca a boca.",
+    "title": "Impulsa tu publicación de persona a persona.",
     "message": "Aumenta tu alcance con energía de boca en boca. Asami suma reposts reales a tu estrategia — puedes financiar campañas con cripto o tarjeta de crédito.",
     "one": "Asami pone tu proyecto Web3 frente a personas reales que eligen repostearte en X — generando alcance ahora y comunidad a futuro.",
     "two": "Paga con DOC — o con tarjeta de crédito si no hay otra.",
@@ -407,7 +410,7 @@
     "lead": "Elige • Comparte • Gana",
     "title": "Obtén tu lectura de influencia única.",
     "one": "Asami revela tu alcance — y te recompensa por usarlo.",
-    "two": "Elige campañas Web3 que valga la pena amplificar, repostealas en X y gana DOC (USD) y tokens ASAMI. Solo necesitarás una wallet para retirar tus recompensas.",
+    "two": "Elige campañas Web3 que valga la pena amplificar, repostealas en X y gana DOC (USD) y tokens ASAMI. No necesitarás una wallet hasta el momento de retirar tus recompensas.",
     "button": "Únete al club — Es gratis"
   },
   "login_form": {
@@ -585,7 +588,7 @@
     "robot_url": "robot.asami.club"
   },
   "landing": {
-    "title": "Un club para las tendencias de Web3.",
+    "title": "Un club para tendencias WEB3.",
     "asami_invites": "Asami conecta proyectos con personas reales que amplifican su mensaje compartiéndolo de forma auténtica y significativa.",
     "boost": "Los anunciantes crecen gracias a un alcance genuino. Los colaboradores aportan valor eligiendo qué amplificar y reciben recompensas por su influencia.",
     "together": "Todavía es muy temprano. Llevemos a los próximos mil millones de personas al mundo Web3 — juntos."

@@ -322,13 +322,16 @@
         "we_will_post_a_poll": "We’ll post a poll on your behalf so your audience can rate your influence, you can opt-out by deleting it right away, but it may affect your score.",
         "you_will_earn_rewards": "After that, you’ll see campaigns you can repost to start earning rewards.",
         "you_can_revoke": "You can revoke permissions anytime on X, and reset your influence.",
-        "help_text": "Need help? Ask our <a href=\"https://bot.asami.club\" target=\"_blank\" rel=\"noopener\">chatbot</a> or join our <a href=\"https://t.me/asami_club\" target=\"_blank\" rel=\"noopener\">Telegram group</a>."
+        "help_text": "Need help? Ask our <a href=\"https://bot.asami.club\" target=\"_blank\" rel=\"noopener\">chatbot</a> or join our <a href=\"https://t.me/asami_club\" target=\"_blank\" rel=\"noopener\">Telegram group</a>.",
+        "lets_go": "Let's go",
+        "will_do_it_later": "I'll do this later"
       },
       "in_progress": {
         "summary": "We are measuring your influnce @%{username}, it may take up to one hour.",
         "dialog_title": "Measuring influence for @%{username}",
         "may_take_up_to_an_hour": "It may take up to an hour for your score to be ready.",
-        "check_the_poll": "In the meantime, check your X profile to see the poll we just posted for you — your audience’s votes will help shape your score!"
+        "check_the_poll": "In the meantime, check your X profile to see the poll we just posted for you — your audience’s votes will help shape your score!",
+        "got_it": "Got it"
       },
       "grant_permissions_again": {
         "summary": "We've lost access to your x account. Reconnect to keep collaborating.",
@@ -346,7 +349,7 @@
   "balance_card": {
     "account_id_label": "Account ID",
     "unclaimed": {
-      "title": "Getting Started Without a Wallet",
+      "title": "You're earning, but not withdrawing",
       "doc_label": "Locked DOC rewards",
       "asami_label": "Locked ASAMI tokens",
       "not_requested": "You're using a managed account — no wallet needed for now. When you’re ready, connect your RSK wallet to take full control. Your funds will move to a smart contract only you can access. Just keep your wallet safe — lost wallets mean lost funds.",

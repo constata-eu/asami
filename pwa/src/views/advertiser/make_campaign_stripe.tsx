@@ -1,6 +1,6 @@
 import { useSafeSetState, useDataProvider, useTranslate } from "react-admin";
 
-import { Box, Button, CardContent, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Typography } from "@mui/material";
 import { Dialog } from "@mui/material";
 import { toBeHex } from "ethers";
 import { DeckCard } from "../layout";
@@ -13,15 +13,22 @@ export const MakeCampaignStripe = ({ account, onCreate }) => {
   const status = account?.status;
 
   return (
-    <DeckCard>
-      <CardContent>
+    <Card>
+      <CardContent
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
         <Head2>{t("make_campaign.with_stripe.title")}</Head2>
         {status == "BANNED" && <Banned />}
         {status != "BANNED" && (
           <MakeCampaignStripeDialog account={account} onCreate={onCreate} />
         )}
       </CardContent>
-    </DeckCard>
+    </Card>
   );
 };
 
@@ -67,8 +74,10 @@ const MakeCampaignStripeDialog = ({ onCreate }) => {
   };
 
   return (
-    <Box id="make-campaign-stripe-dialog-container">
-      <Typography my="1em">{t("make_campaign.with_stripe.text")}</Typography>
+    <>
+      <Typography id="make-campaign-stripe-dialog-container" my="1em">
+        {t("make_campaign.with_stripe.text")}
+      </Typography>
       <Button
         fullWidth
         variant="contained"
@@ -117,6 +126,6 @@ const MakeCampaignStripeDialog = ({ onCreate }) => {
           />
         )}
       </Dialog>
-    </Box>
+    </>
   );
 };
