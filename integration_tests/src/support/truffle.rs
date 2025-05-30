@@ -10,6 +10,7 @@ use nix::{
     unistd::Pid,
 };
 
+#[derive(Debug)]
 pub struct Truffle {
     pub child: Child,
     pub dir: std::path::PathBuf,

@@ -2,21 +2,32 @@
   "resources": {
     "Account": {
       "fields": {
-        "unclaimedAsamiBalance": "Unclaimed ASAMI",
-        "unclaimedDocBalance": "Unclaimed DOC",
+        "unclaimedAsamiBalance": "ASAMI to claim",
+        "unclaimedDocBalance": "DOC to claim",
         "addr": "Wallet Address",
-        "totalCollabs": "Collabs made",
-        "totalCollabRewards": "Collabs Reward",
+        "totalCollabs": "Collabs done",
+        "totalCollabRewards": "Collected DOC",
         "totalCampaigns": "Campaigns created",
-        "totalCollabsReceived": "Collabs received",
-        "totalSpent": "Spent",
+        "totalCollabsReceived": "Collabs paid",
+        "totalSpent": "Spent DOC",
         "createdAt": "Joined",
         "asamiBalance": "ASAMI",
         "rbtcBalance": "RBTC",
         "docBalance": "DOC",
-        "allowsGasless": "Wants Gasless", 
+        "allowsGasless": "Wants Gasless",
         "idEq": "by ID",
         "addrLike": "by wallet address"
+      }
+    },
+    "CommunityMember": {
+      "fields": {
+        "memberId": "Member",
+        "accountId": "Advertiser",
+        "rewards": "Total rewads DOC",
+        "collabs": "Collabs",
+        "firstCollabDate": "First collab",
+        "lastCollabDate": "Last collab",
+        "rating": "Rating"
       }
     },
     "Topic": {
@@ -30,9 +41,10 @@
         "briefingJson": "ID on X",
         "status": "Status",
         "totalCollabs": "Collabs",
-        "budget": "Available",
-        "totalSpent": "Spent",
-        "totalBudget": "Total",
+        "collabs": "Collabs",
+        "budget": "Available DOC",
+        "totalSpent": "Spent DOC",
+        "totalBudget": "Total DOC",
         "validUntil": "Valid until",
         "createdAt": "Created at",
         "accountId": "Member",
@@ -43,11 +55,20 @@
         "accountIdEq": "by member ID",
         "statusEq": "status is",
         "statusNe": "status is not"
+      },
+      "statuses": {
+        "DRAFT": "Draft",
+        "AWAITING_PAYMENT": "Awaiting Payment",
+        "PAID": "Payment received",
+        "SUBMITTED": "Submitted On-Chain",
+        "PUBLISHED": "Live Campaign",
+        "FAILED": "Failed to Publish"
       }
     },
     "Handle": {
       "fields": {
         "username": "X username",
+        "userId": "ID on X",
         "score": "Influence level",
         "status": "Status",
         "totalCollabs": "Collabs",
@@ -57,15 +78,16 @@
         "idEq": "by ID",
         "usernameLike": "by X username",
         "accountIdEq": "by member",
-        "topic": "Categories"
+        "topic": "Categories",
+        "lastScoring": "Last scored"
       }
     },
     "Collab": {
       "fields": {
         "campaignId": "Campaign",
         "handleId": "Handle",
-        "reward": "Reward",
-        "fee": "Fee",
+        "reward": "Reward DOC",
+        "fee": "Fee DOC",
         "status": "Status",
         "advertiserId": "Advertiser member",
         "memberId": "Collaborator member",
@@ -78,7 +100,16 @@
         "memberIdEq": "by collaborator member",
         "collabTriggerUniqueIdLike": "by trigger on X",
         "statusEq": "status is",
-        "statusNe": "status is not"
+        "statusNe": "status is not",
+        "createdAt": "Collab date"
+      }
+    },
+    "Stats": {
+      "fields": {
+        "totalActiveHandles": "Active Handles",
+        "totalCollabs": "Collabs",
+        "totalCampaigns": "Campaigns",
+        "totalRewardsPaid": "Rewards Paid"
       }
     },
     "OnChainJob": {
@@ -95,50 +126,43 @@
       }
     }
   },
-	"footer": {
-    "built_with": "Built with"
-  },
-	"footer": {
-    "built_with": "Bitcoiner smart-contract in",
-    "tech_sponsor": "Industrial-grade tech sponsor",
-    "funds_sponsor": "Campaign funding sponsor",
-    "with_support_from": "Overall support from",
+  "footer": {
+    "built_with": "Powered by",
+    "tech_sponsor": "Tech sponsor",
+    "funds_sponsor": "Campaign funding",
+    "with_support_from": "Started on",
     "campaign_manager": "Managed by"
   },
   "campaign_list": {
-    "title": "Active campaigns",
+    "title": "Your campaigns",
     "text": "Club members will be reposting your content until the budget is fully spent. Unspent amounts will be returned after campaign ends.",
     "see_post": "See Post",
     "kind": "Campaign Kind",
     "post": "Post",
     "budget": "Budget",
     "status": "Current status",
-		"statuses": {
-			"publishing": "Publishing soon.",
-			"running": "Has %{budget} DOC. Runs until: %{validUntil}.",
-			"stopped": "Not running."
-		}
+    "statuses": {
+      "publishing": "Publishing soon.",
+      "running": "Has %{budget} DOC. Runs until: %{validUntil}.",
+      "stopped": "Not running."
+    }
+  },
+  "campaign_request_list": {
+    "title": "Stripe payments",
+    "go_to_stripe": "Go to checkout"
   },
   "claim_account": {
     "success": "The admin will hand over control of your account to you soon.",
     "error": "Oops, we could not receive your request. Please try again or contact the admin on X."
   },
   "advertiser_help": {
-    "title": "Little help:",
-    "CLAIMED": "You can create a campaign in X by providing a link to any post, and members will amplify it. Remember they have the last word, so make your post friendly!",
-    "CLAIMING": "You'll be able to start new campaigns once the admin processes your account claim",
-    "MANAGED": "You should connect your WEB3 wallet to be able to create campaigns.",
-		"BANNED": "Your account has been deactivated 😭. Your funds are still in the smart contract, and you can find them there, but you cannot longer use this website."
+    "title": "Fund, Boost, Grow.",
+    "text": "Get more impressions on your posts by launching a campaign. You’ll choose a post, set a budget, and reach real people through authentic reposts. Eligible collaborators are paid based on their genuine influence and audience size, helping you achieve meaningful reach."
   },
-  "campaign_request_list": {
-    "title": "Requested campaigns",
-    "admin_will_review": "The club's admin will review and decide whether to fund your campaigns.",
-    "claim_to_create": "Claim your account using a WEB3 wallet to create campaigns yourself!",
-    "see_post": "See Post",
-    "post": "Post",
-    "status": "Status",
-    "site": "Site",
-    "budget": "Budget"
+  "community": {
+    "title": "Your community.",
+    "description": "These members helped amplify your campaigns! Pick your favorites to invite them to exclusive ones — or flag those you’d rather not work with again.",
+    "rating_success": "Rating saved."
   },
   "collab_list": {
     "title": "Your collaboration history",
@@ -146,20 +170,20 @@
     "see_post": "See post",
     "reward": "Reward",
     "fee": "Asami fee",
-		"statuses": {
-			"REGISTERED": {
-				"title": "Registered",
-				"text": "We saw your collab, we're validating it."
-			},
-			"CLEARED": {
-				"title": "Cleared",
-				"text": "Paid to your unclaimed balance."
-			},
-			"FAILED": {
-				"title": "Failed",
-				"text": "The campaign ran out of budget. You can undo your collaboration :("
-			}
-		}
+    "statuses": {
+      "REGISTERED": {
+        "title": "Registered",
+        "text": "We saw your collab, we're validating it."
+      },
+      "CLEARED": {
+        "title": "Cleared",
+        "text": "Paid to your unclaimed balance."
+      },
+      "FAILED": {
+        "title": "Failed",
+        "text": "The campaign ran out of budget. You can undo your collaboration :("
+      }
+    }
   },
   "campaign_request": {
     "title": "Suggest a campaign",
@@ -173,13 +197,40 @@
       "invalid_url": "The link must point to a post, and start with https://..."
     }
   },
-  "make_campaign_card": {
-    "title": "Start a campaign!",
+  "make_campaign": {
+    "with_stripe": {
+      "title": "Use Stripe",
+      "text": "You can fund your campaign using a credit or debit card. A portion of your budget will go to payment processing fees, and you won’t receive Asami tokens — but collaborators will still be paid in DOC, just like with on-chain campaigns.",
+      "create_button": "Launch Campaign",
+      "form_title": "What to know before you launch.",
+      "service_summary": "Campaigns paid via Stripe include a 20% fee for processing and budget management. The rest is converted to DOC and fully used to fund your campaign and reward collaborators. You may want to consider funding directly in DOC to avoid this fee. Campaigns run until the full budget is spent, with collaborators paid based on their influence to help you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small $50 budget to see how Asami works for your goals.",
+      "done": {
+        "title": "One Last Step",
+        "text": "We’ve received your campaign details. All that’s left is to complete the payment. Once we receive it, your campaign may take up to 24 hours to go live.",
+        "go_to_stripe": "Go to checkout"
+      }
+    },
+    "with_doc": {
+      "title": "Use DOC",
+      "claim_to_use": "Funding your campaign with DOC is 20% cheaper and earns you Asami tokens for every repost. DOC is a fully decentralized stablecoin on the Rootstock blockchain, so you’ll need a compatible wallet — like Beexo, MetaMask, Enkrypt, or Rabby — to use it.",
+      "claim_to_use_button": "Connect Wallet to Continue",
+      "claim_in_progress": "Linking your wallet... Soon you'll be able to create campaigns and enjoy all the benefits of using DOC — including lower costs and Asami rewards.",
+      "create_text": "Want more for your budget? Use DOC to launch campaigns at lower cost and collect Asami tokens with every collaboration.",
+      "create_button": "Launch with DOC",
+      "doc_funded": "You don't have any DOC in your wallet yet. To get started, you can mint it using RBTC or swap for it using supported protocols.",
+      "get_doc": "Get DOC now",
+      "form_title": "What to know before you launch.",
+      "service_summary": "Your campaign will go live as soon as it’s submitted. Your wallet may ask for DOC spending authorization before it can proceed. Campaigns run for 15 days, and any unused DOC will be automatically returned to your wallet at the end.<br/> Collaborators are paid in DOC based on their influence level, which helps you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small 30 DOC budget to see how Asami works for your goals.",
+      "done": {
+        "title": "Campaign created",
+        "text": "Your campaign has been created. It may take a few minutes to show up in your dashboard.",
+        "see_in_explorer": "See transaction in block explorer"
+      }
+    },
     "pay_members": "Pay club members to repost any X post.",
-    "doc_funded": "Campaigns are funded in DoC, a US dollar pegged stablecoin from Money On Chain, that you can mint yourself using RBTC.",
-    "get_doc": "Go get some DoC",
     "start_campaign": "Start Campaign",
     "close": "Close",
+    "i_changed_my_mind": "I changed my mind",
     "post_url_label": "The X post link",
     "cancel": "Cancel",
     "errors": {
@@ -195,19 +246,23 @@
       "invalid_url": "The link must point to a post, and start with https://..."
     },
     "form_step": {
-      "content_url": "Link to X post",
-      "budget": "Total budget you'll spend, in DOC",
+      "content_url": "X post link to boost",
+      "content_url_help": "Paste the link here. Find it on the “Share Post” menu on X. <a target='_blank' href='https://help.x.com/en/using-x/post-and-moment-url'>Need help?</a>",
+      "budget": "Total campaign budget in DOC (USD)",
+      "budget_help": "Minimum is 1 DOC, but we usually recommend 30–250 DOC.",
+      "managed_amount": "USD to spend",
+      "managed_amount_help": "Minimum is $10, but we usually recommend $50–$300.",
       "start_campaign": "Start Campaign",
-      "service_summary": "Members will repost your content and get paid based on their reach",
-      "refund_notice": "Unused funds will be returned to you after 15 days.",
-      "price_per_point": "DOC per impression contributed.",
-      "price_per_point_help": "Impressions contributed by collaborators are only a rough approximation, and are not guaranteed. A value of 0.002 means your intent is to pay 2 DOC every 1K impressions.",
-      "max_individual_reward": "Max DOC per individual collaborator",
-      "max_individual_reward_help": "No collaborator will be paid more than this, regardless of how many impressions they contribute.",
-      "min_individual_reward": "Min DOC per individual collaborator",
-      "min_individual_reward_help": "Collaborators will be paid at least this much, regardles of impressions. You can use this to incentivize contributions from lower reach members.",
-      "topics": "Relevant audience criteria",
-      "topics_help": "Only members who meet all selected criteria can collaborate. Leave blank if you want anyone to collaborate."
+      "price_per_point": "DOC per influence point.",
+      "price_per_point_help": "Sets how much to reward for reach. Each point estimates one person getting your message. 0.01 means you pay 10 DOC for approximately 1,000 people meaningfully reached.",
+      "max_individual_reward": "Max per collaborator",
+      "max_individual_reward_help": "No one earns more than this total, no matter their reach.",
+      "min_individual_reward": "Min per collaborator",
+      "min_individual_reward_help": "Useful to support smaller collaborators with guaranteed pay.",
+      "topics": "Who can collaborate?",
+      "topics_help": "Leave this blank to allow everyone.",
+      "thumbs_up_only": "Thumbs up only",
+      "thumbs_up_only_help": "Only visible to collaborators you have approved."
     },
     "tx_waiter": {
       "approving_title": "Approve budget spend",
@@ -217,11 +272,6 @@
       "waiting_for_tx": "Waiting for transaction to confirm",
       "see_in_explorer": "See transaction in block explorer",
       "close": "Close"
-    },
-    "done": {
-      "title": "Campaign created",
-      "text": "Your campaign has been created. It may take a few minutes to show up in your dashboard.",
-      "see_in_explorer": "See transaction in block explorer"
     },
     "failure_step": {
       "action_rejected": "It looks like you cancelled the campaign creation in your wallet, try again if you're still interested.",
@@ -240,21 +290,22 @@
     },
     "header": {
       "title": "You get $%{amount}",
-      "subheader": "*minus fees"
+      "subheader": "minus fees"
     },
     "x": {
       "main_button": "Repost to earn",
       "attempted": "Now just wait, your repost may take up to an hour to register in Asami."
     }
   },
-  "help_card": {
-    "title": "What's next?",
-    "collaborate": "You can collaborate in a campaign, but remember, people are listening to you, be responsible an true to yourself when choosing what content to amplify.",
-    "verify_handles": "Help us verify your X account. We'll estimate your influence level, and you'll be able to start earning for your reposts",
-    "wait_for_campaigns": "There are no campaigns for you to amplify at the moment. Come back tomorrow!"
+  "title_card": {
+    "title": "Pick, Share, Earn.",
+    "collaborate": "You're all set to collaborate! Just remember — your audience is paying attention, so be a bit selective. Reposting content that doesn’t align with you can wear out your followers and weaken your influence. Plus, staying true to your voice shows you're sharing responsibly.",
+    "verify_handles": "Let’s link your X account so we can estimate your influence. Once you're verified, you can start earning from reposts!",
+    "wait_for_campaigns": "No campaigns available right now — check back soon, new opportunities pop up all the time, specially on fridays!"
   },
   "handle_settings": {
-    "title": "Settings",
+    "title": "Handle",
+    "see_full_profile": "See your public profile",
     "stats": {
       "username": "Username",
       "user_id": "User ID",
@@ -263,64 +314,72 @@
       "locked_until": "Values in force until"
     },
     "x": {
-      "create_request": {
-        "text": "Verify your X account ownership to know your influence level, and get paid to repost.",
-        "username_label": "Your X handle",
-        "username_help": "Example: @jack",
-        "save": "Continue",
-        "success": "We've got your handle!",
-        "username_error": "That does not seem to be an X username. It should be something like '@jack'"
+      "grant_permissions_and_make_posts": {
+        "summary": "Connect your X account to get your personalized influence reading. It’s fun, and lets you join campaigns on X to earn crypto for reposting.",
+        "get_started": "Get Started",
+        "dialog_title": "Get Your Personalized influence Reading",
+        "we_will_check_your_activity": "We’ll check your X activity to measure your audience and influence based on interactions.",
+        "we_will_post_a_poll": "We’ll post a poll on your behalf so your audience can rate your influence, you can opt-out by deleting it right away, but it may affect your score.",
+        "you_will_earn_rewards": "After that, you’ll see campaigns you can repost to start earning rewards.",
+        "you_can_revoke": "You can revoke permissions anytime on X, and reset your influence.",
+        "help_text": "Need help? Ask our <a href=\"https://bot.asami.club\" target=\"_blank\" rel=\"noopener\">chatbot</a> or join our <a href=\"https://t.me/asami_club\" target=\"_blank\" rel=\"noopener\">Telegram group</a>.",
+        "lets_go": "Let's go",
+        "will_do_it_later": "I'll do this later"
       },
       "in_progress": {
-        "text": "We're verifying your X account, this may take up to one hour."
+        "summary": "We are measuring your influnce @%{username}, it may take up to one hour.",
+        "dialog_title": "Measuring influence for @%{username}",
+        "may_take_up_to_an_hour": "It may take up to an hour for your score to be ready.",
+        "check_the_poll": "In the meantime, check your X profile to see the poll we just posted for you — your audience’s votes will help shape your score!",
+        "got_it": "Got it"
       },
-      "make_verification_post": {
-        "text": "Post this message to verify your handle ownership, consent to use asami, and disclosure to your followers.",
-        "post_text": "Starting today, some of my reposts will be paid for, as I joined @asami_club [%{accountId}]",
-        "button": "Post message",
-        "done": "Thank you! It may take up to an hour for us to pick up your post."
+      "grant_permissions_again": {
+        "summary": "We've lost access to your x account. Reconnect to keep collaborating.",
+        "dialog_title": "We've Lost Access to Your X Account",
+        "cant_measure": "We can’t measure your influence right now, so your score will be reset to 0.",
+        "please_reconnect": "Please reconnect your X account to restore access and continue collaborating in campaigns.",
+        "reconnect": "Reconnect",
+        "later": "I'll do this later"
+      },
+      "account_deactivated": {
+        "summary": "Your handle has been deactivated by the campaign manager due to infringement."
       }
     }
   },
   "balance_card": {
-    "title": "Your account",
-    "account_id_label":"Account ID",
+    "account_id_label": "Account ID",
     "unclaimed": {
-      "doc_label": "Unclaimed DOC",
-      "asami_label": "Unclaimed ASAMI",
-      "not_requested": "You must create and connect a WEB3 wallet to gain full control of your account. Then, you can claim your rewards whenever you like.",
-      "not_requested_button": "Connect wallet and claim",
-      "pending": "You've started the process to claim your account, which will complete soon."
+      "title": "You're earning, but not withdrawing",
+      "doc_label": "Locked DOC rewards",
+      "asami_label": "Locked ASAMI tokens",
+      "not_requested": "You're using a managed account — no wallet needed for now. When you’re ready, connect your RSK wallet to take full control. Your funds will move to a smart contract only you can access. Just keep your wallet safe — lost wallets mean lost funds.",
+      "not_requested_button": "Link wallet and unlock",
+      "pending": "Hang tight — your wallet is being linked. You’ll be able to manage and withdraw your rewards as soon as it’s ready."
     },
     "claimed": {
+      "title": "Rewards",
       "doc_label": "DOC in wallet",
       "asami_label": "ASAMI in wallet",
       "added": "%{symbol} added to your wallet.",
       "not_added": "%{symbol} could not be added to your wallet.",
       "address": "RSK Address",
       "last_payout_amount_label": "Last fee share received",
-      "last_payout_date_label":"Last fee share date",
-      "next_payout_date_label":"Next fee share date",
-			"cant_withdraw": "You don't have enough RBTC in your wallet to claim your balance.",
-			"claim_button_label": "Claim to wallet",
-			"gasless_claim_button_label": "Claim without RBTC",
-			"suggest_gasless": "We deduct 1 DOC, you get your unclaimed balances and 0.000006 RBTC in your wallet.",
-			"no_pending_balance": "Your rewards will go to your unclaimed balance, then you can claim them here.",
-			"cant_withdraw": "You're low on RBTC for this claim. We can process your claim ind send you some extra RBTC for 1 DOC of your unclaimed balance. Keep stacking rewards!",
-			"gasless_allowance_success": "We'll process your claim soon.",
-			"claim_success": "Your tokens are on their way."
+      "last_payout_date_label": "Last fee share date",
+      "next_payout_date_label": "Next fee share date",
+      "claim_button_label": "Claim to wallet",
+      "gasless_claim_button_label": "Claim without RBTC",
+      "suggest_gasless": "We deduct 1 DOC, you get your unclaimed balances and 0.000006 RBTC in your wallet.",
+      "no_pending_balance": "Your rewards will go to your unclaimed balance, then you can claim them here.",
+      "cant_withdraw": "You're low on RBTC for this claim. We can process your claim ind send you some extra RBTC for 1 DOC of your unclaimed balance. Keep stacking rewards!",
+      "gasless_allowance_success": "We'll process your claim soon.",
+      "claim_success": "Your tokens are on their way.",
+      "on_your_wallet": "On your wallet"
     }
-  },
-  "logged_in_nav_card": {
-    "post_to_earn": "Post to earn",
-    "pay_to_amplify": "Pay for reach",
-    "logout": "Logout"
   },
   "login": {
     "login_button": "Login",
     "about_asami_button": "About ASAMI",
-    "ig_handle": "asamiclub",
-    "x_handle": "asami_club",
+    "x_handle": "@asami_club",
     "unexpected_error": "An unexpected error ocurred while starting your session",
     "error_description_title": "We have a description for the error:",
     "try_again": "Try again",
@@ -340,39 +399,44 @@
     "message": "Check back soon though!"
   },
   "your_post_here": {
-    "title": "Your post, here.",
-    "message": "Pay club members to repost your X content.",
+    "lead": "Fund • Boost • Grow",
+    "title": "Boost your posts with word-of-mouth energy.",
+    "message": "Boost your engagement with word-of-mouth energy. Asami adds real reposts to your ad strategy — campaigns can be funded with crypto or credit card.",
+    "one": "Asami puts your Web3 project in front of real people who choose to repost you on X — building reach now and community over time.",
+    "two": "Pay with DOC — or with a Credit Card if you must.",
     "button": "Start a campaign"
   },
   "join_now": {
-    "title": "Monetize any audience size.",
-    "message": "Repost content from advertisers in X and receive US dollar equivalent crypto, with rewards based on your genuine reach.",
-    "no_crypto_no_problem": "No crypto? No problem!",
-    "learn_later": "You can start accumulating rewards now, and learn more about using crypto later.",
-    "button": "Join the club, it's free!"
+    "lead": "Pick • Share • Earn",
+    "title": "Get your personalized influence reading.",
+    "one": "Asami reveals your reach — and rewards you for using it.",
+    "two": "Pick Web3 campaigns worth amplifying, repost them on X, and earn DOC stablecoin and ASAMI tokens. You’ll only need a wallet to cash out.",
+    "button": "Join the club — It's free"
   },
   "login_form": {
-    "disclaimer_title": "Consent to transfer your data outside the EU",
-    "disclaimer_body": "Using ASAMI means agreeing to permanent disclosure and storage of your data globally. This non-revocable policy is essential for our club's fairness and transparency.  Before logging in, please assess the potential privacy and reputation risks of disclosing your social media handles and rewards.",
-    "reject_button": "I do not consent!",
-    "read_more": "Read more",
-    "web2_consent_title": "Consent and login with your social account.",
-    "consent_with_x": "Consent and login with X",
-    "consent_with_email": "Consent and login via Email",
-    "consent_with_facebook": "Consent with Facebook",
-    "web3_consent_title": "Consent and login with a WEB3 wallet",
-    "web3_consent_body": "To collect your rewards, get ASAMI tokens, and vote.",
-    "consent_and_connect": "Consent and connect",
-    "send_email_token": {
-        "title": "Enter your email and we'll send you a login code.",
-        "submit": "Send me a code",
-        "error": "There was a problem sending your code. Contact us on X at @asami_club",
-        "done": "Code sent, check your inbox.",
-        "done_contact_us": "If you don't get your login token, contact us on X at @asami_club"
-    },
+    "read_our_terms": "Read our terms. If you agree, choose how you'd like to log in.",
+    "read_terms_button": "I'll read the terms first",
+    "x_login_button": "• agree & login",
+    "email_login_button": "Email • agree & login",
+    "rsk_login_button": "RSK Wallet • agree & login",
     "x_mobile_warning": {
-        "title": "This may not work on mobile",
-        "text": "If login fails, we suggest you log-in using your Email address or a WEB3 wallet. You can also try again using X but on your laptop or from a different browser on your mobile."
+      "title": "X login doesn’t always work on mobile.",
+      "text": "This happens when the X app opens instead of your browser. If it doesn't work, try logging in from a laptop, use Email or Web3 instead, or temporarily disable link handling in the X app settings so the login opens in your mobile browser."
+    },
+    "send_email_token": {
+      "title": "Type your email and we'll send you a login link.",
+      "submit": "Send login link",
+      "error": "We couldn’t send the code. Contact us on X at @asami_club if the issue continues.",
+      "done": "Link sent! Check your inbox.",
+      "done_contact_us": "It might take a few minutes to arrive — please wait up to 10 minutes and check your spam folder. If it still hasn’t arrived, contact us on X at @asami_club."
+    },
+    "login_disclaimer": {
+      "title": "How things work here",
+      "heads_up": "Just a quick heads-up before you join",
+      "asami_operates_differently": "— Asami operates differently from typical websites due to its blockchain-based fairness and transparency model.",
+      "data_outside_the_eu": "Your data may be transferred outside the EU and stored forever, given our legitimate interest in blockchain transparency.",
+      "no_guarantees": "The service is provided as is, with no guarantees of suitability for any specific purpose, and may be changed or discontinued at any time.",
+      "local_laws": "You are responsible for ensuring your asami usage complies with local laws and third-party platform terms — like X. We haven’t run into any issues ourselves, but we include this just to cover our bases."
     }
   },
   "about_us": {
@@ -401,7 +465,8 @@
     "action": {
       "clear_input_value": "Clear",
       "confirm": "Confirm",
-      "unselect": "Unselect"
+      "unselect": "Unselect",
+      "export": "Export"
     },
     "auth": {
       "auth_check_error": "Please sign in to continue",
@@ -412,43 +477,127 @@
       "skip_nav": "Skip"
     }
   },
-	"version_two": {
-		"title": "Version 2 is here 🎉",
-		"text": "Batteries included! Now you can get some RBTC with your rewards, so your wallet is always ready to be used with other apps in the rootstock ecosystem."
-	},
-	"explorer": {
-	  "menu": {
-	    "stats": "Club Stats",
-	    "handles": "Handles",
-	    "accounts": "Members",
-	    "campaigns": "Campaigns",
-	    "collabs": "Collabs",
-	    "oracle": "Oracle"
-	  },
-	  "stats": {
-	    "title": "Club Stats",
-	    "description": "These are the general club stats right now. You can explore all club activities in Members, Campaigns, Handles, and Collabs.",
-	    "explore_btn": "Explore data"
-	  },
-	  "campaigns": {
-	    "title": "Campaigns",
-	    "description": "These are all the campaigns ever created by advertisers."
-	  },
-	  "handles": {
-	    "title": "Handles",
-	    "description": "These are the handles that engage in collabs. They are scored by the campaign manager."
-	  },
-	  "accounts": {
-	    "title": "Members",
-	    "description": "Club members that can be making campaigns, collaborating, or both."
-	  },
-	  "collabs": {
-	    "title": "Collaborations",
-	    "description": "A collaboration occurs when a Handle reposts, participating on a Campaign"
-	  },
-	  "oracle": {
-	    "title": "Oracle Jobs",
-	    "description": "These are this campaign manager's on-chain jobs. This is the only campaign manager so far."
-	  }
-	}
+  "explorer": {
+    "stats": {
+      "title": "Club Stats",
+      "description": "Global club stats at a glance — for specifics, check each section in the navbar.",
+      "explore_btn": "Explore all stats"
+    },
+    "campaigns": {
+      "title": "Campaigns",
+      "description": "These are all the campaigns ever created by advertisers."
+    },
+    "handles": {
+      "title": "Handles",
+      "description": "These are the handles that engage in collabs. They are scored by the campaign manager."
+    },
+    "accounts": {
+      "title": "Members",
+      "description": "Club members that can be making campaigns, collaborating, or both."
+    },
+    "collabs": {
+      "title": "Collaborations",
+      "description": "A collaboration occurs when a Handle reposts, participating on a Campaign"
+    },
+    "oracle": {
+      "title": "Oracle Jobs",
+      "description": "These are this campaign manager's on-chain jobs. This is the only campaign manager so far."
+    }
+  },
+  "oauth_redirect": {
+    "logging_you_in": "Logging you in, this won't take long.",
+    "invalid_redirect_state": "This link has expired or the redirect url is invalid. Did you copy it manually?. Please try again.",
+    "unexpected_error": "An unexpected error ocurred while starting your session",
+    "error_description_title": "We have a description for the error:",
+    "try_again": "Try again",
+    "contact_us": "Contact us",
+    "x_grant_access_success": "Success! We're verifying your influence now — you’ll be able to join campaigns shortly.",
+    "x_gant_access_error": "We couldn’t link your X account. Please try again, or contact support if the issue persists.",
+    "x_waiting_for_access": "Waiting for X access."
+  },
+  "account_show": {
+    "title": {
+      "default_name": "Valued Anon",
+      "member": "member"
+    },
+    "scoring_in_progress": "We're scoring this handle",
+    "advertiser_title": "Advertiser",
+    "member_info_title": "Member Info",
+    "score": "Score",
+    "online_engagement": {
+      "title": "Online engagement",
+      "average": "Engagement on X is okay, but has room to grow. %{extra}",
+      "high": "Engagement on X is high, the audience is tuned in. %{extra}",
+      "none": "We could not detect authentic engagement on X. %{extra}"
+    },
+    "offline_engagement_title": "Offline Engagement",
+    "audience_poll": {
+      "title": "Audience poll",
+      "high": "An audience poll shows high influence. %{extra}",
+      "average": "An audience poll shows moderate influence. %{extra}",
+      "reverse": "An audience poll shows contentious influence. %{extra}"
+    },
+    "banned_title": "[Shadow] Banned",
+    "banned_text": "X is limiting this account's reach. %{extra}",
+    "verified_title": "Verified",
+    "verified_text": "This account has improved reach on X. %{extra}",
+    "referrer_title": "Referrer",
+    "referrer_text": "User has referred other high scored members. %{extra}",
+    "holder_title": "Hodler",
+    "holder_text": "Is commited to the cause, holding ASAMI tokens. %{extra}",
+    "ghost_title": "Ghost",
+    "ghost_text": "Doesn't talk much, and/or gets few impressions.",
+    "repost_fatigue_title": "Repost Fatigue",
+    "repost_fatigue_text": "User reposts too much, people can't keep up.",
+    "indeterminate_audience_title": "Unclear Audience",
+    "indeterminate_audience_text": "Can't tell if their audience is real or bots.",
+    "followed_title": "Followed",
+    "followed_text": "Is verified, and has a high ratio of verified followers.",
+    "liked_title": "Liked",
+    "liked_text": "Gets many likes per impression on posts.",
+    "replied_title": "Replied",
+    "replied_text": "A lot of people reply to this user's posts.",
+    "reposted_title": "Reposted",
+    "reposted_text": "Audience can’t resist the urge to repost.",
+    "mentioned_title": "Mentioned",
+    "mentioned_text": "Was recently mentioned on high visibility posts.",
+    "collabs_title": "Collaborations made.",
+    "campaigns_title": "Campaigns created."
+  },
+  "logged_in_nav_card": {
+    "post_to_earn": "Post to earn",
+    "pay_to_amplify": "Pay for reach",
+    "logout": "Logout"
+  },
+  "app_bar": {
+    "home": "Home",
+    "x_handle": "asami_club",
+    "help": "Help",
+    "stats": "Explore",
+    "login": "Login",
+    "logout": "Logout",
+    "my_campaigns": "Fund•Boost•Grow",
+    "my_collabs": "Pick•Share•Earn",
+    "whitepaper": "Whitepaper",
+    "handles": "Handles",
+    "accounts": "Members",
+    "campaigns": "Campaigns",
+    "collabs": "Collabs"
+  },
+  "whitepaper": {
+    "robot_url": "bot.asami.club"
+  },
+  "landing": {
+    "title": "A Club for WEB3 Trends.",
+    "asami_invites": "Asami connects projects with real people who amplify their message through meaningful social sharing.",
+    "boost": "Advertisers grow through genuine reach. Collaborators add value by choosing what to amplify and getting rewarded for their influence.",
+    "together": "We’re still so early. Let’s bring the next billion people into Web3 — together."
+  },
+  "about_token": {
+    "lead": "Get involved in Asami's growth",
+    "title": "Get ASAMI Tokens",
+    "text": "Support the project and earn passively—no need to run campaigns or collaborate. With a fixed supply of 21 million tokens and no premine, ASAMI holders receive a share of club fees every 15 days.",
+    "learn_more": "Learn more",
+    "trade": "Trade ASAMI on OKU"
+  }
 }

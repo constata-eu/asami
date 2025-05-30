@@ -1,164 +1,104 @@
+// The TestHelper wraps a general TestApp, and also allows
+// creating different kinds of users.
+// It also contains all the shortcuts for easily establishing
+// test scenarios without repetition.
+
+pub mod handle_scoring_builder;
 pub mod selenium;
 pub mod test_api_server;
 pub mod test_app;
 pub mod truffle;
 pub mod vite_preview;
 
-use std::{io::{self, BufRead, Write}, os::fd::AsRawFd};
+use std::{
+    future::Future,
+    io::{self, BufRead, Write},
+    os::fd::AsRawFd,
+    sync::Arc,
+};
 
 use nix::unistd::isatty;
 pub use selenium::Selenium;
 pub use test_api_server::*;
 pub use test_app::*;
-use tokio::task;
+pub use test_user::{ApiError, TestUser};
+use tokio::task::{self, JoinHandle};
 pub use truffle::*;
 pub use vite_preview::*;
 
-pub mod test_api_client;
+pub mod test_user;
 #[allow(unused_imports)]
 pub use galvanic_assert::{
     self,
     matchers::{collection::*, variant::*, *},
     *,
 };
-pub use test_api_client::*;
+pub use test_user::*;
 pub use thirtyfour::{error::WebDriverResult, prelude::*, WebDriver, WebElement};
 
-#[allow(dead_code)]
-pub fn wait_here() {
-    use std::{thread, time};
-    println!("Waiting here as instructed. ctrl+c to quit.");
-    let ten_millis = time::Duration::from_millis(10);
-    loop {
-        thread::sleep(ten_millis);
-    }
+#[derive(Clone)]
+pub struct TestHelper {
+    pub test_app: Arc<TestApp>,
 }
 
-#[allow(dead_code)]
-pub async fn wait_for_enter() {
-    task::spawn_blocking(|| {
-        if !isatty(io::stdin().as_raw_fd()).unwrap_or(false) {
-            println!("[Skipping pause — not a TTY]");
-            return
+impl TestHelper {
+    pub async fn new() -> Self {
+        Self {
+            test_app: Arc::new(TestApp::init().await),
         }
+    }
 
-        let stdin = io::stdin();
-        let mut stdout = io::stdout();
-        let mut handle = stdin.lock();
-        let mut buf = String::new();
-
-        write!(stdout, "Press Enter to continue...").unwrap();
-        stdout.flush().unwrap();
-        handle.read_line(&mut buf).unwrap();
-    })
-    .await
-    .unwrap();
-}
-
-pub async fn try_until<T: std::future::Future<Output = bool>>(times: i32, sleep: u64, err: &str, call: impl Fn() -> T) {
-    assert!(wait_for(times, sleep, call).await, "{err}");
-}
-
-pub async fn wait_for<T: std::future::Future<Output = bool>>(times: i32, sleep: u64, call: impl Fn() -> T) -> bool {
-    use std::{thread, time};
-    let millis = time::Duration::from_millis(sleep);
-    for _i in 0..times {
-        if call().await {
-            return true;
+    pub async fn for_web() -> Self {
+        Self {
+            test_app: Arc::new(TestApp::init().await.with_web().await),
         }
-        thread::sleep(millis);
     }
-    false
-}
 
-#[allow(dead_code)]
-pub fn pause_a_bit() {
-    use std::{thread, time};
-    thread::sleep(time::Duration::from_millis(2000));
-}
-
-#[allow(dead_code)]
-pub fn rematch<'a>(expr: &'a str) -> Box<dyn Matcher<'a, String> + 'a> {
-    Box::new(move |actual: &String| {
-        let re = regex::Regex::new(expr).unwrap();
-        let builder = MatchResultBuilder::for_("rematch");
-        if re.is_match(actual) {
-            builder.matched()
-        } else {
-            builder.failed_because(&format!("{:?} does not match {:?}", expr, actual))
-        }
-    })
-}
-
-#[macro_export]
-macro_rules! test {
-  ($i:ident $($e:tt)* ) => {
-    #[test_log::test(test)]
-    fn $i() {
-      use $crate::support::*;
-      use anyhow::*;
-
-      async fn run_test() -> std::result::Result<(), anyhow::Error> {
-        {$($e)*}
-        Ok(())
-      }
-
-      let result = tokio::runtime::Runtime::new()
-        .expect("could not build runtime")
-        .block_on(run_test());
-
-      if let Err(e) = result {
-        let source = e.source().map(|e| e.to_string() ).unwrap_or_else(|| "none".to_string());
-        println!("Error: {e:?}\n Source: {source}.");
-        panic!("Error in test. see backtrace");
-      }
+    pub async fn run<F, Fut>(f: F)
+    where
+        F: FnOnce(Self) -> Fut,
+        Fut: Future<Output = ()>,
+    {
+        let h = TestHelper::new().await;
+        f(h.clone()).await;
+        h.stop().await;
     }
-  }
-}
 
-#[macro_export]
-macro_rules! browser_test {
-  ($i:ident(mut $browser:ident) $($e:tt)* ) => {
-    test!{ $i
-      time_test::time_test!("integration test");
-
-      let test_app = $crate::support::TestApp::init().await;
-      let server = TestApiServer::start(test_app.app.clone()).await;
-      let mut vite_preview = VitePreview::start();
-      let api = test_app.client().await;
-
-      #[allow(unused_mut)]
-      let mut $browser = Selenium::start(api).await;
-      {$($e)*};
-
-      server.abort();
-      assert!(server.await.unwrap_err().is_cancelled());
-      vite_preview.stop();
-      $browser.stop().await;
+    pub async fn with_web<F, Fut>(f: F)
+    where
+        F: FnOnce(Self) -> Fut,
+        Fut: Future<Output = ()>,
+    {
+        let h = TestHelper::for_web().await;
+        f(h.clone()).await;
+        h.stop().await;
     }
-  }
-}
 
-#[macro_export]
-macro_rules! api_test {
-  ($test_name:ident(mut $client:ident) $($e:tt)* ) => {
-    test!{ $test_name
-      time_test::time_test!("api test");
-      let app = $crate::support::TestApp::init().await;
-      #[allow(unused_mut)]
-      let mut $client = app.client().await;
-      {$($e)*};
+    pub fn a(&self) -> &TestApp {
+        &self.test_app
     }
-  }
-}
 
-#[macro_export]
-macro_rules! app_test {
-  ($test_name:ident($test_app:ident) $($e:tt)* ) => {
-    test!{ $test_name
-      time_test::time_test!("app test");
-      let $test_app = $crate::support::TestApp::init().await;
-      {$($e)*};
+    pub async fn user(&self) -> TestUser {
+        TestUser::new(self.test_app.clone()).await
     }
-  }
+
+    pub async fn signed_up(&self) -> TestUser {
+        self.user().await.signed_up().await
+    }
+
+    pub async fn advertiser(&self) -> TestUser {
+        self.user().await.signed_up().await.advertiser().await
+    }
+
+    pub async fn collaborator(&self, score: i32) -> TestUser {
+        self.user().await.signed_up().await.rand_unverified().await.active(score).await
+    }
+
+    pub async fn stop(self) {
+        Arc::try_unwrap(self.test_app).expect("could not stop test app").stop().await
+    }
+
+    pub fn web(&self) -> &Selenium {
+        self.test_app.web.as_ref().unwrap()
+    }
 }

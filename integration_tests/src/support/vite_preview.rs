@@ -1,5 +1,6 @@
 use std::process::{Child, Command, Stdio};
 
+#[derive(Debug)]
 pub struct VitePreview(Child);
 
 impl VitePreview {
@@ -15,6 +16,7 @@ impl VitePreview {
 
         let child = Command::new("yarn")
             .current_dir(current_dir)
+            .stdin(Stdio::null())
             .stdout(Stdio::from(output_file.try_clone().unwrap()))
             .stderr(Stdio::from(output_file))
             .args(["dev"])

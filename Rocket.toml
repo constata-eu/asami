@@ -12,10 +12,18 @@ internal_alerts_email="nubis@constata.eu"
 [default.x]
 client_id="some_client_id"
 client_secret="some_client_secret"
-redirect_uri = "http://127.0.0.1:8000/x_login"
+redirect_uri = "http://127.0.0.1:8000"
 bearer_token = "some_bearer_token"
 asami_user_id = 1688942981573685248
+score_cooldown_seconds = 0  # 180
 crawl_cooldown_minutes = 10
+
+[default.stripe]
+secret_key="xxxxxxx_yyyyyyyyy"
+public_key="yy_xxxxxxxxxxxxxx"
+events_secret="xxxxx_yyyyyyyyy"
+success_url="http://127.0.0.1:5173/stripe_success"
+cancel_url="http://127.0.0.1:5173/stripe_cancel"
 
 [default.recaptcha.v3]
 html_key="6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX"
@@ -35,3 +43,4 @@ blockchain_sync_cooldown=0
 gasless_rbtc_per_user="0x574FBDE6000" # 6e12 This is the contract's default so we're using it.
 gasless_fee="0xDE0B6B3A7640000" # 1 DOC, this is a contract default.
 admin_claim_trigger="0x2A5A058FC295EC000000" # When the admin has this many asami tokens, it will claim.
+gas_override=true

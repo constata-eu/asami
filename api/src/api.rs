@@ -8,13 +8,13 @@ use rocket::{http::Status, serde::json::Json, State};
 use sqlx_models_orm::*;
 
 use super::{error::Error, models, *};
-use crate::models::{CampaignStatus, CollabStatus};
+use crate::models::{CampaignStatus, CollabStatus, CreateCampaignFromLinkInput};
 
 mod current_session;
 use current_session::*;
 mod account;
 use account::*;
-mod campaign;
+pub mod campaign;
 use campaign::*;
 mod session;
 use session::*;
@@ -34,6 +34,10 @@ mod stats;
 use stats::*;
 mod topic;
 use topic::*;
+mod handle_scoring;
+use handle_scoring::*;
+mod community_member;
+use community_member::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -145,6 +149,10 @@ impl Context {
 
     pub fn account_id(&self) -> AsamiResult<String> {
         Ok(self.current_session()?.0.attrs.account_id.clone())
+    }
+
+    pub fn maybe_account_id(&self) -> Option<&str> {
+        self.current_session.as_ref().map(|s| s.0.attrs.account_id.as_str())
     }
 
     pub async fn account(&self) -> AsamiResult<models::Account> {
@@ -311,11 +319,13 @@ make_graphql_query! {
     [Account, allAccounts, allAccountsMeta, "_allAccountsMeta", AccountFilter, String],
     [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, i32],
     [Handle, allHandles, allHandlesMeta, "_allHandlesMeta", HandleFilter, i32],
+    [HandleScoring, allHandleScorings, allHandleScoringsMeta, "_allHandleScoringsMeta", HandleScoringFilter, i32],
     [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, i32],
     [CampaignPreference, allCampaignPreferences, allCampaignPreferencesMeta, "_allCampaignPreferencesMeta", CampaignPreferenceFilter, i32],
     [OnChainJob, allOnChainJobs, allOnChainJobsMeta, "_allOnChainJobsMeta", OnChainJobFilter, i32],
     [Topic, allTopics, allTopicsMeta, "_allTopicsMeta", TopicFilter, i32],
     [AuditLogEntry, allAuditLogEntries, allAuditLogEntriesMeta, "_allAuditLogEntriesMeta", AuditLogEntryFilter, i32],
+    [CommunityMember, allCommunityMembers, allCommunityMembersMeta, "_allCommunityMembersMeta", CommunityMemberFilter, i32],
   }
 
   #[graphql(name="Stats")]
@@ -354,16 +364,13 @@ impl Mutation {
         context: &Context,
         input: CreateCampaignFromLinkInput,
     ) -> FieldResult<Campaign> {
-        input.process(context).await
+        let campaign = input.process(&context.app, &context.account().await?).await?;
+        Ok(Campaign::db_to_graphql(context, campaign).await?)
     }
 
     pub async fn update_campaign(context: &Context, id: i32) -> FieldResult<Campaign> {
         let campaign = context.account().await?.campaign_scope().id_eq(id).one().await?.mark_submitted().await?;
         Ok(Campaign::db_to_graphql(context, campaign).await?)
-    }
-
-    pub async fn create_handle(context: &Context, input: CreateHandleInput) -> FieldResult<Handle> {
-        input.process(context).await
     }
 
     pub async fn create_gasless_allowance(context: &Context) -> FieldResult<Account> {
@@ -395,6 +402,31 @@ impl Mutation {
                 .id,
         })
     }
+
+    pub async fn create_x_refresh_token(context: &Context, token: String, verifier: String) -> FieldResult<Handle> {
+        let handle = context
+            .app
+            .handle()
+            .create_or_update_from_refresh_token(context.account_id()?, token, verifier)
+            .await?;
+        Ok(Handle::db_to_graphql(context, handle).await?)
+    }
+
+    pub async fn update_handle(context: &Context, id: i32, data: AdminEditHandleInput) -> FieldResult<Handle> {
+        if !context.current_session()?.0.admin() {
+            return Err(Error::service("authentication", "asami_authentication_needed").into());
+        }
+
+        data.process(context, id).await
+    }
+
+    pub async fn update_community_member(
+        context: &Context,
+        id: i32,
+        data: EditCommunityMemberInput,
+    ) -> FieldResult<CommunityMember> {
+        data.process(context, id).await
+    }
 }
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
@@ -419,9 +451,4 @@ fn field_error(message: &str, second_message: &str) -> FieldError {
 
 fn into_like_search(i: Option<String>) -> Option<String> {
     i.map(|s| format!("%{s}%"))
-}
-
-fn parse_u256(fieldname: &str, value: &str) -> FieldResult<U256> {
-    use ethers::abi::AbiDecode;
-    Ok(U256::decode_hex(value).map_err(|_e| Error::validation(fieldname, "invalid_hex_encoded_u256_value"))?)
 }

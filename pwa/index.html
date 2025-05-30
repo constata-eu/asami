@@ -1,142 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta
-            name="viewport"
-            content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
-        />
-        <meta name="theme-color" content="#000000" />
-        <link rel="manifest" href="./manifest.json" />
-        <title>ASAMI | Authentic Social Ads Marketplace Infrastructure</title>
-        <link rel="shortcut icon" type="image/png" href="/favicon.png">
-        <link rel="canonical" href="https://asami.club" />
-        <meta property="og:url" content="https://asami.club/asami/" />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="Asami Home" />
-        <meta property="og:description" content="Authentic Social Ads Marketplace Infrastructure, built on RSK." />
-        <meta property="og:image" content="asami.png" /> 
-        <meta property="og:locale" content="en_US" />
-        <meta property="og:site_name" content="asami" />
-        
-        <meta property="twitter:domain" content="asami.club">
-        <meta property="twitter:url" content="https://asami.club/">
-        <meta property="twitter:title" content="ASAMI" />
-        <meta name="twitter:title" content="Asami Home">
-        <meta property="twitter:description" content="Authentic Social Ads Marketplace Infrastructure, built on RSK." />
-        <meta name="twitter:image" content="//logo-black.png">
-        <style>
-            body {
-								color: #fff;
-                margin: 0;
-                padding: 0;
-                font-family: sans-serif;
-            }
 
-            .loader-container {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                flex-direction: column;
-                position: absolute;
-                top: 0;
-                bottom: 0;
-                left: 0;
-                right: 0;
-								background-color: #121212;
-								color: #fff;
-            }
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="./manifest.json" />
+  <title>ASAMI | Authentic Social Ads Marketplace Infrastructure</title>
+  <link rel="shortcut icon" type="image/png" href="/favicon.png">
+  <link rel="canonical" href="https://asami.club" />
+  <meta property="og:url" content="https://asami.club/asami/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Asami Home" />
+  <meta property="og:description" content="Authentic Social Ads Marketplace Infrastructure, built on RSK." />
+  <meta property="og:image" content="asami.png" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:site_name" content="asami" />
 
-            /* CSS Spinner from https://projects.lukehaas.me/css-loaders/ */
+  <meta property="twitter:domain" content="asami.club">
+  <meta property="twitter:url" content="https://asami.club/">
+  <meta property="twitter:title" content="ASAMI" />
+  <meta name="twitter:title" content="Asami Home">
+  <meta property="twitter:description" content="Authentic Social Ads Marketplace Infrastructure, built on RSK." />
+  <meta name="twitter:image" content="//logo-black.png">
+  <style>
+    body {
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
 
-            .loader,
-            .loader:before,
-            .loader:after {
-                border-radius: 50%;
-            }
+    .loader-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-attachment: fixed;
+      background-image: radial-gradient(49% 81% at 45% 47%, rgba(255, 226, 3, 0.27) 0%, #073AFF00 100%), radial-gradient(113% 91% at 17% -2%, rgba(255, 173, 185, 1) 1%, #FF000000 99%), radial-gradient(142% 91% at 83% 7%, rgba(248, 244, 215, 1) 1%, #FF000000 99%), radial-gradient(142% 91% at -6% 74%, rgba(254, 114, 150, 1) 1%, #FF000000 99%), radial-gradient(142% 91% at 111% 84%, rgba(246, 237, 238, 1) 0%, rgba(255, 173, 185, 1) 100%);
+      color: #cc1e7d;
+    }
 
-            .loader {
-								color: #2ec4b6;
-                font-size: 11px;
-                text-indent: -99999em;
-                margin: 55px auto;
-                position: relative;
-                width: 10em;
-                height: 10em;
-                box-shadow: inset 0 0 0 1em;
-                -webkit-transform: translateZ(0);
-                -ms-transform: translateZ(0);
-                transform: translateZ(0);
-            }
+    .loader,
+    .loader:before,
+    .loader:after {
+      border-radius: 50%;
+    }
 
-            .loader:before,
-            .loader:after {
-                position: absolute;
-                content: '';
-            }
+    .loader {
+      font-size: 11px;
+      text-indent: -99999em;
+      margin: 55px auto;
+      position: relative;
+      width: 10em;
+      height: 10em;
+      -webkit-transform: translateZ(0);
+      -ms-transform: translateZ(0);
+      transform: translateZ(0);
+    }
 
-            .loader:before {
-                width: 5.2em;
-                height: 10.2em;
-								background: #121212;
-                border-radius: 10.2em 0 0 10.2em;
-                top: -0.1em;
-                left: -0.1em;
-                -webkit-transform-origin: 5.2em 5.1em;
-                transform-origin: 5.2em 5.1em;
-                -webkit-animation: load2 2s infinite ease 1.5s;
-                animation: load2 2s infinite ease 1.5s;
-            }
+    .loader:before,
+    .loader:after {
+      position: absolute;
+      content: '';
+    }
 
-            .loader:after {
-                width: 5.2em;
-                height: 10.2em;
-								background: #121212;
-                border-radius: 0 10.2em 10.2em 0;
-                top: -0.1em;
-                left: 5.1em;
-                -webkit-transform-origin: 0px 5.1em;
-                transform-origin: 0px 5.1em;
-                -webkit-animation: load2 2s infinite ease;
-                animation: load2 2s infinite ease;
-            }
+    .loader:before {
+      width: 5.2em;
+      height: 10.2em;
+      background: #4B6574;
+      border-radius: 10.2em 0 0 10.2em;
+      top: -0.1em;
+      left: -0.1em;
+      -webkit-transform-origin: 5.2em 5.1em;
+      transform-origin: 5.2em 5.1em;
+      -webkit-animation: load2 2s infinite ease 1.5s;
+      animation: load2 2s infinite ease 1.5s;
+    }
 
-            @-webkit-keyframes load2 {
-                0% {
-                    -webkit-transform: rotate(0deg);
-                    transform: rotate(0deg);
-                }
-                100% {
-                    -webkit-transform: rotate(360deg);
-                    transform: rotate(360deg);
-                }
-            }
+    .loader:after {
+      width: 5.2em;
+      height: 10.2em;
+      background: #cc1e7d;
+      border-radius: 0 10.2em 10.2em 0;
+      top: -0.1em;
+      left: 5.1em;
+      -webkit-transform-origin: 0px 5.1em;
+      transform-origin: 0px 5.1em;
+      -webkit-animation: load2 2s infinite ease;
+      animation: load2 2s infinite ease;
+    }
 
-            @keyframes load2 {
-                0% {
-                    -webkit-transform: rotate(0deg);
-                    transform: rotate(0deg);
-                }
-                100% {
-                    -webkit-transform: rotate(360deg);
-                    transform: rotate(360deg);
-                }
-            }
-        </style>
-        <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link
-            href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
-            rel="stylesheet"
-        />
-    </head>
+    @-webkit-keyframes load2 {
+      0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+      }
 
-    <body>
-        <noscript> You need to enable JavaScript to run this app. </noscript>
-        <div id="root">
-            <div class="loader-container">
-                <div class="loader">Loading...</div>
-            </div>
-        </div>
-    </body>
-    <script type="module" src="/src/index.tsx"></script>
+      100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes load2 {
+      0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+      }
+
+      100% {
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.gstatic.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+</head>
+
+<body>
+  <noscript> You need to enable JavaScript to run this app. </noscript>
+  <div id="root">
+    <div class="loader-container">
+      <div class="loader">Loading...</div>
+    </div>
+  </div>
+</body>
+<script type="module" src="/src/index.tsx"></script>
+
 </html>

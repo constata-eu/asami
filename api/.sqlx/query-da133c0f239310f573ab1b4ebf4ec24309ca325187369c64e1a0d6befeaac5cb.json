@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE community_members SET force_hydrate = false WHERE id = ANY($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "da133c0f239310f573ab1b4ebf4ec24309ca325187369c64e1a0d6befeaac5cb"
+}

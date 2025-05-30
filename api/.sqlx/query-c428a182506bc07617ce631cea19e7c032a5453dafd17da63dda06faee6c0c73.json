@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM (SELECT 1 FROM campaigns WHERE valid_until IS NOT NULL AND valid_until < now() AND report_hash IS NULL LIMIT 20)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c428a182506bc07617ce631cea19e7c032a5453dafd17da63dda06faee6c0c73"
+}

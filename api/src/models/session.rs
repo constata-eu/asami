@@ -22,6 +22,8 @@ model! {
     updated_at: Option<UtcDateTime>,
     #[sqlx_model_hints(int4, default)]
     deletion_id: Option<i32>,
+    #[sqlx_model_hints(boolean)]
+    admin: bool
   },
   belongs_to {
     Account(account_id),

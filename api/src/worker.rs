@@ -39,7 +39,9 @@ async fn main() {
         run!("On chain job scheduler", s, { s.on_chain_job().run_scheduler().await });
     }];
     every![60000, |s| {
-        run!("Sync on-chain events", s, { s.synced_event().sync_on_chain_events().await });
+        run!("Sync on-chain events", s, {
+            s.synced_event().sync_on_chain_events().await
+        });
     }];
 
     every![10000, |s| {
@@ -49,7 +51,9 @@ async fn main() {
     }];
 
     every![10000, |s| {
-        run!("Attempt account on-chain hydrate", s, { s.account().hydrate_on_chain_values_just_in_case().await });
+        run!("Attempt account on-chain hydrate", s, {
+            s.account().hydrate_on_chain_values_just_in_case().await
+        });
     }];
 
     every![settings.x.crawl_cooldown_minutes * 60 * 1000, |s| {
@@ -62,9 +66,10 @@ async fn main() {
     }];
 
     every![1000, |s| {
-        run!("send_email_one_time_tokens", s, { s.one_time_token().send_email_tokens().await });
+        run!("send_email_one_time_tokens", s, {
+            s.one_time_token().send_email_tokens().await
+        });
     }];
 
     futures::future::join_all(handles).await;
 }
-

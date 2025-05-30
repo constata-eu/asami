@@ -23,6 +23,8 @@ pub struct Collab {
     dispute_reason: Option<String>,
     #[graphql(description = "The gross amount paid by the advertiser (campaign creator) for this collab.")]
     reward: String,
+    #[graphql(description = "Date in which the collab was registered")]
+    created_at: DateTime<Utc>,
     #[graphql(
         description = "The fee deducted by asami from the gross amount, field only available when reward cleared."
     )]
@@ -54,6 +56,7 @@ impl Showable<models::Collab, CollabFilter> for Collab {
             "id" => Some(CollabOrderBy::Id),
             "reward" => Some(CollabOrderBy::Reward),
             "fee" => Some(CollabOrderBy::Fee),
+            "createdAt" => Some(CollabOrderBy::CreatedAt),
             _ => None,
         }
     }
@@ -96,6 +99,7 @@ impl Showable<models::Collab, CollabFilter> for Collab {
             dispute_reason: d.attrs.dispute_reason,
             reward: d.attrs.reward,
             fee: d.attrs.fee,
+            created_at: d.attrs.created_at,
             collab_trigger_unique_id: d.attrs.collab_trigger_unique_id,
         })
     }

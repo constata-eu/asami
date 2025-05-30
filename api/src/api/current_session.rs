@@ -102,6 +102,9 @@ impl CurrentSession {
         let pubkey = Self::get_login_pubkey(req)?;
         let nonce = Self::validate_jwt(jwt, &pubkey, req, &body).await?;
         let (kind, lookup_key, auth_data, x_username) = Self::validate_auth_data(app, req).await?;
+        let Outcome::Success(lang) = Lang::from_request(req).await else {
+            return Err(ApiAuthError::Unexpected("could_not_retrieve_lang"));
+        };
 
         let maybe_auth_method = app.auth_method().select().kind_eq(kind).lookup_key_eq(&lookup_key).optional().await?;
 
@@ -109,13 +112,7 @@ impl CurrentSession {
             Some(method) => (method, None),
             None => {
                 let account = auth_try!(
-                    app.account()
-                        .insert(InsertAccount {
-                            name: Some("account".to_string()),
-                            addr: None,
-                        })
-                        .save()
-                        .await,
+                    app.account().insert(InsertAccount { addr: None, lang }).save().await,
                     "could_not_create_account"
                 );
                 let account_id = account.attrs.id.clone();
@@ -170,6 +167,7 @@ impl CurrentSession {
                     auth_method_id: auth_method.attrs.id,
                     pubkey,
                     nonce,
+                    admin: user.attrs.admin,
                 })
                 .save()
                 .await,
@@ -183,7 +181,15 @@ impl CurrentSession {
                 }
                 AuthMethodKind::X => {
                     if let Some(username) = x_username {
-                        account.create_handle(&username).await?;
+                        app.handle()
+                            .insert(InsertHandle {
+                                account_id: account.id().clone(),
+                                username,
+                                user_id: auth_method.lookup_key().clone(),
+                                x_refresh_token: None,
+                            })
+                            .save()
+                            .await?;
                     }
                 }
                 _ => {}

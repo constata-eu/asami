@@ -11,11 +11,13 @@ model! {
   struct Account {
     #[sqlx_model_hints(varchar, default, op_in)]
     id: String,
-    #[sqlx_model_hints(varchar, op_like)]
-    name: Option<String>,
+    #[sqlx_model_hints(varchar, op_like, op_ilike, default)]
+    name: String,
+    #[sqlx_model_hints(boolean, default)]
+    name_is_locked: bool,
     #[sqlx_model_hints(account_status, default, op_in)]
     status: AccountStatus,
-    #[sqlx_model_hints(varchar, op_like, op_is_set)]
+    #[sqlx_model_hints(varchar, op_like, op_ilike, op_is_set)]
     addr: Option<String>,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
@@ -29,6 +31,10 @@ model! {
     processed_for_legacy_claim: bool,
     #[sqlx_model_hints(boolean, default)]
     allows_gasless: bool,
+    #[sqlx_model_hints(varchar, default)]
+    stripe_customer_id: Option<String>,
+    #[sqlx_model_hints(language)]
+    lang: super::Lang,
 
     // These columns contain on-chain values that can be updated in a time based fashion.
     // They should at least be updated when a DOC transfer is done
@@ -265,10 +271,7 @@ impl Account {
             };
 
             for h in &handles {
-                let Some(trigger) = h.user_id() else {
-                    continue;
-                };
-                if h.validate_collaboration(&c, h.reward_for(&c).unwrap_or_default(), trigger).await.is_ok() {
+                if h.validate_collaboration(&c, h.reward_for(&c).unwrap_or_default(), h.user_id()).await.is_ok() {
                     campaigns.push(c);
                     break;
                 }
@@ -276,32 +279,6 @@ impl Account {
         }
 
         Ok(campaigns)
-    }
-
-    pub async fn create_handle(&self, username: &str) -> AsamiResult<Handle> {
-        let existing = self
-            .state
-            .handle()
-            .select()
-            .username_ilike(username)
-            .status_in(vec![HandleStatus::Verified, HandleStatus::Active])
-            .count()
-            .await?
-            > 0;
-
-        if existing {
-            return Err(Error::validation("handle", "handle_already_in_use_by_someone_else"));
-        }
-
-        Ok(self
-            .state
-            .handle()
-            .insert(InsertHandle {
-                account_id: self.attrs.id.clone(),
-                username: username.to_string(),
-            })
-            .save()
-            .await?)
     }
 
     pub async fn create_claim_account_request(
@@ -360,6 +337,33 @@ impl Account {
 
     pub async fn disallow_gasless(self) -> AsamiResult<Self> {
         Ok(self.update().allows_gasless(false).save().await?)
+    }
+
+    pub async fn get_or_create_stripe_customer_id(&self) -> AsamiResult<stripe::CustomerId> {
+        use std::collections::HashMap;
+        use stripe::{CreateCustomer, Customer};
+
+        if let Some(id) = self.stripe_customer_id() {
+            return Ok(id.parse::<stripe::CustomerId>()?);
+        }
+
+        let mut metadata = HashMap::new();
+        metadata.insert("account_id".to_string(), self.attrs.id.to_string());
+        metadata.insert("account_id_as_number".to_string(), hex_to_i32(self.id())?.to_string());
+        let customer_id = Customer::create(
+            &self.state.stripe_client,
+            CreateCustomer {
+                name: Some(self.name()),
+                metadata: Some(metadata),
+                ..Default::default()
+            },
+        )
+        .await?
+        .id;
+
+        self.clone().update().stripe_customer_id(Some(customer_id.to_string())).save().await?;
+
+        Ok(customer_id)
     }
 }
 

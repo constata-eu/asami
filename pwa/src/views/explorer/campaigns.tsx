@@ -1,33 +1,35 @@
-import React from 'react';
-import { useEffect, useContext } from 'react';
-import { SelectInput, SearchInput, Datagrid, List,
-  useSafeSetState,
+import {
+  SelectInput,
+  Datagrid,
+  List,
   useTranslate,
-  ListBase,
-  TextField, FunctionField, Button, useRedirect,
+  TextField,
+  FunctionField,
   TextInput,
   DateField,
   NumberField,
   NumberInput,
-  BooleanField, ReferenceInput, AutocompleteInput, BooleanInput,
+  ReferenceInput,
   SimpleShowLayout,
-  EditButton, ReferenceField,
-} from 'react-admin';
-import { Link } from 'react-router-dom';
-import { BareLayout, DeckCard, ExplorerLayout } from '../layout';
-import { Box, Typography } from '@mui/material';
-import { viewPostUrl } from '../../lib/campaign';
-import { AmountField, BigNumField, AmountInput } from '../../components/custom_fields';
-import { formatEther, formatUnits, parseEther, toBeHex } from "ethers";
+  ReferenceField,
+  ListView,
+  ListBase,
+  useShowController,
+  useListController,
+  ShowButton,
+  ExportButton,
+} from "react-admin";
+import { Link } from "react-router-dom";
+import { ExplorerLayout } from "../layout";
+import { contentId, viewPostUrl } from "../../lib/campaign";
+import { AmountField, AmountInput } from "../../components/custom_fields";
+import { Head1, Head2, Lead } from "../../components/theme";
+import { Box, Card, Stack } from "@mui/material";
+import { TwitterTweetEmbed } from "react-twitter-embed";
+import XIcon from "@mui/icons-material/X";
 
 export const CampaignList = () => {
-  let translate = useTranslate();
-
-  const statusChoices = [
-    {id: 'DRAFT', name: 'DRAFT'},
-    {id: 'SUBMITTED', name: 'SUBMITTED'},
-    {id: 'PUBLISHED', name: 'PUBLISHED'}
-  ];
+  const t = useTranslate();
 
   const filters = [
     <TextInput source="idEq" alwaysOn />,
@@ -36,8 +38,6 @@ export const CampaignList = () => {
     <ReferenceInput source="accountIdEq" reference="Account">
       <NumberInput source="accountIdEq" size="small" />
     </ReferenceInput>,
-    <SelectInput source="statusEq" choices={statusChoices} />,
-    <SelectInput source="statusNe" choices={statusChoices} />,
     <AmountInput source="budgetLt" />,
     <AmountInput source="budgetGt" />,
     <AmountInput source="budgetEq" />,
@@ -45,41 +45,136 @@ export const CampaignList = () => {
 
   return (
     <ExplorerLayout>
-      <Typography mt="0.5em" variant="h3">{ translate("explorer.campaigns.title") }</Typography>
-      <Typography variant="body">{ translate("explorer.campaigns.description") }</Typography>
-      <List disableAuthentication filters={filters} exporter={false}>
-        <Datagrid bulkActionButtons={false} expand={<ExpandCampaign/>}>
+      <Head1>{t("explorer.campaigns.title")}</Head1>
+      <Lead>{t("explorer.campaigns.description")}</Lead>
+      <List
+        disableAuthentication
+        filter={{ isPublishedEq: true }}
+        filters={filters}
+        sort={{ field: "createdAt", order: "DESC" }}
+      >
+        <Datagrid bulkActionButtons={false} expand={<ExpandCampaign />}>
+          <FunctionField source="briefingJson" render={contentId} />
+          <ReferenceField source="accountId" reference="Account" link="show" />
+          <NumberField source="totalCollabs" />
+          <AmountField textAlign="right" currency="" source="budget" />
+          <AmountField textAlign="right" currency="" source="totalSpent" />
+          <AmountField textAlign="right" currency="" source="totalBudget" />
+          <DateField source="validUntil" />
+          <DateField source="createdAt" />
           <TextField source="id" />
-          <FunctionField source="briefingJson" sortable={false} render={record =>
-            <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">
-              { JSON.parse(record.briefingJson) }
-            </a>
-          } />
-          <TextField source="status" sortable={false}/>
-          <FunctionField textAlign="right" source="totalCollabs" render={ (record) =>
-            record.totalCollabs > 0 ?
-              <Link to={`/Collab?displayedFilters=%7B%7D&filter=%7B%22campaignIdEq%22%3A${record.id}%7D`}>
-                <NumberField source="totalCollabs" />
-              </Link>
-              :
-              <NumberField source="totalCollabs" />
-          }/>
-          <AmountField textAlign="right" source="budget" />
-          <AmountField textAlign="right" source="totalSpent" />
-          <AmountField textAlign="right" source="totalBudget" />
-          <DateField source="validUntil" showTime />
-          <DateField source="createdAt" showTime />
+          <ShowButton />
         </Datagrid>
       </List>
     </ExplorerLayout>
   );
 };
 
-const ExpandCampaign = () => <SimpleShowLayout>
-  <FunctionField source="accountId" render={ (record) =>
-    <Link to={`/Account?displayedFilters=%7B%7D&filter=%7B%22idEq%22%3A${record.accountId}%7D`}>
-      <TextField source="accountId" />
-    </Link>
-  }/>
-  <TextField source="briefingHash" />
-</SimpleShowLayout>
+const ExpandCampaign = () => (
+  <SimpleShowLayout>
+    <TextField source="briefingHash" />
+  </SimpleShowLayout>
+);
+
+export const CampaignShow = () => {
+  const show = useShowController({ disableAuthentication: true });
+
+  if (show.isPending || !show.record) {
+    return <></>;
+  }
+
+  return (
+    <ExplorerLayout>
+      <Stack direction="row" gap="1em" mt="1em" flexWrap="wrap">
+        <Box flex="0 1 500px">
+          <TwitterTweetEmbed
+            tweetId={contentId(show.record)}
+            options={{
+              align: "center",
+              width: "100%",
+              conversation: "none",
+              margin: 0,
+            }}
+          />
+          <Card sx={{ mt: "1em", justifySelf: "left" }} elevation={1}>
+            <SimpleShowLayout record={show.record} direction="row">
+              <TextField source="id" />
+              <TextField source="status" sortable={false} />
+              <AmountField textAlign="right" currency="" source="budget" />
+              <AmountField textAlign="right" currency="" source="totalSpent" />
+              <AmountField textAlign="right" currency="" source="totalBudget" />
+              <NumberField source="totalCollabs" />
+              <DateField source="validUntil" showTime />
+              <DateField source="createdAt" showTime />
+              <ReferenceField source="accountId" reference="Account" />
+              <FunctionField
+                source="briefingJson"
+                sortable={false}
+                render={(record) => (
+                  <a
+                    target="_blank"
+                    href={viewPostUrl(record)}
+                    rel="noreferrer"
+                  >
+                    {contentId(record)}
+                  </a>
+                )}
+              />
+            </SimpleShowLayout>
+          </Card>
+        </Box>
+        <Box flex="1 0 500px">
+          <CampaignCollabs campaign={show.record} />
+        </Box>
+      </Stack>
+    </ExplorerLayout>
+  );
+};
+
+const CampaignCollabs = ({ campaign }) => {
+  const t = useTranslate();
+  const listContext = useListController({
+    resource: "Collab",
+    filter: { campaignIdEq: campaign.id },
+    sort: { field: "id", order: "DESC" },
+    exporter: false,
+    perPage: 30,
+  });
+
+  if (listContext.isPending || listContext.total == 0) {
+    return <></>;
+  }
+
+  return (
+    <Box my="0.5em">
+      <ListBase disableAuthentication disableSyncWithLocation {...listContext}>
+        <Stack gap="1em" mb="1em" alignItems="baseline" direction="row">
+          <Head2>{t("resources.Campaign.fields.collabs")}</Head2>
+          <ExportButton disabled={listContext.total === 0} resource="Collab" />
+        </Stack>
+
+        <ListView filters={false} actions={false}>
+          <Datagrid bulkActionButtons={false}>
+            <ReferenceField
+              label={<XIcon sx={{ fontSize: "1em", mb: "-4px" }} />}
+              source="handleId"
+              reference="Handle"
+              sortable={false}
+            >
+              <FunctionField
+                render={(record) => (
+                  <Link to={`/Account/${record.accountId}/show`}>
+                    <TextField source="username" />
+                  </Link>
+                )}
+              />
+            </ReferenceField>
+            <AmountField currency="" textAlign="right" source="reward" />
+            <AmountField currency="" textAlign="right" source="fee" />
+            <TextField source="status" sortable={false} />
+          </Datagrid>
+        </ListView>
+      </ListBase>
+    </Box>
+  );
+};

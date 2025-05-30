@@ -13,6 +13,13 @@ sqlx-cli = { version = "0.8.3", default-features = false, features = [
   "postgres",
   "rustls",
 ] }
+
+stripe-rust = { git = "https://github.com/constata-eu/stripe-rs", default-features = false, features = [
+  "full",
+  "rustls-tls",
+  "webhook-events"
+] }
+
 sqlx = { version = "0.8.3", features = [
   "bigdecimal",
   "chrono",

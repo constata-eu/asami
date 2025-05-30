@@ -1,0 +1,127 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM accounts WHERE (NOT $1::boolean OR id = $2::varchar) AND (NOT $3::boolean OR id = ANY(CAST($4 as varchar[])) ) AND (NOT $5::boolean OR name = $6::varchar) AND (NOT $7::boolean OR name LIKE $8::varchar) AND (NOT $9::boolean OR name ILIKE $10::varchar) AND (NOT $11::boolean OR name_is_locked = $12::boolean) AND (NOT $13::boolean OR status = $14::account_status) AND (NOT $15::boolean OR status = ANY(CAST($16 as account_status[])) ) AND (NOT $17::boolean OR addr = $18::varchar) AND (NOT $19::boolean OR addr LIKE $20::varchar) AND (NOT $21::boolean OR addr ILIKE $22::varchar) AND ($23::boolean IS NULL OR (($23::boolean AND addr IS NOT NULL) OR (NOT $23::boolean AND addr IS NULL))) AND (NOT $24::boolean OR created_at = $25::timestamptz) AND (NOT $26::boolean OR updated_at = $27::timestamptz) AND (NOT $28::boolean OR claim_signature = $29::varchar) AND (NOT $30::boolean OR claim_session_id = $31::varchar) AND (NOT $32::boolean OR processed_for_legacy_claim = $33::boolean) AND (NOT $34::boolean OR allows_gasless = $35::boolean) AND (NOT $36::boolean OR stripe_customer_id = $37::varchar) AND (NOT $38::boolean OR lang = $39::language) AND (NOT $40::boolean OR unclaimed_asami_balance = $41::varchar) AND (NOT $42::boolean OR unclaimed_doc_balance = $43::varchar) AND (NOT $44::boolean OR asami_balance = $45::varchar) AND (NOT $46::boolean OR doc_balance = $47::varchar) AND (NOT $48::boolean OR rbtc_balance = $49::varchar) AND (NOT $50::boolean OR last_on_chain_sync = $51::timestamptz) AND (NOT $52::boolean OR last_on_chain_sync < $53::timestamptz) AND (NOT $54::boolean OR force_hydrate = $55::boolean) AND (NOT $56::boolean OR total_collabs = $57::int4) AND (NOT $58::boolean OR total_collab_rewards = $59::varchar) AND (NOT $60::boolean OR total_campaigns = $61::int4) AND (NOT $62::boolean OR total_collabs_received = $63::int4) AND (NOT $64::boolean OR total_spent = $65::varchar)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Varchar",
+        "Bool",
+        "VarcharArray",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        {
+          "Custom": {
+            "name": "account_status",
+            "kind": {
+              "Enum": [
+                "managed",
+                "claiming",
+                "claimed",
+                "banned"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "account_status[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "account_status",
+                  "kind": {
+                    "Enum": [
+                      "managed",
+                      "claiming",
+                      "claimed",
+                      "banned"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "language",
+            "kind": {
+              "Enum": [
+                "en",
+                "es"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c8d0a6a8a866218cf1eb078ec4047e75121434e876d84078d312a19eac047241"
+}

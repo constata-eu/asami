@@ -1,0 +1,45 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \nhandle_id as \"handle_id!: i32\", \ntopic_id as \"topic_id!: i32\" FROM handle_topics WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR handle_id = $4::int4) AND (NOT $5::boolean OR topic_id = $6::int4) AND (NOT $7::boolean OR topic_id = ANY(CAST($8 as int4[])) ) ORDER BY \n      (CASE ($9 = 'Id' AND NOT $10) WHEN true THEN id ELSE NULL END),\n      (CASE ($9 = 'Id' AND $10) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'HandleId' AND NOT $10) WHEN true THEN handle_id ELSE NULL END),\n      (CASE ($9 = 'HandleId' AND $10) WHEN true THEN handle_id ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'TopicId' AND NOT $10) WHEN true THEN topic_id ELSE NULL END),\n      (CASE ($9 = 'TopicId' AND $10) WHEN true THEN topic_id ELSE NULL END) DESC\n     LIMIT $11 OFFSET $12 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "handle_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "topic_id!: i32",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "215438d6614a4942f30a2439e4b4f8f89ab4b7c35f04a3dedbc5d47e84390461"
+}

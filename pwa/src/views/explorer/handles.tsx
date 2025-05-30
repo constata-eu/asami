@@ -1,70 +1,209 @@
-import React from 'react';
-import { useEffect, useContext } from 'react';
-import { SelectInput, SearchInput, Datagrid, List,
+import {
+  SelectInput,
+  Datagrid,
+  List,
   useSafeSetState,
   useTranslate,
-  ListBase,
-  TextField, FunctionField, Button, useRedirect,
+  TextField,
+  useRedirect,
   TextInput,
-  DateField,
   NumberField,
-  SimpleShowLayout,
-  BooleanField, ReferenceInput, AutocompleteInput, BooleanInput,
-  EditButton, ReferenceField,
-  ReferenceArrayField, SingleFieldList,
-} from 'react-admin';
-import { Link } from 'react-router-dom';
-import { BareLayout, DeckCard, ExplorerLayout } from '../layout';
-import { Box, Typography, Chip } from '@mui/material';
-import { BigNumField, AmountField } from '../../components/custom_fields';
+  BooleanInput,
+  EditButton,
+  ReferenceField,
+  ShowButton,
+  Edit,
+  SimpleForm,
+  NumberInput,
+  DateTimeInput,
+  EditBase,
+  Toolbar,
+  SaveButton,
+  FunctionField,
+  ReferenceArrayInput,
+  AutocompleteArrayInput,
+} from "react-admin";
+import { ExplorerLayout } from "../layout";
+import { BigNumField, AmountField } from "../../components/custom_fields";
+import { Head1, Lead } from "../../components/theme";
+import { Box, Card, Stack, Typography } from "@mui/material";
+import { ResponsiveAppBar } from "../responsive_app_bar";
 
 export const HandleList = () => {
-  let translate = useTranslate();
+  const translate = useTranslate();
 
   const filters = [
     <TextInput source="idEq" alwaysOn />,
     <TextInput source="usernameLike" alwaysOn />,
-    <TextInput source="accountIdEq" alwaysOn/>,
   ];
 
   return (
     <ExplorerLayout>
-      <Typography mt="0.5em" variant="h3">{ translate("explorer.handles.title") }</Typography>
-      <Typography variant="body">{ translate("explorer.handles.description") }</Typography>
-      <List disableAuthentication filters={filters} exporter={false}>
-        <Datagrid bulkActionButtons={false} expand={<ExpandHandle/>} >
-          <TextField source="id" />
+      <Head1>{translate("explorer.handles.title")}</Head1>
+      <Lead>{translate("explorer.handles.description")}</Lead>
+      <List
+        disableAuthentication
+        filters={filters}
+        sort={{ field: "score", order: "DESC" }}
+      >
+        <Datagrid bulkActionButtons={false}>
           <TextField source="username" sortable={false} />
           <BigNumField textAlign="right" source="score" />
           <TextField source="status" sortable={false} />
-          <FunctionField textAlign="right" source="totalCollabs" render={ (record) =>
-            record.totalCollabs > 0 ?
-              <Link to={`/Collab?displayedFilters=%7B%7D&filter=%7B%22handleIdEq%22%3A${record.id}%7D`}>
-                <NumberField source="totalCollabs" />
-              </Link>
-              :
-              <NumberField source="totalCollabs" />
-          }/>
+          <NumberField textAlign="right" source="totalCollabs" />
           <AmountField textAlign="right" source="totalCollabRewards" />
-          <FunctionField source="accountId"  sortable={false} render={ (record) =>
-            <Link to={`/Account?displayedFilters=%7B%7D&filter=%7B%22idEq%22%3A${record.accountId}%7D`}>
-              <TextField source="accountId" />
-            </Link>
-          }/>
+          <TextField source="id" />
+          <ReferenceField
+            textAlign="right"
+            source="accountId"
+            reference="Account"
+            sortable={false}
+            label=""
+          >
+            <ShowButton />
+          </ReferenceField>
+          <EditButton />
         </Datagrid>
       </List>
     </ExplorerLayout>
   );
 };
 
-const ExpandHandle = () => {
-  const translate = useTranslate();
-  
-  return <SimpleShowLayout>
-      <ReferenceArrayField label={ translate("resources.Handle.fields.topic")} reference="Topic" source="topicIds">
-        <SingleFieldList empty={<>-</>} linkType={false}>
-            <FunctionField render={ h => <Chip size="small" variant="outlined" label={translate(`resources.Topic.names.${h.name}`)} /> } />
-        </SingleFieldList>
-      </ReferenceArrayField>
-  </SimpleShowLayout>;
-}
+const engagementScoreChoices = [
+  { id: "NONE", name: "None" },
+  { id: "AVERAGE", name: "Average" },
+  { id: "HIGH", name: "High" },
+];
+
+const pollScoreChoices = [
+  { id: "NONE", name: "None" },
+  { id: "AVERAGE", name: "Average" },
+  { id: "HIGH", name: "High" },
+  { id: "REVERSE", name: "Reverse" },
+];
+
+const operationalStatusChoices = [
+  { id: "BANNED", name: "Banned" },
+  { id: "SHADOWBANNED", name: "ShadowBanned" },
+  { id: "NORMAL", name: "Normal" },
+  { id: "ENHANCED", name: "Enhanced" },
+];
+
+export const HandleEdit = () => {
+  const t = useTranslate();
+
+  return (
+    <Box id="asami-explorer">
+      <ResponsiveAppBar expandExplorer={true} />
+      <EditBase mutationMode="pessimistic">
+        <FunctionField render={(r) => <Head1>Edit {r.username}</Head1>} />
+        <Card sx={{ mt: "1em" }}>
+          <SimpleForm
+            alignItems="stretch"
+            toolbar={
+              <Toolbar>
+                <SaveButton />
+              </Toolbar>
+            }
+          >
+            <Stack direction="row" gap="1em" flexWrap="wrap">
+              <NumberInput
+                size="medium"
+                sx={{ m: "0", flex: "1 1 300px" }}
+                source="audienceSizeOverride"
+              />
+              <TextInput
+                sx={{ flex: "100 0 300px" }}
+                source="audienceSizeOverrideReason"
+              />
+            </Stack>
+
+            <Stack direction="row" gap="1em" flexWrap="wrap">
+              <SelectInput
+                source="onlineEngagementOverride"
+                choices={engagementScoreChoices}
+                sx={{ m: "0", flex: "1 1 300px" }}
+              />
+              <TextInput
+                sx={{ flex: "100 0 300px" }}
+                source="onlineEngagementOverrideReason"
+              />
+            </Stack>
+
+            <Stack direction="row" gap="1em" flexWrap="wrap">
+              <SelectInput
+                source="offlineEngagementScore"
+                choices={engagementScoreChoices}
+                sx={{ m: "0", flex: "1 1 300px" }}
+              />
+              <TextInput
+                source="offlineEngagementDescription"
+                sx={{ flex: "100 0 300px" }}
+              />
+            </Stack>
+
+            <Stack direction="row" gap="1em" flexWrap="wrap">
+              <SelectInput
+                source="pollOverride"
+                choices={pollScoreChoices}
+                sx={{ m: "0", flex: "1 1 300px" }}
+              />
+              <TextInput
+                source="pollOverrideReason"
+                sx={{ flex: "100 0 300px" }}
+              />
+            </Stack>
+
+            <Stack direction="row" gap="1em" flexWrap="wrap">
+              <SelectInput
+                source="operationalStatusOverride"
+                choices={operationalStatusChoices}
+                sx={{ m: "0", flex: "1 1 300px" }}
+              />
+              <TextInput
+                source="operationalStatusOverrideReason"
+                sx={{ flex: "100 0 300px" }}
+              />
+            </Stack>
+
+            <Stack direction="row" gap="1em" flexWrap="wrap">
+              <BooleanInput
+                sx={{ m: "0", flex: "1 1 300px" }}
+                source="referrerScoreOverride"
+              />
+              <TextInput
+                sx={{ flex: "100 0 300px" }}
+                source="referrerScoreOverrideReason"
+              />
+            </Stack>
+
+            <Stack direction="row" gap="1em" flexWrap="wrap">
+              <BooleanInput
+                sx={{ m: "0", flex: "1 1 300px" }}
+                source="holderScoreOverride"
+              />
+              <TextInput
+                sx={{ flex: "100 0 300px" }}
+                source="holderScoreOverrideReason"
+              />
+            </Stack>
+            <ReferenceArrayInput
+              fullWidth
+              size="large"
+              variant="outlined"
+              source="topicIds"
+              reference="Topic"
+            >
+              <AutocompleteArrayInput
+                sx={{ mb: "0.5em" }}
+                size="small"
+                variant="outlined"
+                optionText={(x) => t(`resources.Topic.names.${x.name}`)}
+              />
+            </ReferenceArrayInput>
+          </SimpleForm>
+        </Card>
+      </EditBase>
+    </Box>
+  );
+};

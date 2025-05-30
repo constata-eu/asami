@@ -21,6 +21,7 @@ pub struct Session {
     created_at: UtcDateTime,
     #[graphql(description = "The last time this session was updated.")]
     updated_at: Option<UtcDateTime>,
+    admin: bool,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -76,6 +77,7 @@ impl Showable<models::Session, SessionFilter> for Session {
             nonce: d.attrs.nonce.to_string(),
             created_at: d.attrs.created_at,
             updated_at: d.attrs.updated_at,
+            admin: d.attrs.admin,
         })
     }
 }

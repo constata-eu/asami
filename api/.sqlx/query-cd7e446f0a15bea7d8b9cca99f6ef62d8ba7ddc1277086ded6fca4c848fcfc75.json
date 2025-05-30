@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \nholder_id as \"holder_id!: i32\", \namount as \"amount!: String\", \ncontract_cycle as \"contract_cycle!: String\", \ncreated_at as \"created_at!: DateTime < Utc >\" FROM estimated_fee_pool_claims WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR holder_id = $4::int4) AND (NOT $5::boolean OR amount = $6::varchar) AND (NOT $7::boolean OR contract_cycle = $8::varchar) AND (NOT $9::boolean OR created_at = $10::timestamptz) ORDER BY \n      (CASE ($11 = 'Id' AND NOT $12) WHEN true THEN id ELSE NULL END),\n      (CASE ($11 = 'Id' AND $12) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($11 = 'HolderId' AND NOT $12) WHEN true THEN holder_id ELSE NULL END),\n      (CASE ($11 = 'HolderId' AND $12) WHEN true THEN holder_id ELSE NULL END) DESC\n    ,\n      (CASE ($11 = 'Amount' AND NOT $12) WHEN true THEN amount ELSE NULL END),\n      (CASE ($11 = 'Amount' AND $12) WHEN true THEN amount ELSE NULL END) DESC\n    ,\n      (CASE ($11 = 'ContractCycle' AND NOT $12) WHEN true THEN contract_cycle ELSE NULL END),\n      (CASE ($11 = 'ContractCycle' AND $12) WHEN true THEN contract_cycle ELSE NULL END) DESC\n    ,\n      (CASE ($11 = 'CreatedAt' AND NOT $12) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($11 = 'CreatedAt' AND $12) WHEN true THEN created_at ELSE NULL END) DESC\n     LIMIT $13 OFFSET $14 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "holder_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "amount!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "contract_cycle!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at!: DateTime < Utc >",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "cd7e446f0a15bea7d8b9cca99f6ef62d8ba7ddc1277086ded6fca4c848fcfc75"
+}

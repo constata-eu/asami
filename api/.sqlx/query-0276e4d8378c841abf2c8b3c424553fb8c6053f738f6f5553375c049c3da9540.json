@@ -1,0 +1,115 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nmember_id as \"member_id!: String\", \nrating as \"rating!: CommunityMemberRating\", \ncollabs as \"collabs!: i32\", \nrewards as \"rewards!: String\", \nfirst_collab_date as \"first_collab_date!: UtcDateTime\", \nlast_collab_date as \"last_collab_date!: UtcDateTime\", \nforce_hydrate as \"force_hydrate!: bool\" FROM community_members WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR member_id = $8::varchar) AND (NOT $9::boolean OR rating = $10::community_member_rating) AND (NOT $11::boolean OR collabs = $12::int4) AND (NOT $13::boolean OR rewards = $14::varchar) AND (NOT $15::boolean OR first_collab_date = $16::timestamptz) AND (NOT $17::boolean OR last_collab_date = $18::timestamptz) AND (NOT $19::boolean OR force_hydrate = $20::boolean) ORDER BY \n      (CASE ($21 = 'Id' AND NOT $22) WHEN true THEN id ELSE NULL END),\n      (CASE ($21 = 'Id' AND $22) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'AccountId' AND NOT $22) WHEN true THEN account_id ELSE NULL END),\n      (CASE ($21 = 'AccountId' AND $22) WHEN true THEN account_id ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'MemberId' AND NOT $22) WHEN true THEN member_id ELSE NULL END),\n      (CASE ($21 = 'MemberId' AND $22) WHEN true THEN member_id ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'Rating' AND NOT $22) WHEN true THEN rating ELSE NULL END),\n      (CASE ($21 = 'Rating' AND $22) WHEN true THEN rating ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'Collabs' AND NOT $22) WHEN true THEN collabs ELSE NULL END),\n      (CASE ($21 = 'Collabs' AND $22) WHEN true THEN collabs ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'Rewards' AND NOT $22) WHEN true THEN rewards ELSE NULL END),\n      (CASE ($21 = 'Rewards' AND $22) WHEN true THEN rewards ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'FirstCollabDate' AND NOT $22) WHEN true THEN first_collab_date ELSE NULL END),\n      (CASE ($21 = 'FirstCollabDate' AND $22) WHEN true THEN first_collab_date ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'LastCollabDate' AND NOT $22) WHEN true THEN last_collab_date ELSE NULL END),\n      (CASE ($21 = 'LastCollabDate' AND $22) WHEN true THEN last_collab_date ELSE NULL END) DESC\n    ,\n      (CASE ($21 = 'ForceHydrate' AND NOT $22) WHEN true THEN force_hydrate ELSE NULL END),\n      (CASE ($21 = 'ForceHydrate' AND $22) WHEN true THEN force_hydrate ELSE NULL END) DESC\n     LIMIT $23 OFFSET $24 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "member_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "rating!: CommunityMemberRating",
+        "type_info": {
+          "Custom": {
+            "name": "community_member_rating",
+            "kind": {
+              "Enum": [
+                "good",
+                "normal",
+                "bad"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "collabs!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "rewards!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "first_collab_date!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "last_collab_date!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "force_hydrate!: bool",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "community_member_rating",
+            "kind": {
+              "Enum": [
+                "good",
+                "normal",
+                "bad"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "0276e4d8378c841abf2c8b3c424553fb8c6053f738f6f5553375c049c3da9540"
+}

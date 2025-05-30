@@ -3,16 +3,22 @@ use std::{
     process::{Child, Command},
 };
 
-use api::{lang, models};
+use api::{lang, models, App};
 use chrono::Utc;
 use thirtyfour::prelude::*;
 
-use super::ApiClient;
+use crate::TestUser;
 
-pub struct Selenium<'a> {
+pub struct Selenium {
     pub driver: WebDriver,
-    pub api: ApiClient<'a>,
+    app: App,
     child: Child,
+}
+
+impl std::fmt::Debug for Selenium {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Selenium").field("child", &self.child).finish()
+    }
 }
 
 pub const DOWNLOADS: &str = "/tmp/asami-tests-downloads";
@@ -23,9 +29,13 @@ pub const EXTENSION_ID: &str = "nkbihfbeogaeaoehlefnkodbefgpgknn";
 //pub const SEED: &str = "clay useful lion spawn drift census subway require small matrix guess away";
 //pub const MEMBER_ADDR: "0xbe992ec27E90c07caDE70c6C3CD26eECC8CadCfE"
 
-impl Selenium<'_> {
-    pub async fn start(api: ApiClient<'_>) -> Selenium<'_> {
-        let dir = std::fs::canonicalize(format!("{}/../integration_tests/chromedrivers", env!("CARGO_MANIFEST_DIR"))).unwrap();
+impl Selenium {
+    pub async fn start(app: App) -> Selenium {
+        let dir = std::fs::canonicalize(format!(
+            "{}/../integration_tests/chromedrivers",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .unwrap();
 
         Command::new("rm").args(["-r", "-f", DATA_DIR]).output().unwrap();
         Command::new("cp").args(["-r", &format!("{}/profile", dir.display()), DATA_DIR]).output().unwrap();
@@ -94,20 +104,12 @@ impl Selenium<'_> {
 
         let driver = WebDriver::new("http://localhost:4444", caps).await.expect("Webdriver init");
         driver.maximize_window().await.expect("to maximize window");
-        let selenium = Selenium { child, driver, api };
+        let selenium = Selenium { child, driver, app };
 
         selenium.go_to_extension_window("home.html").await;
         selenium.driver.close_window().await.unwrap();
         selenium.go_to_window("chrome://new-tab-page").await;
         selenium
-    }
-
-    pub fn app(&self) -> api::App {
-        self.api.app()
-    }
-
-    pub fn test_app(&self) -> &super::TestApp {
-        self.api.test_app
     }
 
     pub async fn wait_for(&self, selector: &str) -> WebElement {
@@ -142,6 +144,10 @@ impl Selenium<'_> {
     }
 
     pub async fn wait_until_gone(&self, selector: &str) {
+        self.wait_until_gone_with_timeout(selector, 10000).await;
+    }
+
+    pub async fn wait_until_gone_with_timeout(&self, selector: &str, timeout: u64) {
         let found = self.driver.query(By::Css(selector)).single().await;
         if let Err(thirtyfour::error::WebDriverError::NoSuchElement(_)) = found {
             return;
@@ -151,7 +157,7 @@ impl Selenium<'_> {
             .expect("No errors")
             .wait_until()
             .wait(
-                std::time::Duration::from_millis(10000),
+                std::time::Duration::from_millis(timeout),
                 std::time::Duration::from_millis(500),
             )
             .stale()
@@ -173,6 +179,10 @@ impl Selenium<'_> {
     }
 
     pub async fn fill_in(&self, selector: &str, value: &str) {
+        self.fill_in_with_enter(selector, value, false).await
+    }
+
+    pub async fn fill_in_with_enter(&self, selector: &str, value: &str, send_enter: bool) {
         let elem = self
             .driver
             .query(By::Css(selector))
@@ -181,10 +191,19 @@ impl Selenium<'_> {
             .unwrap_or_else(|_| panic!("{selector} not found"));
         elem.wait_until().enabled().await.unwrap_or_else(|_| panic!("{selector} was not enabled"));
         elem.send_keys(value).await.unwrap_or_else(|_| panic!("Error sending {value} to {selector}"));
+        if send_enter {
+            elem.send_keys(Key::Enter.to_string())
+                .await
+                .unwrap_or_else(|_| panic!("Error sending enter to {selector}"));
+        }
     }
 
     pub async fn goto(&self, url: &str) {
         self.driver.goto(url).await.unwrap_or_else(|_| panic!("Could not visit {url}"));
+    }
+
+    pub async fn navigate(&self, path: &str) {
+        self.goto(&format!("http://127.0.0.1:5173/#{path}")).await;
     }
 
     pub async fn stop(mut self) {
@@ -193,12 +212,10 @@ impl Selenium<'_> {
     }
 
     pub async fn signup_with_one_time_token(&self) {
-        self.api
-            .test_app
-            .app
+        self.app
             .one_time_token()
             .insert(models::InsertOneTimeToken {
-                value: "advertiser-token".to_string(),
+                value: "user-token-1".to_string(),
                 lang: lang::Lang::Es,
                 lookup_key: "one_time_token".to_string(),
                 email: None,
@@ -208,19 +225,48 @@ impl Selenium<'_> {
             .await
             .unwrap();
 
-        self.goto("http://127.0.0.1:5173/#/one_time_token_login?token=advertiser-token").await;
-        self.wait_for("#advertiser-dashboard").await;
+        self.goto("http://127.0.0.1:5173/#/one_time_token_login?token=user-token-1").await;
+        self.wait_for("#member-dashboard").await;
     }
 
-    pub async fn login(&mut self) {
-        self.api.login().await;
+    pub async fn login_with_wallet(&self, test_user: &TestUser) {
+        let pkey = format!("{:x}", test_user.local_wallet().signer().to_bytes());
 
+        self.goto(&format!("chrome-extension://{EXTENSION_ID}/home.html")).await;
+        self.fill_in("input[data-testid=unlock-password]", "password").await;
+        self.click("button[data-testid=unlock-submit]").await;
+        self.click("button.btn-primary").await;
+        self.click("button[data-testid=account-menu-icon]").await;
+        self.click("button[data-testid=multichain-account-menu-popover-action-button]").await;
+        self.click("button[data-testid=multichain-account-menu-popover-add-imported-account]").await;
+        self.fill_in("#private-key-box", &pkey).await;
+        self.click("button[data-testid=import-account-confirm-button]").await;
+        self.click("button[data-testid=account-options-menu-button]").await;
+        self.click("button[data-testid=global-menu-connected-sites]").await;
+        self.click("button[data-testid=connection-list-item]").await;
+        self.click("button[data-testid=edit]").await;
+        self.click("input[title='Select all']").await;
+        self.click("button[data-testid=connect-more-accounts-button]").await;
+        self.goto("http://127.0.0.1:5173/").await;
+        self.click("#menu-login").await;
+        self.click("#wallet-login-button").await;
+        self.click(".rlogin-provider-icon img[alt=MetaMask]").await;
+        self.click("button.rlogin-button.confirm").await;
+        self.go_to_extension_notification().await;
+        self.click("button[data-testid=confirm-footer-button]").await;
+        self.go_to_app_window().await;
+        self.wait_for("#member-dashboard").await;
+    }
+
+    pub async fn logout(&self) {
+        self.click("#menu-logout").await;
+        self.wait_for("#login-form").await;
+    }
+
+    pub async fn login(&self, test_user: &TestUser) {
         let token = format!("web-login-{}", Utc::now().timestamp());
 
-        let one_time_token = self
-            .api
-            .test_app
-            .app
+        self.app
             .one_time_token()
             .insert(models::InsertOneTimeToken {
                 value: token.clone(),
@@ -233,14 +279,12 @@ impl Selenium<'_> {
             .await
             .unwrap();
 
-        self.api
-            .test_app
-            .app
+        self.app
             .auth_method()
             .insert(models::InsertAuthMethod {
-                user_id: self.api.user().await.attrs.id,
+                user_id: test_user.user_id(),
                 kind: models::AuthMethodKind::OneTimeToken,
-                lookup_key: format!("one_time_token:{}", one_time_token.attrs.id),
+                lookup_key: token.clone(),
             })
             .save()
             .await
@@ -256,7 +300,7 @@ impl Selenium<'_> {
         self.wait_for("#member-dashboard").await;
     }
 
-    pub async fn link_wallet_and_sign_login(&self) {
+    pub async fn do_rlogin_login(&self) {
         self.click(".rlogin-provider-icon img[alt=MetaMask]").await;
 
         self.go_to_extension_notification().await;
@@ -266,7 +310,10 @@ impl Selenium<'_> {
 
         self.go_to_app_window().await;
         self.click("button.rlogin-button.confirm").await;
+    }
 
+    pub async fn link_wallet_and_sign_login(&self) {
+        self.do_rlogin_login().await;
         self.confirm_wallet_action().await;
     }
 
@@ -320,5 +367,42 @@ impl Selenium<'_> {
         self.driver.screenshot(Path::new(&filename)).await?;
         println!("Saved screenshot to: {}", filename);
         Ok(())
+    }
+
+    pub async fn open_and_fill_doc_campaign_form(
+        &self,
+        url: &str,
+        budget: &str,
+        thumbs_up_only: bool,
+        needs_approval: bool,
+    ) {
+        self.click("#open-start-campaign-dialog").await;
+        self.fill_in("input[name='contentUrl']", url).await;
+        self.fill_in("input[name='budget']", budget).await;
+        if thumbs_up_only {
+            self.click(".ra-input-thumbsUpOnly").await;
+        }
+        self.click("#submit-start-campaign-form").await;
+
+        if needs_approval {
+            self.wait_for("#approval-waiter").await;
+
+            self.go_to_extension_window("approval").await;
+            self.wait_for(".token-allowance-container").await;
+            self.fill_in("#custom-spending-cap", budget).await;
+            self.click("button[data-testid=page-container-footer-next]").await;
+            self.wait_for(".review-spending-cap").await;
+            self.click("button[data-testid=page-container-footer-next]").await;
+            self.go_to_app_window().await;
+
+            self.wait_until_gone("#approval-waiter").await;
+        }
+
+        self.wait_for("#creation-waiter").await;
+
+        self.confirm_wallet_action().await;
+
+        self.wait_for("#campaign-done").await;
+        self.click("#campaign-done-close").await;
     }
 }

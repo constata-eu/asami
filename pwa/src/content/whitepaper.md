@@ -1,8 +1,6 @@
 # Asami Club Whitepaper
 
-This whitepaper describes the system as intended, some features already exist, others are under development.
-
-You can read this from start to end, or [use our GPT to ask specific questions.](https://chatgpt.com/g/g-67fd41c84f808191b6d034654e621696-asami-club)
+This whitepaper describes the system as intended, some features already exist, others are under development. { .lead }
 
 ---
 
@@ -600,23 +598,23 @@ Asami is built for people—people with something to say, people with something 
 
 ---
 
-## 12. Contract Addresses and Links
+## 12. Contract Addresses and Links { .no-cols }
 
-- **Asami Smart Contract** (Rootstock):  
+**Asami Smart Contract** (Rootstock):  
   https://explorer.rootstock.io/address/0x3150e390bc96f1b4a05cf5183b8e7bdb68566954
 
-- **Current Campaign Manager Address**:  
+**Current Campaign Manager Address**:  
   https://explorer.rootstock.io/address/0x3e79325b61d941e7996f0a1aad4f66a703e24faa
 
-- **DOC Stablecoin Info (Money on Chain)**:  
+**DOC Stablecoin Info (Money on Chain)**:  
   https://moneyonchain.com/
 
-- **Open Source Campaign Manager Software**:  
+**Open Source Campaign Manager Software**:  
   https://github.com/constata-eu/asami
 
 ---
 
-## 13. Contact and Support
+## 13. Contact and Support { .no-cols }
 Members are encouraged to ask questions or request help via public channels. We aim to keep all communication transparent and community-facing.
 
 **X (Twitter):**
@@ -630,7 +628,7 @@ Members are encouraged to ask questions or request help via public channels. We 
 Please note that all reviews and scoring requests must follow the evidence-based process described in this whitepaper, which also contains an FAQ appendix.
 
 ---
-### Appendix A: FAQ and Known Issues
+## Appendix A: FAQ and Known Issues { .no-cols }
 
 **Q: Why am I not getting any campaigns?**
 - Your influence score may be low, or you may be missing required categories. You can request a review.

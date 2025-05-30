@@ -1,0 +1,110 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE community_members SET (id, \naccount_id, \nmember_id, \nrating, \ncollabs, \nrewards, \nfirst_collab_date, \nlast_collab_date, \nforce_hydrate) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE account_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE member_id END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE rating END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE collabs END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE rewards END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE first_collab_date END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE last_collab_date END), (CASE $18::boolean WHEN TRUE THEN $19 ELSE force_hydrate END)) WHERE id = $1 RETURNING id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nmember_id as \"member_id!: String\", \nrating as \"rating!: CommunityMemberRating\", \ncollabs as \"collabs!: i32\", \nrewards as \"rewards!: String\", \nfirst_collab_date as \"first_collab_date!: UtcDateTime\", \nlast_collab_date as \"last_collab_date!: UtcDateTime\", \nforce_hydrate as \"force_hydrate!: bool\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "member_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "rating!: CommunityMemberRating",
+        "type_info": {
+          "Custom": {
+            "name": "community_member_rating",
+            "kind": {
+              "Enum": [
+                "good",
+                "normal",
+                "bad"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "collabs!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "rewards!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "first_collab_date!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "last_collab_date!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "force_hydrate!: bool",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "community_member_rating",
+            "kind": {
+              "Enum": [
+                "good",
+                "normal",
+                "bad"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "2f1e86651fae0db354763b3c8d0595e1bc92555fa59f5e3868981fce6d9d7a88"
+}

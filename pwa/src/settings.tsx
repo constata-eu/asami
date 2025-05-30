@@ -1,103 +1,109 @@
 const development = {
   apiDomain: "http://127.0.0.1:8000",
-  environment: 'development',
+  environment: "development",
   recaptchaSiteKey: "6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX",
   rsk: {
     chainId: 31337,
     rpcUrls: {
-      31337: 'http://localhost:8545',
+      31337: "http://localhost:8545",
     },
     supportedChains: [
       {
-        chainId: '0x7a69', // hex 31337
-        chainName: 'RSK Local',
+        chainId: "0x7a69", // hex 31337
+        chainName: "RSK Local",
         nativeCurrency: {
-          name: 'Local RSK BTC',
-          symbol: 'lRBTC',
-          decimals: 18
+          name: "Local RSK BTC",
+          symbol: "lRBTC",
+          decimals: 18,
         },
-        rpcUrls: ['http://localhost:8545'],
-        blockExplorerUrls: ['http://localhost:8545'],
-        iconUrls: ['https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png']
-      }
-    ]
+        rpcUrls: ["http://localhost:8545"],
+        blockExplorerUrls: ["http://localhost:8545"],
+        iconUrls: [
+          "https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png",
+        ],
+      },
+    ],
   },
   x: {
     clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",
-    redirectUri: "http://127.0.0.1:8000/x_login",
+    redirectUri: "http://127.0.0.1:8000",
   },
   facebook: {
     appId: "376919484899990",
     redirectUri: "http://localhost:8000/facebook_login",
-  }
+  },
 };
 
 const staging = {
   apiDomain: "https://asami-staging.constata.eu",
-  environment: 'staging',
+  environment: "staging",
   recaptchaSiteKey: "6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX",
   rsk: {
     chainId: 31,
     rpcUrls: {
-      31: 'https://public-node.testnet.rsk.co'
+      31: "https://public-node.testnet.rsk.co",
     },
     supportedChains: [
       {
-        chainId: '0x1f', // hex 31
-        chainName: 'RSK Testnet',
+        chainId: "0x1f", // hex 31
+        chainName: "RSK Testnet",
         nativeCurrency: {
-          name: 'TEST RSK BTC',
-          symbol: 'tRBTC',
-          decimals: 18
+          name: "TEST RSK BTC",
+          symbol: "tRBTC",
+          decimals: 18,
         },
-        rpcUrls: ['https://public-node.testnet.rsk.co'],
-        blockExplorerUrls: ['https://explorer.testnet.rsk.co'],
-        iconUrls: ['https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png']
-      }
-    ]
+        rpcUrls: ["https://public-node.testnet.rsk.co"],
+        blockExplorerUrls: ["https://explorer.testnet.rsk.co"],
+        iconUrls: [
+          "https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png",
+        ],
+      },
+    ],
   },
   x: {
     clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",
-    redirectUri: "https://asami-staging.constata.eu/x_login",
+    redirectUri: "https://asami-staging.constata.eu",
   },
   facebook: {
     appId: "376919484899990",
     redirectUri: "https://asami-staging.constata.eu/facebook_login",
-  }
+  },
 };
 
 const production = {
   apiDomain: "https://asami.constata.eu",
-  environment: 'production',
+  environment: "production",
   recaptchaSiteKey: "6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX",
   rsk: {
     chainId: 30,
     rpcUrls: {
-      30: 'https://public-node.rsk.co',
+      30: "https://public-node.rsk.co",
     },
     supportedChains: [
       {
-        chainId: '0x1e', // hex 30
-        chainName: 'RSK Mainnet',
+        chainId: "0x1e", // hex 30
+        chainName: "RSK Mainnet",
         nativeCurrency: {
-          name: 'RSK BTC',
-          symbol: 'RBTC',
-          decimals: 18
+          name: "RSK BTC",
+          symbol: "RBTC",
+          decimals: 18,
         },
-        rpcUrls: ['https://public-node.rsk.co'],
-        blockExplorerUrls: ['https://explorer.rsk.co'],
-        iconUrls: ['https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png']
-      }
-    ]
+        rpcUrls: ["https://public-node.rsk.co"],
+        blockExplorerUrls: ["https://explorer.rsk.co"],
+        iconUrls: [
+          "https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png",
+        ],
+      },
+    ],
   },
   x: {
     clientId: "ZDJUaWk3OVpEU3JTaW12VFFBQmg6MTpjaQ",
-    redirectUri: "https://asami.constata.eu/x_login",
+    redirectUri: "https://asami.constata.eu",
   },
   facebook: {
     appId: "376919484899990",
     redirectUri: "https://asami.constata.eu/facebook_login",
-  }
+  },
 };
 
 const all = {
@@ -107,6 +113,6 @@ const all = {
   "http://localhost:4173": development,
   "https://staging.asami.club": staging,
   "https://asami.club": production,
-}
+};
 
 export const Settings = all[window.origin];

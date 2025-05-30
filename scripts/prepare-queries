@@ -1,0 +1,5 @@
+#!/bin/bash
+set -a
+[ -f .env_local ] && . .env_local
+set +a
+cd api && sqlx database reset -y && cargo sqlx prepare

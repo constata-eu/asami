@@ -1,0 +1,61 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \naddress as \"address!: String\", \nbalance as \"balance!: String\", \nlast_auto_paid_cycle as \"last_auto_paid_cycle!: String\", \nis_contract as \"is_contract!: bool\" FROM holders WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR address = $4::varchar) AND (NOT $5::boolean OR balance = $6::varchar) AND (NOT $7::boolean OR last_auto_paid_cycle = $8::varchar) AND (NOT $9::boolean OR last_auto_paid_cycle < $10::varchar) AND (NOT $11::boolean OR is_contract = $12::boolean) ORDER BY \n      (CASE ($13 = 'Id' AND NOT $14) WHEN true THEN id ELSE NULL END),\n      (CASE ($13 = 'Id' AND $14) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($13 = 'Address' AND NOT $14) WHEN true THEN address ELSE NULL END),\n      (CASE ($13 = 'Address' AND $14) WHEN true THEN address ELSE NULL END) DESC\n    ,\n      (CASE ($13 = 'Balance' AND NOT $14) WHEN true THEN balance ELSE NULL END),\n      (CASE ($13 = 'Balance' AND $14) WHEN true THEN balance ELSE NULL END) DESC\n    ,\n      (CASE ($13 = 'LastAutoPaidCycle' AND NOT $14) WHEN true THEN last_auto_paid_cycle ELSE NULL END),\n      (CASE ($13 = 'LastAutoPaidCycle' AND $14) WHEN true THEN last_auto_paid_cycle ELSE NULL END) DESC\n    ,\n      (CASE ($13 = 'IsContract' AND NOT $14) WHEN true THEN is_contract ELSE NULL END),\n      (CASE ($13 = 'IsContract' AND $14) WHEN true THEN is_contract ELSE NULL END) DESC\n     LIMIT $15 OFFSET $16",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "address!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "balance!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_auto_paid_cycle!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "is_contract!: bool",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "8e2c80b0d6b13eb57a69785e531c58b71ca1e943b70467af6dc6fe1fa935398c"
+}

@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
+use ethers::middleware::NonceManagerMiddleware;
 pub use ethers::{
     prelude::{abigen, LogMeta, Middleware, SignerMiddleware},
-    providers::{Http, Provider},
+    providers::{Http, PendingTransaction, Provider},
     signers::{coins_bip39::English, LocalWallet, MnemonicBuilder, Signer},
     types::{Address, U256, U64},
 };
@@ -27,18 +28,22 @@ abigen!(
     function approve(address spender, uint256 value) public virtual returns (bool)
     function balanceOf(address account) external view returns (uint256)
     function transfer(address receiver, uint256 value) public virtual returns (bool)
+    function allowance(address owner, address spender) external view returns (uint256)
   ]"#,
     derives(serde::Deserialize, serde::Serialize),
 );
 
-pub type LegacyContract = LegacyContractCode<SignerMiddleware<Provider<Http>, LocalWallet>>;
-pub type DocContract = IERC20<SignerMiddleware<Provider<Http>, LocalWallet>>;
-pub type AsamiContract = AsamiContractCode<SignerMiddleware<Provider<Http>, LocalWallet>>;
+pub type AsamiMiddleware = SignerMiddleware<NonceManagerMiddleware<Provider<Http>>, LocalWallet>;
+pub type LegacyContract = LegacyContractCode<AsamiMiddleware>;
+pub type DocContract = IERC20<AsamiMiddleware>;
+pub type AsamiContract = AsamiContractCode<AsamiMiddleware>;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct OnChain {
+    pub client: Arc<AsamiMiddleware>,
     pub legacy_contract: LegacyContract,
     pub asami_contract: AsamiContract,
+    pub asami_address: Address,
     pub doc_contract: DocContract,
 }
 
@@ -58,10 +63,11 @@ impl OnChain {
         let provider = Provider::<Http>::try_from(&config.rsk.rpc_url)
             .map_err(|_| Error::Init("Invalid rsk rpc_url in config".to_string()))?;
 
-        let client = Arc::new(SignerMiddleware::new(
-            provider,
-            wallet.with_chain_id(config.rsk.chain_id),
-        ));
+        let nonce_manager = NonceManagerMiddleware::new(provider, wallet.address());
+
+        let signer_middleware = SignerMiddleware::new(nonce_manager, wallet.with_chain_id(config.rsk.chain_id));
+
+        let client = Arc::new(signer_middleware);
         let legacy_address: Address = config
             .rsk
             .legacy_contract_address
@@ -83,7 +89,9 @@ impl OnChain {
         Ok(Self {
             legacy_contract: LegacyContract::new(legacy_address, client.clone()),
             asami_contract: AsamiContract::new(asami_address, client.clone()),
-            doc_contract: IERC20::new(doc_address, client),
+            asami_address,
+            doc_contract: IERC20::new(doc_address, client.clone()),
+            client,
         })
     }
 

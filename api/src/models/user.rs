@@ -11,6 +11,8 @@ model! {
     created_at: UtcDateTime,
     #[sqlx_model_hints(timestamptz, default)]
     updated_at: Option<UtcDateTime>,
+    #[sqlx_model_hints(boolean, default)]
+    admin: bool
   },
   has_many {
     AccountUser(user_id)

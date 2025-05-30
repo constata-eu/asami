@@ -16,17 +16,41 @@ pub struct Handle {
     )]
     username: String,
     #[graphql(description = "The unique user_id in the given social network. This never changes.")]
-    user_id: Option<String>,
+    user_id: String,
+    #[graphql(description = "The campaign manager has no refresh token to score this account")]
+    needs_refresh_token: bool,
+
     #[graphql(description = "The score given to this handle by Asami's admin.")]
     score: Option<String>,
+    #[graphql(description = "The last scoring successfully applied to this handle.")]
+    current_scoring_id: Option<i32>,
+    #[graphql(description = "Date in which the last scoring took place.")]
+    last_scoring: Option<DateTime<Utc>>,
+
     #[graphql(description = "Topics assigned to this handle")]
     topic_ids: Vec<i32>,
+
     #[graphql(description = "Status of this handle.")]
     status: HandleStatus,
     #[graphql(description = "Collabs made")]
     total_collabs: i32,
     #[graphql(description = "Rewards from collabs made")]
     total_collab_rewards: String,
+
+    online_engagement_override: Option<EngagementScore>,
+    online_engagement_override_reason: Option<String>,
+    offline_engagement_score: EngagementScore,
+    offline_engagement_description: Option<String>,
+    poll_override: Option<PollScore>,
+    poll_override_reason: Option<String>,
+    operational_status_override: Option<OperationalStatus>,
+    operational_status_override_reason: Option<String>,
+    referrer_score_override: Option<bool>,
+    referrer_score_override_reason: Option<String>,
+    holder_score_override: Option<bool>,
+    holder_score_override_reason: Option<String>,
+    audience_size_override: Option<i32>,
+    audience_size_override_reason: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -57,7 +81,7 @@ impl Showable<models::Handle, HandleFilter> for Handle {
             Ok(models::SelectHandle {
                 id_in: f.ids,
                 id_eq: f.id_eq,
-                username_like: into_like_search(f.username_like),
+                username_ilike: into_like_search(f.username_like),
                 status_in: f.status_in,
                 user_id_like: f.user_id_like,
                 account_id_eq: f.account_id_eq.map(i32_to_hex),
@@ -84,24 +108,84 @@ impl Showable<models::Handle, HandleFilter> for Handle {
             user_id: d.attrs.user_id,
             score: d.attrs.score,
             topic_ids,
+            current_scoring_id: d.attrs.current_scoring_id,
+            last_scoring: d.attrs.last_scoring,
             status: d.attrs.status,
             total_collabs: d.attrs.total_collabs,
             total_collab_rewards: d.attrs.total_collab_rewards,
+            needs_refresh_token: d.attrs.x_refresh_token.is_none(),
+            online_engagement_override: d.attrs.online_engagement_override,
+            online_engagement_override_reason: d.attrs.online_engagement_override_reason,
+            offline_engagement_score: d.attrs.offline_engagement_score,
+            offline_engagement_description: d.attrs.offline_engagement_description,
+            poll_override: d.attrs.poll_override,
+            poll_override_reason: d.attrs.poll_override_reason,
+            operational_status_override: d.attrs.operational_status_override,
+            operational_status_override_reason: d.attrs.operational_status_override_reason,
+            referrer_score_override: d.attrs.referrer_score_override,
+            referrer_score_override_reason: d.attrs.referrer_score_override_reason,
+            holder_score_override: d.attrs.holder_score_override,
+            holder_score_override_reason: d.attrs.holder_score_override_reason,
+            audience_size_override: d.attrs.audience_size_override,
+            audience_size_override_reason: d.attrs.audience_size_override_reason,
         })
     }
 }
 
 #[derive(Clone, GraphQLInputObject, Serialize, Deserialize)]
-#[graphql(description = "The input for creating a new Handle.")]
+#[graphql(description = "The input for creating a new CampaignRequest.")]
 #[serde(rename_all = "camelCase")]
-pub struct CreateHandleInput {
-    pub username: String,
+pub struct AdminEditHandleInput {
+    pub topic_ids: Vec<i32>,
+    pub online_engagement_override: Option<EngagementScore>,
+    pub online_engagement_override_reason: Option<String>,
+    pub offline_engagement_score: EngagementScore,
+    pub offline_engagement_description: Option<String>,
+    pub poll_override: Option<PollScore>,
+    pub poll_override_reason: Option<String>,
+    pub operational_status_override: Option<OperationalStatus>,
+    pub operational_status_override_reason: Option<String>,
+    pub referrer_score_override: Option<bool>,
+    pub referrer_score_override_reason: Option<String>,
+    pub holder_score_override: Option<bool>,
+    pub holder_score_override_reason: Option<String>,
+    pub audience_size_override: Option<i32>,
+    pub audience_size_override_reason: Option<String>,
 }
 
-impl CreateHandleInput {
-    pub async fn process(self, context: &Context) -> FieldResult<Handle> {
-        let req = context.account().await?.create_handle(&self.username).await?;
+impl AdminEditHandleInput {
+    pub async fn process(self, context: &Context, handle_id: i32) -> FieldResult<Handle> {
+        let handle = context.app.handle().find(handle_id).await?;
 
-        Ok(Handle::db_to_graphql(context, req).await?)
+        let topics = context.app.topic().select().id_in(&self.topic_ids).all().await?;
+
+        for t in handle.handle_topic_vec().await? {
+            t.delete().await?;
+        }
+        for t in topics {
+            handle.add_topic(&t).await?;
+        }
+
+        let updated = handle
+            .update()
+            .online_engagement_override(self.online_engagement_override)
+            .online_engagement_override_reason(self.online_engagement_override_reason)
+            .offline_engagement_score(self.offline_engagement_score)
+            .offline_engagement_description(self.offline_engagement_description)
+            .poll_override(self.poll_override)
+            .poll_override_reason(self.poll_override_reason)
+            .operational_status_override(self.operational_status_override)
+            .operational_status_override_reason(self.operational_status_override_reason)
+            .referrer_score_override(self.referrer_score_override)
+            .referrer_score_override_reason(self.referrer_score_override_reason)
+            .holder_score_override(self.holder_score_override)
+            .holder_score_override_reason(self.holder_score_override_reason)
+            .audience_size_override(self.audience_size_override)
+            .audience_size_override_reason(self.audience_size_override_reason)
+            .last_scoring(None)
+            .save()
+            .await?;
+
+        Ok(Handle::db_to_graphql(context, updated).await?)
     }
 }

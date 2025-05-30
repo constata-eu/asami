@@ -21,6 +21,7 @@ itertools = "0.10.1"
 thiserror = "1.0"
 sqlx = { workspace = true}
 sqlx-cli = { workspace = true }
+stripe-rust = { workspace = true }
 sqlx-models-orm = "0.8.5"
 rust_decimal = "*"
 rust_decimal_macros = "*"

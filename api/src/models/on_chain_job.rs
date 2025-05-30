@@ -2,10 +2,9 @@ use std::sync::Arc;
 
 use ethers::{
     middleware::{contract::FunctionCall, Middleware, MiddlewareError},
-    prelude::{ContractError, SignerMiddleware, Wallet},
-    providers::{Http, Provider},
-    signers::LocalWallet,
+    prelude::ContractError,
 };
+use on_chain::AsamiMiddleware;
 use strum::IntoEnumIterator;
 
 use super::*;
@@ -20,9 +19,8 @@ mod promote_sub_accounts;
 mod reimburse_campaigns;
 mod submit_reports;
 
-pub type AsamiSigner = SignerMiddleware<Provider<Http>, Wallet<ethers::core::k256::ecdsa::SigningKey>>;
-pub type AsamiFunctionCall = FunctionCall<Arc<AsamiSigner>, AsamiSigner, ()>;
-pub type AsamiContractError = ContractError<SignerMiddleware<Provider<Http>, LocalWallet>>;
+pub type AsamiFunctionCall = FunctionCall<Arc<AsamiMiddleware>, AsamiMiddleware, ()>;
+pub type AsamiContractError = ContractError<AsamiMiddleware>;
 
 model! {
   state: App,
