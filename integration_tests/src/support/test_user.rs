@@ -122,9 +122,13 @@ impl TestUser {
         self
     }
 
-    pub async fn unverified(mut self, username: &str, user_id: &str) -> Self {
+    pub async fn rand_unverified(self) -> Self {
         let x_user_id = rand::thread_rng().gen_range(10000..=99999).to_string();
 
+        self.unverified(&format!("twittero_{x_user_id}"), &x_user_id).await
+    }
+
+    pub async fn unverified(mut self, username: &str, user_id: &str) -> Self {
         let handle = self
             .test_app
             .app
@@ -140,31 +144,18 @@ impl TestUser {
             .expect("could not save handle");
 
         self.handle = Some(handle);
-        self.x_user_id = Some(x_user_id);
+        self.x_user_id = Some(user_id.to_string());
 
         self
     }
 
     pub async fn active(mut self, score: i32) -> Self {
         use super::handle_scoring_builder::*;
-
-        let x_user_id = rand::thread_rng().gen_range(10000..=99999).to_string();
-
         let poll = poll_json(1, 3, 4, 5);
 
         let verified = self
-            .test_app
-            .app
-            .handle()
-            .insert(InsertHandle {
-                account_id: self.account_id().encode_hex(),
-                username: format!("twittero_{x_user_id}"),
-                user_id: x_user_id.clone(),
-                x_refresh_token: Some("invalid_refresh_token".to_string()),
-            })
-            .save()
-            .await
-            .expect("could not save handle")
+            .handle
+            .unwrap()
             .update()
             .audience_size_override(Some(score))
             .save()
@@ -197,7 +188,6 @@ impl TestUser {
         let scored = verified.reloaded().await.unwrap();
 
         self.handle = Some(scored);
-        self.x_user_id = Some(x_user_id);
 
         self
     }

@@ -1,0 +1,297 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: String\", \nname as \"name!: String\", \nname_is_locked as \"name_is_locked!: bool\", \nstatus as \"status!: AccountStatus\", \naddr as \"addr!: Option < String >\", \ncreated_at as \"created_at!: UtcDateTime\", \nupdated_at as \"updated_at!: Option < UtcDateTime >\", \nclaim_signature as \"claim_signature!: Option < String >\", \nclaim_session_id as \"claim_session_id!: Option < String >\", \nprocessed_for_legacy_claim as \"processed_for_legacy_claim!: bool\", \nallows_gasless as \"allows_gasless!: bool\", \nstripe_customer_id as \"stripe_customer_id!: Option < String >\", \nlang as \"lang!: super :: Lang\", \nunclaimed_asami_balance as \"unclaimed_asami_balance!: String\", \nunclaimed_doc_balance as \"unclaimed_doc_balance!: String\", \nasami_balance as \"asami_balance!: String\", \ndoc_balance as \"doc_balance!: String\", \nrbtc_balance as \"rbtc_balance!: String\", \nlast_on_chain_sync as \"last_on_chain_sync!: UtcDateTime\", \nforce_hydrate as \"force_hydrate!: bool\", \ntotal_collabs as \"total_collabs!: i32\", \ntotal_collab_rewards as \"total_collab_rewards!: String\", \ntotal_campaigns as \"total_campaigns!: i32\", \ntotal_collabs_received as \"total_collabs_received!: i32\", \ntotal_spent as \"total_spent!: String\" FROM accounts WHERE (NOT $1::boolean OR id = $2::varchar) AND (NOT $3::boolean OR id = ANY(CAST($4 as varchar[])) ) AND (NOT $5::boolean OR name = $6::varchar) AND (NOT $7::boolean OR name LIKE $8::varchar) AND (NOT $9::boolean OR name ILIKE $10::varchar) AND (NOT $11::boolean OR name_is_locked = $12::boolean) AND (NOT $13::boolean OR status = $14::account_status) AND (NOT $15::boolean OR status = ANY(CAST($16 as account_status[])) ) AND (NOT $17::boolean OR addr = $18::varchar) AND (NOT $19::boolean OR addr LIKE $20::varchar) AND (NOT $21::boolean OR addr ILIKE $22::varchar) AND ($23::boolean IS NULL OR (($23::boolean AND addr IS NOT NULL) OR (NOT $23::boolean AND addr IS NULL))) AND (NOT $24::boolean OR created_at = $25::timestamptz) AND (NOT $26::boolean OR updated_at = $27::timestamptz) AND (NOT $28::boolean OR claim_signature = $29::varchar) AND (NOT $30::boolean OR claim_session_id = $31::varchar) AND (NOT $32::boolean OR processed_for_legacy_claim = $33::boolean) AND (NOT $34::boolean OR allows_gasless = $35::boolean) AND (NOT $36::boolean OR stripe_customer_id = $37::varchar) AND (NOT $38::boolean OR lang = $39::language) AND (NOT $40::boolean OR unclaimed_asami_balance = $41::varchar) AND (NOT $42::boolean OR unclaimed_doc_balance = $43::varchar) AND (NOT $44::boolean OR asami_balance = $45::varchar) AND (NOT $46::boolean OR doc_balance = $47::varchar) AND (NOT $48::boolean OR rbtc_balance = $49::varchar) AND (NOT $50::boolean OR last_on_chain_sync = $51::timestamptz) AND (NOT $52::boolean OR last_on_chain_sync < $53::timestamptz) AND (NOT $54::boolean OR force_hydrate = $55::boolean) AND (NOT $56::boolean OR total_collabs = $57::int4) AND (NOT $58::boolean OR total_collab_rewards = $59::varchar) AND (NOT $60::boolean OR total_campaigns = $61::int4) AND (NOT $62::boolean OR total_collabs_received = $63::int4) AND (NOT $64::boolean OR total_spent = $65::varchar) ORDER BY \n      (CASE ($66 = 'Id' AND NOT $67) WHEN true THEN id ELSE NULL END),\n      (CASE ($66 = 'Id' AND $67) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'Name' AND NOT $67) WHEN true THEN name ELSE NULL END),\n      (CASE ($66 = 'Name' AND $67) WHEN true THEN name ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'NameIsLocked' AND NOT $67) WHEN true THEN name_is_locked ELSE NULL END),\n      (CASE ($66 = 'NameIsLocked' AND $67) WHEN true THEN name_is_locked ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'Status' AND NOT $67) WHEN true THEN status ELSE NULL END),\n      (CASE ($66 = 'Status' AND $67) WHEN true THEN status ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'Addr' AND NOT $67) WHEN true THEN addr ELSE NULL END),\n      (CASE ($66 = 'Addr' AND $67) WHEN true THEN addr ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'CreatedAt' AND NOT $67) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($66 = 'CreatedAt' AND $67) WHEN true THEN created_at ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'UpdatedAt' AND NOT $67) WHEN true THEN updated_at ELSE NULL END),\n      (CASE ($66 = 'UpdatedAt' AND $67) WHEN true THEN updated_at ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'ClaimSignature' AND NOT $67) WHEN true THEN claim_signature ELSE NULL END),\n      (CASE ($66 = 'ClaimSignature' AND $67) WHEN true THEN claim_signature ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'ClaimSessionId' AND NOT $67) WHEN true THEN claim_session_id ELSE NULL END),\n      (CASE ($66 = 'ClaimSessionId' AND $67) WHEN true THEN claim_session_id ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'ProcessedForLegacyClaim' AND NOT $67) WHEN true THEN processed_for_legacy_claim ELSE NULL END),\n      (CASE ($66 = 'ProcessedForLegacyClaim' AND $67) WHEN true THEN processed_for_legacy_claim ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'AllowsGasless' AND NOT $67) WHEN true THEN allows_gasless ELSE NULL END),\n      (CASE ($66 = 'AllowsGasless' AND $67) WHEN true THEN allows_gasless ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'StripeCustomerId' AND NOT $67) WHEN true THEN stripe_customer_id ELSE NULL END),\n      (CASE ($66 = 'StripeCustomerId' AND $67) WHEN true THEN stripe_customer_id ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'Lang' AND NOT $67) WHEN true THEN lang ELSE NULL END),\n      (CASE ($66 = 'Lang' AND $67) WHEN true THEN lang ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'UnclaimedAsamiBalance' AND NOT $67) WHEN true THEN unclaimed_asami_balance ELSE NULL END),\n      (CASE ($66 = 'UnclaimedAsamiBalance' AND $67) WHEN true THEN unclaimed_asami_balance ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'UnclaimedDocBalance' AND NOT $67) WHEN true THEN unclaimed_doc_balance ELSE NULL END),\n      (CASE ($66 = 'UnclaimedDocBalance' AND $67) WHEN true THEN unclaimed_doc_balance ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'AsamiBalance' AND NOT $67) WHEN true THEN asami_balance ELSE NULL END),\n      (CASE ($66 = 'AsamiBalance' AND $67) WHEN true THEN asami_balance ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'DocBalance' AND NOT $67) WHEN true THEN doc_balance ELSE NULL END),\n      (CASE ($66 = 'DocBalance' AND $67) WHEN true THEN doc_balance ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'RbtcBalance' AND NOT $67) WHEN true THEN rbtc_balance ELSE NULL END),\n      (CASE ($66 = 'RbtcBalance' AND $67) WHEN true THEN rbtc_balance ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'LastOnChainSync' AND NOT $67) WHEN true THEN last_on_chain_sync ELSE NULL END),\n      (CASE ($66 = 'LastOnChainSync' AND $67) WHEN true THEN last_on_chain_sync ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'ForceHydrate' AND NOT $67) WHEN true THEN force_hydrate ELSE NULL END),\n      (CASE ($66 = 'ForceHydrate' AND $67) WHEN true THEN force_hydrate ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'TotalCollabs' AND NOT $67) WHEN true THEN total_collabs ELSE NULL END),\n      (CASE ($66 = 'TotalCollabs' AND $67) WHEN true THEN total_collabs ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'TotalCollabRewards' AND NOT $67) WHEN true THEN total_collab_rewards ELSE NULL END),\n      (CASE ($66 = 'TotalCollabRewards' AND $67) WHEN true THEN total_collab_rewards ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'TotalCampaigns' AND NOT $67) WHEN true THEN total_campaigns ELSE NULL END),\n      (CASE ($66 = 'TotalCampaigns' AND $67) WHEN true THEN total_campaigns ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'TotalCollabsReceived' AND NOT $67) WHEN true THEN total_collabs_received ELSE NULL END),\n      (CASE ($66 = 'TotalCollabsReceived' AND $67) WHEN true THEN total_collabs_received ELSE NULL END) DESC\n    ,\n      (CASE ($66 = 'TotalSpent' AND NOT $67) WHEN true THEN total_spent ELSE NULL END),\n      (CASE ($66 = 'TotalSpent' AND $67) WHEN true THEN total_spent ELSE NULL END) DESC\n     LIMIT $68 OFFSET $69",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "name!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "name_is_locked!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "status!: AccountStatus",
+        "type_info": {
+          "Custom": {
+            "name": "account_status",
+            "kind": {
+              "Enum": [
+                "managed",
+                "claiming",
+                "claimed",
+                "banned"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "addr!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at!: Option < UtcDateTime >",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 7,
+        "name": "claim_signature!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "claim_session_id!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "processed_for_legacy_claim!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "allows_gasless!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 11,
+        "name": "stripe_customer_id!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 12,
+        "name": "lang!: super :: Lang",
+        "type_info": {
+          "Custom": {
+            "name": "language",
+            "kind": {
+              "Enum": [
+                "en",
+                "es"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "unclaimed_asami_balance!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 14,
+        "name": "unclaimed_doc_balance!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 15,
+        "name": "asami_balance!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 16,
+        "name": "doc_balance!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 17,
+        "name": "rbtc_balance!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 18,
+        "name": "last_on_chain_sync!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 19,
+        "name": "force_hydrate!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 20,
+        "name": "total_collabs!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 21,
+        "name": "total_collab_rewards!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 22,
+        "name": "total_campaigns!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 23,
+        "name": "total_collabs_received!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 24,
+        "name": "total_spent!: String",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Varchar",
+        "Bool",
+        "VarcharArray",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        {
+          "Custom": {
+            "name": "account_status",
+            "kind": {
+              "Enum": [
+                "managed",
+                "claiming",
+                "claimed",
+                "banned"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "account_status[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "account_status",
+                  "kind": {
+                    "Enum": [
+                      "managed",
+                      "claiming",
+                      "claimed",
+                      "banned"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "language",
+            "kind": {
+              "Enum": [
+                "en",
+                "es"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "1eb9cc3d21d5a4ee7bfbfc860c98af2030ce4acbe7d4858cb5cae20728a64dd2"
+}

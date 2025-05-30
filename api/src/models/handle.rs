@@ -260,10 +260,7 @@ impl HandleHub {
             let post_result = twitter
                 .post_tweet()
                 .text(texts.text.to_string())
-                .poll(
-                    texts.options.to_vec(),
-                    std::time::Duration::from_secs(60 * 60 * 24 * 7),
-                )
+                .poll(texts.options.to_vec(), std::time::Duration::from_secs(60 * 60 * 24 * 7))
                 .send()
                 .await;
 
@@ -348,6 +345,14 @@ impl Handle {
             .count()
             .await?
             > 0;
+
+        self.account()
+            .await?
+            .update()
+            .name(format!("@{}", self.username()))
+            .name_is_locked(true)
+            .save()
+            .await?;
 
         if !existing {
             let user = self.state.account_user().select().account_id_eq(self.account_id()).one().await?;

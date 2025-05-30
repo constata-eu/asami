@@ -44,6 +44,7 @@ export const StatsShow = () => {
         resource="OnChainJob"
         disableSyncWithLocation
         disableAuthentication
+        sort={{ field: "sleepUntil", order: "DESC" }}
         exporter={false}
       >
         <Datagrid bulkActionButtons={false} expand={<ExpandOnChainJob />}>

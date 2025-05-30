@@ -52,6 +52,7 @@ export const AccountList = () => {
   const filters = [
     <TextInput source="idEq" alwaysOn />,
     <TextInput source="addrLike" alwaysOn />,
+    <TextInput source="nameLike" alwaysOn />,
   ];
 
   return (
@@ -68,8 +69,7 @@ export const AccountList = () => {
             <TextField
               source="name"
               defaultValue={t("account_show.title.default_name")}
-            />{" "}
-            # <BigNumField source="id" />
+            />
           </Box>
           <DateField source="createdAt" />
           <NumberField textAlign="right" source="totalCollabs" />
@@ -128,15 +128,7 @@ const AccountCardTable = () => {
   return (
     <>
       <RecordContextProvider value={showAccount.record}>
-        <Head1>
-          <strong>
-            {showAccount.record.name || t("account_show.title.default_name")}
-          </strong>
-          <Box component="span" fontSize="0.6em">
-            {" "}
-            # {showAccount.record.id}
-          </Box>
-        </Head1>
+        <Head1 sx={{ color: "primary.main" }}>{showAccount.record.name}</Head1>
         <HorizontalCardTable mt="2em">
           {handle &&
             (handle.currentScoringId ? (
@@ -249,6 +241,7 @@ const ScoringCardTable = ({ handle }) => {
               currency=""
               source="totalCollabRewards"
             />
+            <DateField source="lastScoring" emptyText="-" />
           </AttributeTable>
         </CardContent>
       </FixedWidthCard>
@@ -523,7 +516,7 @@ const AccountCollabs = ({ account }) => {
   const listContext = useListController({
     resource: "Collab",
     filter: { memberIdEq: account.id },
-    sort: { field: "id", order: "DESC" },
+    sort: { field: "createdAt", order: "DESC" },
     perPage: 5,
   });
 
@@ -537,7 +530,12 @@ const AccountCollabs = ({ account }) => {
       <ListBase disableAuthentication disableSyncWithLocation {...listContext}>
         <ListView>
           <Datagrid bulkActionButtons={false}>
-            <TextField source="id" />
+            <ReferenceField
+              source="advertiserId"
+              reference="Account"
+              sortable={false}
+              link="show"
+            />
             <FunctionField
               source="campaignId"
               render={(record) => (
@@ -548,15 +546,11 @@ const AccountCollabs = ({ account }) => {
                 </Link>
               )}
             />
+            <TextField source="createdAt" />
             <AmountField textAlign="right" source="reward" />
             <AmountField textAlign="right" source="fee" />
             <TextField source="status" sortable={false} />
-            <ReferenceField
-              source="advertiserId"
-              reference="Account"
-              sortable={false}
-              link="show"
-            />
+            <TextField source="id" />
           </Datagrid>
         </ListView>
       </ListBase>

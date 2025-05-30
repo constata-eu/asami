@@ -100,6 +100,7 @@ input AccountFilter {
   ids: [Int!]
   idEq: Int
   addrLike: String
+  nameLike: String
 }
 
 "The input for creating a new CampaignRequest."
@@ -264,6 +265,8 @@ type Account {
   status: AccountStatus!
   "The address of a claimed account."
   addr: String
+  "The account name."
+  name: String!
   "Tokens awarded, which will be minted when the account is first claimed."
   unclaimedAsamiBalance: String!
   "Rewards awarded to the user, which will be transferred when the account is claimed."

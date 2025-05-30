@@ -26,8 +26,6 @@ import { CardTable, DeckCard } from "./layout";
 import { Head2, Head3, light, green, Head1, Lead } from "../components/theme";
 import { useNavigate } from "react-router-dom";
 import CampaignIcon from "@mui/icons-material/Campaign";
-import chunk from "lodash/chunk";
-import flatten from "lodash/flatten";
 import CampaignListEmpty from "./campaign_list_empty";
 import StatsCard from "./stats_card";
 import { ResponsiveAppBar } from "./responsive_app_bar";
@@ -35,9 +33,9 @@ import { contentId } from "../lib/campaign";
 
 export default () => {
   const t = useTranslate();
+  const navigate = useNavigate();
   const [pubDataProvider, setPubDataProvider] = useState();
   const i18nProvider = useContext(I18nContext);
-  const navigate = useNavigate();
 
   useEffect(() => {
     async function initApp() {
@@ -59,36 +57,37 @@ export default () => {
   return (
     <>
       <ResponsiveAppBar />
-      <CardTable>
-        <Stack gap="0.5em" mb="1em">
-          <Head1>{t("landing.title")}</Head1>
+
+      <Stack
+        my="3em"
+        gap="2em"
+        direction="row"
+        flexWrap="wrap"
+        alignItems="stretch"
+      >
+        <Stack flex="1 1 270px" gap="0.5em">
+          <Head1 sx={{ color: "secondary.main" }}>{t("landing.title")}</Head1>
           <Lead>{t("landing.asami_invites")}</Lead>
           <Lead>{t("landing.boost")}</Lead>
-          <Lead>{t("landing.built_on_fairness")}</Lead>
+          <Lead>{t("landing.together")}</Lead>
         </Stack>
-        <JoinNow key="join-now" loginAs={loginAs} />
-        <YourPostHere loginAs={loginAs} />
+        <Box flex="1 1 300px" display="flex">
+          <YourPostHere loginAs={loginAs} />
+        </Box>
+        <Box flex="1 1 300px" display="flex">
+          <JoinNow key="join-now" loginAs={loginAs} />
+        </Box>
+      </Stack>
+
+      <Box my="3em">
         {pubDataProvider && (
           <CoreAdminContext
             i18nProvider={i18nProvider}
             dataProvider={pubDataProvider}
           >
-            <StatsCard />
+            <PublicCampaignList loginAs={loginAs} />
           </CoreAdminContext>
         )}
-        <AboutToken />
-      </CardTable>
-      <Box mt="1em">
-        <CardTable>
-          {pubDataProvider && (
-            <CoreAdminContext
-              i18nProvider={i18nProvider}
-              dataProvider={pubDataProvider}
-            >
-              <PublicCampaignList loginAs={loginAs} />
-            </CoreAdminContext>
-          )}
-        </CardTable>
       </Box>
     </>
   );
@@ -107,6 +106,14 @@ const PublicCampaignList = ({ loginAs }) => {
     resource: "Campaign",
   });
 
+  useEffect(() => {
+    async function initApp() {
+      const prov = await publicDataProvider();
+      setPubDataProvider(prov);
+    }
+    initApp();
+  }, []);
+
   if (listContext.isLoading) {
     return <></>;
   }
@@ -115,42 +122,53 @@ const PublicCampaignList = ({ loginAs }) => {
     return <CampaignListEmpty />;
   }
 
-  const items = flatten(
-    chunk(listContext.data, 4).map((i) =>
-      i.length == 4 ? [...i, { yourPostHere: true }] : i,
-    ),
-  );
-
   return (
-    <>
-      {items.map((item, index) => {
-        if (item.yourPostHere) {
-          return (
-            <YourPostHere key={`your-post-here-${index}`} loginAs={loginAs} />
-          );
-        } else {
-          return (
-            <PublicXCampaign key={item.id} item={item} loginAs={loginAs} />
-          );
-        }
-      })}
-    </>
+    <CardTable>
+      {listContext.data.map((item, index) => (
+        <>
+          <PublicXCampaign key={item.id} item={item} loginAs={loginAs} />
+          {index == 0 && (
+            <>
+              <AboutToken />
+              <StatsCard />
+            </>
+          )}
+        </>
+      ))}
+    </CardTable>
   );
 };
 const YourPostHere = ({ loginAs }) => {
   const translate = useTranslate();
 
   return (
-    <DeckCard color="inverted.main" background={(t) => t.palette.primary.main}>
-      <CardContent>
-        <Lead sx={{ mb: "0.2em", color: "inverted.main" }}>
-          {translate("your_post_here.lead")}
+    <Card
+      sx={{
+        color: "inverted.main",
+        background: (theme) => theme.palette.primary.main,
+      }}
+    >
+      <CardContent
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        <Box>
+          <Lead sx={{ mb: "0.2em", color: "inverted.main" }}>
+            {translate("your_post_here.lead")}
+          </Lead>
+          <Head2 sx={{ color: "inverted.main" }}>
+            {translate("your_post_here.title")}
+          </Head2>
+        </Box>
+        <Lead sx={{ my: "0.5em", color: "inverted.main" }}>
+          {translate("your_post_here.one")}
         </Lead>
-        <Head2 sx={{ color: "inverted.main" }}>
-          {translate("your_post_here.title")}
-        </Head2>
-        <Lead sx={{ my: "1em", color: "inverted.main" }}>
-          {translate("your_post_here.message")}
+        <Lead sx={{ mt: "0.5em", mb: "1em", color: "inverted.main" }}>
+          {translate("your_post_here.two")}
         </Lead>
         <Box mt="1em">
           <Button
@@ -166,7 +184,7 @@ const YourPostHere = ({ loginAs }) => {
           </Button>
         </Box>
       </CardContent>
-    </DeckCard>
+    </Card>
   );
 };
 
@@ -174,19 +192,28 @@ const JoinNow = ({ loginAs }) => {
   const translate = useTranslate();
 
   return (
-    <DeckCard color="primary.main">
-      <CardContent>
-        <Lead sx={{ color: "primary.main", mb: "0.2em" }}>
-          {translate("join_now.lead")}
+    <Card sx={{ color: "primary.main" }}>
+      <CardContent
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        <Box>
+          <Lead sx={{ color: "primary.main", mb: "0.2em" }}>
+            {translate("join_now.lead")}
+          </Lead>
+          <Head2 sx={{ color: "primary.main" }}>
+            {translate("join_now.title")}
+          </Head2>
+        </Box>
+        <Lead sx={{ color: "primary.main", my: "0.5em" }}>
+          {translate("join_now.one")}
         </Lead>
-        <Head2 sx={{ color: "primary.main" }}>
-          {translate("join_now.title")}
-        </Head2>
-        <Lead sx={{ color: "primary.main", my: "1em" }}>
-          {translate("join_now.you_will_be_invited")}
-        </Lead>
-        <Lead sx={{ color: "primary.main", my: "1em" }}>
-          {translate("join_now.join_from_anywhere")}
+        <Lead sx={{ color: "primary.main", my: "0.5em" }}>
+          {translate("join_now.two")}
         </Lead>
         <Button
           fullWidth
@@ -198,57 +225,59 @@ const JoinNow = ({ loginAs }) => {
           {translate("join_now.button")}
         </Button>
       </CardContent>
-    </DeckCard>
+    </Card>
   );
 };
 
-/*
-Landing ideas:
-- Add other stats to club stats:
-    * Total reach : 100000 PEOPLE
-    * Largest campaign: 
-    * User with most rewards: 
-
-    * Highest 
-*/
-
 const AboutToken = () => {
-  const translate = useTranslate();
+  const navigate = useNavigate();
+  const t = useTranslate();
 
   return (
-    <DeckCard color="primary.main">
-      <CardContent>
-        <Lead sx={{ color: "primary.main", mb: "0.2em" }}>
-          Invest in Asami’s growth
-        </Lead>
-        <Head2 sx={{ color: "primary.main" }}>Hold ASAMI Tokens</Head2>
+    <Card sx={{ mb: "1em", color: "primary.main" }}>
+      <CardContent
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        <Box>
+          <Lead sx={{ color: "primary.main", mb: "0.2em" }}>
+            {t("about_token.lead")}
+          </Lead>
+          <Head2 sx={{ color: "primary.main" }}>{t("about_token.title")}</Head2>
+        </Box>
         <Lead sx={{ color: "primary.main", my: "1em" }}>
-          Support the project and earn passively—no need to run campaigns or
-          collaborate. With a fixed supply of 21 million tokens and no premine,
-          ASAMI holders receive a share of club fees every 15 days.
+          {t("about_token.text")}
         </Lead>
-        <Stack gap="1em">
+        <Stack
+          gap="1em"
+          direction="row"
+          flexWrap="wrap"
+          justifyContent="flex-end"
+        >
           <Button
-            fullWidth
             size="large"
             color="primary"
             variant="outlined"
-            onClick={() => loginAs("member")}
+            onClick={() => navigate("/whitepaper")}
           >
-            Learn more
+            {t("about_token.learn_more")}
           </Button>
           <Button
-            fullWidth
             size="large"
             color="primary"
             variant="contained"
-            onClick={() => loginAs("member")}
+            href="https://oku.trade/app/rootstock/pool/0x90508e187c7defe5ca1768cea45e4a1ea818594b?isFlipped=false"
+            target="_blank"
           >
-            Trade ASAMI on OKU
+            {t("about_token.trade")}
           </Button>
         </Stack>
       </CardContent>
-    </DeckCard>
+    </Card>
   );
 };
 

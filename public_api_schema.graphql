@@ -20,8 +20,11 @@ enum AuditLogSeverity {
 
 enum CampaignStatus {
   DRAFT
+  AWAITING_PAYMENT
+  PAID
   SUBMITTED
   PUBLISHED
+  FAILED
 }
 
 enum CollabStatus {
@@ -97,6 +100,7 @@ input AccountFilter {
   ids: [Int!]
   idEq: Int
   addrLike: String
+  nameLike: String
 }
 
 "The input for creating a new CampaignRequest."
@@ -135,6 +139,8 @@ input CampaignFilter {
   statusNe: CampaignStatus
   statusEq: CampaignStatus
   availableToAccountId: Int
+  managedByAdminEq: Boolean
+  isPublishedEq: Boolean
 }
 
 input CampaignPreferenceFilter {
@@ -165,9 +171,10 @@ input CommunityMemberFilter {
   ratingEq: CommunityMemberRating
 }
 
-"The input for creating a new CampaignRequest."
+"The input for creating a new Campaign."
 input CreateCampaignFromLinkInput {
   link: String!
+  managedUnitAmount: Int
   topicIds: [Int!]!
   pricePerPoint: String!
   maxIndividualReward: String!
@@ -258,6 +265,8 @@ type Account {
   status: AccountStatus!
   "The address of a claimed account."
   addr: String
+  "The account name."
+  name: String!
   "Tokens awarded, which will be minted when the account is first claimed."
   unclaimedAsamiBalance: String!
   "Rewards awarded to the user, which will be transferred when the account is claimed."
@@ -305,14 +314,14 @@ type Campaign {
   accountId: Int!
   "The total budget for this campaign to be collected by users."
   budget: String!
+  "If the campaign is published and ready to receive collaborations."
+  isPublished: Boolean!
   "Auxiliary data related to this campaign's briefing"
   briefingJson: String!
   "Auxiliary data related to this campaign's briefing"
   briefingHash: String!
   "The campaign expiration date, after which funds may be returned"
   validUntil: DateTime
-  "The on-chain publication status of this campaign."
-  status: CampaignStatus!
   "The date in which this campaign was created."
   createdAt: DateTime!
   "The topic ids this campaign is restricted to."
@@ -327,6 +336,8 @@ type Campaign {
   totalBudget: String!
   "Campaign only available with users with a thumbs up from advertiser"
   thumbsUpOnly: Boolean!
+  "These fields are private to the campaign's owner and for internal use only. "
+  privateFields: PrivateFields
 }
 
 "Internal UX preferences for specific campaigns"
@@ -503,6 +514,15 @@ type OnChainJob {
   sleepUntil: DateTime!
   "When this job was first scheduled"
   createdAt: DateTime!
+}
+
+"Private fields for the campaign owner only"
+type PrivateFields {
+  managedByAdmin: Boolean!
+  managedUnitAmount: Int
+  stripeSessionUrl: String
+  stripeSessionId: String
+  status: CampaignStatus!
 }
 
 type Query {

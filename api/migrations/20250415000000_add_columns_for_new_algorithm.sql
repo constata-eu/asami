@@ -198,7 +198,9 @@ ALTER TYPE campaign_status ADD VALUE IF NOT EXISTS 'failed' AFTER 'published';
 
 ALTER TABLE accounts
 ADD COLUMN stripe_customer_id VARCHAR,
-ADD COLUMN lang language NOT NULL DEFAULT 'en';
+ADD COLUMN lang language NOT NULL DEFAULT 'en',
+ADD COLUMN name_is_locked BOOLEAN NOT NULL DEFAULT FALSE,
+ALTER COLUMN name DROP NOT NULL;
 
 UPDATE accounts SET lang = 'es' WHERE id IN
     ( SELECT account_id FROM handles WHERE id IN
@@ -206,3 +208,72 @@ UPDATE accounts SET lang = 'es' WHERE id IN
     );
 
 UPDATE handles SET status = 'unverified';
+
+
+UPDATE accounts SET name = NULL;
+
+CREATE OR REPLACE FUNCTION generate_account_name(id_hex varchar)
+RETURNS text AS $$
+DECLARE
+    id_suffix text;
+    hash bigint;
+
+    roman_names text[] := ARRAY[
+        'Aurelius', 'Cassius', 'Livia', 'Maximus', 'Flavia', 'Lucius', 'Tiberius', 'Octavia', 'Marcus',
+        'Cornelia', 'Quintus', 'Claudia', 'Gaius', 'Drusus', 'Fabia', 'Severus', 'Valeria', 'Hadrian', 'Antonia',
+        'Julia', 'Publius', 'Agrippa', 'Calpurnia', 'Domitia', 'Trajan', 'Licinia', 'Nerva', 'Faustina', 'Plautius'
+    ];
+
+    latin_objects text[] := ARRAY[
+        'Gladius', 'Papyrus', 'Fibula', 'Laurea', 'Scutum', 'Harpax', 'Lyra', 'Vasum', 'Tabula', 'Patera',
+        'Hasta', 'Tunicella', 'Calix', 'Cithara', 'Cornu', 'Cera', 'Stylus', 'Aqua', 'Templum', 'Astrum',
+        'Pons', 'Navis', 'Arcus', 'Follis', 'Corona', 'Phiala', 'Lampas', 'Porta', 'Mensula', 'Sagitta'
+    ];
+
+    latin_adjectives text[] := ARRAY[
+        'Sapiens', 'Fortis', 'Altus', 'Nobilis', 'Candidus', 'Strenuus', 'Clarus', 'Gratus', 'Audax', 'Liberalus',
+        'Tenax', 'Pius', 'Humilis', 'Celer', 'Justus', 'Prudens', 'Vetus', 'Mysticus', 'Fidelis', 'Modestus',
+        'Lucidus', 'Verus', 'Comis', 'Ingeniosus', 'Sanus', 'Integer', 'Fulgidus', 'Amplus', 'Benevolus', 'Ferox'
+    ];
+BEGIN
+    -- Remove '0x' and leading zeros for display
+    id_suffix := ltrim(ltrim(id_hex, '0x'), '0');
+    IF id_suffix = '' THEN
+        id_suffix := '0';
+    END IF;
+
+    -- Use PostgreSQL's 64-bit stable hash function
+    hash := hashtextextended(id_hex, 0); -- seed 0 ensures determinism
+
+    RETURN roman_names[(abs(hash) % array_length(roman_names, 1)) + 1]
+        || ' ' || latin_objects[(abs(hash / 31) % array_length(latin_objects, 1)) + 1]
+        || ' ' || latin_adjectives[(abs(hash / 997) % array_length(latin_adjectives, 1)) + 1]
+        || ' #' || id_suffix;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+
+CREATE OR REPLACE FUNCTION set_account_name_if_missing()
+RETURNS trigger AS $$
+BEGIN
+    IF NEW.name IS NULL OR trim(NEW.name) = '' THEN
+        NEW.name := generate_account_name(NEW.id);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER fill_account_name_before_insert
+BEFORE INSERT ON accounts
+FOR EACH ROW
+WHEN (NEW.name IS NULL OR trim(NEW.name) = '')
+EXECUTE FUNCTION set_account_name_if_missing();
+
+UPDATE accounts
+SET name = generate_account_name(id)
+WHERE name IS NULL OR trim(name) = '';
+
+UPDATE accounts
+SET name = h.username || ' #' || accounts.id
+FROM handles h
+WHERE h.account_id = accounts.id;

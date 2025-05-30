@@ -74,14 +74,16 @@ impl TestHelper {
         h.stop().await;
     }
 
-    pub async fn user(&self) -> TestUser {
-        let mut u = TestUser::new(self.test_app.clone()).await;
-        u.login_to_api_with_one_time_token().await;
-        u
-    }
-
     pub fn a(&self) -> &TestApp {
         &self.test_app
+    }
+
+    pub async fn user(&self) -> TestUser {
+        TestUser::new(self.test_app.clone()).await
+    }
+
+    pub async fn signed_up(&self) -> TestUser {
+        self.user().await.signed_up().await
     }
 
     pub async fn advertiser(&self) -> TestUser {
@@ -89,7 +91,7 @@ impl TestHelper {
     }
 
     pub async fn collaborator(&self, score: i32) -> TestUser {
-        self.user().await.signed_up().await.active(score).await
+        self.user().await.signed_up().await.rand_unverified().await.active(score).await
     }
 
     pub async fn stop(self) {

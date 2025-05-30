@@ -13,6 +13,8 @@ pub struct Account {
     status: AccountStatus,
     #[graphql(description = "The address of a claimed account.")]
     addr: Option<String>,
+    #[graphql(description = "The account name.")]
+    name: String,
     #[graphql(description = "Tokens awarded, which will be minted when the account is first claimed.")]
     unclaimed_asami_balance: String,
     #[graphql(description = "Rewards awarded to the user, which will be transferred when the account is claimed.")]
@@ -48,6 +50,7 @@ pub struct AccountFilter {
     ids: Option<Vec<i32>>,
     id_eq: Option<i32>,
     addr_like: Option<String>,
+    name_like: Option<String>,
 }
 
 #[rocket::async_trait]
@@ -75,7 +78,8 @@ impl Showable<models::Account, AccountFilter> for Account {
             Ok(models::SelectAccount {
                 id_in: f.ids.map(|ids| ids.into_iter().map(i32_to_hex).collect()),
                 id_eq: f.id_eq.map(i32_to_hex),
-                addr_like: into_like_search(f.addr_like),
+                addr_ilike: into_like_search(f.addr_like),
+                name_ilike: into_like_search(f.name_like),
                 ..Default::default()
             })
         } else {
@@ -95,6 +99,7 @@ impl Showable<models::Account, AccountFilter> for Account {
 
         Ok(Account {
             id: hex_to_i32(&d.attrs.id)?,
+            name: d.attrs.name,
             status: d.attrs.status,
             addr,
             asami_balance: d.attrs.asami_balance,

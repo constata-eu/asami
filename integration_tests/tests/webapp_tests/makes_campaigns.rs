@@ -4,7 +4,7 @@ use super::*;
 #[serial_test::file_serial]
 async fn creates_campaign_using_stripe() {
     TestHelper::with_web(|h| async move {
-        let advertiser = h.user().await;
+        let advertiser = h.user().await.signed_up().await;
         advertiser.login_to_web_with_otp().await;
         h.web().navigate("/dashboard?role=advertiser").await;
         h.web().click("#open-start-campaign-stripe-dialog").await;

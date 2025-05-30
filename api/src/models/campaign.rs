@@ -1,4 +1,4 @@
-use juniper::GraphQLInputObject;
+use juniper::{FieldResult, GraphQLInputObject};
 
 /* Campaigns are created locally, then paid in the smart contract.
  * Campaigns could be paid on-chain without being reported in the contract, but it would not
@@ -645,7 +645,7 @@ pub struct CreateCampaignFromLinkInput {
 }
 
 impl CreateCampaignFromLinkInput {
-    pub async fn process(self, app: &App, account: &Account) -> AsamiResult<Campaign> {
+    pub async fn process(self, app: &App, account: &Account) -> FieldResult<Campaign> {
         let topics = app.topic().select().id_in(&self.topic_ids).all().await?;
 
         let advertiser_addr = if self.managed_unit_amount.is_some() {
@@ -657,9 +657,7 @@ impl CreateCampaignFromLinkInput {
         let briefing = Self::validate_x_link_and_get_briefing(&self.link)?;
 
         let Ok(briefing_hash) = models::hasher::u256digest(briefing.as_bytes()) else {
-            return Err(Error::precondition(
-                "conversion_from_briefing_hash_to_u256_should_never_fail",
-            ));
+            return Err(Error::precondition("conversion_from_briefing_hash_to_u256_should_never_fail").into());
         };
 
         let briefing_json =
@@ -675,9 +673,9 @@ impl CreateCampaignFromLinkInput {
                 budget: weihex("0"),
                 briefing_hash: briefing_hash.encode_hex(),
                 briefing_json,
-                price_per_point: self.price_per_point.encode_hex(),
-                max_individual_reward: self.max_individual_reward.encode_hex(),
-                min_individual_reward: self.min_individual_reward.encode_hex(),
+                price_per_point: parse_u256("price_per_point", &self.price_per_point)?.encode_hex(),
+                max_individual_reward: parse_u256("max_individual_reward", &self.max_individual_reward)?.encode_hex(),
+                min_individual_reward: parse_u256("min_individual_reward", &self.min_individual_reward)?.encode_hex(),
                 thumbs_up_only: self.thumbs_up_only,
             })
             .save()
@@ -725,4 +723,9 @@ impl CreateCampaignFromLinkInput {
 
         Ok(briefing.to_string())
     }
+}
+
+fn parse_u256(fieldname: &str, value: &str) -> FieldResult<U256> {
+    use ethers::abi::AbiDecode;
+    Ok(U256::decode_hex(value).map_err(|_e| Error::validation(fieldname, "invalid_hex_encoded_u256_value"))?)
 }

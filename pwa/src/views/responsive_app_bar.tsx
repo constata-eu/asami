@@ -94,7 +94,7 @@ export const ResponsiveAppBar = ({
         navigate("/dashboard");
       },
       icon: CampaignIcon,
-      label: "app_bar.my_campaings",
+      label: "app_bar.my_campaigns",
     },
     myCollabs: {
       id: "my-collabs",
@@ -144,8 +144,8 @@ export const ResponsiveAppBar = ({
           sx={{
             mt: "1em",
             mb: {
-              xs: "0.5em",
-              md: "1.5em",
+              xs: "1.5em",
+              md: "2.5em",
             },
             gap: "1em",
             flexWrap: { xs: "nowrap", sm: "wrap" },
@@ -211,8 +211,10 @@ export const ResponsiveAppBar = ({
               {!authenticated && <TextEntry def={defs.login} />}
               {authenticated && (
                 <>
-                  <TextEntry def={defs.myCampaigns} />
-                  <TextEntry def={defs.myCollabs} />
+                  {!expandExplorer && <TextEntry def={defs.myCampaigns} />}
+                  {expandExplorer && <IconEntry def={defs.myCampaigns} />}
+                  {!expandExplorer && <TextEntry def={defs.myCollabs} />}
+                  {expandExplorer && <IconEntry def={defs.myCollabs} />}
                   <IconEntry def={defs.logout} />
                 </>
               )}

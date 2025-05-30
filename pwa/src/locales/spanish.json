@@ -78,7 +78,8 @@
         "idEq": "por ID",
         "usernameLike": "por usuario en X",
         "accountIdEq": "por miembro",
-        "topic": "Categorias"
+        "topic": "Categorias",
+        "lastScoring": "Última medición"
       }
     },
     "Collab": {
@@ -99,7 +100,8 @@
         "memberIdEq": "por miembro colaborador",
         "collabTriggerUniqueIdLike": "por disparador",
         "statusEq": "estado es",
-        "statusNe": "estado no es"
+        "statusNe": "estado no es",
+        "createdAt": "Fecha"
       }
     },
     "Stats": {
@@ -154,7 +156,7 @@
     "error": "Ups, no pudimos recibir tu pedido. Por favor contáctate con el administrador en X."
   },
   "advertiser_help": {
-    "title": "Paga y Amplifica.",
+    "title": "Fondea, Impulsa, Crece.",
     "text": "Consigue más vistas en tus publicaciones lanzando una campaña. Tú eliges una publicación, defines el presupuesto y llegas a personas reales con reposts auténticos. Los colaboradores que participan reciben un pago según su influencia real y el tamaño de su audiencia, ayudándote a lograr un alcance que realmente vale la pena."
   },
   "community": {
@@ -296,7 +298,7 @@
     }
   },
   "title_card": {
-    "title": "Reposteá y cobra",
+    "title": "Elige, Comparte, Gana.",
     "collaborate": "¡Todo listo para colaborar! Solo recuerda: tu audiencia está atenta, así que conviene tener selectividad. Repostear contenido que no va contigo puede cansar a tus seguidores y debilitar tu influencia. Además, mantener tu estilo muestra que compartes con responsabilidad.",
     "verify_handles": "Vamos a vincular tu cuenta de X para poder estimar tu influencia. Una vez verificada, podrás empezar a ganar con tus reposts.",
     "wait_for_campaigns": "Por ahora no hay campañas disponibles — vuelve pronto, ¡suelen aparecer nuevas oportunidades todo el tiempo, especialmente los viernes!"
@@ -394,17 +396,19 @@
     "message": "¡Vuelve a fijarte pronto!"
   },
   "your_post_here": {
-    "lead": "¿Quieres anunciarte?",
-    "title": "Tu publicación, aquí.",
-    "message": "Dale un impulso a tu alcance con el poder del boca en boca. Asami suma reposts reales a tu estrategia publicitaria — puedes financiar campañas con cripto o tarjeta de crédito.",
-    "button": "Lanzar una campaña"
+    "lead": "Fondea • Impulsa • Crece",
+    "title": "Impulsa tus publicaciones con energía boca a boca.",
+    "message": "Aumenta tu alcance con energía de boca en boca. Asami suma reposts reales a tu estrategia — puedes financiar campañas con cripto o tarjeta de crédito.",
+    "one": "Asami pone tu proyecto Web3 frente a personas reales que eligen repostearte en X — generando alcance ahora y comunidad a futuro.",
+    "two": "Paga con DOC — o con tarjeta de crédito si no hay otra.",
+    "button": "Lanza una campaña"
   },
   "join_now": {
-    "lead": "¿Quieres colaborar?",
+    "lead": "Elige • Comparte • Gana",
     "title": "Obtén tu lectura de influencia única.",
-    "you_will_be_invited": "Es divertido, y te permite unirte a campañas en X para ganar cripto por hacer reposts.",
-    "join_from_anywhere": "Únete desde cualquier lugar y empieza a recibir recompensas — solo necesitarás una wallet para retirar.",
-    "button": "Únete al club — es gratis"
+    "one": "Asami revela tu alcance — y te recompensa por usarlo.",
+    "two": "Elige campañas Web3 que valga la pena amplificar, repostealas en X y gana DOC (USD) y tokens ASAMI. Solo necesitarás una wallet para retirar tus recompensas.",
+    "button": "Únete al club — Es gratis"
   },
   "login_form": {
     "read_our_terms": "Lee nuestros términos. Si estás de acuerdo, elige cómo quieres ingresar .",
@@ -566,11 +570,11 @@
     "home": "Inicio",
     "x_handle": "asami_club_es",
     "help": "Ayuda",
-    "stats": "Estadísticas",
+    "stats": "Explora",
     "login": "Iniciar sesión",
     "logout": "Cerrar sesión",
-    "my_campaings": "Paga y amplifica",
-    "my_collabs": "Repostea y gana",
+    "my_campaigns": "Fondea•Impulsa•Crece",
+    "my_collabs": "Elige•Comparte•Gana",
     "whitepaper": "Whitepaper",
     "handles": "Usuarios",
     "accounts": "Miembros",
@@ -581,9 +585,16 @@
     "robot_url": "robot.asami.club"
   },
   "landing": {
-    "title": "Un club que crea tendencias.",
-    "asami_invites": "Asami invita a las personas a pagarse entre sí por repostear en redes sociales.",
-    "boost": "Los anunciantes amplifican con energía de boca en boca. Los colaboradores ganan recompensas reales por su influencia.",
-    "built_on_fairness": "Basado en la equidad, valores compartidos y reglas transparentes, es para personas y marcas que quieren crecer — juntos."
+    "title": "Un club para las tendencias de Web3.",
+    "asami_invites": "Asami conecta proyectos con personas reales que amplifican su mensaje compartiéndolo de forma auténtica y significativa.",
+    "boost": "Los anunciantes crecen gracias a un alcance genuino. Los colaboradores aportan valor eligiendo qué amplificar y reciben recompensas por su influencia.",
+    "together": "Todavía es muy temprano. Llevemos a los próximos mil millones de personas al mundo Web3 — juntos."
+  },
+  "about_token": {
+    "lead": "Haz crecer a Asami",
+    "title": "Obtén tokens ASAMI",
+    "text": "Apoya el proyecto y gana de forma pasiva — sin necesidad de lanzar campañas ni colaborar. Con un suministro fijo de 21 millones de tokens y sin premine, los holders de ASAMI reciben una parte de las comisiones del club cada 15 días.",
+    "learn_more": "Saber más",
+    "trade": "Intercambia ASAMI en OKU"
   }
 }

@@ -17,6 +17,8 @@ import { makeXLogin } from "../lib/auth_provider";
 import {
   useTranslate,
   useDataProvider,
+  useAuthProvider,
+  useRedirect,
   Form,
   TextInput,
   SaveButton,
@@ -42,13 +44,26 @@ const Login = () => {
   const [pubDataProvider, setPubDataProvider] = useState();
   const i18nProvider = useContext(I18nContext);
 
+  const authProvider = useAuthProvider();
+  const redirect = useRedirect();
+
   useEffect(() => {
+    authProvider
+      ?.checkAuth({})
+      .then(() => {
+        // If authenticated, redirect to dashboard
+        redirect("/dashboard");
+      })
+      .catch(() => {
+        // Not authenticated, stay on login
+      });
+
     async function initApp() {
       const prov = await publicDataProvider();
       setPubDataProvider(prov);
     }
     initApp();
-  }, []);
+  }, [authProvider, redirect]);
 
   if (!pubDataProvider) {
     return <></>;

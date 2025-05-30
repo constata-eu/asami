@@ -81,7 +81,7 @@ impl Showable<models::Handle, HandleFilter> for Handle {
             Ok(models::SelectHandle {
                 id_in: f.ids,
                 id_eq: f.id_eq,
-                username_like: into_like_search(f.username_like),
+                username_ilike: into_like_search(f.username_like),
                 status_in: f.status_in,
                 user_id_like: f.user_id_like,
                 account_id_eq: f.account_id_eq.map(i32_to_hex),

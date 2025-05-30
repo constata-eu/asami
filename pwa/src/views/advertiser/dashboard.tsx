@@ -69,7 +69,7 @@ const Dashboard = () => {
   }
 
   return (
-    <Box p="1em" id="advertiser-dashboard">
+    <Box id="advertiser-dashboard">
       <ResponsiveAppBar />
       <ColumnsContainer>
         <AdvertiserHelpCard />

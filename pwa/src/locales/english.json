@@ -78,7 +78,8 @@
         "idEq": "by ID",
         "usernameLike": "by X username",
         "accountIdEq": "by member",
-        "topic": "Categories"
+        "topic": "Categories",
+        "lastScoring": "Last scored"
       }
     },
     "Collab": {
@@ -99,7 +100,8 @@
         "memberIdEq": "by collaborator member",
         "collabTriggerUniqueIdLike": "by trigger on X",
         "statusEq": "status is",
-        "statusNe": "status is not"
+        "statusNe": "status is not",
+        "createdAt": "Collab date"
       }
     },
     "Stats": {
@@ -154,7 +156,7 @@
     "error": "Oops, we could not receive your request. Please try again or contact the admin on X."
   },
   "advertiser_help": {
-    "title": "Pay & Boost.",
+    "title": "Fund, Boost, Grow.",
     "text": "Get more impressions on your posts by launching a campaign. You’ll choose a post, set a budget, and reach real people through authentic reposts. Eligible collaborators are paid based on their genuine influence and audience size, helping you achieve meaningful reach."
   },
   "community": {
@@ -296,7 +298,7 @@
     }
   },
   "title_card": {
-    "title": "Repost & Earn",
+    "title": "Pick, Share, Earn.",
     "collaborate": "You're all set to collaborate! Just remember — your audience is paying attention, so be a bit selective. Reposting content that doesn’t align with you can wear out your followers and weaken your influence. Plus, staying true to your voice shows you're sharing responsibly.",
     "verify_handles": "Let’s link your X account so we can estimate your influence. Once you're verified, you can start earning from reposts!",
     "wait_for_campaigns": "No campaigns available right now — check back soon, new opportunities pop up all the time, specially on fridays!"
@@ -394,16 +396,18 @@
     "message": "Check back soon though!"
   },
   "your_post_here": {
-    "lead": "Need to Advertise?",
-    "title": "Your Post, Here.",
+    "lead": "Fund • Boost • Grow",
+    "title": "Boost your posts with word-of-mouth energy.",
     "message": "Boost your engagement with word-of-mouth energy. Asami adds real reposts to your ad strategy — campaigns can be funded with crypto or credit card.",
+    "one": "Asami puts your Web3 project in front of real people who choose to repost you on X — building reach now and community over time.",
+    "two": "Pay with DOC — or with a Credit Card if you must.",
     "button": "Start a campaign"
   },
   "join_now": {
-    "lead": "Want to Collaborate?",
+    "lead": "Pick • Share • Earn",
     "title": "Get your personalized influence reading.",
-    "you_will_be_invited": "It’s fun, and lets you join campaigns on X to earn crypto for reposting.",
-    "join_from_anywhere": "Join from anywhere and start collecting rewards — you’ll only need a wallet to cash out.",
+    "one": "Asami reveals your reach — and rewards you for using it.",
+    "two": "Pick Web3 campaigns worth amplifying, repost them on X, and earn DOC stablecoin and ASAMI tokens. You’ll only need a wallet to cash out.",
     "button": "Join the club — It's free"
   },
   "login_form": {
@@ -566,11 +570,11 @@
     "home": "Home",
     "x_handle": "asami_club",
     "help": "Help",
-    "stats": "Stats",
+    "stats": "Explore",
     "login": "Login",
     "logout": "Logout",
-    "my_campaings": "Pay & Boost",
-    "my_collabs": "Repost & Earn",
+    "my_campaigns": "Fund•Boost•Grow",
+    "my_collabs": "Pick•Share•Earn",
     "whitepaper": "Whitepaper",
     "handles": "Handles",
     "accounts": "Members",
@@ -581,9 +585,16 @@
     "robot_url": "bot.asami.club"
   },
   "landing": {
-    "title": "A trend making club.",
-    "asami_invites": "Asami invites people to pay each other to repost on social media.",
-    "boost": "Advertisers boost through word-of-mouth energy. Collaborators earn real rewards for their influence.",
-    "built_on_fairness": "Built on fairness, shared values, and transparent rules, it's for people and brands who want to grow — together."
+    "title": "A Club for WEB3 Trends.",
+    "asami_invites": "Asami connects projects with real people who amplify their message through meaningful social sharing.",
+    "boost": "Advertisers grow through genuine reach. Collaborators add value by choosing what to amplify and getting rewarded for their influence.",
+    "together": "We’re still so early. Let’s bring the next billion people into Web3 — together."
+  },
+  "about_token": {
+    "lead": "Get involved in Asami's growth",
+    "title": "Get ASAMI Tokens",
+    "text": "Support the project and earn passively—no need to run campaigns or collaborate. With a fixed supply of 21 million tokens and no premine, ASAMI holders receive a share of club fees every 15 days.",
+    "learn_more": "Learn more",
+    "trade": "Trade ASAMI on OKU"
   }
 }

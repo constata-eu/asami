@@ -108,14 +108,19 @@ impl App {
         let account = self
             .account()
             .insert(InsertAccount {
-                name: Some("Constata.eu Campaign Manager".to_string()),
                 addr: Some(addr),
                 lang: Lang::En,
             })
             .save()
             .await?;
 
-        Ok(account.update().status(AccountStatus::Claimed).save().await?)
+        Ok(account
+            .update()
+            .name("Constata.eu Campaign Manager".to_string())
+            .name_is_locked(true)
+            .status(AccountStatus::Claimed)
+            .save()
+            .await?)
     }
 }
 

@@ -45,9 +45,7 @@ async fn full_authority_scoring() {
 
         handle.reload().await.unwrap();
 
-        ScoringExpectations {
-            ..Default::default()
-        }.assert_matches(&scoring, &handle);
+        ScoringExpectations { ..Default::default() }.assert_matches(&scoring, &handle);
 
         assert_eq!(handle.score(), scoring.score());
     })
@@ -273,7 +271,8 @@ async fn ghost_account_for_short_tweets() {
             score: weihex("0"),
             handle_score: weihex("0"),
             ..ScoringExpectations::average()
-        }.assert_matches(&scoring, &handle);
+        }
+        .assert_matches(&scoring, &handle);
     })
     .await;
 }
@@ -315,7 +314,8 @@ async fn ghost_account_for_low_impressions() {
             score: weihex("0"),
             handle_score: weihex("0"),
             ..ScoringExpectations::average()
-        }.assert_matches(&scoring, &handle);
+        }
+        .assert_matches(&scoring, &handle);
     })
     .await;
 }
@@ -363,7 +363,8 @@ async fn repost_fatigue() {
             score: weihex("0"),
             handle_score: weihex("0"),
             ..ScoringExpectations::average()
-        }.assert_matches(&scoring, &handle);
+        }
+        .assert_matches(&scoring, &handle);
     })
     .await;
 }
@@ -412,7 +413,8 @@ async fn full_authority_overrides_to_none() {
             score: weihex("0"),
             handle_score: weihex("0"),
             ..ScoringExpectations::default()
-        }.assert_matches(&scoring, &handle);
+        }
+        .assert_matches(&scoring, &handle);
     })
     .await;
 }
@@ -460,7 +462,8 @@ async fn full_authority_overrides_to_none_for_operational_status() {
             score: weihex("0"),
             handle_score: weihex("0"),
             ..ScoringExpectations::default()
-        }.assert_matches(&scoring, &handle);
+        }
+        .assert_matches(&scoring, &handle);
     })
     .await;
 }
@@ -508,7 +511,8 @@ async fn overrides_audience_size() {
             score: weihex("10"),
             handle_score: weihex("10"),
             ..ScoringExpectations::default()
-        }.assert_matches(&scoring, &handle);
+        }
+        .assert_matches(&scoring, &handle);
     })
     .await;
 }
@@ -563,7 +567,8 @@ async fn full_authority_overrides_to_average() {
             score: weihex("79"),
             handle_score: weihex("79"),
             ..ScoringExpectations::default()
-        }.assert_matches(&scoring, &handle);
+        }
+        .assert_matches(&scoring, &handle);
     })
     .await;
 }
@@ -621,7 +626,8 @@ async fn ghost_account_overrides_to_full() {
             score: weihex("31"),
             handle_score: weihex("31"),
             ..ScoringExpectations::average()
-        }.assert_matches(&scoring, &handle);
+        }
+        .assert_matches(&scoring, &handle);
     })
     .await;
 }
@@ -672,7 +678,8 @@ async fn average_poll_score() {
             handle_score: weihex("284"),
             operational_status_score: OperationalStatus::Normal,
             ..ScoringExpectations::default()
-        }.assert_matches(&scoring, &handle);
+        }
+        .assert_matches(&scoring, &handle);
     })
     .await;
 }
@@ -715,7 +722,8 @@ async fn reverse_poll_score() {
             score: weihex("5"),
             handle_score: weihex("5"),
             ..ScoringExpectations::average()
-        }.assert_matches(&scoring, &handle);
+        }
+        .assert_matches(&scoring, &handle);
     })
     .await;
 }
@@ -758,7 +766,8 @@ async fn none_poll_score() {
             score: weihex("12"),
             handle_score: weihex("12"),
             ..ScoringExpectations::average()
-        }.assert_matches(&scoring, &handle);
+        }
+        .assert_matches(&scoring, &handle);
     })
     .await;
 }
@@ -807,7 +816,8 @@ async fn override_poll_score() {
             score: weihex("21"),
             handle_score: weihex("21"),
             ..ScoringExpectations::average()
-        }.assert_matches(&scoring, &handle);
+        }
+        .assert_matches(&scoring, &handle);
     })
     .await;
 }
@@ -866,7 +876,8 @@ async fn does_not_count_own_replies_and_reposts() {
             replied: false,
             reposted: false,
             ..ScoringExpectations::default()
-        }.assert_matches(&scoring, &handle);
+        }
+        .assert_matches(&scoring, &handle);
     })
     .await;
 }

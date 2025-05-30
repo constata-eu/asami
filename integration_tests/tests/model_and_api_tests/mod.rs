@@ -1,4 +1,5 @@
 pub use integration_tests::support::{self, *};
+pub mod account_names;
 pub mod handle_scoring;
 
 /*

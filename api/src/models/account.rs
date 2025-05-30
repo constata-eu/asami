@@ -11,11 +11,13 @@ model! {
   struct Account {
     #[sqlx_model_hints(varchar, default, op_in)]
     id: String,
-    #[sqlx_model_hints(varchar, op_like)]
-    name: Option<String>,
+    #[sqlx_model_hints(varchar, op_like, op_ilike, default)]
+    name: String,
+    #[sqlx_model_hints(boolean, default)]
+    name_is_locked: bool,
     #[sqlx_model_hints(account_status, default, op_in)]
     status: AccountStatus,
-    #[sqlx_model_hints(varchar, op_like, op_is_set)]
+    #[sqlx_model_hints(varchar, op_like, op_ilike, op_is_set)]
     addr: Option<String>,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: UtcDateTime,
@@ -351,7 +353,7 @@ impl Account {
         let customer_id = Customer::create(
             &self.state.stripe_client,
             CreateCustomer {
-                name: self.name().as_deref(),
+                name: Some(self.name()),
                 metadata: Some(metadata),
                 ..Default::default()
             },
