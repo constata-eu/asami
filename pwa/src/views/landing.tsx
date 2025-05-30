@@ -1,9 +1,7 @@
 /// <reference types="vite-plugin-svgr/client" />
 import { useEffect, useContext, useState, useRef } from "react";
 import {
-  Avatar,
   CardContent,
-  CardHeader,
   Box,
   Button,
   Typography,
@@ -57,9 +55,8 @@ export default () => {
   return (
     <>
       <ResponsiveAppBar />
-
       <Stack
-        my="3em"
+        my={{ sm: "2em", md: "3em" }}
         gap="2em"
         direction="row"
         flexWrap="wrap"

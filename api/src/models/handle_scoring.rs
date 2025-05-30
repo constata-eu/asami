@@ -341,7 +341,7 @@ impl HandleScoring {
         let h = handle
             .update()
             .current_scoring_id(Some(*self.id()))
-            .last_scoring(dbg!(Some(*self.created_at())))
+            .last_scoring(Some(*self.created_at()))
             .score(Some(score.clone()))
             .status(HandleStatus::Active)
             .save()

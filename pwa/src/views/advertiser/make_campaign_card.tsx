@@ -151,8 +151,8 @@ const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
   const hasDoc = BigInt(account.docBalance) >= parseEther("1");
 
   return (
-    <Box id="make-campaign-with-doc-dialog-container">
-      <Typography my="1em">
+    <>
+      <Typography my="1em" id="make-campaign-with-doc-dialog-container">
         {translate("make_campaign.with_doc.create_text")}
       </Typography>
       {hasDoc ? (
@@ -229,7 +229,7 @@ const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
           <OnChainFailure failure={failure} handleClose={handleClose} />
         )}
       </Dialog>
-    </Box>
+    </>
   );
 };
 

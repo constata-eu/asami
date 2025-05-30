@@ -233,7 +233,6 @@ const Community = () => {
               reference="Account"
               sortable={false}
             >
-              <TextField source="id" />
               <TextField source="name" />
             </ReferenceField>
             <AmountField currency="" textAlign="right" source="rewards" />

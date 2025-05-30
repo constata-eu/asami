@@ -19,7 +19,11 @@ import { viewPostUrl } from "../../lib/campaign";
 import { useParams, Link } from "react-router-dom";
 import { ExplorerLayout } from "../layout";
 import { Box, Card, CardContent, styled, Typography } from "@mui/material";
-import { AmountField, BigNumField } from "../../components/custom_fields";
+import {
+  AddressField,
+  AmountField,
+  BigNumField,
+} from "../../components/custom_fields";
 import XIcon from "@mui/icons-material/X";
 import BadgeIcon from "@mui/icons-material/Badge";
 import CampaignIcon from "@mui/icons-material/Campaign";
@@ -91,7 +95,7 @@ export const AccountList = () => {
             currency=""
             source="unclaimedDocBalance"
           />
-          <TextField source="addr" />
+          <AddressField source="addr" />
           <ShowButton textAlign="right" />
         </Datagrid>
       </List>
@@ -147,7 +151,11 @@ const AccountCardTable = () => {
                 <CampaignIcon sx={{ fontSize: 90, flexGrow: 1 }} />
                 <AttributeTable>
                   <NumberField source="totalCampaigns" />
-                  <AmountField textAlign="right" source="totalSpent" />
+                  <AmountField
+                    textAlign="right"
+                    currency=""
+                    source="totalSpent"
+                  />
                   <NumberField source="totalCollabsReceived" />
                 </AttributeTable>
               </CardContent>
@@ -159,7 +167,7 @@ const AccountCardTable = () => {
               <BadgeIcon sx={{ fontSize: 90, flexGrow: 1 }} />
               <AttributeTable>
                 <DateField source="createdAt" />
-                <TextField source="addr" emptyText={"-"} />
+                <AddressField source="addr" />
                 <AmountField
                   textAlign="right"
                   source="unclaimedAsamiBalance"

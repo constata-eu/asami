@@ -4,7 +4,7 @@
       "fields": {
         "unclaimedAsamiBalance": "ASAMI to claim",
         "unclaimedDocBalance": "DOC to claim",
-        "addr": "Wallet Address",
+        "addr": "Wallet",
         "totalCollabs": "Collabs done",
         "totalCollabRewards": "Collected DOC",
         "totalCampaigns": "Campaigns created",
@@ -599,5 +599,9 @@
     "text": "Support the project and earn passively—no need to run campaigns or collaborate. With a fixed supply of 21 million tokens and no premine, ASAMI holders receive a share of club fees every 15 days.",
     "learn_more": "Learn more",
     "trade": "Trade ASAMI on OKU"
+  },
+  "address_field": {
+    "cannot_copy": "Copy failed",
+    "copy": "Copy address"
   }
 }

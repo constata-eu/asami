@@ -61,8 +61,8 @@ const CollabList = () => {
               reference="Campaign"
               link="show"
             />
-            <AmountField textAlign="right" source="reward" />
-            <AmountField textAlign="right" source="fee" />
+            <AmountField textAlign="right" source="reward" currency="" />
+            <AmountField textAlign="right" source="fee" currency="" />
             <ReferenceField
               source="advertiserId"
               reference="Account"
