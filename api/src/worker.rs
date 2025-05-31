@@ -59,9 +59,6 @@ async fn main() {
 
     every![settings.x.crawl_cooldown_minutes * 60 * 1000, |s| {
         run!("sync_x_collabs", s, { s.campaign().sync_x_collabs().await });
-    }];
-
-    every![settings.x.crawl_cooldown_minutes * 60 * 1000, |s| {
         run!("verify_pending", s, { s.handle().verify_pending().await });
         run!("score_pending", s, { s.handle().score_pending().await });
     }];
