@@ -276,6 +276,8 @@ impl HandleHub {
                     let _ = handle.fail("creating_poll", e.to_string()).await;
                 }
             }
+            // We need to sleep here too.
+            tokio::time::sleep(tokio::time::Duration::from_millis(self.state.settings.x.score_cooldown_seconds * 1000)).await;
         }
 
         Ok(handles)

@@ -207,6 +207,7 @@ impl CampaignHub {
             } else {
                 self.state.info("sync_x_collabs", "no_organic_metrics_for", &post_id).await;
             }
+            self.x_cooldown().await; // The metrics take up space too. 
 
             let reposts = api.get_tweet_retweeted_by(post_id).send().await?;
             self.state.info("sync_x_collabs", "got_reposts", ()).await;
