@@ -184,6 +184,7 @@ impl HandleScoringHub {
         let end_time = time::OffsetDateTime::from_unix_timestamp((now - chrono::Duration::days(0)).timestamp())?
             .to_offset(time::UtcOffset::UTC);
 
+        self.state.info("score_pending", "getting_tweets_json", ()).await;
         let tweets_json = serde_json::to_string(
             &api.get_user_tweets(user_id)
                 .max_results(100)
@@ -205,7 +206,10 @@ impl HandleScoringHub {
                 .send()
                 .await?,
         )?;
+        self.state.info("score_pending", "sleeping", ()).await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(self.state.settings.x.score_cooldown_seconds * 500)).await;
 
+        self.state.info("score_pending", "getting_mentions_json", ()).await;
         let mentions_json = serde_json::to_string(
             &api.get_user_mentions(user_id)
                 .max_results(100)
@@ -219,7 +223,10 @@ impl HandleScoringHub {
                 .send()
                 .await?,
         )?;
+        self.state.info("score_pending", "sleeping", ()).await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(self.state.settings.x.score_cooldown_seconds * 500)).await;
 
+        self.state.info("score_pending", "getting_reposts_json", ()).await;
         let reposts_json = serde_json::to_string(
             &api.get_user_tweets(user_id)
                 .max_results(100)
@@ -229,7 +236,10 @@ impl HandleScoringHub {
                 .send()
                 .await?,
         )?;
+        self.state.info("score_pending", "sleeping", ()).await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(self.state.settings.x.score_cooldown_seconds * 500)).await;
 
+        self.state.info("score_pending", "getting_poll_json", ()).await;
         let maybe_poll_json = if let Some(tweet_id_string) = poll_id {
             let tweet_id: u64 = tweet_id_string.parse()?;
             Some(serde_json::to_string(
@@ -247,6 +257,8 @@ impl HandleScoringHub {
         } else {
             None
         };
+        self.state.info("score_pending", "sleeping", ()).await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(self.state.settings.x.score_cooldown_seconds * 500)).await;
 
         Ok((me_json, tweets_json, mentions_json, reposts_json, maybe_poll_json))
     }
@@ -258,19 +270,22 @@ impl HandleScoring {
 
         let Some(me) = self.me_payload()?.and_then(|x| x.into_data()) else {
             let _ = self.fail("me_payload_missing", ()).await;
+            self.state.info("score_pending", "me_payload_missing", ()).await;
             return self.discard_or_apply_empty().await;
         };
 
         let Some(tweets) = self.tweets_payload()?.and_then(|x| x.into_data()) else {
             let _ = self.fail("tweets_missing", ()).await;
+            self.state.info("score_pending", "tweets_missing", ()).await;
             return self.discard_or_apply_empty().await;
         };
 
         let mentions = match self.mentions_payload()? {
             None => vec![],
             Some(payload) => {
-                if payload.errors().is_some() {
+                if payload.errors().is_some() && payload.data().is_none() {
                     let _ = self.fail("errors_on_mentions", ()).await;
+                    self.state.info("score_pending", "errors_on_mentions", ()).await;
                     return self.discard_or_apply_empty().await;
                 }
                 payload.into_data().unwrap_or(vec![])
@@ -280,8 +295,8 @@ impl HandleScoring {
         let reposts = match self.reposts_payload()? {
             None => vec![],
             Some(payload) => {
-                if payload.errors().is_some() {
-                    let _ = self.fail("errors_on_reposts", ()).await;
+                if payload.errors().is_some() && payload.data().is_none() {
+                    self.state.info("score_pending", "errors_on_reposts", ()).await;
                     return self.discard_or_apply_empty().await;
                 }
                 payload.into_data().unwrap_or(vec![])
@@ -290,6 +305,7 @@ impl HandleScoring {
 
         let Some(poll_score) = Self::get_poll_score(&self.poll_payload()?) else {
             let _ = self.fail("poll_score_missing", ()).await;
+            self.state.info("score_pending", "poll_score_is_missing", ()).await;
             return self.discard_or_apply_empty().await;
         };
 
