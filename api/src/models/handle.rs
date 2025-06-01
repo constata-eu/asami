@@ -308,13 +308,17 @@ impl HandleHub {
             return Ok(vec![]);
         }
 
+        self.state.info("score_pending", "start_scoring_handles", ()).await;
         for handle in pending.clone() {
             self.state.info("score_pending", "starting_hadle", &handle).await;
 
             handle.state.handle_scoring().create_and_apply(handle).await?;
+            self.state.info("score_pending", "scored_handle", ()).await;
+            self.state.info("score_pending", "sleeping", ()).await;
             let cooldown = tokio::time::Duration::from_secs(self.state.settings.x.score_cooldown_seconds * 1000);
             tokio::time::sleep(cooldown).await;
         }
+        self.state.info("score_pending", "done_scoring_handles", ()).await;
 
         Ok(pending)
     }
