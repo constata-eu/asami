@@ -315,7 +315,7 @@ impl HandleHub {
             handle.state.handle_scoring().create_and_apply(handle).await?;
             self.state.info("score_pending", "scored_handle", ()).await;
             self.state.info("score_pending", "sleeping", ()).await;
-            let cooldown = tokio::time::Duration::from_secs(self.state.settings.x.score_cooldown_seconds * 1000);
+            let cooldown = tokio::time::Duration::from_secs(self.state.settings.x.score_cooldown_seconds);
             tokio::time::sleep(cooldown).await;
         }
         self.state.info("score_pending", "done_scoring_handles", ()).await;
