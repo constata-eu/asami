@@ -148,12 +148,12 @@ impl HandleScoringHub {
                             .poll_json(maybe_poll);
                     }
                     Err(e) => {
-                        let _ = scoring.fail("ingestion_error", format!("{e:?}")).await;
+                        self.state.fail("score_pending", "ingestion_error", format!("{e:?}")).await;
                     }
                 };
             }
             Err(e) => {
-                let _ = scoring.fail("twitter_client_issues", format!("{e:?}")).await;
+                self.state.fail("score_pending", "twitter_client_issues", format!("{e:?}")).await;
             }
         };
 

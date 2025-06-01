@@ -1,5 +1,3 @@
-use api::on_chain::PromoteSubAccountsParam;
-
 /**
 This module tests the contract's fees distribution mechanism
 with a simulation of fees to be distributed, focusing on the amounts

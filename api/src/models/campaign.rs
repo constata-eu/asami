@@ -171,6 +171,14 @@ impl CampaignHub {
     }
 
     pub async fn sync_x_collabs(&self) -> anyhow::Result<Vec<Collab>> {
+        let result = self.sync_x_collabs_inner().await;
+        if let Err(e) = result.as_ref() {
+            self.state.fail("sync_x_collabs", "error", &format!("{e:?}")).await;
+        }
+        result
+    }
+
+    pub async fn sync_x_collabs_inner(&self) -> anyhow::Result<Vec<Collab>> {
         use twitter_v2::{api_result::*, authorization::BearerToken, TwitterApi};
 
         let mut reqs = vec![];

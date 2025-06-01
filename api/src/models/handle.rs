@@ -239,6 +239,14 @@ impl HandleHub {
     }
 
     pub async fn verify_pending(&self) -> AsamiResult<Vec<Handle>> {
+        let result = self.verify_pending_inner().await;
+        if let Err(e) = result.as_ref() {
+            self.state.fail("verify_pending", "error", &format!("{e:?}")).await;
+        }
+        result
+    }
+
+    pub async fn verify_pending_inner(&self) -> AsamiResult<Vec<Handle>> {
         let scope = self.select().x_refresh_token_is_set(true).status_eq(HandleStatus::Unverified);
 
         if scope.count().await? == 0 {
@@ -266,14 +274,15 @@ impl HandleHub {
 
             match post_result {
                 Ok(post) => {
+                    self.state.fail("verify_pending", "post_returned", &post).await;
                     if let Some(poll_id) = post.into_data().map(|t| t.id.to_string()) {
                         handles.push(handle.verify(poll_id).await?);
                     } else {
-                        let _ = handle.fail("creating_poll", "no_poll_id_returned").await;
+                        self.state.fail("verify_pending", "no_poll_id_returned", ()).await;
                     }
                 }
                 Err(e) => {
-                    let _ = handle.fail("creating_poll", e.to_string()).await;
+                    self.state.fail("verify_pending", "creating_poll", format!("{e:?}")).await;
                 }
             }
             // We need to sleep here too.
@@ -284,6 +293,14 @@ impl HandleHub {
     }
 
     pub async fn score_pending(&self) -> AsamiResult<Vec<Handle>> {
+        let result = self.score_pending_inner().await;
+        if let Err(e) = result.as_ref() {
+            self.state.fail("score_pending", "error", &format!("{e:?}")).await;
+        }
+        result
+    }
+
+    pub async fn score_pending_inner(&self) -> AsamiResult<Vec<Handle>> {
         let pending = self.need_scoring(Utc::now() - chrono::Duration::days(20)).all().await?;
 
         if pending.is_empty() {
@@ -292,7 +309,7 @@ impl HandleHub {
         }
 
         for handle in pending.clone() {
-            let _ = handle.info("starting_to_score_handle", ()).await;
+            self.state.info("score_pending", "starting_hadle", &handle).await;
 
             handle.state.handle_scoring().create_and_apply(handle).await?;
             let cooldown = tokio::time::Duration::from_secs(self.state.settings.x.score_cooldown_seconds * 1000);

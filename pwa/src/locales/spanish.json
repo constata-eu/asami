@@ -599,5 +599,9 @@
     "text": "Apoya el proyecto y gana de forma pasiva — sin necesidad de lanzar campañas ni colaborar. Con un suministro fijo de 21 millones de tokens y sin premine, los holders de ASAMI reciben una parte de las comisiones del club cada 15 días.",
     "learn_more": "Saber más",
     "trade": "Intercambia ASAMI en OKU"
+  },
+  "address_field": {
+    "cannot_copy": "No se pudo copiar",
+    "copy": "Copiar dirección"
   }
 }

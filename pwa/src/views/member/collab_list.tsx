@@ -1,20 +1,16 @@
 import {
   useTranslate,
   ReferenceField,
-  TextField,
   ListBase,
   ListView,
   ExportButton,
 } from "react-admin";
-import { viewPostUrl } from "../../lib/campaign";
 import { Box, Card, Stack, Typography } from "@mui/material";
-import { formatEther } from "ethers";
-import { CardTitle, Head1, Head2, Lead } from "../../components/theme";
-import { Pagination, Datagrid, FunctionField } from "react-admin";
+import { Head2 } from "../../components/theme";
+import { Datagrid, FunctionField } from "react-admin";
 import { useListController, ListContextProvider } from "react-admin";
 import { getAuthKeys } from "../../lib/auth_provider";
 import { AmountField } from "../../components/custom_fields";
-import { Link } from "react-router-dom";
 
 const CollabList = () => {
   const translate = useTranslate();

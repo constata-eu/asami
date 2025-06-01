@@ -52,6 +52,7 @@ async fn shows_member_profile_page() {
             reloaded.attrs.offline_engagement_description.unwrap(),
             "Founder de un proyecto WEB3 en argentina"
         );
+        TestApp::wait_for_enter("wait here").await;
     })
     .await;
 }
