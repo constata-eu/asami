@@ -774,6 +774,58 @@ async fn none_poll_score() {
 
 #[tokio::test]
 #[serial_test::file_serial]
+async fn user_deleted_the_poll() {
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
+        handle = handle.update().poll_id(Some(poll_tweet_id())).save().await.unwrap();
+
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("0", false),
+            &[
+                reply_to_own_tweet(50, 0, 0, 11, 0),
+                quoting_someone_elses_tweet(50, 0, 0, 11, 0),
+                tweet_hello_world(30, 0, 0, 11, 0),
+                tweet_goodbye_world(55, 0, 1, 11, 0),
+                tweet_foo_bar(50, 0, 0, 0, 1),
+                tweet_poll(50, 0, 0, 3, 0),
+            ],
+            mentions_json(0, 0),
+            Some(json::json!({
+                "errors":[{
+                    "title":"Not Found Error",
+                    "type":"https://api.twitter.com/2/problems/resource-not-found",
+                    "status":200,
+                    "detail":"Could not find tweet with id: [1928541752614334718].",
+                    "errors":[]
+                }]
+            })),
+            reposts_json(),
+        )
+        .await
+        .apply()
+        .await
+        .unwrap();
+
+        handle.reload().await.unwrap();
+
+        ScoringExpectations {
+            audience_size: 48,
+            poll_score: Some(PollScore::None),
+            indeterminate_audience: true,
+            authority: 25,
+            score: weihex("12"),
+            handle_score: weihex("12"),
+            ..ScoringExpectations::average()
+        }
+        .assert_matches(&scoring, &handle);
+    })
+    .await;
+}
+
+#[tokio::test]
+#[serial_test::file_serial]
 async fn override_poll_score() {
     TestHelper::run(|h| async move {
         let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;

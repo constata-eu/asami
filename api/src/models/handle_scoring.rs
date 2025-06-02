@@ -606,6 +606,11 @@ impl HandleScoring {
             return Some(PollScore::None);
         };
 
+        // The user can delete the poll, we're fine with it, so not-found should not discard the scoring.
+        if payload.errors().map(|v| v.iter().any(|e| e.title == "Not Found Error")).unwrap_or(false) {
+            return Some(PollScore::None);
+        }
+
         let mut options = payload.includes().as_ref()?.polls.as_ref()?.first().as_ref()?.options.clone();
         options.sort_by_key(|i| i.position);
         let [none, average, high, reverse] = options.as_slice() else {
