@@ -44,6 +44,12 @@ async fn main() {
         });
     }];
 
+    every![60000, |s| {
+        run!("Create CC campaigns", s, {
+            s.campaign().create_managed_on_chain_campaigns().await
+        });
+    }];
+
     every![10000, |s| {
         run!("Force account hydrations", s, { s.account().force_hydrate().await });
         run!("Force handle hydrations", s, { s.handle().force_hydrate().await });
