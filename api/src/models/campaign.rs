@@ -636,7 +636,7 @@ impl Campaign {
 
         let processing_fee_percent = U256::from(20);
         let amount_as_wei = U256::from(*unit_amount) * U256::from(10).pow(U256::from(16));
-        Ok(amount_as_wei * processing_fee_percent / U256::from(100))
+        Ok(amount_as_wei * (U256::from(100) - processing_fee_percent) / U256::from(100))
     }
 }
 

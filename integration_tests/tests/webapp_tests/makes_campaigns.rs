@@ -28,6 +28,8 @@ async fn creates_campaign_using_stripe() {
 
         let campaign = h.test_app.app.campaign().select().one().await.unwrap();
 
+        assert_eq!(campaign.budget_from_unit_amount().unwrap(), u("160"));
+
         send_test_stripe_event_sync(
             &h.test_app.app.settings.stripe.events_secret,
             advertiser.account().await.stripe_customer_id().as_deref().unwrap(),
