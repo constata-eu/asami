@@ -103,6 +103,7 @@ impl App {
         self.on_chain
             .asami_contract
             .config_account(self.on_chain.client.address(), u("1"), wei("6000000000000"), u("0"))
+            .send()
             .await?;
 
         let account = self
