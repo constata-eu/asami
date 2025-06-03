@@ -393,19 +393,9 @@ impl Handle {
         self.update().poll_id(Some(poll_id)).status(HandleStatus::Verified).save().await
     }
 
+    // NOTE: If collab exists the error should be collab_exists.
+    // Do not return any other errors earlier.
     pub async fn validate_collaboration(&self, campaign: &Campaign, reward: U256, trigger: &str) -> AsamiResult<()> {
-        let Some(score) = self.score() else {
-            return Err(Error::validation("all", "handle_is_not_scored"));
-        };
-
-        if u256(score) <= wei("5") {
-            return Err(Error::validation("all", "score_is_too_low"));
-        }
-
-        if reward < milli("50") {
-            return Err(Error::validation("all", "reward_would_bee_too_small"));
-        } 
-
         // The funds calculation is always made with a fresh copy of the campaign as it could have been updated.
         let available_funds = campaign
             .reloaded()
@@ -427,6 +417,19 @@ impl Handle {
         if collab_exists {
             return Err(Error::validation("all", "collab_exists"));
         }
+
+        let Some(score) = self.score() else {
+            return Err(Error::validation("all", "handle_is_not_scored"));
+        };
+
+        if u256(score) <= wei("5") {
+            return Err(Error::validation("all", "score_is_too_low"));
+        }
+
+        if reward < milli("50") {
+            return Err(Error::validation("all", "reward_would_bee_too_small"));
+        } 
+
 
         if available_funds < reward {
             return Err(Error::validation("all", "campaign_has_not_enough_funds"));
