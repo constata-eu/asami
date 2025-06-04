@@ -80,7 +80,7 @@ const production = {
           symbol: "RBTC",
           decimals: 18,
         },
-        rpcUrls: ["https://public-node.rsk.co"],
+        rpcUrls: [ "https://go.getblock.io/29d34a7a48894f699d6ef6344da35628"],
         blockExplorerUrls: ["https://explorer.rsk.co"],
         iconUrls: [
           "https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png",
