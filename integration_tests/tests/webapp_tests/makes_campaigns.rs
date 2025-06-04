@@ -1,3 +1,7 @@
+use models::CampaignStatus;
+use rocket::serde::json::{self, json};
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use super::*;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -19,7 +23,18 @@ async fn creates_campaign_using_stripe() {
         h.web().click("#campaign-done-close").await;
         h.web().wait_for_text("td.column-status span", "Awaiting Payment").await;
 
-        h.web().wait_for("#btn-go-to-checkout-for-1").await;
+        h.web().click("#btn-go-to-checkout-for-1").await;
+
+        h.web().go_to_window("https://checkout.stripe.com/").await;
+        h.web().fill_in("#email", "test@example.com").await;
+        h.web().fill_in("#cardNumber", "4242424242424242").await;
+        h.web().fill_in("#cardExpiry", "0233").await;
+        h.web().fill_in("#cardCvc", "123").await;
+        h.web().fill_in("#billingName", "Juan Perez").await;
+        h.web().click("[data-testid=hosted-payment-submit-button]").await;
+        h.web().wait_for_text("h2", "You're all set").await;
+
+        h.web().go_to_app_window().await;
 
         TestApp::try_until(100, 50, "No campaign created", || async {
             h.test_app.app.campaign().select().count().await.unwrap() > 0
@@ -30,10 +45,37 @@ async fn creates_campaign_using_stripe() {
 
         assert_eq!(campaign.budget_from_unit_amount().unwrap(), u("160"));
 
+        let customer = advertiser.account().await.stripe_customer_id().clone().unwrap();
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+
         send_test_stripe_event_sync(
             &h.test_app.app.settings.stripe.events_secret,
-            advertiser.account().await.stripe_customer_id().as_deref().unwrap(),
-            *campaign.id(),
+            timestamp,
+            json!({
+                "id": "evt_test_payment_intent_succeeded",
+                "object": "event",
+                "type": "payment_intent.succeeded",
+                "data": {
+                    "object": {
+                        "id": "pi_test_123456789",
+                        "object": "payment_intent",
+                        "amount": 2000,
+                        "currency": "usd",
+                        "status": "succeeded",
+                        "metadata": {
+                            "campaign_id": campaign.id().to_string()
+                        },
+                        "capture_method": "automatic",
+                        "confirmation_method": "automatic",
+                        "customer": customer,
+                        "created": timestamp,
+                        "livemode": false,
+                        "payment_method_types": ["card"]
+                    }
+                },
+                "livemode": false,
+                "created": timestamp,
+            })
         )
         .unwrap();
 
@@ -49,6 +91,81 @@ async fn creates_campaign_using_stripe() {
             })
             .await;
         h.web().wait_for_text("td.column-status span", "Live Campaign").await;
+    })
+    .await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial_test::file_serial]
+async fn stripe_campaign_fails_when_payment_fails() {
+    TestHelper::with_web(|h| async move {
+        let advertiser = h.user().await.signed_up().await;
+        advertiser.login_to_web_with_otp().await;
+        h.web().navigate("/dashboard?role=advertiser").await;
+        h.web().click("#open-start-campaign-stripe-dialog").await;
+        h.web()
+            .fill_in(
+                "input[name='contentUrl']",
+                "https://x.com/rootstock_io/status/1922301351725261191",
+            )
+            .await;
+        h.web().fill_in("input[name='budget']", "200").await;
+        h.web().click("#submit-start-campaign-form").await;
+        h.web().click("#campaign-done-close").await;
+        h.web().wait_for_text("td.column-status span", "Awaiting Payment").await;
+
+        h.web().click("#btn-go-to-checkout-for-1").await;
+
+        h.web().go_to_window("https://checkout.stripe.com/").await;
+        h.web().click("[data-testid=business-link]").await;
+        h.web().wait_for_text("h2", "Looks like the payment").await;
+
+        h.web().go_to_app_window().await;
+
+        TestApp::try_until(100, 50, "No campaign created", || async {
+            h.test_app.app.campaign().select().count().await.unwrap() > 0
+        })
+        .await;
+
+        let mut campaign = h.test_app.app.campaign().select().one().await.unwrap();
+
+        let customer = advertiser.account().await.stripe_customer_id().clone().unwrap();
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+
+        send_test_stripe_event_sync(
+            &h.test_app.app.settings.stripe.events_secret,
+            timestamp,
+            json!({
+                "id": "evt_test_payment_intent_canceled",
+                "object": "event",
+                "type": "payment_intent.canceled",
+                "data": {
+                    "object": {
+                        "id": "pi_test_123456789",
+                        "object": "payment_intent",
+                        "amount": 2000,
+                        "currency": "usd",
+                        "status": "canceled",
+                        "metadata": {
+                            "campaign_id": campaign.id().to_string()
+                        },
+                        "capture_method": "automatic",
+                        "confirmation_method": "automatic",
+                        "customer": customer,
+                        "created": timestamp,
+                        "livemode": false,
+                        "payment_method_types": ["card"]
+                    }
+                },
+                "livemode": false,
+                "created": timestamp,
+            })
+        )
+        .unwrap();
+
+
+        campaign.reload().await.unwrap();
+        assert_eq!(*campaign.status(), CampaignStatus::Failed);
     })
     .await;
 }
@@ -76,43 +193,13 @@ async fn admin_address_has_an_account_too() {
 
 pub fn send_test_stripe_event_sync(
     webhook_secret: &str,
-    customer: &str,
-    campaign_id: i32,
+    timestamp: u64,
+    payload: json::Value,
 ) -> Result<(), Box<dyn std::error::Error>> {
     use hmac::{Hmac, Mac};
     use sha2::Sha256;
-    use std::time::{SystemTime, UNIX_EPOCH};
 
-    use serde_json::json;
     type HmacSha256 = Hmac<Sha256>;
-
-    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs().to_string();
-
-    let payload = json!({
-        "id": "evt_test_payment_intent_succeeded",
-        "object": "event",
-        "type": "payment_intent.succeeded",
-        "data": {
-            "object": {
-                "id": "pi_test_123456789",
-                "object": "payment_intent",
-                "amount": 2000,
-                "currency": "usd",
-                "status": "succeeded",
-                "metadata": {
-                    "campaign_id": campaign_id.to_string()
-                },
-                "capture_method": "automatic",
-                "confirmation_method": "automatic",
-                "customer": customer,
-                "created": timestamp.parse::<u64>()?,
-                "livemode": false,
-                "payment_method_types": ["card"]
-            }
-        },
-        "livemode": false,
-        "created": timestamp.parse::<u64>()?,
-    });
 
     let payload_string = payload.to_string();
     let signed_payload = format!("{}.{}", timestamp, payload_string);
@@ -144,32 +231,6 @@ pub fn send_test_stripe_event_sync(
     }
     Ok(())
 }
-
-// -> Has a 'paid' flag.
-// -> Has a column for stripe's payment code, clearing code, or other details.
-// -> Once marked paid, a campaign is created (the campaign id is stored.)
-// -> Campaign creation is funded by the admin address itself, so it needs doc.
-// -> All draft campaigns require DOC to be available in the admin address?
-// -> These campaigns may take up to 24 hours to become active.
-// -> Any campaign that gets marked paid shoots out an email and report.
-//      - this report includes the DOC balance in the admin address and the total balance of all DRAFT and PAID campaigns.
-
-// I need a function that sets-up the admin as a user on its own.
-
-/*
-CampaignRequestStatus
-
-requested: Request just received.
-paid: Payment on stripe done.
-draft: The inner campaign exists, and is in draft status.
-    -> Admin address pays the doc and marks submitted.
-submitted: The inner campaign exists, and is in submitted status.
-published: The inner campaign exists, and is in published status.
-created: A draft campaign has been created.
-failed
-
-
-*/
 
 /*
 use models::CampaignStatus;

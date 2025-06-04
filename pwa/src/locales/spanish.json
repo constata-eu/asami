@@ -61,7 +61,7 @@
         "AWAITING_PAYMENT": "Pendiente de pago",
         "PAID": "Pago recibido",
         "SUBMITTED": "Enviado a la red",
-        "PUBLISHED": "Camaña activa",
+        "PUBLISHED": "Publicada",
         "FAILED": "Error al publicar"
       }
     },
@@ -414,6 +414,7 @@
     "button": "Únete al club — Es gratis"
   },
   "login_form": {
+    "title": "¿Vas a entrar?",
     "read_our_terms": "Lee nuestros términos. Si estás de acuerdo, elige cómo quieres ingresar .",
     "read_terms_button": "Quiero leer los términos primero",
     "x_login_button": "• aceptar e ingresar",
@@ -603,5 +604,16 @@
   "address_field": {
     "cannot_copy": "No se pudo copiar",
     "copy": "Copiar dirección"
+  },
+  "stripe_landings": {
+    "you_can_close": "Ya puedes cerrar esta ventana.",
+    "success": {
+      "title": "¡Todo listo! La campaña estará disponible pronto.",
+      "text": "Gracias por tu pago. Ya tenemos todo lo necesario para preparar tu campaña. Estará activa en Asami en breve."
+    },
+    "cancel": {
+      "title": "Parece que el pago no se completó.",
+      "text": "No te preocupes, la campaña aún no fue creada. Si cambiaste de opinión o tuviste algún problema, puedes intentarlo de nuevo cuando quieras."
+    }
   }
 }

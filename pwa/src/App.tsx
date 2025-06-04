@@ -19,6 +19,7 @@ import asamiTheme from "./components/theme";
 import { BareLayout } from "./views/layout";
 import AdvertiserDashboard from "./views/advertiser/dashboard";
 import MemberDashboard from "./views/member/dashboard";
+import { StripeSuccess, StripeCancel } from "./views/stripe";
 import { Container, Skeleton } from "@mui/material";
 import {
   XLogin,
@@ -106,6 +107,8 @@ export const App = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/about" element={<About />} />
             <Route path="/whitepaper" element={<Whitepaper />} />
+            <Route path="/stripe-success" element={<StripeSuccess />} />
+            <Route path="/stripe-cancel" element={<StripeCancel />} />
           </CustomRoutes>
 
           <CustomRoutes noLayout>

@@ -217,7 +217,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
 
 #[rocket::post("/handle_stripe_events", data = "<webhook>")]
 pub async fn handle_stripe_events(webhook: StripeWebhook, app: &State<App>) -> AsamiResult<serde_json::Value> {
-    app.campaign().set_paid_from_stripe_event(&webhook.event).await?;
+    app.campaign().set_status_from_stripe_event(&webhook.event).await?;
     Ok(serde_json::json!("OK"))
 }
 

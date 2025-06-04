@@ -31,6 +31,8 @@ import { ResponsiveAppBar } from "../responsive_app_bar";
 
 export const HandleList = () => {
   const translate = useTranslate();
+  const storedSession = localStorage.getItem("session");
+  const session = storedSession ? JSON.parse(storedSession) : null;
 
   const filters = [
     <TextInput source="idEq" alwaysOn />,
@@ -62,7 +64,7 @@ export const HandleList = () => {
           >
             <ShowButton />
           </ReferenceField>
-          <EditButton />
+          {session?.admin && <EditButton />}
         </Datagrid>
       </List>
     </ExplorerLayout>

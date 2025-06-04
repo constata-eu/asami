@@ -6308,7 +6308,7 @@ dependencies = [
 [[package]]
 name = "stripe-rust"
 version = "0.13.0-dev"
-source = "git+https://github.com/constata-eu/stripe-rs#1bb51b54f5e9f5883a2b1629d540a5f84376cb25"
+source = "git+https://github.com/constata-eu/stripe-rs#054849e982e57bb8d73835f2f123d4ea0f1109f7"
 dependencies = [
  "chrono",
  "futures-util",

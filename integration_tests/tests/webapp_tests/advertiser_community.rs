@@ -56,8 +56,6 @@ async fn builds_and_curates_advertiser_community() {
 
         h.a().stop_mining().await;
 
-        TestApp::wait_for_enter("Advertiser").await;
-
         h.web().logout().await;
         h.web().login(&bob).await;
         h.web().wait_for("#button-repost-2").await;

@@ -162,7 +162,7 @@ impl Context {
 
 impl juniper::Context for Context {}
 
-const DEFAULT_PER_PAGE: i32 = 20;
+const DEFAULT_PER_PAGE: i32 = 60;
 const DEFAULT_PAGE: i32 = 0;
 
 #[rocket::async_trait]

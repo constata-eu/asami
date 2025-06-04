@@ -260,10 +260,16 @@ impl CampaignHub {
         tokio::time::sleep(tokio::time::Duration::from_millis(3 * 60 * 1000)).await;
     }
 
-    pub async fn set_paid_from_stripe_event(&self, e: &stripe::Event) -> AsamiResult<Option<Campaign>> {
+    pub async fn set_status_from_stripe_event(&self, e: &stripe::Event) -> AsamiResult<Option<Campaign>> {
         use stripe::{EventObject, EventType};
 
-        let (EventType::PaymentIntentSucceeded, EventObject::PaymentIntent(i)) = (&e.event_type, &e.data.object) else {
+        let status = match e.event_type {
+            EventType::PaymentIntentSucceeded => CampaignStatus::Paid,
+            EventType::PaymentIntentCanceled | EventType::PaymentIntentPaymentFailed => CampaignStatus::Failed,
+            _ =>  return Ok(None)
+        };
+
+        let EventObject::PaymentIntent(i) = &e.data.object else {
             return Ok(None);
         };
 
@@ -290,7 +296,7 @@ impl CampaignHub {
             return Err(Error::validation("campaign", "campaign_not_found"));
         };
 
-        Ok(Some(campaign.update().status(CampaignStatus::Paid).save().await?))
+        Ok(Some(campaign.update().status(status).save().await?))
     }
 
     pub async fn create_managed_on_chain_campaigns(&self) -> AsamiResult<()> {

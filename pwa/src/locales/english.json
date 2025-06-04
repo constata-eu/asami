@@ -414,6 +414,7 @@
     "button": "Join the club — It's free"
   },
   "login_form": {
+    "title": "Are you in?",
     "read_our_terms": "Read our terms. If you agree, choose how you'd like to log in.",
     "read_terms_button": "I'll read the terms first",
     "x_login_button": "• agree & login",
@@ -603,5 +604,16 @@
   "address_field": {
     "cannot_copy": "Copy failed",
     "copy": "Copy address"
+  },
+  "stripe_landings": {
+    "you_can_close": "You may close this window now.",
+    "success": {
+      "title": "You're all set — campaign coming soon!",
+      "text": "Thanks for your payment! We’ve received everything we need to get your campaign ready. It’ll be live on Asami shortly."
+    },
+    "cancel": {
+      "title": "Looks like the payment didn’t go through.",
+      "text": "No worries — your campaign wasn’t created yet. If you changed your mind or ran into trouble, you can try again anytime."
+    }
   }
 }

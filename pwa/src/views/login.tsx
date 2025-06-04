@@ -112,7 +112,9 @@ const LoginSelector = ({ open, setOpen }) => {
       >
         <Card elevation={1} sx={{ flex: "1 0 300px" }}>
           <CardContent>
-            <Head2 sx={{ color: "primary.main" }}>Are you in?</Head2>
+            <Head2 sx={{ color: "primary.main" }}>
+              {t("login_form.title")}
+            </Head2>
             <Typography my="1em" color="primary.main">
               {t("login_form.read_our_terms")}
             </Typography>
