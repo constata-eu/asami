@@ -19,6 +19,9 @@ async fn builds_and_curates_advertiser_community() {
 
         h.a().batch_collabs(campaign, &users).await;
 
+        h.web().navigate("/").await;
+        TestApp::wait_for_enter("test").await;
+
         advertiser.login_to_web_with_wallet().await;
         h.web().click("#button-cancel-grant-permission-and-make-post").await;
         h.web().click("#menu-my-campaings").await;
