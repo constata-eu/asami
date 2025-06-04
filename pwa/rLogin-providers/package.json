@@ -1,0 +1,28 @@
+{
+  "name": "root",
+  "private": true,
+  "workspaces": [
+    "./packages/*"
+  ],
+  "scripts": {
+    "test": "npx jest packages/*/test --verbose --coverage --collectCoverageFrom=packages/*/src/**/*",
+    "build": "npx lerna run build",
+    "lint": "npx eslint ./packages"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.19.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.1",
+    "eslint": "^9.19.0",
+    "globals": "^15.14.0",
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "lerna": "^8.1.9",
+    "ts-jest": "^29.2.5",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.23.0",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1"
+  }
+}

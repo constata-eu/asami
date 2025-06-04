@@ -1,3 +1,17 @@
+use super::*;
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial_test::file_serial]
+async fn supports_all_login_options() {
+    TestHelper::with_web(|h| async move {
+        h.web().navigate("/").await;
+
+        TestApp::wait_for_enter("try_logging_in_with_trezor").await;
+    }).await;
+}
+
+
+
 /*
 use super::*;
 TODO: Test all login methods here. You have X. You can mimic email.

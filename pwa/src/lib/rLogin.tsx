@@ -1,9 +1,8 @@
-import RLogin from '@rsksmart/rlogin'
-import { trezorProviderOptions } from '@rsksmart/rlogin-trezor-provider'
-import { ledgerProviderOptions } from '@rsksmart/rlogin-ledger-provider'
-import { dcentProviderOptions } from '@rsksmart/rlogin-dcent-provider'
-import { WalletConnect2Provider } from '@rsksmart/rlogin-walletconnect2-provider'
-import Portis from '@portis/web3'
+import RLogin from "@rsksmart/rlogin";
+import { trezorProviderOptions } from "@rsksmart/rlogin-trezor-provider";
+import { ledgerProviderOptions } from "@rsksmart/rlogin-ledger-provider";
+import { WalletConnect2Provider } from "@rsksmart/rlogin-walletconnect2-provider";
+import Portis from "@portis/web3";
 import { Settings } from "../settings";
 
 export const rLogin = new RLogin({
@@ -12,11 +11,11 @@ export const rLogin = new RLogin({
     walletconnect: {
       package: WalletConnect2Provider,
       options: {
-        projectId: 'PROJECTID',
+        projectId: "c531d864674ffa6c8d234eaf1ecd3f24",
         chains: [Settings.rsk.chainId],
         showQrModal: true,
-        rpcMap: Settings.rsk.rpcUrls
-      }
+        rpcMap: Settings.rsk.rpcUrls,
+      },
     },
     portis: {
       package: Portis,
@@ -25,17 +24,16 @@ export const rLogin = new RLogin({
         network: {
           nodeUrl: Settings.rsk.supportedChains[0].rpcUrls[0],
           chainId: Settings.rsk.chainId,
-        }
-      }
+        },
+      },
     },
-    'custom-ledger': ledgerProviderOptions,
-    'custom-dcent': dcentProviderOptions,
-    'custom-trezor': {
+    "custom-ledger": ledgerProviderOptions,
+    "custom-trezor": {
       ...trezorProviderOptions,
       options: {
-        manifestEmail: 'info@iovlabs.org',
-        manifestAppUrl: 'https://basic-sample.rlogin.identity.rifos.org/',
-      }
-    }
+        manifestEmail: "hola@asami.club",
+        manifestAppUrl: "https://asami.club",
+      },
+    },
   },
-})
+});

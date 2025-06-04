@@ -1,0 +1,1 @@
+{"version":3,"file":"ConfirmInWallet.d.ts","sourceRoot":"","sources":["../../../src/ui/shared/ConfirmInWallet.tsx"],"names":[],"mappings":"AACA,OAAO,KAAK,MAAM,OAAO,CAAA;AAazB,UAAU,SAAS;IACjB,YAAY,CAAC,EAAE,MAAM,CAAA;CACtB;AAED,QAAA,MAAM,eAAe,EAAE,KAAK,CAAC,EAAE,CAAC,SAAS,CA8BxC,CAAA;AAED,eAAe,eAAe,CAAA"}

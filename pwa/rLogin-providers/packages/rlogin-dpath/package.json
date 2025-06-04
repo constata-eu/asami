@@ -1,0 +1,30 @@
+{
+  "name": "@rsksmart/rlogin-dpath",
+  "version": "1.0.3",
+  "description": "rLogin - derivation path helper",
+  "main": "dist/bundle.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "npx webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rsksmart/rLogin-providers.git"
+  },
+  "keywords": [
+    "rsk",
+    "rif",
+    "eth",
+    "eip1193",
+    "web3"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rsksmart/rLogin-providers/issues"
+  },
+  "homepage": "https://github.com/rsksmart/rLogin-providers#readme"
+}

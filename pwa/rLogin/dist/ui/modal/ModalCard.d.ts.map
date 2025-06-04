@@ -1,0 +1,1 @@
+{"version":3,"file":"ModalCard.d.ts","sourceRoot":"","sources":["../../../src/ui/modal/ModalCard.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAK,MAAM,OAAO,CAAA;AAsBzB,MAAM,WAAW,cAAc;IAC7B,aAAa,EAAE,cAAc,GAAG,IAAI,GAAG,SAAS,CAAA;IAChD,GAAG,EAAE,OAAO,CAAA;CACb;AAED,eAAO,MAAM,SAAS,EAAE,KAAK,CAAC,EAAE,CAAC,cAAc,CAO1B,CAAA"}
