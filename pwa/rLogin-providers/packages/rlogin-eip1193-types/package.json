@@ -1,0 +1,34 @@
+{
+  "name": "@rsksmart/rlogin-eip1193-types",
+  "version": "1.0.2",
+  "description": "rLogin - EIP-1193 types",
+  "main": "dist/bundle.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "npx webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rsksmart/rLogin-providers.git"
+  },
+  "keywords": [
+    "rsk",
+    "rif",
+    "eth",
+    "eip1193",
+    "web3"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rsksmart/rLogin-providers/issues"
+  },
+  "homepage": "https://github.com/rsksmart/rLogin-providers#readme",
+  "dependencies": {
+    "ethjs-provider-http": "^0.1.6",
+    "ethjs-query": "^0.3.8"
+  }
+}

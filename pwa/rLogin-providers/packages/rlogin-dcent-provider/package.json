@@ -1,0 +1,44 @@
+{
+	"name": "@rsksmart/rlogin-dcent-provider",
+	"version": "1.0.2-beta.5",
+	"description": "rLogin - D'cent EIP-1193 provider",
+	"main": "dist/bundle.js",
+	"types": "dist/index.d.ts",
+	"files": [
+		"dist/"
+	],
+	"scripts": {
+		"build": "npx webpack"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/rsksmart/rLogin-providers.git"
+	},
+	"keywords": [
+		"rsk",
+		"rif",
+		"eth",
+		"eip1193",
+		"web3"
+	],
+	"author": "",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/rsksmart/rLogin-providers/issues"
+	},
+	"homepage": "https://github.com/rsksmart/rLogin-providers#readme",
+	"dependencies": {
+		"@rsksmart/dcent-provider": "^0.3.0-beta",
+		"@rsksmart/rlogin-dpath": "^1.0.3",
+		"@rsksmart/rlogin-eip1193-proxy-subprovider": "^1.0.2",
+		"@rsksmart/rlogin-transactions": "^1.0.2",
+		"assert": "^2.0.0",
+		"buffer": "^6.0.3",
+		"stream-browserify": "^3.0.0",
+		"url": "^0.11.0",
+		"util": "^0.12.4"
+	},
+	"devDependencies": {
+		"@rsksmart/rlogin-eip1193-types": "^1.0.0-beta.7"
+	}
+}

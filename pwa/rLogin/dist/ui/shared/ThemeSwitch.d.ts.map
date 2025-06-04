@@ -1,0 +1,1 @@
+{"version":3,"file":"ThemeSwitch.d.ts","sourceRoot":"","sources":["../../../src/ui/shared/ThemeSwitch.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAK,MAAM,OAAO,CAAA;AAEzB,OAAO,EAAE,aAAa,EAAE,MAAM,aAAa,CAAA;AAE3C,UAAU,sBAAsB;IAC9B,KAAK,CAAC,EAAE,aAAa,CAAA;IACrB,QAAQ,EAAC,CAAC,KAAK,EAAC,aAAa,KAAG,IAAI,CAAA;CACrC;AAsBD,eAAO,MAAM,aAAa,EAAE,KAAK,CAAC,EAAE,CAAC,sBAAsB,CAQ1D,CAAA"}

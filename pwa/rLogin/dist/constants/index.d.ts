@@ -1,0 +1,9 @@
+export declare const DECRYPT_ERROR = "DECRYPT_ERROR";
+export declare const WALLETCONNECT = "walletconnect";
+export declare const DONT_SHOW_TUTORIAL_AGAIN_KEY_LEDGER = "RLogin:DontShowTutorialAgain:Ledger";
+export declare const DONT_SHOW_TUTORIAL_AGAIN_KEY_TREZOR = "RLogin:DontShowTutorialAgain:Trezor";
+export declare const DONT_SHOW_TUTORIAL_AGAIN_KEY_DCENT = "RLogin:DontShowTutorialAgain:DCent";
+export declare const RLOGIN_SELECTED_PROVIDER = "RLOGIN_SELECTED_PROVIDER";
+export declare const CACHED_PROVIDER_KEY = "RLOGIN_CACHED_PROVIDER";
+export declare const DONT_SHOW_AGAIN_KEY = "RLogin:DontShowAgain";
+//# sourceMappingURL=index.d.ts.map

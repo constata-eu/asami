@@ -1,0 +1,56 @@
+{
+	"name": "@rsksmart/rlogin-ledger-provider",
+	"version": "1.0.5-alpha",
+	"description": "rLogin - Ledger EIP-1193 provider",
+	"main": "dist/bundle.js",
+	"types": "dist/index.d.ts",
+	"files": [
+		"dist/"
+	],
+	"scripts": {
+		"build": "npx webpack"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/rsksmart/rLogin-providers.git"
+	},
+	"keywords": [
+		"rsk",
+		"rif",
+		"eth",
+		"eip1193",
+		"web3"
+	],
+	"author": "",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/rsksmart/rLogin-providers/issues"
+	},
+	"homepage": "https://github.com/rsksmart/rLogin-providers#readme",
+	"devDependencies": {
+		"@rsksmart/rlogin-eip1193-types": "^1.0.2",
+		"webpack": "^5.90.3",
+		"webpack-cli": "^4.9.2"
+	},
+	"dependencies": {
+		"@ledgerhq/hw-app-eth": "^6.42.1",
+		"@ledgerhq/hw-transport-webhid": "^6.28.4",
+		"@ledgerhq/hw-transport-webusb": "^6.28.4",
+		"@rsksmart/rlogin-dpath": "^1.0.3",
+		"@rsksmart/rlogin-eip1193-proxy-subprovider": "^1.0.2",
+		"@rsksmart/rlogin-transactions": "^1.0.2",
+		"@rsksmart/rsk-utils": "^1.1.0",
+		"assert": "^2.1.0",
+		"bn.js": "^5.2.1",
+		"browserify-zlib": "^0.2.0",
+		"buffer": "^6.0.3",
+		"ethers": "^5.7.2",
+		"https-browserify": "^1.0.0",
+		"stream-browserify": "^3.0.0",
+		"stream-http": "^3.2.0",
+		"url": "^0.11.3"
+	},
+	"overrides": {
+		"semver": ">7.5.3"
+	}
+}

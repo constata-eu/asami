@@ -1,0 +1,37 @@
+{
+  "name": "@rsksmart/rlogin-walletconnect2-provider",
+  "version": "1.0.1",
+  "description": "rLogin - WalletConnect2 Adapter as a Provider",
+  "main": "dist/bundle.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "npx webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rsksmart/rLogin-providers.git"
+  },
+  "keywords": [
+    "rsk",
+    "rif",
+    "eth",
+    "eip1193",
+    "web3"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rsksmart/rLogin-providers/issues"
+  },
+  "homepage": "https://github.com/rsksmart/rLogin-providers#readme",
+  "dependencies": {
+    "@walletconnect/ethereum-provider": "^2.9.1",
+    "@walletconnect/modal": "^2.6.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
