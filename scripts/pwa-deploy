@@ -8,6 +8,8 @@ PRODUCTION_IP=167.99.18.108
 IP=$PRODUCTION_IP
 
 scp -r release/pwa/dist root@$IP:/home/asami/new_pwa &&
+echo "New files uploaded, press enter to continue"
+read
 ssh root@$IP '
 cd /home/asami &&
 rm -rf old_pwa &&
