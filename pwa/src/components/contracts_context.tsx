@@ -62,13 +62,50 @@ export const ContractsProvider = ({ children }) => {
 
   const signLoginMessage = async () => {
     try {
-      const { signer } = await contracts();
+      const { signer, provider } = await contracts();
 
-      return await signer.signTypedData(
-        { name: "Asami", version: "1", chainId: Settings.rsk.chainId },
-        { Acceptance: [{ name: "content", type: "string" }] },
-        { content: "Login to Asami" },
-      );
+      const address = await signer.getAddress();
+
+      const typedData = {
+        domain: {
+          name: "Asami",
+          version: "1",
+          chainId: Settings.rsk.chainId,
+        },
+        message: {
+          content: "Login to Asami",
+        },
+        primaryType: "Acceptance",
+        types: {
+          EIP712Domain: [
+            { name: "name", type: "string" },
+            { name: "version", type: "string" },
+            { name: "chainId", type: "uint256" },
+          ],
+          Acceptance: [{ name: "content", type: "string" }],
+        },
+      };
+
+      if (provider.isWalletConnect) {
+        // Provider.signer means we have walletConnect
+        const sessions = provider.signer.client.session.getAll();
+        const session = sessions[sessions.length - 1];
+
+        return await provider.signer.client.request({
+          topic: session.topic,
+          chainId: `eip155:${Settings.rsk.chainId}`,
+          request: {
+            method: "eth_signTypedData_v4",
+            params: [address, JSON.stringify(typedData)],
+          },
+        });
+      } else {
+        return await provider.request({
+          method: "eth_signTypedData_v4",
+          params: [address, JSON.stringify(typedData)],
+          from: address,
+        });
+      }
     } catch (e) {
       throw new HttpError("Unauthorized", 401, {
         message: "Cannot log-in if you don't authorize the app.",

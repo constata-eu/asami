@@ -26,8 +26,6 @@
     "@portis/web3": "^4.0.7",
     "@rollup/plugin-commonjs": "^25.0.4",
     "@rsksmart/rlogin": "file:rLogin",
-    "@rsksmart/rlogin-ledger-provider": "file:rLogin-providers/packages/rlogin-ledger-provider",
-    "@rsksmart/rlogin-trezor-provider": "file:rLogin-providers/packages/rlogin-trezor-provider",
     "@rsksmart/rlogin-walletconnect2-provider": "file:rLogin-providers/packages/rlogin-walletconnect2-provider",
     "bignumber": "^1.1.0",
     "bip-schnorr": "^0.6.7",
