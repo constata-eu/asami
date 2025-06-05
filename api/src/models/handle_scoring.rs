@@ -207,7 +207,10 @@ impl HandleScoringHub {
                 .await?,
         )?;
         self.state.info("score_pending", "sleeping", ()).await;
-        tokio::time::sleep(tokio::time::Duration::from_millis(self.state.settings.x.score_cooldown_seconds * 500)).await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(
+            self.state.settings.x.score_cooldown_seconds * 500,
+        ))
+        .await;
 
         self.state.info("score_pending", "getting_mentions_json", ()).await;
         let mentions_json = serde_json::to_string(
@@ -224,7 +227,10 @@ impl HandleScoringHub {
                 .await?,
         )?;
         self.state.info("score_pending", "sleeping", ()).await;
-        tokio::time::sleep(tokio::time::Duration::from_millis(self.state.settings.x.score_cooldown_seconds * 500)).await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(
+            self.state.settings.x.score_cooldown_seconds * 500,
+        ))
+        .await;
 
         self.state.info("score_pending", "getting_reposts_json", ()).await;
         let reposts_json = serde_json::to_string(
@@ -237,7 +243,10 @@ impl HandleScoringHub {
                 .await?,
         )?;
         self.state.info("score_pending", "sleeping", ()).await;
-        tokio::time::sleep(tokio::time::Duration::from_millis(self.state.settings.x.score_cooldown_seconds * 500)).await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(
+            self.state.settings.x.score_cooldown_seconds * 500,
+        ))
+        .await;
 
         self.state.info("score_pending", "getting_poll_json", ()).await;
         let maybe_poll_json = if let Some(tweet_id_string) = poll_id {
@@ -258,7 +267,10 @@ impl HandleScoringHub {
             None
         };
         self.state.info("score_pending", "sleeping", ()).await;
-        tokio::time::sleep(tokio::time::Duration::from_millis(self.state.settings.x.score_cooldown_seconds * 500)).await;
+        tokio::time::sleep(tokio::time::Duration::from_millis(
+            self.state.settings.x.score_cooldown_seconds * 500,
+        ))
+        .await;
 
         Ok((me_json, tweets_json, mentions_json, reposts_json, maybe_poll_json))
     }

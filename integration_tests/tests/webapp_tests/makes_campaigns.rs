@@ -75,7 +75,7 @@ async fn creates_campaign_using_stripe() {
                 },
                 "livemode": false,
                 "created": timestamp,
-            })
+            }),
         )
         .unwrap();
 
@@ -159,10 +159,9 @@ async fn stripe_campaign_fails_when_payment_fails() {
                 },
                 "livemode": false,
                 "created": timestamp,
-            })
+            }),
         )
         .unwrap();
-
 
         campaign.reload().await.unwrap();
         assert_eq!(*campaign.status(), CampaignStatus::Failed);

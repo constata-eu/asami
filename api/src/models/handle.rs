@@ -286,7 +286,10 @@ impl HandleHub {
                 }
             }
             // We need to sleep here too.
-            tokio::time::sleep(tokio::time::Duration::from_millis(self.state.settings.x.score_cooldown_seconds * 1000)).await;
+            tokio::time::sleep(tokio::time::Duration::from_millis(
+                self.state.settings.x.score_cooldown_seconds * 1000,
+            ))
+            .await;
         }
 
         Ok(handles)
@@ -428,8 +431,7 @@ impl Handle {
 
         if reward < milli("50") {
             return Err(Error::validation("all", "reward_would_bee_too_small"));
-        } 
-
+        }
 
         if available_funds < reward {
             return Err(Error::validation("all", "campaign_has_not_enough_funds"));

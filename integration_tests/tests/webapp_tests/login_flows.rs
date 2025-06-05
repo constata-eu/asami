@@ -7,10 +7,9 @@ async fn supports_all_login_options() {
         h.web().navigate("/").await;
 
         TestApp::wait_for_enter("try_logging_in_with_trezor").await;
-    }).await;
+    })
+    .await;
 }
-
-
 
 /*
 use super::*;

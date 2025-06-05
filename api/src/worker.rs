@@ -54,7 +54,9 @@ async fn main() {
         run!("Force account hydrations", s, { s.account().force_hydrate().await });
         run!("Force handle hydrations", s, { s.handle().force_hydrate().await });
         run!("Force campaign hydrations", s, { s.campaign().force_hydrate().await });
-        run!("Force community-member hydrations", s, { s.community_member().force_hydrate().await });
+        run!("Force community-member hydrations", s, {
+            s.community_member().force_hydrate().await
+        });
     }];
 
     every![10000, |s| {

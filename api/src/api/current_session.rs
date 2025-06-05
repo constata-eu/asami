@@ -47,7 +47,7 @@ impl From<sqlx::Error> for ApiAuthError {
 
 macro_rules! auth_try {
     ($expr:expr, $error:literal) => {
-        $expr.map_err(|_| ApiAuthError::Fail($error.to_string()) )?
+        $expr.map_err(|_| ApiAuthError::Fail($error.to_string()))?
     };
 }
 

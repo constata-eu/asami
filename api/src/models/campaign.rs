@@ -1,4 +1,7 @@
+use std::collections::HashSet;
+
 use juniper::{FieldResult, GraphQLInputObject};
+use twitter_v2::query::TweetField;
 
 /* Campaigns are created locally, then paid in the smart contract.
  * Campaigns could be paid on-chain without being reported in the contract, but it would not
@@ -181,7 +184,7 @@ impl CampaignHub {
     pub async fn sync_x_collabs_inner(&self) -> anyhow::Result<Vec<Collab>> {
         use twitter_v2::{api_result::*, authorization::BearerToken, TwitterApi};
 
-        let mut reqs = vec![];
+        let mut collabs = vec![];
         let conf = &self.state.settings.x;
         let auth = BearerToken::new(&conf.bearer_token);
         let api = TwitterApi::new(auth);
@@ -215,14 +218,14 @@ impl CampaignHub {
             } else {
                 self.state.info("sync_x_collabs", "no_organic_metrics_for", &post_id).await;
             }
-            self.x_cooldown().await; // The metrics take up space too. 
+            self.x_cooldown().await; // The metrics take up space too.
+
+            let mut user_ids = HashSet::new();
 
             let reposts = api.get_tweet_retweeted_by(post_id).send().await?;
-            self.state.info("sync_x_collabs", "got_reposts", ()).await;
-
-            let mut page = Some(reposts);
-
-            while let Some(reposts) = page {
+            self.state.info("sync_x_collabs", "got_retweeted_by", ()).await;
+            let mut reposts_page = Some(reposts);
+            while let Some(reposts) = reposts_page {
                 self.state.info("sync_x_collabs", "getting_payload", ()).await;
                 let payload = reposts.payload();
                 self.state.info("sync_x_collabs", "got_payload", ()).await;
@@ -232,26 +235,62 @@ impl CampaignHub {
                 };
 
                 for user in data {
-                    self.state.info("sync_x_collabs", "processing_user", &user.id).await;
-                    if let Some(req) = campaign.make_x_collab_with_user_id(&user.id.to_string()).await? {
-                        reqs.push(req);
-                    };
+                    self.state.info("sync_x_collabs", "got_retweet_user", &user.id).await;
+                    user_ids.insert(user.id.to_string());
                 }
 
                 if data.len() < 100 {
-                    page = None;
+                    reposts_page = None;
                 } else {
                     self.state.info("sync_x_collabs", "fetching_next_page", ()).await;
-                    page = reposts.next_page().await?;
+                    reposts_page = reposts.next_page().await?;
+                    self.state.info("sync_x_collabs", "got_next_page", ()).await;
+                    self.x_cooldown().await; // After fetching a page.
+                }
+            }
+
+            let quotes = api.get_tweet_quote_tweets(post_id).tweet_fields([TweetField::AuthorId]).send().await?;
+            self.state.info("sync_x_collabs", "got_quotes", ()).await;
+            let mut quotes_page = Some(quotes);
+            while let Some(quotes) = quotes_page {
+                self.state.info("sync_x_collabs", "getting_payload", ()).await;
+                let payload = quotes.payload();
+                self.state.info("sync_x_collabs", "got_payload", ()).await;
+                let Some(data) = payload.data() else {
+                    self.state.info("sync_x_collabs", "no_payload_data", ()).await;
+                    break;
+                };
+
+                for post in data {
+                    let Some(user_id) = post.author_id else {
+                        continue;
+                    };
+                    self.state.info("sync_x_collabs", "got_quote_user", &user_id).await;
+                    user_ids.insert(user_id.to_string());
+                }
+
+                if data.len() < 100 {
+                    quotes_page = None;
+                } else {
+                    self.state.info("sync_x_collabs", "fetching_next_page", ()).await;
+                    quotes_page = quotes.next_page().await?;
                     self.state.info("sync_x_collabs", "got_next_page", ()).await;
                     self.x_cooldown().await; // After fetching a page.
                 }
             }
 
             self.state.info("sync_x_collabs", "next_campaign", ()).await;
+
+            for user_id in user_ids {
+                self.state.info("sync_x_collabs", "processing_user", &user_id).await;
+                if let Some(collab) = campaign.make_x_collab_with_user_id(&user_id).await? {
+                    collabs.push(collab);
+                };
+            }
+
             self.x_cooldown().await; // Always between campaigns, even if reposts was None.
         }
-        Ok(reqs)
+        Ok(collabs)
     }
 
     async fn x_cooldown(&self) {
@@ -266,7 +305,7 @@ impl CampaignHub {
         let status = match e.event_type {
             EventType::PaymentIntentSucceeded => CampaignStatus::Paid,
             EventType::PaymentIntentCanceled | EventType::PaymentIntentPaymentFailed => CampaignStatus::Failed,
-            _ =>  return Ok(None)
+            _ => return Ok(None),
         };
 
         let EventObject::PaymentIntent(i) = &e.data.object else {

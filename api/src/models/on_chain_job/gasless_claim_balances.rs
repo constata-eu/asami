@@ -62,11 +62,11 @@ impl OnChainJob {
 
         let total_rbtc = U256::from(addresses.len()) * rbtc_per_user;
 
-        return Ok(Some(
+        Ok(Some(
             self.contract()
                 .gasless_claim_balances(doc_fee, rbtc_per_user, Vec::from_iter(addresses))
                 .value(total_rbtc),
-        ));
+        ))
     }
 
     /// When an OnChainJob for making collabs is done, we sync the collabs and campaigns
