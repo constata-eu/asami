@@ -76,7 +76,13 @@ const ExpandCampaign = () => (
   </SimpleShowLayout>
 );
 
-export const CampaignShow = () => {
+export const CampaignShow = () => (
+  <ExplorerLayout>
+    <CampaignShowInner />
+  </ExplorerLayout>
+);
+
+export const CampaignShowInner = () => {
   const show = useShowController({ disableAuthentication: true });
 
   if (show.isPending || !show.record) {
@@ -84,50 +90,44 @@ export const CampaignShow = () => {
   }
 
   return (
-    <ExplorerLayout>
-      <Stack direction="row" gap="1em" mt="1em" flexWrap="wrap">
-        <Box flex="0 1 500px">
-          <TwitterTweetEmbed
-            tweetId={contentId(show.record)}
-            options={{
-              align: "center",
-              width: "100%",
-              conversation: "none",
-              margin: 0,
-            }}
-          />
-          <Card sx={{ mt: "1em", justifySelf: "left" }} elevation={1}>
-            <SimpleShowLayout record={show.record} direction="row">
-              <TextField source="id" />
-              <TextField source="status" sortable={false} />
-              <AmountField textAlign="right" currency="" source="budget" />
-              <AmountField textAlign="right" currency="" source="totalSpent" />
-              <AmountField textAlign="right" currency="" source="totalBudget" />
-              <NumberField source="totalCollabs" />
-              <DateField source="validUntil" showTime />
-              <DateField source="createdAt" showTime />
-              <ReferenceField source="accountId" reference="Account" />
-              <FunctionField
-                source="briefingJson"
-                sortable={false}
-                render={(record) => (
-                  <a
-                    target="_blank"
-                    href={viewPostUrl(record)}
-                    rel="noreferrer"
-                  >
-                    {contentId(record)}
-                  </a>
-                )}
-              />
-            </SimpleShowLayout>
-          </Card>
-        </Box>
-        <Box flex="1 0 500px">
-          <CampaignCollabs campaign={show.record} />
-        </Box>
-      </Stack>
-    </ExplorerLayout>
+    <Stack direction="row" gap="1em" mt="1em" flexWrap="wrap">
+      <Box flex="0 1 500px">
+        <TwitterTweetEmbed
+          tweetId={contentId(show.record)}
+          options={{
+            align: "center",
+            width: "100%",
+            conversation: "none",
+            margin: 0,
+          }}
+        />
+        <Card sx={{ mt: "1em", justifySelf: "left" }} elevation={1}>
+          <SimpleShowLayout record={show.record} direction="row">
+            <TextField source="id" />
+            <TextField source="status" sortable={false} />
+            <AmountField textAlign="right" currency="" source="budget" />
+            <AmountField textAlign="right" currency="" source="totalSpent" />
+            <AmountField textAlign="right" currency="" source="totalBudget" />
+            <NumberField source="totalCollabs" />
+            <DateField source="validUntil" showTime />
+            <DateField source="createdAt" showTime />
+            <ReferenceField source="accountId" reference="Account" />
+            <FunctionField
+              source="briefingJson"
+              sortable={false}
+              render={(record) => (
+                <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">
+                  {contentId(record)}
+                </a>
+              )}
+            />
+          </SimpleShowLayout>
+        </Card>
+      </Box>
+      <Box flex="1 0 500px">
+        <CampaignCollabs campaign={show.record} />
+      </Box>
+    </Stack>
   );
 };
 
