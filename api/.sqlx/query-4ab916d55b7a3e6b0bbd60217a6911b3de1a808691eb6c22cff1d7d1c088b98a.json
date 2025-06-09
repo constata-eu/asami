@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nusername as \"username!: String\", \nuser_id as \"user_id!: String\", \nstatus as \"status!: HandleStatus\", \nforce_hydrate as \"force_hydrate!: bool\", \ntotal_collabs as \"total_collabs!: i32\", \ntotal_collab_rewards as \"total_collab_rewards!: String\", \nx_refresh_token as \"x_refresh_token!: Option < String >\", \nscore as \"score!: Option < String >\", \nlast_scoring as \"last_scoring!: Option < UtcDateTime >\", \ncurrent_scoring_id as \"current_scoring_id!: Option < i32 >\", \nonline_engagement_override as \"online_engagement_override!: Option < EngagementScore >\", \nonline_engagement_override_reason as \"online_engagement_override_reason!: Option < String >\", \noffline_engagement_score as \"offline_engagement_score!: EngagementScore\", \noffline_engagement_description as \"offline_engagement_description!: Option < String >\", \npoll_id as \"poll_id!: Option < String >\", \npoll_ends_at as \"poll_ends_at!: Option < DateTime < Utc > >\", \npoll_override as \"poll_override!: Option < PollScore >\", \npoll_override_reason as \"poll_override_reason!: Option < String >\", \noperational_status_override as \"operational_status_override!: Option < OperationalStatus >\", \noperational_status_override_reason as \"operational_status_override_reason!: Option < String >\", \nreferrer_score_override as \"referrer_score_override!: Option < bool >\", \nreferrer_score_override_reason as \"referrer_score_override_reason!: Option < String >\", \nholder_score_override as \"holder_score_override!: Option < bool >\", \nholder_score_override_reason as \"holder_score_override_reason!: Option < String >\", \naudience_size_override as \"audience_size_override!: Option < i32 >\", \naudience_size_override_reason as \"audience_size_override_reason!: Option < String >\" FROM handles WHERE status IN ('verified', 'active') AND (last_scoring IS NULL OR last_scoring < $1)",
+  "query": "INSERT INTO handles (account_id, \nusername, \nuser_id, \nx_refresh_token) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET id = handles.id RETURNING id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nusername as \"username!: String\", \nuser_id as \"user_id!: String\", \nstatus as \"status!: HandleStatus\", \nforce_hydrate as \"force_hydrate!: bool\", \ntotal_collabs as \"total_collabs!: i32\", \ntotal_collab_rewards as \"total_collab_rewards!: String\", \nx_refresh_token as \"x_refresh_token!: Option < String >\", \ninvalidated_x_refresh_token as \"invalidated_x_refresh_token!: Option < String >\", \nscore as \"score!: Option < String >\", \nlast_scoring as \"last_scoring!: Option < UtcDateTime >\", \ncurrent_scoring_id as \"current_scoring_id!: Option < i32 >\", \nonline_engagement_override as \"online_engagement_override!: Option < EngagementScore >\", \nonline_engagement_override_reason as \"online_engagement_override_reason!: Option < String >\", \noffline_engagement_score as \"offline_engagement_score!: EngagementScore\", \noffline_engagement_description as \"offline_engagement_description!: Option < String >\", \npoll_id as \"poll_id!: Option < String >\", \npoll_ends_at as \"poll_ends_at!: Option < DateTime < Utc > >\", \npoll_override as \"poll_override!: Option < PollScore >\", \npoll_override_reason as \"poll_override_reason!: Option < String >\", \noperational_status_override as \"operational_status_override!: Option < OperationalStatus >\", \noperational_status_override_reason as \"operational_status_override_reason!: Option < String >\", \nreferrer_score_override as \"referrer_score_override!: Option < bool >\", \nreferrer_score_override_reason as \"referrer_score_override_reason!: Option < String >\", \nholder_score_override as \"holder_score_override!: Option < bool >\", \nholder_score_override_reason as \"holder_score_override_reason!: Option < String >\", \naudience_size_override as \"audience_size_override!: Option < i32 >\", \naudience_size_override_reason as \"audience_size_override_reason!: Option < String >\"",
   "describe": {
     "columns": [
       {
@@ -62,21 +62,26 @@
       },
       {
         "ordinal": 9,
+        "name": "invalidated_x_refresh_token!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
         "name": "score!: Option < String >",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 10,
+        "ordinal": 11,
         "name": "last_scoring!: Option < UtcDateTime >",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 11,
+        "ordinal": 12,
         "name": "current_scoring_id!: Option < i32 >",
         "type_info": "Int4"
       },
       {
-        "ordinal": 12,
+        "ordinal": 13,
         "name": "online_engagement_override!: Option < EngagementScore >",
         "type_info": {
           "Custom": {
@@ -92,12 +97,12 @@
         }
       },
       {
-        "ordinal": 13,
+        "ordinal": 14,
         "name": "online_engagement_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 14,
+        "ordinal": 15,
         "name": "offline_engagement_score!: EngagementScore",
         "type_info": {
           "Custom": {
@@ -113,22 +118,22 @@
         }
       },
       {
-        "ordinal": 15,
+        "ordinal": 16,
         "name": "offline_engagement_description!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 16,
+        "ordinal": 17,
         "name": "poll_id!: Option < String >",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 17,
+        "ordinal": 18,
         "name": "poll_ends_at!: Option < DateTime < Utc > >",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 18,
+        "ordinal": 19,
         "name": "poll_override!: Option < PollScore >",
         "type_info": {
           "Custom": {
@@ -145,12 +150,12 @@
         }
       },
       {
-        "ordinal": 19,
+        "ordinal": 20,
         "name": "poll_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 20,
+        "ordinal": 21,
         "name": "operational_status_override!: Option < OperationalStatus >",
         "type_info": {
           "Custom": {
@@ -167,44 +172,47 @@
         }
       },
       {
-        "ordinal": 21,
+        "ordinal": 22,
         "name": "operational_status_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 22,
+        "ordinal": 23,
         "name": "referrer_score_override!: Option < bool >",
         "type_info": "Bool"
       },
       {
-        "ordinal": 23,
+        "ordinal": 24,
         "name": "referrer_score_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 24,
+        "ordinal": 25,
         "name": "holder_score_override!: Option < bool >",
         "type_info": "Bool"
       },
       {
-        "ordinal": 25,
+        "ordinal": 26,
         "name": "holder_score_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 26,
+        "ordinal": 27,
         "name": "audience_size_override!: Option < i32 >",
         "type_info": "Int4"
       },
       {
-        "ordinal": 27,
+        "ordinal": 28,
         "name": "audience_size_override_reason!: Option < String >",
         "type_info": "Text"
       }
     ],
     "parameters": {
       "Left": [
-        "Timestamptz"
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Text"
       ]
     },
     "nullable": [
@@ -216,6 +224,7 @@
       false,
       false,
       false,
+      true,
       true,
       true,
       true,
@@ -238,5 +247,5 @@
       true
     ]
   },
-  "hash": "bb9cff55b34ebaf75f198e7bb3009fdd820da5f26c21e9c2d42a2b6853622f04"
+  "hash": "4ab916d55b7a3e6b0bbd60217a6911b3de1a808691eb6c22cff1d7d1c088b98a"
 }

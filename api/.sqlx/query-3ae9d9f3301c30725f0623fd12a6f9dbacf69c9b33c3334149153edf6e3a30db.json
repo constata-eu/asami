@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT count(*) as \"count!\" FROM handles WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR username = $8::varchar) AND (NOT $9::boolean OR username LIKE $10::varchar) AND (NOT $11::boolean OR username ILIKE $12::varchar) AND (NOT $13::boolean OR user_id = $14::varchar) AND (NOT $15::boolean OR user_id LIKE $16::varchar) AND (NOT $17::boolean OR status = $18::handle_status) AND (NOT $19::boolean OR status = ANY(CAST($20 as handle_status[])) ) AND (NOT $21::boolean OR force_hydrate = $22::boolean) AND (NOT $23::boolean OR total_collabs = $24::int4) AND (NOT $25::boolean OR total_collab_rewards = $26::varchar) AND (NOT $27::boolean OR x_refresh_token = $28::varchar) AND ($29::boolean IS NULL OR (($29::boolean AND x_refresh_token IS NOT NULL) OR (NOT $29::boolean AND x_refresh_token IS NULL))) AND (NOT $30::boolean OR score = $31::varchar) AND (NOT $32::boolean OR last_scoring = $33::timestamptz) AND (NOT $34::boolean OR current_scoring_id = $35::int4) AND (NOT $36::boolean OR online_engagement_override = $37::engagement_score) AND (NOT $38::boolean OR online_engagement_override_reason = $39::text) AND (NOT $40::boolean OR offline_engagement_score = $41::engagement_score) AND (NOT $42::boolean OR offline_engagement_description = $43::text) AND (NOT $44::boolean OR poll_id = $45::varchar) AND (NOT $46::boolean OR poll_ends_at = $47::timestamptz) AND (NOT $48::boolean OR poll_override = $49::poll_score) AND (NOT $50::boolean OR poll_override_reason = $51::varchar) AND (NOT $52::boolean OR operational_status_override = $53::operational_status) AND (NOT $54::boolean OR operational_status_override_reason = $55::text) AND (NOT $56::boolean OR referrer_score_override = $57::boolean) AND (NOT $58::boolean OR referrer_score_override_reason = $59::text) AND (NOT $60::boolean OR holder_score_override = $61::boolean) AND (NOT $62::boolean OR holder_score_override_reason = $63::text) AND (NOT $64::boolean OR audience_size_override = $65::int4) AND (NOT $66::boolean OR audience_size_override_reason = $67::text)",
+  "query": "SELECT count(*) as \"count!\" FROM handles WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR username = $8::varchar) AND (NOT $9::boolean OR username LIKE $10::varchar) AND (NOT $11::boolean OR username ILIKE $12::varchar) AND (NOT $13::boolean OR user_id = $14::varchar) AND (NOT $15::boolean OR user_id LIKE $16::varchar) AND (NOT $17::boolean OR status = $18::handle_status) AND (NOT $19::boolean OR status = ANY(CAST($20 as handle_status[])) ) AND (NOT $21::boolean OR force_hydrate = $22::boolean) AND (NOT $23::boolean OR total_collabs = $24::int4) AND (NOT $25::boolean OR total_collab_rewards = $26::varchar) AND (NOT $27::boolean OR x_refresh_token = $28::text) AND ($29::boolean IS NULL OR (($29::boolean AND x_refresh_token IS NOT NULL) OR (NOT $29::boolean AND x_refresh_token IS NULL))) AND (NOT $30::boolean OR invalidated_x_refresh_token = $31::text) AND ($32::boolean IS NULL OR (($32::boolean AND invalidated_x_refresh_token IS NOT NULL) OR (NOT $32::boolean AND invalidated_x_refresh_token IS NULL))) AND (NOT $33::boolean OR score = $34::varchar) AND (NOT $35::boolean OR last_scoring = $36::timestamptz) AND (NOT $37::boolean OR current_scoring_id = $38::int4) AND (NOT $39::boolean OR online_engagement_override = $40::engagement_score) AND (NOT $41::boolean OR online_engagement_override_reason = $42::text) AND (NOT $43::boolean OR offline_engagement_score = $44::engagement_score) AND (NOT $45::boolean OR offline_engagement_description = $46::text) AND (NOT $47::boolean OR poll_id = $48::varchar) AND (NOT $49::boolean OR poll_ends_at = $50::timestamptz) AND (NOT $51::boolean OR poll_override = $52::poll_score) AND (NOT $53::boolean OR poll_override_reason = $54::varchar) AND (NOT $55::boolean OR operational_status_override = $56::operational_status) AND (NOT $57::boolean OR operational_status_override_reason = $58::text) AND (NOT $59::boolean OR referrer_score_override = $60::boolean) AND (NOT $61::boolean OR referrer_score_override_reason = $62::text) AND (NOT $63::boolean OR holder_score_override = $64::boolean) AND (NOT $65::boolean OR holder_score_override_reason = $66::text) AND (NOT $67::boolean OR audience_size_override = $68::int4) AND (NOT $69::boolean OR audience_size_override_reason = $70::text)",
   "describe": {
     "columns": [
       {
@@ -69,7 +69,10 @@
         "Bool",
         "Varchar",
         "Bool",
-        "Varchar",
+        "Text",
+        "Bool",
+        "Bool",
+        "Text",
         "Bool",
         "Bool",
         "Varchar",
@@ -161,5 +164,5 @@
       null
     ]
   },
-  "hash": "6d2fd8ac3292a75f3c26fd482a2ec3c74b45274c3b113a036a5131e74f67cce1"
+  "hash": "3ae9d9f3301c30725f0623fd12a6f9dbacf69c9b33c3334149153edf6e3a30db"
 }

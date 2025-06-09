@@ -28,8 +28,10 @@ model! {
     #[sqlx_model_hints(varchar, default)]
     total_collab_rewards: String,
 
-    #[sqlx_model_hints(varchar, op_is_set)]
+    #[sqlx_model_hints(text, op_is_set)]
     x_refresh_token: Option<String>,
+    #[sqlx_model_hints(text, default, op_is_set)]
+    invalidated_x_refresh_token: Option<String>,
 
     #[sqlx_model_hints(varchar, default)]
     score: Option<String>,
@@ -351,7 +353,10 @@ impl Handle {
                 // So we need to obtain a new one, we force this by deleting the refresh
                 // token which will prompt users to do this next time they log in.
                 let _ = self.fail("refresh_token_invalidated", format!("{e:?}")).await;
-                self.update().x_refresh_token(None).save().await?;
+                let invalidated = Some(refresh_token.clone());
+                self.update()
+                    .invalidated_x_refresh_token(invalidated)
+                    .x_refresh_token(None).save().await?;
                 Err(Error::validation("x_refresh_token", "failed_to_obtain_token"))
             }
             Err(e) => {
