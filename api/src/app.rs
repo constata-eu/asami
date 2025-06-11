@@ -194,6 +194,7 @@ pub struct Rsk {
     pub gasless_fee: U256,
     pub admin_claim_trigger: U256,
     pub gas_override: Option<bool>,
+    pub mainnet_readonly_rpc_url: String,
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]

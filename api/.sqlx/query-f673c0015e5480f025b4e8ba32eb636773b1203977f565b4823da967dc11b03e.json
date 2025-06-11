@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \naddress as \"address!: String\", \ncreated_at as \"created_at!: UtcDateTime\" FROM backers WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR address = $4::varchar) AND (NOT $5::boolean OR created_at = $6::timestamptz) ORDER BY \n      (CASE ($7 = 'Id' AND NOT $8) WHEN true THEN id ELSE NULL END),\n      (CASE ($7 = 'Id' AND $8) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($7 = 'Address' AND NOT $8) WHEN true THEN address ELSE NULL END),\n      (CASE ($7 = 'Address' AND $8) WHEN true THEN address ELSE NULL END) DESC\n    ,\n      (CASE ($7 = 'CreatedAt' AND NOT $8) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($7 = 'CreatedAt' AND $8) WHEN true THEN created_at ELSE NULL END) DESC\n     LIMIT $9 OFFSET $10 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "address!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "f673c0015e5480f025b4e8ba32eb636773b1203977f565b4823da967dc11b03e"
+}

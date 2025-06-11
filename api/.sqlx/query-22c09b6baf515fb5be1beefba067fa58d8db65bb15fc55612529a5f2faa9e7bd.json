@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE indexer_states SET (id, \nx_handle_verification_checkpoint, \nsuggested_price_per_point, \nlast_synced_block, \nlast_rewards_indexed_block) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE x_handle_verification_checkpoint END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE suggested_price_per_point END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE last_synced_block END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE last_rewards_indexed_block END)) WHERE id = $1 RETURNING id as \"id!: i32\", \nx_handle_verification_checkpoint as \"x_handle_verification_checkpoint!: i64\", \nsuggested_price_per_point as \"suggested_price_per_point!: String\", \nlast_synced_block as \"last_synced_block!: Decimal\", \nlast_rewards_indexed_block as \"last_rewards_indexed_block!: Decimal\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "x_handle_verification_checkpoint!: i64",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "suggested_price_per_point!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_synced_block!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_rewards_indexed_block!: Decimal",
+        "type_info": "Numeric"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int8",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "22c09b6baf515fb5be1beefba067fa58d8db65bb15fc55612529a5f2faa9e7bd"
+}

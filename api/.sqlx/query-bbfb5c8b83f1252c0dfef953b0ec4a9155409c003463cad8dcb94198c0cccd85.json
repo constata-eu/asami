@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO indexer_states (id) VALUES ($1) RETURNING id as \"id!: i32\", \nx_handle_verification_checkpoint as \"x_handle_verification_checkpoint!: i64\", \nsuggested_price_per_point as \"suggested_price_per_point!: String\", \nlast_synced_block as \"last_synced_block!: Decimal\"",
+  "query": "INSERT INTO indexer_states (id) VALUES ($1) ON CONFLICT (id) DO UPDATE SET id = indexer_states.id RETURNING id as \"id!: i32\", \nx_handle_verification_checkpoint as \"x_handle_verification_checkpoint!: i64\", \nsuggested_price_per_point as \"suggested_price_per_point!: String\", \nlast_synced_block as \"last_synced_block!: Decimal\", \nlast_rewards_indexed_block as \"last_rewards_indexed_block!: Decimal\"",
   "describe": {
     "columns": [
       {
@@ -22,6 +22,11 @@
         "ordinal": 3,
         "name": "last_synced_block!: Decimal",
         "type_info": "Numeric"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_rewards_indexed_block!: Decimal",
+        "type_info": "Numeric"
       }
     ],
     "parameters": {
@@ -33,8 +38,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "d9a0823fa6b2d5c93e4b7e14a96b2b5acc2fd526f7ba99d7f45aeee9cbda23ec"
+  "hash": "bbfb5c8b83f1252c0dfef953b0ec4a9155409c003463cad8dcb94198c0cccd85"
 }

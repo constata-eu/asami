@@ -32,11 +32,103 @@ abigen!(
   ]"#,
     derives(serde::Deserialize, serde::Serialize),
 );
+abigen!(
+    CollectiveCode,
+    r#"[
+      event BackerRewardsClaimed(address indexed rewardToken_, address indexed backer_, uint256 amount_)
+      event BuilderRewardsClaimed(address indexed rewardToken_, address indexed builder_, uint256 amount_)
+      event NewAllocation(address indexed backer_, uint256 allocation_)
+      event NotifyReward(address indexed rewardToken_, uint256 builderAmount_, uint256 backersAmount_)
+      function allocationOf(address) view returns (uint256)
+    ]"#,
+    derives(serde::Deserialize, serde::Serialize),
+);
+abigen!(
+    PriceOracleCode,
+    r#"[
+        function getPrice() external override view returns (uint256)
+    ]"#,
+    derives(serde::Deserialize, serde::Serialize),
+);
+
+abigen!(
+    UniswapCode,
+    r#"
+    [
+      {
+        "inputs": [],
+        "name": "slot0",
+        "outputs": [
+          { "internalType": "uint160", "name": "sqrtPriceX96", "type": "uint160" },
+          { "internalType": "int24", "name": "tick", "type": "int24" },
+          { "internalType": "uint16", "name": "observationIndex", "type": "uint16" },
+          { "internalType": "uint16", "name": "observationCardinality", "type": "uint16" },
+          { "internalType": "uint16", "name": "observationCardinalityNext", "type": "uint16" },
+          { "internalType": "uint8", "name": "feeProtocol", "type": "uint8" },
+          { "internalType": "bool", "name": "unlocked", "type": "bool" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ]
+    "#,
+    derives(serde::Deserialize, serde::Serialize),
+);
 
 pub type AsamiMiddleware = SignerMiddleware<NonceManagerMiddleware<Provider<Http>>, LocalWallet>;
 pub type LegacyContract = LegacyContractCode<AsamiMiddleware>;
 pub type DocContract = IERC20<AsamiMiddleware>;
 pub type AsamiContract = AsamiContractCode<AsamiMiddleware>;
+pub type CollectiveContract = CollectiveCode<Provider<Http>>;
+pub type PriceOracleContract = PriceOracleCode<Provider<Http>>;
+pub type UniswapContract = UniswapCode<Provider<Http>>;
+
+impl CollectiveContract {
+    pub fn from_config(config: &AppConfig) -> AsamiResult<Self> {
+        let provider = Provider::<Http>::try_from(&config.rsk.mainnet_readonly_rpc_url)
+            .map_err(|_| Error::Init("Invalid rsk mainnet_readonly_rpc_url in config".to_string()))?;
+
+        // The asami gauge contract address is harcoded, we don't have this
+        // for staging or local environments.
+        let address: Address = "0x78349782F753a593ceBE91298dAfdB9053719228"
+            .parse()
+            .map_err(|_| Error::Init("Invalid collective_gague contract address".to_string()))?;
+
+        Ok(Self::new(address, std::sync::Arc::new(provider)))
+    }
+}
+
+impl PriceOracleContract {
+    pub fn from_config(config: &AppConfig) -> AsamiResult<Self> {
+        let provider = Provider::<Http>::try_from(&config.rsk.mainnet_readonly_rpc_url)
+            .map_err(|_| Error::Init("Invalid rsk mainnet_readonly_rpc_url in config".to_string()))?;
+
+        let address: Address = "0xe2927a0620b82A66D67F678FC9B826b0E01b1BFd"
+            .parse()
+            .map_err(|_| Error::Init("Invalid doc oracle contract address".to_string()))?;
+
+        Ok(Self::new(address, std::sync::Arc::new(provider)))
+    }
+}
+
+impl UniswapContract {
+    pub fn from_config(config: &AppConfig) -> AsamiResult<Self> {
+        let provider = Provider::<Http>::try_from(&config.rsk.mainnet_readonly_rpc_url)
+            .map_err(|_| Error::Init("Invalid rsk mainnet_readonly_rpc_url in config".to_string()))?;
+
+        let address: Address = "0xa89a86d3d9481a741833208676fa57d0f1d5c6cb"
+            .parse()
+            .map_err(|_| Error::Init("Invalid doc oracle contract address".to_string()))?;
+
+        Ok(Self::new(address, std::sync::Arc::new(provider)))
+    }
+
+    pub async fn price(&self) -> AsamiResult<U256> {
+        let sqrt_price_x96 = self.slot_0().call().await?.0;
+        let prod = sqrt_price_x96.checked_mul(sqrt_price_x96).ok_or_else(|| Error::runtime("checked mul of u256 failed"))?;
+        Ok(prod >> 192)
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct OnChain {
@@ -45,6 +137,7 @@ pub struct OnChain {
     pub asami_contract: AsamiContract,
     pub asami_address: Address,
     pub doc_contract: DocContract,
+    pub collective_contract: CollectiveContract,
 }
 
 impl OnChain {
@@ -90,6 +183,7 @@ impl OnChain {
             legacy_contract: LegacyContract::new(legacy_address, client.clone()),
             asami_contract: AsamiContract::new(asami_address, client.clone()),
             asami_address,
+            collective_contract: CollectiveContract::from_config(&config)?,
             doc_contract: IERC20::new(doc_address, client.clone()),
             client,
         })
@@ -114,3 +208,4 @@ impl OnChain {
         Ok(self.asami_contract.accounts(self.asami_contract.client().address()).await?.3)
     }
 }
+

@@ -1,0 +1,80 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE backer_disbursements SET (id, \ncreated_at, \nrif_claimed, \nbtc_claimed, \nrif_usd_rate, \nbtc_usd_rate, \nasami_issuance_rate, \ntx_hash) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE created_at END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE rif_claimed END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE btc_claimed END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE rif_usd_rate END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE btc_usd_rate END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE asami_issuance_rate END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE tx_hash END)) WHERE id = $1 RETURNING id as \"id!: i32\", \ncreated_at as \"created_at!: UtcDateTime\", \nrif_claimed as \"rif_claimed!: Decimal\", \nbtc_claimed as \"btc_claimed!: Decimal\", \nrif_usd_rate as \"rif_usd_rate!: Decimal\", \nbtc_usd_rate as \"btc_usd_rate!: Decimal\", \nasami_issuance_rate as \"asami_issuance_rate!: Decimal\", \ntx_hash as \"tx_hash!: String\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "rif_claimed!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 3,
+        "name": "btc_claimed!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 4,
+        "name": "rif_usd_rate!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 5,
+        "name": "btc_usd_rate!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 6,
+        "name": "asami_issuance_rate!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 7,
+        "name": "tx_hash!: String",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e825c0d41bffc799e36039099a9c5ce8509fa452577897de4db6a563adab7763"
+}

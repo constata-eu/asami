@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM indexer_states WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR x_handle_verification_checkpoint = $4::int8) AND (NOT $5::boolean OR suggested_price_per_point = $6::varchar) AND (NOT $7::boolean OR last_synced_block = $8::decimal) AND (NOT $9::boolean OR last_rewards_indexed_block = $10::decimal)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int8",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "7300fb5bf3d64691a5bd621be4d8d2add6f70628e85a9ded095695dc1b943396"
+}

@@ -1,0 +1,54 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO backer_payouts (backer_id, \nasami_amount, \ndisbursement_id) VALUES ($1, $2, $3) RETURNING id as \"id!: i32\", \nbacker_id as \"backer_id!: i32\", \nasami_amount as \"asami_amount!: Decimal\", \ndisbursement_id as \"disbursement_id!: i32\", \npaid as \"paid!: bool\", \ncreated_at as \"created_at!: UtcDateTime\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "backer_id!: i32",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "asami_amount!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 3,
+        "name": "disbursement_id!: i32",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "paid!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Numeric",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "ca288e1fa0d22fae4fd44c3521fe6d618228bbff9cd6da68fb670b291dc3ac6e"
+}

@@ -38,7 +38,7 @@ async fn main() {
     every![10000, |s| {
         run!("On chain job scheduler", s, { s.on_chain_job().run_scheduler().await });
     }];
-    every![60000, |s| {
+    every![120000, |s| {
         run!("Sync on-chain events", s, {
             s.synced_event().sync_on_chain_events().await
         });

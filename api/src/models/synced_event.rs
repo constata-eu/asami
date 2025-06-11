@@ -1,4 +1,4 @@
-use std::{collections::HashSet, sync::Arc};
+use std::{collections::{HashMap, HashSet}, sync::Arc};
 
 use ethers::prelude::{EthLogDecode, Event};
 
@@ -8,8 +8,7 @@ use crate::{
     on_chain::{
         asami_contract_code::{
             CampaignCreatedFilter, CampaignExtendedFilter, CampaignReimbursedFilter, CampaignToppedUpFilter,
-        },
-        AsamiContract,
+        }, AsamiContract, BuilderRewardsClaimedFilter, CollectiveContract
     },
 };
 
@@ -61,7 +60,69 @@ impl SyncedEventHub {
 
         self.sync_asami_transfer_events(from_block, to_block).await?;
 
-        index_state.update().last_synced_block(u64_to_d(to_block)).save().await?;
+        let rewards_from_block = d_to_u64(*index_state.last_rewards_indexed_block());
+        let rewards_to_block =  self.collective_contract().client().get_block_number().await? - self.state.settings.rsk.reorg_protection_padding;
+        self.sync_builder_rewards_claimed_events(rewards_from_block, rewards_to_block).await?;
+        self.sync_new_allocation_events(rewards_from_block, rewards_to_block).await?;
+
+        index_state.update()
+            .last_rewards_indexed_block(u64_to_d(rewards_to_block))
+            .last_synced_block(u64_to_d(to_block)).save().await?;
+        Ok(())
+    }
+
+    pub async fn sync_builder_rewards_claimed_events(&self, from_block: U64, to_block: U64) -> anyhow::Result<()> {
+        let events = self
+            .collective_contract()
+            .builder_rewards_claimed_filter()
+            .address(self.collective_contract().address().into())
+            .from_block(from_block)
+            .to_block(to_block)
+            .query_with_meta()
+            .await?;
+
+        let db_tx = self.state.transactional().await?;
+
+        let mut by_tx_hash: HashMap<H256, Vec<BuilderRewardsClaimedFilter>> = HashMap::new();
+
+        for (e, meta) in events {
+            let Some(_synced_event) = db_tx.synced_event().save_unprocessed_event(&meta, &e).await? else {
+                continue;
+            };
+
+            by_tx_hash.entry(meta.transaction_hash).or_default().push(e);
+        }
+
+        for (tx_hash, group) in by_tx_hash {
+            dbg!(db_tx.backer_disbursement().create_from_events(tx_hash, &group).await?);
+        }
+
+        db_tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn sync_new_allocation_events(&self, from_block: U64, to_block: U64) -> anyhow::Result<()> {
+        let events = dbg!(self
+            .collective_contract()
+            .new_allocation_filter()
+            .address(self.collective_contract().address().into())
+            .from_block(from_block)
+            .to_block(to_block)
+            .query_with_meta()
+            .await?);
+
+        for (e, meta) in &events {
+            let tx = self.state.transactional().await?;
+
+            let Some(_synced_event) = tx.synced_event().save_unprocessed_event(meta, &e).await? else {
+                continue;
+            };
+
+            tx.backer().get_or_create(e.backer).await?;
+
+            tx.commit().await?;
+        }
+
         Ok(())
     }
 
@@ -221,6 +282,10 @@ impl SyncedEventHub {
 
     fn contract(&self) -> &AsamiContract {
         &self.state.on_chain.asami_contract
+    }
+
+    fn collective_contract(&self) -> &CollectiveContract {
+        &self.state.on_chain.collective_contract
     }
 }
 

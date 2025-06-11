@@ -1,5 +1,6 @@
 pub use integration_tests::support::{self, *};
 pub mod account_names;
+pub mod backer_disbursements;
 pub mod handle_scoring;
 
 /*
