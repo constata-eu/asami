@@ -38,6 +38,7 @@ legacy_contract_address="unknown"
 asami_contract_address="unknown"
 doc_contract_address="unknown"
 rpc_url="http://127.0.0.1:8545"
+mainnet_readonly_rpc_url="http://127.0.0.1:8545"
 reorg_protection_padding="0x0000"
 blockchain_sync_cooldown=0
 gasless_rbtc_per_user="0x574FBDE6000" # 6e12 This is the contract's default so we're using it.

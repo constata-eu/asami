@@ -113,6 +113,17 @@ fn wei_to_decimal_safe(val: U256) -> AsamiResult<Decimal> {
         .map(|x| x / Decimal::from(1_000_000_000_000_000_000u128))
 }
 
+fn decimal_to_wei_scaled_18(dec: Decimal) -> AsamiResult<U256> {
+    let scale = Decimal::from(10u128.pow(18)); // 1e18 as Decimal
+    let scaled = dec * scale;
+
+    // Ensure scaled value fits into u128 (for simplicity). You can also use BigUint for larger numbers.
+    let int_val = scaled.trunc().to_u128()
+        .ok_or_else(|| Error::runtime("converting large decimal to u256"))?;
+
+    Ok(U256::from(int_val))
+}
+
 // Converts an account id expressed in hex to an i32
 pub fn hex_to_i32(hex: &str) -> Result<i32, std::num::TryFromIntError> {
     u256(hex).as_u32().try_into()

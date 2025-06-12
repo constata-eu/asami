@@ -55,7 +55,6 @@ model! {
     OnChainJobCampaign(job_id),
     OnChainJobCollab(job_id),
     OnChainJobHolder(job_id),
-    OnChainJobBackerPayout(job_id),
   }
 }
 
@@ -349,23 +348,6 @@ model! {
   belongs_to {
     OnChainJob(job_id),
     Holder(holder_id),
-  }
-}
-
-model! {
-  state: App,
-  table: on_chain_job_backer_payouts,
-  struct OnChainJobBackerPayout {
-    #[sqlx_model_hints(int4, default)]
-    id: i32,
-    #[sqlx_model_hints(int4)]
-    job_id: i32,
-    #[sqlx_model_hints(int4)]
-    payout_id: i32,
-  },
-  belongs_to {
-    OnChainJob(job_id),
-    BackerPayout(payout_id),
   }
 }
 

@@ -94,7 +94,7 @@ impl SyncedEventHub {
         }
 
         for (tx_hash, group) in by_tx_hash {
-            dbg!(db_tx.backer_disbursement().create_from_events(tx_hash, &group).await?);
+            db_tx.backer_disbursement().create_from_events(tx_hash, &group).await?;
         }
 
         db_tx.commit().await?;
@@ -102,14 +102,14 @@ impl SyncedEventHub {
     }
 
     pub async fn sync_new_allocation_events(&self, from_block: U64, to_block: U64) -> anyhow::Result<()> {
-        let events = dbg!(self
+        let events = self
             .collective_contract()
             .new_allocation_filter()
             .address(self.collective_contract().address().into())
             .from_block(from_block)
             .to_block(to_block)
             .query_with_meta()
-            .await?);
+            .await?;
 
         for (e, meta) in &events {
             let tx = self.state.transactional().await?;

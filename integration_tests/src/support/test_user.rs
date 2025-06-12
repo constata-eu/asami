@@ -361,7 +361,7 @@ impl TestUser {
                         managed_unit_amount: None,
                         topic_ids: topic_ids.iter().map(|x| *x as i64).collect(),
                         price_per_point: milli("1").encode_hex(),
-                        max_individual_reward: milli("20000").encode_hex(),
+                        max_individual_reward: u("2000").encode_hex(),
                         min_individual_reward: milli("200").encode_hex(),
                         thumbs_up_only: false,
                     },

@@ -88,8 +88,6 @@ impl CollectiveContract {
         let provider = Provider::<Http>::try_from(&config.rsk.mainnet_readonly_rpc_url)
             .map_err(|_| Error::Init("Invalid rsk mainnet_readonly_rpc_url in config".to_string()))?;
 
-        // The asami gauge contract address is harcoded, we don't have this
-        // for staging or local environments.
         let address: Address = "0x78349782F753a593ceBE91298dAfdB9053719228"
             .parse()
             .map_err(|_| Error::Init("Invalid collective_gague contract address".to_string()))?;
@@ -118,7 +116,7 @@ impl UniswapContract {
 
         let address: Address = "0xa89a86d3d9481a741833208676fa57d0f1d5c6cb"
             .parse()
-            .map_err(|_| Error::Init("Invalid doc oracle contract address".to_string()))?;
+            .map_err(|_| Error::Init("Invalid uniswap contract address".to_string()))?;
 
         Ok(Self::new(address, std::sync::Arc::new(provider)))
     }
@@ -126,7 +124,10 @@ impl UniswapContract {
     pub async fn price(&self) -> AsamiResult<U256> {
         let sqrt_price_x96 = self.slot_0().call().await?.0;
         let prod = sqrt_price_x96.checked_mul(sqrt_price_x96).ok_or_else(|| Error::runtime("checked mul of u256 failed"))?;
-        Ok(prod >> 192)
+        let denom = U256::from(1) << 192;
+        // 18 to make the number 'wei'. 12 to fix for USDT precision.
+        let scale = U256::exp10(18 + 12);
+        Ok(prod * scale / denom)
     }
 }
 

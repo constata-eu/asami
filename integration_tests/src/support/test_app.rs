@@ -783,7 +783,7 @@ impl TestApp {
 
     pub async fn sync_events_until<T: std::future::Future<Output = bool>>(&self, context: &str, call: impl Fn() -> T) {
         Self::try_until(
-            100,
+            20,
             20,
             &format!("Syncing events did not have the expected effect for '{context}'"),
             || async {

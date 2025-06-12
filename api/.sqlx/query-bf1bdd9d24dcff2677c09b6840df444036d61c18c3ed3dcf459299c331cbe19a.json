@@ -1,0 +1,72 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE backer_payouts SET (id, \nbacker_id, \nasami_amount, \ndisbursement_id, \npaid, \ntx_hash, \ncreated_at) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE backer_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE asami_amount END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE disbursement_id END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE paid END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE tx_hash END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE created_at END)) WHERE id = $1 RETURNING id as \"id!: i32\", \nbacker_id as \"backer_id!: i32\", \nasami_amount as \"asami_amount!: Decimal\", \ndisbursement_id as \"disbursement_id!: i32\", \npaid as \"paid!: bool\", \ntx_hash as \"tx_hash!: Option < String >\", \ncreated_at as \"created_at!: UtcDateTime\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "backer_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "asami_amount!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 3,
+        "name": "disbursement_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "paid!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "tx_hash!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "bf1bdd9d24dcff2677c09b6840df444036d61c18c3ed3dcf459299c331cbe19a"
+}

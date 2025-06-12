@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO backer_stakes (backer_id, \nstake, \ndate) VALUES ($1, $2, $3) RETURNING id as \"id!: i32\", \nbacker_id as \"backer_id!: i32\", \nstake as \"stake!: Decimal\", \ndate as \"date!: UtcDateTime\", \ndisbursement_id as \"disbursement_id!: Option < i32 >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "backer_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "stake!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 3,
+        "name": "date!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "disbursement_id!: Option < i32 >",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Numeric",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "ab57814bd53457c94dd5faddc3f53dc39e1b477a4cd212eff089ae06ff90797f"
+}
