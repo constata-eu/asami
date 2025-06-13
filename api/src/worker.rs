@@ -36,7 +36,6 @@ async fn main() {
     // The on chain jobs scheduler has its own internal cooldown and backoff.
     // We just make sure to wake it up once a second here so that it decides what to do.
     every![10000, |s| {
-        run!("Populate token column data", s, { s.estimated_fee_pool_claim().populate_new_column_data().await });
         run!("On chain job scheduler", s, { s.on_chain_job().run_scheduler().await });
         //run!("Pay backer rewards", s, { s.backer_payout().pay_all().await });
     }];

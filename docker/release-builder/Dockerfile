@@ -30,6 +30,7 @@ CMD /bin/bash -c "\
   rm -rf /work/* \
   && rsync -av --progress /host_workspace/ /work --exclude-from /host_workspace/.gitignore \
   && chown -R root:root /work \
+  && rm -rf /host_workspace/releases/pwa/assets/index-*.js
   && cd /work/pwa \
   && yarn cache clean \
   && yarn \
