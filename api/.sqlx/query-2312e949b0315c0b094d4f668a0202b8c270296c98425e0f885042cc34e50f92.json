@@ -1,0 +1,37 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM backer_disbursements WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR created_at = $4::timestamptz) AND (NOT $5::boolean OR rif_claimed = $6::decimal) AND (NOT $7::boolean OR btc_claimed = $8::decimal) AND (NOT $9::boolean OR rif_usd_rate = $10::decimal) AND (NOT $11::boolean OR btc_usd_rate = $12::decimal) AND (NOT $13::boolean OR asami_issuance_rate = $14::decimal) AND (NOT $15::boolean OR tx_hash = $16::varchar)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "2312e949b0315c0b094d4f668a0202b8c270296c98425e0f885042cc34e50f92"
+}

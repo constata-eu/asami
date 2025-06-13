@@ -37,8 +37,9 @@ async fn main() {
     // We just make sure to wake it up once a second here so that it decides what to do.
     every![10000, |s| {
         run!("On chain job scheduler", s, { s.on_chain_job().run_scheduler().await });
+        run!("Pay backer rewards", s, { s.backer_payout().pay_all().await });
     }];
-    every![60000, |s| {
+    every![120000, |s| {
         run!("Sync on-chain events", s, {
             s.synced_event().sync_on_chain_events().await
         });

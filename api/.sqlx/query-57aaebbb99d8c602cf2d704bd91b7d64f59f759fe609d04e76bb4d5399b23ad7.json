@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE backer_stakes SET disbursement_id = $1 WHERE disbursement_id IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "57aaebbb99d8c602cf2d704bd91b7d64f59f759fe609d04e76bb4d5399b23ad7"
+}

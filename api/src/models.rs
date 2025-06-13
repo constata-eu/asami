@@ -50,6 +50,8 @@ pub use handle_scoring::*;
 pub mod community_member;
 pub use community_member::*;
 pub mod poll_texts;
+pub mod backer_disbursements;
+pub use backer_disbursements::*;
 
 #[macro_export]
 macro_rules! make_sql_enum {
@@ -86,6 +88,8 @@ model! {
     suggested_price_per_point: String,
     #[sqlx_model_hints(decimal, default)]
     last_synced_block: Decimal,
+    #[sqlx_model_hints(decimal, default)]
+    last_rewards_indexed_block: Decimal,
   }
 }
 
@@ -101,6 +105,23 @@ impl IndexerStateHub {
 // Unsafe conversion for values that we know for sure have an U256 hex encoded value.
 pub fn u256<T: AsRef<str> + std::fmt::Debug>(u: T) -> U256 {
     U256::decode_hex(u).unwrap_or(U256::zero())
+}
+
+fn wei_to_decimal_safe(val: U256) -> AsamiResult<Decimal> {
+    val.try_into().ok().and_then(|u: u128| Decimal::from_u128(u))
+        .ok_or_else(|| Error::runtime("converting u256 to decimal"))
+        .map(|x| x / Decimal::from(1_000_000_000_000_000_000u128))
+}
+
+fn decimal_to_wei_scaled_18(dec: Decimal) -> AsamiResult<U256> {
+    let scale = Decimal::from(10u128.pow(18)); // 1e18 as Decimal
+    let scaled = dec * scale;
+
+    // Ensure scaled value fits into u128 (for simplicity). You can also use BigUint for larger numbers.
+    let int_val = scaled.trunc().to_u128()
+        .ok_or_else(|| Error::runtime("converting large decimal to u256"))?;
+
+    Ok(U256::from(int_val))
 }
 
 // Converts an account id expressed in hex to an i32

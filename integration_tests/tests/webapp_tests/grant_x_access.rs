@@ -50,7 +50,7 @@ async fn grant_x_access() {
 
     assert!(scoring.tweets_payload().unwrap().unwrap().data.unwrap().first().unwrap().organic_metrics.is_some());
 
-    assert!(!scoring.mentions_payload().unwrap().unwrap().data().is_none());
+    assert!(scoring.mentions_payload().unwrap().unwrap().data().is_some());
 
     w.driver.refresh().await.unwrap();
     w.wait_for("#existing-x-handle-stats").await;

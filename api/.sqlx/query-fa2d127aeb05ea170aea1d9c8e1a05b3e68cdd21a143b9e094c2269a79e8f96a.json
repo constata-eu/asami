@@ -1,0 +1,83 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \ncreated_at as \"created_at!: UtcDateTime\", \nrif_claimed as \"rif_claimed!: Decimal\", \nbtc_claimed as \"btc_claimed!: Decimal\", \nrif_usd_rate as \"rif_usd_rate!: Decimal\", \nbtc_usd_rate as \"btc_usd_rate!: Decimal\", \nasami_issuance_rate as \"asami_issuance_rate!: Decimal\", \ntx_hash as \"tx_hash!: String\" FROM backer_disbursements WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR created_at = $4::timestamptz) AND (NOT $5::boolean OR rif_claimed = $6::decimal) AND (NOT $7::boolean OR btc_claimed = $8::decimal) AND (NOT $9::boolean OR rif_usd_rate = $10::decimal) AND (NOT $11::boolean OR btc_usd_rate = $12::decimal) AND (NOT $13::boolean OR asami_issuance_rate = $14::decimal) AND (NOT $15::boolean OR tx_hash = $16::varchar) ORDER BY \n      (CASE ($17 = 'Id' AND NOT $18) WHEN true THEN id ELSE NULL END),\n      (CASE ($17 = 'Id' AND $18) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($17 = 'CreatedAt' AND NOT $18) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($17 = 'CreatedAt' AND $18) WHEN true THEN created_at ELSE NULL END) DESC\n    ,\n      (CASE ($17 = 'RifClaimed' AND NOT $18) WHEN true THEN rif_claimed ELSE NULL END),\n      (CASE ($17 = 'RifClaimed' AND $18) WHEN true THEN rif_claimed ELSE NULL END) DESC\n    ,\n      (CASE ($17 = 'BtcClaimed' AND NOT $18) WHEN true THEN btc_claimed ELSE NULL END),\n      (CASE ($17 = 'BtcClaimed' AND $18) WHEN true THEN btc_claimed ELSE NULL END) DESC\n    ,\n      (CASE ($17 = 'RifUsdRate' AND NOT $18) WHEN true THEN rif_usd_rate ELSE NULL END),\n      (CASE ($17 = 'RifUsdRate' AND $18) WHEN true THEN rif_usd_rate ELSE NULL END) DESC\n    ,\n      (CASE ($17 = 'BtcUsdRate' AND NOT $18) WHEN true THEN btc_usd_rate ELSE NULL END),\n      (CASE ($17 = 'BtcUsdRate' AND $18) WHEN true THEN btc_usd_rate ELSE NULL END) DESC\n    ,\n      (CASE ($17 = 'AsamiIssuanceRate' AND NOT $18) WHEN true THEN asami_issuance_rate ELSE NULL END),\n      (CASE ($17 = 'AsamiIssuanceRate' AND $18) WHEN true THEN asami_issuance_rate ELSE NULL END) DESC\n    ,\n      (CASE ($17 = 'TxHash' AND NOT $18) WHEN true THEN tx_hash ELSE NULL END),\n      (CASE ($17 = 'TxHash' AND $18) WHEN true THEN tx_hash ELSE NULL END) DESC\n     LIMIT $19 OFFSET $20",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "rif_claimed!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 3,
+        "name": "btc_claimed!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 4,
+        "name": "rif_usd_rate!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 5,
+        "name": "btc_usd_rate!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 6,
+        "name": "asami_issuance_rate!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 7,
+        "name": "tx_hash!: String",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Numeric",
+        "Bool",
+        "Varchar",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "fa2d127aeb05ea170aea1d9c8e1a05b3e68cdd21a143b9e094c2269a79e8f96a"
+}

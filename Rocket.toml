@@ -44,3 +44,4 @@ gasless_rbtc_per_user="0x574FBDE6000" # 6e12 This is the contract's default so w
 gasless_fee="0xDE0B6B3A7640000" # 1 DOC, this is a contract default.
 admin_claim_trigger="0x2A5A058FC295EC000000" # When the admin has this many asami tokens, it will claim.
 gas_override=true
+rpc_polling_interval_milli=10

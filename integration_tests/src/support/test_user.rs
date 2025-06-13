@@ -12,7 +12,7 @@ pub use api::{
 };
 use api::{
     models::{on_chain_job::AsamiFunctionCall, AbiDecode, InsertHandle, OnChainJobKind, OnChainJobStatus},
-    on_chain::{self, Address, AsamiContract, DocContract, Http, LegacyContract, Provider, SignerMiddleware, IERC20},
+    on_chain::{self, Address, AsamiContract, DocContract, LegacyContract, SignerMiddleware, IERC20},
 };
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
 use ethers::{
@@ -61,7 +61,8 @@ impl TestUser {
         let rsk = test_app.app.settings.rsk.clone();
         let wallet = test_app.make_wallet().await;
 
-        let provider = Provider::<Http>::try_from(&rsk.rpc_url).unwrap().interval(std::time::Duration::from_millis(10));
+        let provider = on_chain::OnChain::make_asami_provider(&rsk.rpc_url, 10).unwrap();
+
         let nonce_manager = NonceManagerMiddleware::new(provider, wallet.address());
         let client = std::sync::Arc::new(SignerMiddleware::new(nonce_manager, wallet.clone()));
 
@@ -361,7 +362,7 @@ impl TestUser {
                         managed_unit_amount: None,
                         topic_ids: topic_ids.iter().map(|x| *x as i64).collect(),
                         price_per_point: milli("1").encode_hex(),
-                        max_individual_reward: milli("20000").encode_hex(),
+                        max_individual_reward: u("2000").encode_hex(),
                         min_individual_reward: milli("200").encode_hex(),
                         thumbs_up_only: false,
                     },

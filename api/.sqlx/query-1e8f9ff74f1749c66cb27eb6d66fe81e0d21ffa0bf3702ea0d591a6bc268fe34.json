@@ -1,0 +1,69 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO backer_disbursements (rif_claimed, \nbtc_claimed, \nrif_usd_rate, \nbtc_usd_rate, \nasami_issuance_rate, \ntx_hash) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id as \"id!: i32\", \ncreated_at as \"created_at!: UtcDateTime\", \nrif_claimed as \"rif_claimed!: Decimal\", \nbtc_claimed as \"btc_claimed!: Decimal\", \nrif_usd_rate as \"rif_usd_rate!: Decimal\", \nbtc_usd_rate as \"btc_usd_rate!: Decimal\", \nasami_issuance_rate as \"asami_issuance_rate!: Decimal\", \ntx_hash as \"tx_hash!: String\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 2,
+        "name": "rif_claimed!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 3,
+        "name": "btc_claimed!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 4,
+        "name": "rif_usd_rate!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 5,
+        "name": "btc_usd_rate!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 6,
+        "name": "asami_issuance_rate!: Decimal",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 7,
+        "name": "tx_hash!: String",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Numeric",
+        "Numeric",
+        "Numeric",
+        "Numeric",
+        "Numeric",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "1e8f9ff74f1749c66cb27eb6d66fe81e0d21ffa0bf3702ea0d591a6bc268fe34"
+}
