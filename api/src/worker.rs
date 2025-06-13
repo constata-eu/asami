@@ -43,6 +43,9 @@ async fn main() {
         run!("Sync on-chain events", s, {
             s.synced_event().sync_on_chain_events().await
         });
+        run!("Store backer stakes", s, {
+            s.backer().store_today_stakes().await
+        });
     }];
 
     every![60000, |s| {
