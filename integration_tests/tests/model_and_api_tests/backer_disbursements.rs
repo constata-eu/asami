@@ -16,6 +16,10 @@ async fn pays_out_backers() {
         let campaign = advertiser.make_campaign_one(u("1000000"), 20, &[]).await;
         h.a().batch_collabs(campaign, &[&alice, &bob, &carl, &dan]).await;
 
+        h.test_app.start_mining().await;
+        h.test_app.app.synced_event().sync_on_chain_events().await.unwrap();
+        h.test_app.stop_mining().await;
+
       h.test_app.wait_for_job("admin claimed balance",
           OnChainJobKind::AdminClaimBalancesFree,
           OnChainJobStatus::Settled).await;
@@ -59,9 +63,12 @@ async fn pays_out_backers() {
       assert_eq!(payouts.len(), 5);
       assert!(payouts.iter().all(|x| !x.paid() ));
 
+      assert_eq!(h.test_app.admin_asami_balance().await, u("1280000"));
+      assert_eq!(filled.asamis_to_distribute(), Decimal::new(240_120, 0));
       h.a().start_mining().await;
       h.test_app.app.backer_payout().pay_all().await.unwrap();
       h.a().stop_mining().await;
+      assert_eq!(h.test_app.admin_asami_balance().await, u("1039880"));
 
       let holdout = h.test_app.app.backer_payout().find(1).await.unwrap(); 
           assert!(!holdout.paid());
@@ -86,7 +93,6 @@ async fn pays_out_backers() {
       assert_eq!(another_empty.backer_payout_scope().count().await.unwrap(), 0);
       assert_eq!(h.test_app.app.backer_payout().select().count().await.unwrap(), 5);
       assert_eq!(h.test_app.app.backer_stake().select().count().await.unwrap(), 5);
-
     }).await;
 }
 
@@ -95,7 +101,7 @@ async fn pays_out_backers() {
 async fn creates_disbursements_from_on_chain_data() {
     std::env::set_var(
         "ROCKET_RSK",
-        format!("{{ mainnet_readonly_rpc_url={} }}", std::env::var("MAINNET_READONLY_RPC").unwrap() )
+        format!("{{ readonly_mainnet_rpc_url={} }}", std::env::var("MAINNET_READONLY_RPC").unwrap() )
     );
 
     TestHelper::run(|h| async move {

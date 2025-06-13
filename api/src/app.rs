@@ -19,7 +19,7 @@ use super::{models::*, on_chain::OnChain, *};
 pub struct App {
     pub settings: Box<AppConfig>,
     pub db: Db,
-    pub on_chain: OnChain,
+    pub on_chain: Box<OnChain>,
     pub stripe_client: Box<stripe::Client>,
 }
 
@@ -36,7 +36,7 @@ impl App {
 
     pub async fn new(password: String, config: AppConfig) -> AsamiResult<Self> {
         let db = config.db().await?;
-        let on_chain = OnChain::new(&config, &password).await?;
+        let on_chain = Box::new(OnChain::new(&config, &password).await?);
         let stripe_client = stripe::Client::new(&config.stripe.secret_key);
 
         Ok(Self {
@@ -194,7 +194,9 @@ pub struct Rsk {
     pub gasless_fee: U256,
     pub admin_claim_trigger: U256,
     pub gas_override: Option<bool>,
-    pub mainnet_readonly_rpc_url: String,
+    pub readonly_mainnet_rpc_url: Option<String>,
+    pub rpc_polling_interval_milli: u64,
+    pub mainnet_rpc_polling_interval_milli: Option<u64>
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]

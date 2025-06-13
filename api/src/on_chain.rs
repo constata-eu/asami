@@ -1,9 +1,10 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use ethers::middleware::NonceManagerMiddleware;
+use url::Url;
 pub use ethers::{
     prelude::{abigen, LogMeta, Middleware, SignerMiddleware},
-    providers::{Http, PendingTransaction, Provider},
+    providers::{Http, PendingTransaction, Provider, RetryClient, RetryClientBuilder, HttpRateLimitRetryPolicy},
     signers::{coins_bip39::English, LocalWallet, MnemonicBuilder, Signer},
     types::{Address, U256, U64},
 };
@@ -75,52 +76,52 @@ abigen!(
     derives(serde::Deserialize, serde::Serialize),
 );
 
-pub type AsamiMiddleware = SignerMiddleware<NonceManagerMiddleware<Provider<Http>>, LocalWallet>;
+pub type AsamiProvider = Provider<RetryClient<Http>>;
+pub type AsamiMiddleware = SignerMiddleware<NonceManagerMiddleware<AsamiProvider>, LocalWallet>;
 pub type LegacyContract = LegacyContractCode<AsamiMiddleware>;
 pub type DocContract = IERC20<AsamiMiddleware>;
 pub type AsamiContract = AsamiContractCode<AsamiMiddleware>;
-pub type CollectiveContract = CollectiveCode<Provider<Http>>;
-pub type PriceOracleContract = PriceOracleCode<Provider<Http>>;
-pub type UniswapContract = UniswapCode<Provider<Http>>;
+pub type CollectiveContract = CollectiveCode<AsamiProvider>;
+pub type PriceOracleContract = PriceOracleCode<AsamiProvider>;
+pub type UniswapContract = UniswapCode<AsamiProvider>;
 
-impl CollectiveContract {
-    pub fn from_config(config: &AppConfig) -> AsamiResult<Self> {
-        let provider = Provider::<Http>::try_from(&config.rsk.mainnet_readonly_rpc_url)
-            .map_err(|_| Error::Init("Invalid rsk mainnet_readonly_rpc_url in config".to_string()))?;
+trait ReadonlyContract: Sized {
+    fn from_config(config: &AppConfig, addr: &str) -> AsamiResult<Self> {
+        let url = config.rsk.readonly_mainnet_rpc_url.as_ref().unwrap_or(&config.rsk.rpc_url);
+        let interval = config.rsk.mainnet_rpc_polling_interval_milli.as_ref()
+            .unwrap_or(&config.rsk.rpc_polling_interval_milli);
 
-        let address: Address = "0x78349782F753a593ceBE91298dAfdB9053719228"
+        let provider = OnChain::make_asami_provider(url, *interval)?;
+
+        let address: Address = addr
             .parse()
-            .map_err(|_| Error::Init("Invalid collective_gague contract address".to_string()))?;
+            .map_err(|_| Error::Init("Invalid readonly contract address".to_string()))?;
 
-        Ok(Self::new(address, std::sync::Arc::new(provider)))
+        Ok(Self::make(address, std::sync::Arc::new(provider)))
+    }
+
+    fn make(addr: Address, provider: Arc<AsamiProvider>) -> Self;
+}
+
+impl ReadonlyContract for CollectiveContract {
+    fn make(addr: Address, provider: Arc<AsamiProvider>) -> Self {
+        Self::new(addr, provider)
     }
 }
 
-impl PriceOracleContract {
-    pub fn from_config(config: &AppConfig) -> AsamiResult<Self> {
-        let provider = Provider::<Http>::try_from(&config.rsk.mainnet_readonly_rpc_url)
-            .map_err(|_| Error::Init("Invalid rsk mainnet_readonly_rpc_url in config".to_string()))?;
+impl ReadonlyContract for PriceOracleContract {
+    fn make(addr: Address, provider: Arc<AsamiProvider>) -> Self {
+        Self::new(addr, provider)
+    }
+}
 
-        let address: Address = "0xe2927a0620b82A66D67F678FC9B826b0E01b1BFd"
-            .parse()
-            .map_err(|_| Error::Init("Invalid doc oracle contract address".to_string()))?;
-
-        Ok(Self::new(address, std::sync::Arc::new(provider)))
+impl ReadonlyContract for UniswapContract {
+    fn make(addr: Address, provider: Arc<AsamiProvider>) -> Self {
+        Self::new(addr, provider)
     }
 }
 
 impl UniswapContract {
-    pub fn from_config(config: &AppConfig) -> AsamiResult<Self> {
-        let provider = Provider::<Http>::try_from(&config.rsk.mainnet_readonly_rpc_url)
-            .map_err(|_| Error::Init("Invalid rsk mainnet_readonly_rpc_url in config".to_string()))?;
-
-        let address: Address = "0xa89a86d3d9481a741833208676fa57d0f1d5c6cb"
-            .parse()
-            .map_err(|_| Error::Init("Invalid uniswap contract address".to_string()))?;
-
-        Ok(Self::new(address, std::sync::Arc::new(provider)))
-    }
-
     pub async fn price(&self) -> AsamiResult<U256> {
         let sqrt_price_x96 = self.slot_0().call().await?.0;
         let prod = sqrt_price_x96.checked_mul(sqrt_price_x96).ok_or_else(|| Error::runtime("checked mul of u256 failed"))?;
@@ -139,6 +140,8 @@ pub struct OnChain {
     pub asami_address: Address,
     pub doc_contract: DocContract,
     pub collective_contract: CollectiveContract,
+    pub doc_price_contract: PriceOracleContract,
+    pub rif_price_contract: UniswapContract,
 }
 
 impl OnChain {
@@ -154,8 +157,7 @@ impl OnChain {
             ));
         }
 
-        let provider = Provider::<Http>::try_from(&config.rsk.rpc_url)
-            .map_err(|_| Error::Init("Invalid rsk rpc_url in config".to_string()))?;
+        let provider = Self::make_asami_provider(&config.rsk.rpc_url, config.rsk.rpc_polling_interval_milli)?;
 
         let nonce_manager = NonceManagerMiddleware::new(provider, wallet.address());
 
@@ -184,8 +186,10 @@ impl OnChain {
             legacy_contract: LegacyContract::new(legacy_address, client.clone()),
             asami_contract: AsamiContract::new(asami_address, client.clone()),
             asami_address,
-            collective_contract: CollectiveContract::from_config(&config)?,
             doc_contract: IERC20::new(doc_address, client.clone()),
+            collective_contract: CollectiveContract::from_config(config, "0x78349782F753a593ceBE91298dAfdB9053719228")?,
+            doc_price_contract: PriceOracleContract::from_config(config, "0xe2927a0620b82A66D67F678FC9B826b0E01b1BFd")?,
+            rif_price_contract: UniswapContract::from_config(config, "0xa89a86d3d9481a741833208676fa57d0f1d5c6cb")?,
             client,
         })
     }
@@ -207,6 +211,29 @@ impl OnChain {
 
     pub async fn admin_unclaimed_asami_balance(&self) -> anyhow::Result<U256> {
         Ok(self.asami_contract.accounts(self.asami_contract.client().address()).await?.3)
+    }
+
+    pub fn make_asami_provider(url: &str, interval: u64) -> AsamiResult<AsamiProvider> {
+        let reqwest_client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(3))
+            .build()
+            .map_err(|_| Error::Init("Could not build reqwest client for on-chain".to_string()))?;
+
+        let url = Url::parse(url)
+            .map_err(|_| Error::Init("Invalid rsk rpc_url in config".to_string()))?;
+
+        let http = Http::new_with_client(url, reqwest_client);
+        
+        let retry_client = RetryClientBuilder::default()
+            .timeout_retries(3)
+            .rate_limit_retries(5)
+            .initial_backoff(Duration::from_millis(500)) // Initial backoff duration
+            .build(http, Box::new(HttpRateLimitRetryPolicy));
+
+        let provider = Provider::new(retry_client)
+            .interval(std::time::Duration::from_millis(interval));
+
+        Ok(provider)
     }
 }
 

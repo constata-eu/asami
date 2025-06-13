@@ -56,10 +56,10 @@ impl BackerDisbursementHub {
       let raw_issuance = self.state.on_chain.asami_contract.get_issuance_for(u("1")).call().await.context("getting asami issuance rate")?;
       let asami_issuance_rate = wei_to_decimal_safe(raw_issuance)?;
 
-      let doc_oracle = on_chain::PriceOracleContract::from_config(&self.state.settings)?;
+      let doc_oracle = &self.state.on_chain.doc_price_contract;
       let btc_price = wei_to_decimal_safe( doc_oracle.get_price().call().await.context("getting btc price")? )?;
 
-      let rif_oracle = on_chain::UniswapContract::from_config(&self.state.settings)?;
+      let rif_oracle = &self.state.on_chain.rif_price_contract;
       let rif_price = wei_to_decimal_safe(rif_oracle.price().await.context("getting rif price")?)?;
 
       let disbursement = self.insert(InsertBackerDisbursement{
