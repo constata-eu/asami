@@ -7044,7 +7044,7 @@ dependencies = [
 [[package]]
 name = "twitter-v2"
 version = "0.1.8"
-source = "git+https://github.com/constata-eu/twitter-v2-rs#192e1b60636edefa3d7733f2ff676a67976e4333"
+source = "git+https://github.com/constata-eu/twitter-v2-rs#a2e4073fa4fcd2b9da67b4273813ee47a2a3e60b"
 dependencies = [
  "async-trait",
  "futures",
