@@ -1,0 +1,51 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \ncycle as \"cycle!: String\", \npool as \"pool!: String\", \nsupply as \"supply!: String\" FROM fee_pool_snapshots WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR cycle = $4::varchar) AND (NOT $5::boolean OR pool = $6::varchar) AND (NOT $7::boolean OR supply = $8::varchar) ORDER BY \n      (CASE ($9 = 'Id' AND NOT $10) WHEN true THEN id ELSE NULL END),\n      (CASE ($9 = 'Id' AND $10) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'Cycle' AND NOT $10) WHEN true THEN cycle ELSE NULL END),\n      (CASE ($9 = 'Cycle' AND $10) WHEN true THEN cycle ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'Pool' AND NOT $10) WHEN true THEN pool ELSE NULL END),\n      (CASE ($9 = 'Pool' AND $10) WHEN true THEN pool ELSE NULL END) DESC\n    ,\n      (CASE ($9 = 'Supply' AND NOT $10) WHEN true THEN supply ELSE NULL END),\n      (CASE ($9 = 'Supply' AND $10) WHEN true THEN supply ELSE NULL END) DESC\n     LIMIT $11 OFFSET $12",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "cycle!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "pool!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "supply!: String",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "4ea579e0ce9556f6e6b056a4c98d7032a2d77c6d811afe3ddb9dc380bd382a5f"
+}

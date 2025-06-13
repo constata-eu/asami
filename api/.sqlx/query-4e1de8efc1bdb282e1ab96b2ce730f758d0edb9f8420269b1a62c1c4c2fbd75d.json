@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM fee_pool_snapshots WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4e1de8efc1bdb282e1ab96b2ce730f758d0edb9f8420269b1a62c1c4c2fbd75d"
+}
