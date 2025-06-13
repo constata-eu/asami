@@ -15,6 +15,63 @@ import { AmountField } from "../../components/custom_fields";
 import { Head1, Lead } from "../../components/theme";
 import { BigNumField } from "../../components/custom_fields";
 
+/*
+ TODO:
+
+ Stats page will be a text + boxes like other sections.
+
+ Club Public Explorer
+ This is public club data,
+ for transparency. 
+ 
+ - Active Handles.
+     - Total that ever collaborated.
+     - secondary numbers:
+       - Currently active.
+       - Joined last month.
+
+    * Allow filtering by kind.
+     [ Browse handles ]
+
+ - Campaigns:
+     - total campaigns.
+     - secondary numbers:
+       - Last month.
+       - monthly average.
+
+     [ Browse campaigns ]
+
+ - Collab rewards:
+     - Total collab rewards.
+     - secondary numbers:
+       - last month
+       - monthly average
+
+     [ Browse Collabs ]
+     
+ - Collabs:
+     - Total collabs.
+     - secondary numbres:
+       - Last month
+       - monthly average.
+
+ - Asami token:
+     - Average yield per 1000 tokens. 
+         44 DOC.
+
+     - secondary numbers:
+        - Total yield in history.
+        - 
+
+ 
+ - Campaigns:
+     - 
+     - Will show total campaign count.
+     - Total 
+
+
+*/
+
 export const StatsShow = () => {
   const t = useTranslate();
 
