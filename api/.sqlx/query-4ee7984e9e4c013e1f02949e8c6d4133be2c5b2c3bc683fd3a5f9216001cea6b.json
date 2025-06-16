@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO fee_pool_snapshots (cycle, \npool, \nsupply) VALUES ($1, $2, $3) RETURNING id as \"id!: i32\", \ncycle as \"cycle!: String\", \npool as \"pool!: String\", \nsupply as \"supply!: String\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "cycle!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "pool!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "supply!: String",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "4ee7984e9e4c013e1f02949e8c6d4133be2c5b2c3bc683fd3a5f9216001cea6b"
+}

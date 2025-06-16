@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE fee_pool_snapshots SET (id, \ncycle, \npool, \nsupply) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE cycle END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE pool END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE supply END)) WHERE id = $1 RETURNING id as \"id!: i32\", \ncycle as \"cycle!: String\", \npool as \"pool!: String\", \nsupply as \"supply!: String\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "cycle!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "pool!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "supply!: String",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "7c633282ea23976e54a9d61c21ad07e190ffc6310eb46861e70f1f9178551165"
+}

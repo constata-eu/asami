@@ -22,6 +22,8 @@ impl OnChainJob {
             return Ok(None);
         }
 
+        self.state.fee_pool_snapshot().create_if_missing(current_cycle, pool, supply).await?;
+
         let mut params = vec![];
 
         for h in holders {
@@ -31,7 +33,7 @@ impl OnChainJob {
 
             let reward = balance * pool / supply;
 
-            self.state.estimated_fee_pool_claim().create_if_missing(&h, reward, current_cycle).await?;
+            self.state.estimated_fee_pool_claim().create_if_missing(&h, reward, balance, current_cycle).await?;
 
             // We don't intentionally burn DOC by paying dividends to contracts.
             // But whatever, if they want to do it they can.

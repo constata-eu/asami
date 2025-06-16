@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM fee_pool_snapshots WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR cycle = $4::varchar) AND (NOT $5::boolean OR pool = $6::varchar) AND (NOT $7::boolean OR supply = $8::varchar)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "00e2c771bf4d633c82abc8979c1fd991feeaf60a509f3b42a1a793bd7ef00236"
+}

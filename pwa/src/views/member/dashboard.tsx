@@ -37,7 +37,9 @@ const Dashboard = () => {
       <ResponsiveAppBar />
       <CardTable mb="2em">
         <TitleCard handles={handles} campaigns={campaigns} />
-        <BalanceCard />
+        <Box mb="1em">
+          <BalanceCard />
+        </Box>
         <HandleSettings handles={handles} />
         <CampaignList handles={handles} />
       </CardTable>
