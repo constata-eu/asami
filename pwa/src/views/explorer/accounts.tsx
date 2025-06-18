@@ -19,11 +19,7 @@ import { viewPostUrl } from "../../lib/campaign";
 import { useParams, Link } from "react-router-dom";
 import { ExplorerLayout } from "../layout";
 import { Box, Card, CardContent, styled, Typography } from "@mui/material";
-import {
-  AddressField,
-  AmountField,
-  BigNumField,
-} from "../../components/custom_fields";
+import { AddressField, AmountField } from "../../components/custom_fields";
 import XIcon from "@mui/icons-material/X";
 import BadgeIcon from "@mui/icons-material/Badge";
 import CampaignIcon from "@mui/icons-material/Campaign";
@@ -219,7 +215,7 @@ const ScoringCardTable = ({ handle }) => {
             >
               {handle.username}
             </Typography>
-            <BigText sx={{ textAlign: "center", mt: "0.2em" }}>
+            <BigText sx={{ textAlign: "center" }}>
               {BigInt(handle.score)}
               <Typography
                 fontSize="0.4em"
@@ -228,7 +224,7 @@ const ScoringCardTable = ({ handle }) => {
                 padding="0"
                 fontWeight="100"
                 fontFamily="'LeagueSpartanLight'"
-                lineHeight="0.5em"
+                lineHeight="0.7em"
                 textTransform="uppercase"
               >
                 {t("account_show.score")}

@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM value_series WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR name = $4::series_name) AND (NOT $5::boolean OR value = $6::varchar) AND (NOT $7::boolean OR created_at = $8::timestamptz)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        {
+          "Custom": {
+            "name": "series_name",
+            "kind": {
+              "Enum": [
+                "asami_doc_price",
+                "asami_supply",
+                "asami_assigned_tokens",
+                "asami_issuance_rate",
+                "asami_fee_pool"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "7afc9831537f7fd206d77b46833d501afcdc18c1f32884ab0e914532ce5df06c"
+}

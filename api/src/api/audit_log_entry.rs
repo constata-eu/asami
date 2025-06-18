@@ -30,7 +30,7 @@ impl Showable<models::AuditLogEntry, AuditLogEntryFilter> for AuditLogEntry {
     fn sort_field_to_order_by(field: &str) -> Option<models::AuditLogEntryOrderBy> {
         match field {
             "id" => Some(AuditLogEntryOrderBy::Id),
-            "created_at" => Some(AuditLogEntryOrderBy::CreatedAt),
+            "createdAt" => Some(AuditLogEntryOrderBy::CreatedAt),
             _ => None,
         }
     }

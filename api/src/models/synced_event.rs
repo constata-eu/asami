@@ -1,4 +1,7 @@
-use std::{collections::{HashMap, HashSet}, sync::Arc};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 use ethers::prelude::{EthLogDecode, Event};
 
@@ -8,7 +11,8 @@ use crate::{
     on_chain::{
         asami_contract_code::{
             CampaignCreatedFilter, CampaignExtendedFilter, CampaignReimbursedFilter, CampaignToppedUpFilter,
-        }, AsamiContract, BuilderRewardsClaimedFilter, CollectiveContract
+        },
+        AsamiContract, BuilderRewardsClaimedFilter, CollectiveContract,
     },
 };
 
@@ -61,13 +65,17 @@ impl SyncedEventHub {
         self.sync_asami_transfer_events(from_block, to_block).await?;
 
         let rewards_from_block = d_to_u64(*index_state.last_rewards_indexed_block());
-        let rewards_to_block =  self.collective_contract().client().get_block_number().await? - self.state.settings.rsk.reorg_protection_padding;
+        let rewards_to_block = self.collective_contract().client().get_block_number().await?
+            - self.state.settings.rsk.reorg_protection_padding;
         self.sync_builder_rewards_claimed_events(rewards_from_block, rewards_to_block).await?;
         self.sync_new_allocation_events(rewards_from_block, rewards_to_block).await?;
 
-        index_state.update()
+        index_state
+            .update()
             .last_rewards_indexed_block(u64_to_d(rewards_to_block))
-            .last_synced_block(u64_to_d(to_block)).save().await?;
+            .last_synced_block(u64_to_d(to_block))
+            .save()
+            .await?;
         Ok(())
     }
 

@@ -1,0 +1,69 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \nholder_id as \"holder_id!: i32\", \namount as \"amount!: String\", \nbalance as \"balance!: String\", \ncontract_cycle as \"contract_cycle!: String\", \ncreated_at as \"created_at!: DateTime < Utc >\" FROM estimated_fee_pool_claims WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR holder_id = $4::int4) AND (NOT $5::boolean OR amount = $6::varchar) AND (NOT $7::boolean OR balance = $8::varchar) AND (NOT $9::boolean OR balance > $10::varchar) AND (NOT $11::boolean OR contract_cycle = $12::varchar) AND (NOT $13::boolean OR created_at = $14::timestamptz) ORDER BY \n      (CASE ($15 = 'Id' AND NOT $16) WHEN true THEN id ELSE NULL END),\n      (CASE ($15 = 'Id' AND $16) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($15 = 'HolderId' AND NOT $16) WHEN true THEN holder_id ELSE NULL END),\n      (CASE ($15 = 'HolderId' AND $16) WHEN true THEN holder_id ELSE NULL END) DESC\n    ,\n      (CASE ($15 = 'Amount' AND NOT $16) WHEN true THEN amount ELSE NULL END),\n      (CASE ($15 = 'Amount' AND $16) WHEN true THEN amount ELSE NULL END) DESC\n    ,\n      (CASE ($15 = 'Balance' AND NOT $16) WHEN true THEN balance ELSE NULL END),\n      (CASE ($15 = 'Balance' AND $16) WHEN true THEN balance ELSE NULL END) DESC\n    ,\n      (CASE ($15 = 'ContractCycle' AND NOT $16) WHEN true THEN contract_cycle ELSE NULL END),\n      (CASE ($15 = 'ContractCycle' AND $16) WHEN true THEN contract_cycle ELSE NULL END) DESC\n    ,\n      (CASE ($15 = 'CreatedAt' AND NOT $16) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($15 = 'CreatedAt' AND $16) WHEN true THEN created_at ELSE NULL END) DESC\n     LIMIT $17 OFFSET $18 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "holder_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "amount!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "balance!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "contract_cycle!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at!: DateTime < Utc >",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "623e439e1a4f920ee48974493e65aaaa4083d24a731e9c15c00150adee2befed"
+}

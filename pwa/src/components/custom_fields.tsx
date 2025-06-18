@@ -17,11 +17,15 @@ export const AmountField = ({ source, label, currency }) => {
   );
 };
 
-function truncateEther(wei: BigNumberish, decimals = 4): string {
+export function truncateEther(wei: BigNumberish, decimals = 4): string {
   const str = formatEther(wei);
   const dotIndex = str.indexOf(".");
-  if (dotIndex === -1 || decimals === 0) return str;
-  return str.slice(0, dotIndex + decimals + 1);
+  if (dotIndex === -1) return str;
+  if (decimals === 0) {
+    return str.slice(0, dotIndex);
+  } else {
+    return str.slice(0, dotIndex + decimals + 1);
+  }
 }
 
 export const BigNumField = ({ source, label }) => {

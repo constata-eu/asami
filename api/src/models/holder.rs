@@ -4,9 +4,9 @@ model! {
   state: App,
   table: holders,
   struct Holder {
-    #[sqlx_model_hints(int4, default)]
+    #[sqlx_model_hints(int4, default, op_in)]
     id: i32,
-    #[sqlx_model_hints(varchar)]
+    #[sqlx_model_hints(varchar, op_ilike)]
     address: String,
     #[sqlx_model_hints(varchar)]
     balance: String,
@@ -14,7 +14,60 @@ model! {
     last_auto_paid_cycle: String,
     #[sqlx_model_hints(boolean)]
     is_contract: bool,
+    #[sqlx_model_hints(varchar, default)]
+    estimated_total_doc_claimed: String,
+  },
+  has_many {
+      EstimatedFeePoolClaim(holder_id)
   }
+}
+
+impl HolderHub {
+    pub async fn force_hydrate(&self) -> AsamiResult<()> {
+        let ids = self
+            .state
+            .db
+            .fetch_all_scalar(sqlx::query_scalar!(
+                "SELECT id FROM holders WHERE force_hydrate = true LIMIT 50"
+            ))
+            .await?;
+        if ids.is_empty() {
+            return Ok(());
+        }
+        self.hydrate_estimated_total_claims_for(ids.iter().copied()).await?;
+        self.state
+            .db
+            .execute(sqlx::query!(
+                "UPDATE holders SET force_hydrate = false WHERE id = ANY($1)",
+                &ids
+            ))
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn hydrate_estimated_total_claims_for(&self, ids: impl Iterator<Item = i32>) -> AsamiResult<()> {
+        for id in ids {
+            let holder = self.find(id).await?;
+
+            let mut total_doc = u("0");
+
+            if *holder.is_contract() {
+                continue;
+            }
+
+            for claim in holder.estimated_fee_pool_claim_vec().await? {
+                if u256(claim.balance()) <= u("4000") {
+                    continue;
+                }
+                total_doc += u256(claim.amount());
+            }
+
+            holder.update().estimated_total_doc_claimed(total_doc.encode_hex()).save().await?;
+        }
+
+        Ok(())
+    }
 }
 
 impl Holder {
@@ -33,7 +86,7 @@ model! {
     holder_id: i32,
     #[sqlx_model_hints(varchar)]
     amount: String,
-    #[sqlx_model_hints(varchar)]
+    #[sqlx_model_hints(varchar, op_gt)]
     balance: String,
     #[sqlx_model_hints(varchar)]
     contract_cycle: String,
@@ -43,7 +96,13 @@ model! {
 }
 
 impl EstimatedFeePoolClaimHub {
-    pub async fn create_if_missing(&self, holder: &Holder, amount: U256, balance: U256, contract_cycle: U256) -> AsamiResult<()> {
+    pub async fn create_if_missing(
+        &self,
+        holder: &Holder,
+        amount: U256,
+        balance: U256,
+        contract_cycle: U256,
+    ) -> AsamiResult<()> {
         if self
             .select()
             .holder_id_eq(holder.id())
@@ -66,46 +125,6 @@ impl EstimatedFeePoolClaimHub {
 
         Ok(())
     }
-
-    pub async fn populate_new_column_data(&self) -> AsamiResult<()> {
-        let snapshots = [
-            (
-                "0x0000000000000000000000000000000000000000000000000000000000000019".to_string(),
-                u("2800000")
-            ),
-            (
-                "0x000000000000000000000000000000000000000000000000000000000000001a".to_string(),
-                u("2900000")
-            ),
-        ];
-
-        for (cycle, supply) in snapshots {
-            let mut pool = u("0");
-            for claim in self.state
-                .estimated_fee_pool_claim()
-                .select()
-                .contract_cycle_eq(&cycle)
-                .all().await? {
-                    pool += u256(claim.amount());
-                }
-
-            self.state.fee_pool_snapshot().create_if_missing(u256(&cycle), pool, supply).await?;
-            let claims = self.state.estimated_fee_pool_claim().select()
-                .balance_eq(weihex("0"))
-                .contract_cycle_eq(&cycle)
-                .all()
-                .await?;
-
-            dbg!(&claims);
-
-            for claim in claims {
-                let balance = u256(claim.amount()) * supply / pool;
-                claim.update().balance(balance.encode_hex()).save().await?;
-            }
-        }
-
-        Ok(())
-    }
 }
 
 model! {
@@ -125,13 +144,7 @@ model! {
 
 impl FeePoolSnapshotHub {
     pub async fn create_if_missing(&self, cycle: U256, pool: U256, supply: U256) -> AsamiResult<()> {
-        if self
-            .select()
-            .cycle_eq(cycle.encode_hex())
-            .count()
-            .await?
-            > 0
-        {
+        if self.select().cycle_eq(cycle.encode_hex()).count().await? > 0 {
             return Ok(());
         }
 

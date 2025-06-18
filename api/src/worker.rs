@@ -1,5 +1,7 @@
 use std::time::Duration;
 
+use api::models::SeriesName;
+
 #[tokio::main(worker_threads = 10)]
 async fn main() {
     let app = api::App::from_stdin_password().await.unwrap();
@@ -43,14 +45,30 @@ async fn main() {
         run!("Sync on-chain events", s, {
             s.synced_event().sync_on_chain_events().await
         });
-        run!("Store backer stakes", s, {
-            s.backer().store_today_stakes().await
+        run!("Store backer stakes", s, { s.backer().store_today_stakes().await });
+    }];
+
+    every![1800000, |s| {
+        run!("Store ASAMI supply", s, {
+            s.value_series().store(SeriesName::AsamiSupply).await
+        });
+        run!("Store ASAMI assigned tokens", s, {
+            s.value_series().store(SeriesName::AsamiAssignedTokens).await
+        });
+        run!("Store ASAMI fee pool", s, {
+            s.value_series().store(SeriesName::AsamiFeePool).await
+        });
+        run!("Store issuance rate", s, {
+            s.value_series().store(SeriesName::AsamiIssuanceRate).await
         });
     }];
 
     every![60000, |s| {
         run!("Create CC campaigns", s, {
             s.campaign().create_managed_on_chain_campaigns().await
+        });
+        run!("Store ASAMI price", s, {
+            s.value_series().store(SeriesName::AsamiDocPrice).await
         });
     }];
 
@@ -61,6 +79,7 @@ async fn main() {
         run!("Force community-member hydrations", s, {
             s.community_member().force_hydrate().await
         });
+        run!("Force holder hydrations", s, { s.holder().force_hydrate().await });
     }];
 
     every![10000, |s| {

@@ -14,6 +14,7 @@
         "asamiBalance": "ASAMI",
         "rbtcBalance": "RBTC",
         "docBalance": "DOC",
+        "confirmedYield": "Rendimiento de $ASAMI",
         "allowsGasless": "Retiro sin gas",
         "idEq": "por ID",
         "addrLike": "por billetera"
@@ -106,10 +107,54 @@
     },
     "Stats": {
       "fields": {
-        "totalActiveHandles": "Cuentas de X activas",
+        "totalActiveHandles": "Handles activos",
+        "currentlyActive": "Actualmente activos",
+        "joinedRecently": "Menos de 30 días de antigüedad",
+        "recentCampaigns": "Menos de 30 días de antigüedad",
+        "thirtyDayAverageCampaigns": "Promedio cada 30 días",
         "totalCollabs": "Colaboraciones",
+        "recentCollabs": "Menos de 30 días de antigüedad",
+        "thirtyDayAverageCollabs": "Promedio cada 30 días",
+        "totalRewardsPaid": "Recompensas pagadas",
+        "recentRewardsPaid": "Menos de 30 días de antigüedad",
+        "thirtyDayAverageRewardsPaid": "Promedio cada 30 días",
         "totalCampaigns": "Campañas",
-        "totalRewardsPaid": "Pagos"
+        "asamiTokenPrice": "Último precio (x 1000)",
+        "asamiTokenPaybackPeriod": "Retorno esperado (meses)",
+        "xApiOk": "Sincronizar con X",
+        "rskApiOk": "Sincronizar con RSK"
+      },
+      "show_page_cards": {
+        "active_handles": {
+          "title": "COLABORADORES",
+          "subtitle": "con al menos una colaboración",
+          "button": "Explorar colaboradores"
+        },
+        "campaigns": {
+          "title": "CAMPAÑAS",
+          "subtitle": "desde el lanzamiento",
+          "button": "Explorar campañas"
+        },
+        "collabs": {
+          "title": "COLABORACIONES",
+          "subtitle": "desde el lanzamiento",
+          "button": "Explorar colaboraciones"
+        },
+        "rewards_paid": {
+          "title": "RECOMPENSAS",
+          "subtitle": "totales desde el lanzamiento",
+          "button": "Explorar recompensas"
+        },
+        "token_yield": {
+          "title": "RENDIMIENTO HISTÓRICO ASAMI",
+          "subtitle": "Por cada 1K ASAMI cada 30 días",
+          "button": "Explorar token ASAMI"
+        },
+        "system_status": {
+          "title": "ESTADO DEL SISTEMA",
+          "subtitle": "",
+          "button": "Ver estado del sistema"
+        }
       }
     },
     "OnChainJob": {
@@ -123,6 +168,15 @@
         "nonce": "Nonce",
         "block": "Bloque",
         "statusLine": "Mensaje"
+      }
+    },
+    "Holder": {
+      "fields": {
+        "address": "Dirección",
+        "balance": "ASAMI actual",
+        "estimatedTotalDocClaimed": "Rendimiento histórico confirmado (DOC)",
+        "isContract": "¿Es un contrato?",
+        "addressIlike": "filtrar por dirección"
       }
     }
   },
@@ -481,7 +535,6 @@
   "explorer": {
     "stats": {
       "title": "Datos del club",
-      "description": "Estadísticas globales del club — para ver detalles, visita cada sección en la barra de navegación.",
       "explore_btn": "Explorar todo"
     },
     "campaigns": {
@@ -574,16 +627,13 @@
     "home": "Inicio",
     "x_handle": "asami_club_es",
     "help": "Ayuda",
-    "stats": "Explora",
+    "stats": "Métricas",
+    "token": "$ASAMI",
     "login": "Iniciar sesión",
     "logout": "Cerrar sesión",
-    "my_campaigns": "Fondea•Impulsa•Crece",
-    "my_collabs": "Elige•Comparte•Gana",
-    "whitepaper": "Whitepaper",
-    "handles": "Usuarios",
-    "accounts": "Miembros",
-    "campaigns": "Campañas",
-    "collabs": "Colaboraciones"
+    "my_campaigns": "Anuncia",
+    "my_collabs": "Repostea",
+    "whitepaper": "Whitepaper"
   },
   "whitepaper": {
     "robot_url": "robot.asami.club"
@@ -595,8 +645,7 @@
     "together": "Todavía es muy temprano. Llevemos a los próximos mil millones de personas al mundo Web3 — juntos."
   },
   "about_token": {
-    "lead": "Haz crecer a Asami",
-    "title": "Obtén tokens ASAMI",
+    "title": "Obtén $ASAMI",
     "text": "Apoya el proyecto y gana de forma pasiva — sin necesidad de lanzar campañas ni colaborar. Con un suministro fijo de 21 millones de tokens y sin premine, los holders de ASAMI reciben una parte de las comisiones del club cada 15 días.",
     "learn_more": "Saber más",
     "trade": "Intercambia ASAMI en OKU"
@@ -614,6 +663,52 @@
     "cancel": {
       "title": "Parece que el pago no se completó.",
       "text": "No te preocupes, la campaña aún no fue creada. Si cambiaste de opinión o tuviste algún problema, puedes intentarlo de nuevo cuando quieras."
+    }
+  },
+  "token": {
+    "title": "$ASAMI",
+    "text": "Representa participación en el protocolo y genera ingresos pasivos a partir de las comisiones por colaboraciones.",
+    "sections": {
+      "price": {
+        "title": "PRECIO × 1000",
+        "description": "Conserva 4000 o más para recibir rendimiento en DOC directamente en tu billetera cada 15 días.",
+        "button_href": "https://oku.trade/app/rootstock/pool/0x90508e187c7defe5ca1768cea45e4a1ea818594b?isFlipped=false",
+        "button_label": "Operar ASAMI en OKU"
+      },
+      "token_yield": {
+        "title": "RENDIMIENTO × 1000",
+        "description": "Basado en el rendimiento promedio de 30 días para 1000 tokens. Se paga automáticamente a billeteras que mantengan 4000+ tokens durante un ciclo completo. Las transferencias dentro del ciclo anulan el rendimiento. Los contratos deben reclamarlo manualmente."
+      },
+      "payback": {
+        "title": "RETORNO (MESES)",
+        "description": "Tiempo estimado para recuperar el precio actual del token con rendimiento — conservando los tokens."
+      },
+      "supply": {
+        "title": "EMISIÓN",
+        "description": "ASAMI tiene un tope fijo de 21 millones. No hubo asignación inicial — solo las colaboraciones reales generan nuevos tokens.",
+        "button_href": "https://explorer.rootstock.io/address/0x3150e390bc96f1b4a05cf5183b8e7bdb68566954",
+        "button_label": "Ver contrato inteligente"
+      },
+      "unclaimed": {
+        "title": "PENDIENTES",
+        "description": "Los tokens no se emiten hasta que se reclaman desde una billetera. Los pendientes no generan rendimiento, pero cuentan dentro del límite de 21 millones."
+      },
+      "issuance_rate": {
+        "title": "RITMO DE EMISIÓN",
+        "description": "Se emiten esta cantidad de tokens por cada 1 DOC recaudado en comisiones del protocolo. La tasa se ajusta automáticamente en cada ciclo, con un objetivo de 100.000 ASAMI cada 15 días."
+      },
+      "fee_pool": {
+        "title": "FONDO DE COMISIONES",
+        "description": "Comisiones por colaboraciones acumuladas en un fondo. Se distribuye cada 15 días entre titulares elegibles. El rendimiento no reclamado permanece en el fondo."
+      },
+      "current_cycle": {
+        "title": "CICLO ACTUAL",
+        "description": "El fondo de comisiones crece durante el ciclo y se distribuye al final entre los titulares que califican."
+      }
+    },
+    "holders": {
+      "title": "Titulares de Tokens",
+      "description": "Titulares actuales, saldos y rendimiento. El total es estimado — algunos pagos exitosos pueden no haberse contabilizado."
     }
   }
 }

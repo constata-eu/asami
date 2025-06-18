@@ -8,3 +8,4 @@ pub mod login_flows;
 pub mod makes_campaigns;
 pub mod member_campaign_preferences;
 pub mod member_profile;
+pub mod stats;

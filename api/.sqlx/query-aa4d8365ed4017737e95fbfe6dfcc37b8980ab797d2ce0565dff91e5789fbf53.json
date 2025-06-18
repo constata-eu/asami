@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO holders (address, \nbalance, \nis_contract) VALUES ($1, $2, $3) RETURNING id as \"id!: i32\", \naddress as \"address!: String\", \nbalance as \"balance!: String\", \nlast_auto_paid_cycle as \"last_auto_paid_cycle!: String\", \nis_contract as \"is_contract!: bool\"",
+  "query": "INSERT INTO holders (address, \nbalance, \nis_contract) VALUES ($1, $2, $3) RETURNING id as \"id!: i32\", \naddress as \"address!: String\", \nbalance as \"balance!: String\", \nlast_auto_paid_cycle as \"last_auto_paid_cycle!: String\", \nis_contract as \"is_contract!: bool\", \nestimated_total_doc_claimed as \"estimated_total_doc_claimed!: String\"",
   "describe": {
     "columns": [
       {
@@ -27,6 +27,11 @@
         "ordinal": 4,
         "name": "is_contract!: bool",
         "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "estimated_total_doc_claimed!: String",
+        "type_info": "Varchar"
       }
     ],
     "parameters": {
@@ -41,8 +46,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "c6c1b44e7b06cb83b4f9ba6b6a5358bfc7f7a3c5202631edd8d994156d168e34"
+  "hash": "aa4d8365ed4017737e95fbfe6dfcc37b8980ab797d2ce0565dff91e5789fbf53"
 }

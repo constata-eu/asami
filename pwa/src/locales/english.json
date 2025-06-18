@@ -14,6 +14,7 @@
         "asamiBalance": "ASAMI",
         "rbtcBalance": "RBTC",
         "docBalance": "DOC",
+        "confirmedYield": "Yield from $ASAMI",
         "allowsGasless": "Wants Gasless",
         "idEq": "by ID",
         "addrLike": "by wallet address"
@@ -107,9 +108,53 @@
     "Stats": {
       "fields": {
         "totalActiveHandles": "Active Handles",
+        "currentlyActive": "Currently active",
+        "joinedRecently": "Less than 30 days old",
+        "recentCampaigns": "Less than 30 days old",
+        "thirtyDayAverageCampaigns": "Average every 30 days",
         "totalCollabs": "Collabs",
+        "recentCollabs": "Less than 30 days old",
+        "thirtyDayAverageCollabs": "Average every 30 days",
+        "totalRewardsPaid": "Rewards Paid",
+        "recentRewardsPaid": "Less than 30 days old",
+        "thirtyDayAverageRewardsPaid": "Average every 30 days",
         "totalCampaigns": "Campaigns",
-        "totalRewardsPaid": "Rewards Paid"
+        "asamiTokenPrice": "Last price (x 1000)",
+        "asamiTokenPaybackPeriod": "Expected payback (months)",
+        "xApiOk": "Sync with X",
+        "rskApiOk": "Sync with RSK"
+      },
+      "show_page_cards": {
+        "active_handles": {
+          "title": "HANDLES",
+          "subtitle": "with at least one collab",
+          "button": "Explore Handles"
+        },
+        "campaigns": {
+          "title": "CAMPAIGNS",
+          "subtitle": "since we launched",
+          "button": "Explore Campaigns"
+        },
+        "collabs": {
+          "title": "COLLABS",
+          "subtitle": "since we launched",
+          "button": "Explore Collabs"
+        },
+        "rewards_paid": {
+          "title": "COLLAB REWARDS",
+          "subtitle": "total since launch",
+          "button": "Explore Collab Rewards"
+        },
+        "token_yield": {
+          "title": "ASAMI PAST YIELD",
+          "subtitle": "For 1K ASAMI every 30 days",
+          "button": "Explore ASAMI token"
+        },
+        "system_status": {
+          "title": "SYSTEM STATUS",
+          "subtitle": "",
+          "button": "Explore system status"
+        }
       }
     },
     "OnChainJob": {
@@ -123,6 +168,15 @@
         "nonce": "Nonce",
         "block": "Block",
         "statusLine": "Status message"
+      }
+    },
+    "Holder": {
+      "fields": {
+        "address": "Address",
+        "balance": "Current ASAMI",
+        "estimatedTotalDocClaimed": "Confirmed historical yield (DOC)",
+        "isContract": "Is contract?",
+        "addressIlike": "filter by address"
       }
     }
   },
@@ -481,7 +535,6 @@
   "explorer": {
     "stats": {
       "title": "Club Stats",
-      "description": "Global club stats at a glance — for specifics, check each section in the navbar.",
       "explore_btn": "Explore all stats"
     },
     "campaigns": {
@@ -574,16 +627,13 @@
     "home": "Home",
     "x_handle": "asami_club",
     "help": "Help",
-    "stats": "Explore",
+    "stats": "Club Stats",
+    "token": "$ASAMI",
     "login": "Login",
     "logout": "Logout",
-    "my_campaigns": "Fund•Boost•Grow",
-    "my_collabs": "Pick•Share•Earn",
-    "whitepaper": "Whitepaper",
-    "handles": "Handles",
-    "accounts": "Members",
-    "campaigns": "Campaigns",
-    "collabs": "Collabs"
+    "my_campaigns": "Advertise",
+    "my_collabs": "Repost",
+    "whitepaper": "Whitepaper"
   },
   "whitepaper": {
     "robot_url": "bot.asami.club"
@@ -595,8 +645,7 @@
     "together": "We’re still so early. Let’s bring the next billion people into Web3 — together."
   },
   "about_token": {
-    "lead": "Get involved in Asami's growth",
-    "title": "Get ASAMI Tokens",
+    "title": "Get $ASAMI",
     "text": "Support the project and earn passively—no need to run campaigns or collaborate. With a fixed supply of 21 million tokens and no premine, ASAMI holders receive a share of club fees every 15 days.",
     "learn_more": "Learn more",
     "trade": "Trade ASAMI on OKU"
@@ -614,6 +663,52 @@
     "cancel": {
       "title": "Looks like the payment didn’t go through.",
       "text": "No worries — your campaign wasn’t created yet. If you changed your mind or ran into trouble, you can try again anytime."
+    }
+  },
+  "token": {
+    "title": "$ASAMI",
+    "text": "Represents protocol equity and earns passive income from collaboration fees.",
+    "sections": {
+      "price": {
+        "title": "PRICE × 1000",
+        "description": "Hold 4000 or more to receive DOC yield in your wallet every 15 days.",
+        "button_href": "https://oku.trade/app/rootstock/pool/0x90508e187c7defe5ca1768cea45e4a1ea818594b?isFlipped=false",
+        "button_label": "Trade ASAMI on OKU"
+      },
+      "token_yield": {
+        "title": "YIELD × 1000",
+        "description": "Based on 30-day average yield for 1000 tokens. Paid automatically to wallets holding 4000+ tokens for a full cycle. Transfers during the cycle cancel yield. Contracts must claim manually."
+      },
+      "payback": {
+        "title": "PAYBACK MONTHS",
+        "description": "Estimated time to recover the current token price from yield — while keeping the tokens."
+      },
+      "supply": {
+        "title": "SUPPLY",
+        "description": "ASAMI has a hard cap of 21 million. There was no premine — only real collaborations mint new tokens.",
+        "button_href": "https://explorer.rootstock.io/address/0x3150e390bc96f1b4a05cf5183b8e7bdb68566954",
+        "button_label": "See smart contract"
+      },
+      "unclaimed": {
+        "title": "UNCLAIMED",
+        "description": "Tokens aren’t minted until claimed via wallet. Unclaimed tokens earn no yield but count toward the 21M cap."
+      },
+      "issuance_rate": {
+        "title": "ISSUANCE RATE",
+        "description": "This many tokens are issued per 1 DOC collected in protocol fees. The rate auto-adjusts based on fees each cycle, targeting 100,000 ASAMI every 15 days."
+      },
+      "fee_pool": {
+        "title": "FEE POOL",
+        "description": "Collaboration fees collected into a pool. Distributed every 15 days to eligible holders. Unclaimed yield stays in the fee pool."
+      },
+      "current_cycle": {
+        "title": "CURRENT CYCLE",
+        "description": "The fee pool accumulates during the cycle and is distributed at the end to qualifying holders."
+      }
+    },
+    "holders": {
+      "title": "Token Holders",
+      "description": "Current holders, balances, and yield. Yield totals are estimated — some claim events may be missing."
     }
   }
 }

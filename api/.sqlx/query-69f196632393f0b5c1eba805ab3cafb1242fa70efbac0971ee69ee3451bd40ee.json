@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT count(*) as \"count!\" FROM collabs WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR campaign_id = $6::int4) AND (NOT $7::boolean OR campaign_id = ANY(CAST($8 as int4[])) ) AND (NOT $9::boolean OR advertiser_id = $10::varchar) AND (NOT $11::boolean OR advertiser_id = ANY(CAST($12 as varchar[])) ) AND (NOT $13::boolean OR member_id = $14::varchar) AND (NOT $15::boolean OR member_id = ANY(CAST($16 as varchar[])) ) AND (NOT $17::boolean OR collab_trigger_unique_id = $18::varchar) AND (NOT $19::boolean OR handle_id = $20::int4) AND (NOT $21::boolean OR handle_id = ANY(CAST($22 as int4[])) ) AND (NOT $23::boolean OR status = $24::collab_status) AND (NOT $25::boolean OR status != $26::collab_status) AND (NOT $27::boolean OR dispute_reason = $28::varchar) AND (NOT $29::boolean OR reward = $30::varchar) AND (NOT $31::boolean OR fee = $32::varchar) AND (NOT $33::boolean OR created_at = $34::timestamptz)",
+  "query": "SELECT count(*) as \"count!\" FROM collabs WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR campaign_id = $6::int4) AND (NOT $7::boolean OR campaign_id = ANY(CAST($8 as int4[])) ) AND (NOT $9::boolean OR advertiser_id = $10::varchar) AND (NOT $11::boolean OR advertiser_id = ANY(CAST($12 as varchar[])) ) AND (NOT $13::boolean OR member_id = $14::varchar) AND (NOT $15::boolean OR member_id = ANY(CAST($16 as varchar[])) ) AND (NOT $17::boolean OR collab_trigger_unique_id = $18::varchar) AND (NOT $19::boolean OR handle_id = $20::int4) AND (NOT $21::boolean OR handle_id = ANY(CAST($22 as int4[])) ) AND (NOT $23::boolean OR status = $24::collab_status) AND (NOT $25::boolean OR status != $26::collab_status) AND (NOT $27::boolean OR dispute_reason = $28::varchar) AND (NOT $29::boolean OR reward = $30::varchar) AND (NOT $31::boolean OR fee = $32::varchar) AND (NOT $33::boolean OR created_at = $34::timestamptz) AND (NOT $35::boolean OR created_at > $36::timestamptz)",
   "describe": {
     "columns": [
       {
@@ -68,6 +68,8 @@
         "Bool",
         "Varchar",
         "Bool",
+        "Timestamptz",
+        "Bool",
         "Timestamptz"
       ]
     },
@@ -75,5 +77,5 @@
       null
     ]
   },
-  "hash": "56dd3a703006b68df32a5d441df0843259eb1960f13d8ad866610d82ee113601"
+  "hash": "69f196632393f0b5c1eba805ab3cafb1242fa70efbac0971ee69ee3451bd40ee"
 }

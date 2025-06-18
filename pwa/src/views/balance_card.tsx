@@ -14,7 +14,7 @@ import {
   Card,
   Stack,
 } from "@mui/material";
-import { AmountField } from "../components/custom_fields";
+import { AddressField, AmountField } from "../components/custom_fields";
 import { formatEther, parseEther } from "ethers";
 import { Head2, Head3, Lead } from "../components/theme";
 import { getAuthKeys } from "../lib/auth_provider";
@@ -133,32 +133,32 @@ const Done = ({ account }) => {
           justifyContent: "space-between",
         }}
       >
-        <Head2>{translate("balance_card.claimed.title")}</Head2>
+        <Box sx={{ breakInside: "avoid" }}>
+          <Head2>{translate("balance_card.claimed.title")}</Head2>
 
-        <Typography
-          mb="1em"
-          id="no-pending-balance-messsage"
-          variant="caption"
-          paragraph={true}
-        >
-          {translate("balance_card.claimed.no_pending_balance")}
-        </Typography>
-        <Box mb="0.5em">
-          <AttributeTable
-            fontSize="0.9em !important"
-            record={account}
-            resource="Account"
+          <Typography
+            mb="1em"
+            id="no-pending-balance-messsage"
+            variant="caption"
+            paragraph={true}
           >
-            <AmountField source="unclaimedDocBalance" currency="" />
-            <AmountField source="unclaimedAsamiBalance" currency="" />
-          </AttributeTable>
+            {translate("balance_card.claimed.no_pending_balance")}
+          </Typography>
         </Box>
+        <AttributeTable
+          fontSize="0.9em !important"
+          record={account}
+          resource="Account"
+        >
+          <AmountField source="unclaimedDocBalance" currency="" />
+          <AmountField source="unclaimedAsamiBalance" currency="" />
+        </AttributeTable>
         {claimRegular && <ClaimButton account={account} />}
         {claimGasless && (
           <Box mt="1em">
             <GaslessClaimButton disabled={account.allowsGasless} />
             <Typography
-              mt="0.5em"
+              mt="1em"
               mb="0"
               id="suggest-gasless"
               variant="caption"
@@ -203,25 +203,34 @@ const Done = ({ account }) => {
           </Box>
         )}
         <Box flexGrow={1} />
-        <Head3 sx={{ mt: "1em", mb: "0.2em" }}>
-          {translate("balance_card.claimed.on_your_wallet")}
-        </Head3>
-        {account.addr && (
-          <Typography mb="0.5em">{formatAddress(account.addr)}</Typography>
-        )}
+        <Divider sx={{ my: "1em" }} />
         <AttributeTable
           fontSize="0.9em !important"
           record={account}
           resource="Account"
         >
-          <Stack direction="row" source="docBalance">
-            <AmountField source="docBalance" currency="" />
+          <AddressField source="addr" />
+          <Stack
+            gap="0.5em"
+            flex="0 0 120px"
+            direction="row"
+            justifyContent="space-between"
+            source="docBalance"
+          >
             <AddToWallet symbol="DOC" account={account} />
+            <AmountField source="docBalance" currency="" />
           </Stack>
-          <Stack direction="row" source="asamiBalance">
-            <AmountField source="asamiBalance" currency="" />
+          <Stack
+            gap="0.5em"
+            flex="0 0 120px"
+            direction="row"
+            justifyContent="space-between"
+            source="asamiBalance"
+          >
             <AddToWallet symbol="ASAMI" account={account} />
+            <AmountField source="asamiBalance" currency="" />
           </Stack>
+          <AmountField source="confirmedYield" currency="DOC" />
         </AttributeTable>
       </CardContent>
     </>
@@ -267,7 +276,7 @@ const AddToWallet = ({ symbol, account }) => {
   return (
     <Button
       id={`add-to-wallet-${symbol}`}
-      sx={{ padding: "0.1em", justifyContent: "flex-end" }}
+      sx={{ py: "0.1em", minWidth: 0 }}
       size="small"
       color="secondary"
       onClick={addToken}

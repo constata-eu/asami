@@ -24,7 +24,7 @@ model! {
     reward: String,
     #[sqlx_model_hints(varchar)]
     fee: Option<String>,
-    #[sqlx_model_hints(timestamptz, default)]
+    #[sqlx_model_hints(timestamptz, default, op_gt)]
     created_at: UtcDateTime,
   },
   queries {

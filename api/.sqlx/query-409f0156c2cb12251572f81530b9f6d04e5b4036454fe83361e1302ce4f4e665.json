@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE value_series SET (id, \nname, \nvalue, \ncreated_at) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE name END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE value END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE created_at END)) WHERE id = $1 RETURNING id as \"id!: i32\", \nname as \"name!: SeriesName\", \nvalue as \"value!: String\", \ncreated_at as \"created_at!: DateTime < Utc >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name!: SeriesName",
+        "type_info": {
+          "Custom": {
+            "name": "series_name",
+            "kind": {
+              "Enum": [
+                "asami_doc_price",
+                "asami_supply",
+                "asami_assigned_tokens",
+                "asami_issuance_rate",
+                "asami_fee_pool"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "value!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at!: DateTime < Utc >",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        {
+          "Custom": {
+            "name": "series_name",
+            "kind": {
+              "Enum": [
+                "asami_doc_price",
+                "asami_supply",
+                "asami_assigned_tokens",
+                "asami_issuance_rate",
+                "asami_fee_pool"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "409f0156c2cb12251572f81530b9f6d04e5b4036454fe83361e1302ce4f4e665"
+}

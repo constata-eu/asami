@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM estimated_fee_pool_claims WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR holder_id = $4::int4) AND (NOT $5::boolean OR amount = $6::varchar) AND (NOT $7::boolean OR balance = $8::varchar) AND (NOT $9::boolean OR balance > $10::varchar) AND (NOT $11::boolean OR contract_cycle = $12::varchar) AND (NOT $13::boolean OR created_at = $14::timestamptz)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "833fb3925480202744ca7e3293a67085505b6836238b5844cf5c0fb21270ab6b"
+}

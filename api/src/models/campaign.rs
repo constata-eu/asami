@@ -62,7 +62,7 @@ model! {
     valid_until: Option<UtcDateTime>,
     #[sqlx_model_hints(varchar, default)]
     report_hash: Option<String>,
-    #[sqlx_model_hints(timestamptz, default)]
+    #[sqlx_model_hints(timestamptz, default, op_gt)]
     created_at: UtcDateTime,
 
     // These columns are part of the campaign activity report
