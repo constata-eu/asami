@@ -14,6 +14,7 @@
         "asamiBalance": "ASAMI",
         "rbtcBalance": "RBTC",
         "docBalance": "DOC",
+        "confirmedYield": "Rendimiento de $ASAMI",
         "allowsGasless": "Retiro sin gas",
         "idEq": "por ID",
         "addrLike": "por billetera"

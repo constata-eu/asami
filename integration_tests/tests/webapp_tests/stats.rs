@@ -6,15 +6,15 @@ use api::models::{InsertBackerDisbursement, OnChainJobKind, OnChainJobStatus};
 async fn shows_stats() {
     TestHelper::with_web(|h| async move {
         let advertiser = h.advertiser().await;
-        let alice = h.collaborator(3_000_000).await;
-        let bob = h.collaborator(3_000_000).await;
-        let carl = h.collaborator(3_000_000).await;
-        let dan = h.collaborator(3_000_000).await;
+        let mut alice = h.collaborator(3_000_000).await;
+        let mut bob = h.collaborator(3_000_000).await;
+        let mut carl = h.collaborator(3_000_000).await;
+        let mut dan = h.collaborator(3_000_000).await;
         let people = vec![&alice, &bob, &carl, &dan];
         let campaign = advertiser.make_campaign_one(u("1000000"), 20, &[]).await;
         h.a().batch_collabs(campaign, &people).await;
 
-        for mut person in [alice, bob, carl, dan] {
+        for person in [&mut alice, &mut bob, &mut carl, &mut dan] {
             person.claim_account().await;
         }
 
@@ -58,8 +58,13 @@ async fn shows_stats() {
         h.a().app.backer_payout().pay_all().await.unwrap();
         h.a().stop_mining().await;
         h.a().app.fee_pool_snapshot().create_if_missing(wei("1"), milli("1"), u("100")).await.unwrap();
+        for h in h.a().app.holder().select().all().await.unwrap() {
+            h.update().estimated_total_doc_claimed(u("123").encode_hex()).save().await.unwrap();
+        }
 
         h.web().navigate("/").await;
+
+        alice.login_to_web_with_wallet().await;
         TestApp::wait_for_enter("test").await;
     })
     .await;

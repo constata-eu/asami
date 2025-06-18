@@ -42,6 +42,8 @@ pub struct Account {
     total_collabs_received: i32,
     #[graphql(description = "Total spent on collabs received")]
     total_spent: String,
+    #[graphql(description = "Historic confirmed yield from tokens")]
+    confirmed_yield: String,
 }
 
 #[derive(Debug, Clone, Default, GraphQLInputObject, serde::Serialize, serde::Deserialize)]
@@ -94,8 +96,17 @@ impl Showable<models::Account, AccountFilter> for Account {
         })
     }
 
-    async fn db_to_graphql(_context: &Context, d: models::Account) -> AsamiResult<Self> {
+    async fn db_to_graphql(context: &Context, d: models::Account) -> AsamiResult<Self> {
         let addr = d.decoded_addr()?.map(|x| format!("{x:?}"));
+
+        let confirmed_yield = if let Some(a) = d.addr().as_ref() {
+            match context.app.holder().select().address_eq(a).optional().await? {
+                Some(holder) => holder.attrs.estimated_total_doc_claimed,
+                None => weihex("1")
+            }
+        } else {
+            weihex("0")  
+        };
 
         Ok(Account {
             id: hex_to_i32(&d.attrs.id)?,
@@ -114,6 +125,7 @@ impl Showable<models::Account, AccountFilter> for Account {
             total_campaigns: d.attrs.total_campaigns,
             total_collabs_received: d.attrs.total_collabs_received,
             total_spent: d.attrs.total_spent,
+            confirmed_yield
         })
     }
 }

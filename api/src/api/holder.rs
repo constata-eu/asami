@@ -36,7 +36,7 @@ impl Showable<models::Holder, HolderFilter> for Holder {
             Ok(models::SelectHolder {
                 id_in: f.ids,
                 id_eq: f.id_eq,
-                address_ilike: f.address_ilike,
+                address_ilike: into_like_search(f.address_ilike),
                 ..Default::default()
             })
         } else {

@@ -14,6 +14,7 @@
         "asamiBalance": "ASAMI",
         "rbtcBalance": "RBTC",
         "docBalance": "DOC",
+        "confirmedYield": "Yield from $ASAMI",
         "allowsGasless": "Wants Gasless",
         "idEq": "by ID",
         "addrLike": "by wallet address"
