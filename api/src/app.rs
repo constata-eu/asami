@@ -196,7 +196,7 @@ pub struct Rsk {
     pub gas_override: Option<bool>,
     pub readonly_mainnet_rpc_url: Option<String>,
     pub rpc_polling_interval_milli: u64,
-    pub mainnet_rpc_polling_interval_milli: Option<u64>
+    pub mainnet_rpc_polling_interval_milli: Option<u64>,
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]

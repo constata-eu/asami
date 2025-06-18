@@ -1,13 +1,13 @@
 use std::{sync::Arc, time::Duration};
 
 use ethers::middleware::NonceManagerMiddleware;
-use url::Url;
 pub use ethers::{
     prelude::{abigen, LogMeta, Middleware, SignerMiddleware},
-    providers::{Http, PendingTransaction, Provider, RetryClient, RetryClientBuilder, HttpRateLimitRetryPolicy},
+    providers::{Http, HttpRateLimitRetryPolicy, PendingTransaction, Provider, RetryClient, RetryClientBuilder},
     signers::{coins_bip39::English, LocalWallet, MnemonicBuilder, Signer},
     types::{Address, U256, U64},
 };
+use url::Url;
 
 use super::*;
 
@@ -88,14 +88,16 @@ pub type UniswapContractInner = UniswapCode<AsamiProvider>;
 trait ReadonlyContract: Sized {
     fn from_config(config: &AppConfig, addr: &str) -> AsamiResult<Self> {
         let url = config.rsk.readonly_mainnet_rpc_url.as_ref().unwrap_or(&config.rsk.rpc_url);
-        let interval = config.rsk.mainnet_rpc_polling_interval_milli.as_ref()
+        let interval = config
+            .rsk
+            .mainnet_rpc_polling_interval_milli
+            .as_ref()
             .unwrap_or(&config.rsk.rpc_polling_interval_milli);
 
         let provider = OnChain::make_asami_provider(url, *interval)?;
 
-        let address: Address = addr
-            .parse()
-            .map_err(|_| Error::Init("Invalid readonly contract address".to_string()))?;
+        let address: Address =
+            addr.parse().map_err(|_| Error::Init("Invalid readonly contract address".to_string()))?;
 
         Ok(Self::make(address, std::sync::Arc::new(provider)))
     }
@@ -121,7 +123,7 @@ impl ReadonlyContract for UniswapContractInner {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct UniswapContract {
     inner: UniswapContractInner,
     decimals: usize,
@@ -137,7 +139,9 @@ impl UniswapContract {
 
     pub async fn price(&self) -> AsamiResult<U256> {
         let sqrt_price_x96 = self.inner.slot_0().call().await?.0;
-        let prod = sqrt_price_x96.checked_mul(sqrt_price_x96).ok_or_else(|| Error::runtime("checked mul of u256 failed"))?;
+        let prod = sqrt_price_x96
+            .checked_mul(sqrt_price_x96)
+            .ok_or_else(|| Error::runtime("checked mul of u256 failed"))?;
         let denom = U256::from(1) << 192;
         let scale = U256::exp10(18 + (18 - self.decimals));
         Ok(prod * scale / denom)
@@ -203,7 +207,11 @@ impl OnChain {
             collective_contract: CollectiveContract::from_config(config, "0x78349782F753a593ceBE91298dAfdB9053719228")?,
             doc_price_contract: PriceOracleContract::from_config(config, "0xe2927a0620b82A66D67F678FC9B826b0E01b1BFd")?,
             rif_price_contract: UniswapContract::from_config(config, "0xa89a86d3d9481a741833208676fa57d0f1d5c6cb", 6)?,
-            asami_price_contract: UniswapContract::from_config(config, "0x90508e187c7defe5ca1768cea45e4a1ea818594b", 18)?,
+            asami_price_contract: UniswapContract::from_config(
+                config,
+                "0x90508e187c7defe5ca1768cea45e4a1ea818594b",
+                18,
+            )?,
             client,
         })
     }
@@ -233,21 +241,18 @@ impl OnChain {
             .build()
             .map_err(|_| Error::Init("Could not build reqwest client for on-chain".to_string()))?;
 
-        let url = Url::parse(url)
-            .map_err(|_| Error::Init("Invalid rsk rpc_url in config".to_string()))?;
+        let url = Url::parse(url).map_err(|_| Error::Init("Invalid rsk rpc_url in config".to_string()))?;
 
         let http = Http::new_with_client(url, reqwest_client);
-        
+
         let retry_client = RetryClientBuilder::default()
             .timeout_retries(3)
             .rate_limit_retries(5)
             .initial_backoff(Duration::from_millis(500)) // Initial backoff duration
             .build(http, Box::new(HttpRateLimitRetryPolicy));
 
-        let provider = Provider::new(retry_client)
-            .interval(std::time::Duration::from_millis(interval));
+        let provider = Provider::new(retry_client).interval(std::time::Duration::from_millis(interval));
 
         Ok(provider)
     }
 }
-

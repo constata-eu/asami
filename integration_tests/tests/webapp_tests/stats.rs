@@ -1,5 +1,5 @@
-use api::models::{InsertBackerDisbursement, OnChainJobKind, OnChainJobStatus};
 use super::*;
+use api::models::{InsertBackerDisbursement, OnChainJobKind, OnChainJobStatus};
 
 #[tokio::test(flavor = "multi_thread")]
 #[serial_test::file_serial]
@@ -26,9 +26,11 @@ async fn shows_stats() {
             )
             .await;
 
-        h.a().sync_events_until( "holders are created", || async {
-            h.a().app.holder().select().count().await.unwrap() == 5
-        }).await;
+        h.a()
+            .sync_events_until("holders are created", || async {
+                h.a().app.holder().select().count().await.unwrap() == 5
+            })
+            .await;
 
         for x in 0..5 {
             let backer = h.test_app.app.backer().get_or_create(models::H160::random()).await.unwrap();

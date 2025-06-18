@@ -357,9 +357,7 @@ impl Handle {
                 // token which will prompt users to do this next time they log in.
                 let _ = self.fail("refresh_token_invalidated", format!("{e:?}")).await;
                 let invalidated = Some(refresh_token.clone());
-                self.update()
-                    .invalidated_x_refresh_token(invalidated)
-                    .x_refresh_token(None).save().await?;
+                self.update().invalidated_x_refresh_token(invalidated).x_refresh_token(None).save().await?;
                 Err(Error::validation("x_refresh_token", "failed_to_obtain_token"))
             }
             Err(e) => {

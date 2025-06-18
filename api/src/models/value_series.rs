@@ -38,15 +38,18 @@ impl ValueSeriesHub {
             AsamiAssignedTokens => asami.assigned_asami_tokens().call().await?,
             AsamiIssuanceRate => asami.get_issuance_for(u("1")).call().await?,
             AsamiFeePool => asami.fee_pool().call().await?,
-        }.encode_hex();
+        }
+        .encode_hex();
 
-        if let Some(current) = self.select().name_eq(name).order_by(ValueSeriesOrderBy::CreatedAt).desc(true).optional().await? {
+        if let Some(current) =
+            self.select().name_eq(name).order_by(ValueSeriesOrderBy::CreatedAt).desc(true).optional().await?
+        {
             if *current.value() == value {
                 return Ok(current);
             }
         }
 
-        Ok(self.insert(InsertValueSeries{ name, value}).save().await?)
+        Ok(self.insert(InsertValueSeries { name, value }).save().await?)
     }
 
     pub async fn get(&self, name: SeriesName) -> AsamiResult<ValueSeries> {

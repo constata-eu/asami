@@ -1,4 +1,4 @@
-use super::{*, models};
+use super::{models, *};
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -31,10 +31,7 @@ impl Showable<models::Holder, HolderFilter> for Holder {
         }
     }
 
-    fn filter_to_select(
-        _context: &Context,
-        filter: Option<HolderFilter>,
-    ) -> FieldResult<models::SelectHolder> {
+    fn filter_to_select(_context: &Context, filter: Option<HolderFilter>) -> FieldResult<models::SelectHolder> {
         if let Some(f) = filter {
             Ok(models::SelectHolder {
                 id_in: f.ids,

@@ -21,7 +21,7 @@ async fn stores_asami_value_series() {
             AsamiAssignedTokens,
             AsamiIssuanceRate,
             AsamiFeePool,
-            AsamiCurrentCycle
+            AsamiCurrentCycle,
         ] {
             let before = h.a().app.value_series().select().count().await.unwrap();
             let one = h.a().app.value_series().store(variant).await.unwrap();

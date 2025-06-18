@@ -49,8 +49,8 @@ pub mod handle_scoring;
 pub use handle_scoring::*;
 pub mod community_member;
 pub use community_member::*;
-pub mod poll_texts;
 pub mod backer_disbursements;
+pub mod poll_texts;
 pub use backer_disbursements::*;
 pub mod value_series;
 pub use value_series::*;
@@ -110,7 +110,9 @@ pub fn u256<T: AsRef<str> + std::fmt::Debug>(u: T) -> U256 {
 }
 
 fn wei_to_decimal_safe(val: U256) -> AsamiResult<Decimal> {
-    val.try_into().ok().and_then(|u: u128| Decimal::from_u128(u))
+    val.try_into()
+        .ok()
+        .and_then(|u: u128| Decimal::from_u128(u))
         .ok_or_else(|| Error::runtime("converting u256 to decimal"))
         .map(|x| x / Decimal::from(1_000_000_000_000_000_000u128))
 }
@@ -120,8 +122,7 @@ fn decimal_to_wei_scaled_18(dec: Decimal) -> AsamiResult<U256> {
     let scaled = dec * scale;
 
     // Ensure scaled value fits into u128 (for simplicity). You can also use BigUint for larger numbers.
-    let int_val = scaled.trunc().to_u128()
-        .ok_or_else(|| Error::runtime("converting large decimal to u256"))?;
+    let int_val = scaled.trunc().to_u128().ok_or_else(|| Error::runtime("converting large decimal to u256"))?;
 
     Ok(U256::from(int_val))
 }

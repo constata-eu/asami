@@ -45,12 +45,10 @@ async fn main() {
         run!("Sync on-chain events", s, {
             s.synced_event().sync_on_chain_events().await
         });
-        run!("Store backer stakes", s, {
-            s.backer().store_today_stakes().await
-        });
+        run!("Store backer stakes", s, { s.backer().store_today_stakes().await });
     }];
 
-    every![ 1800000, |s| {
+    every![1800000, |s| {
         run!("Store ASAMI supply", s, {
             s.value_series().store(SeriesName::AsamiSupply).await
         });
@@ -81,9 +79,7 @@ async fn main() {
         run!("Force community-member hydrations", s, {
             s.community_member().force_hydrate().await
         });
-        run!("Force holder hydrations", s, {
-            s.holder().force_hydrate().await
-        });
+        run!("Force holder hydrations", s, { s.holder().force_hydrate().await });
     }];
 
     every![10000, |s| {

@@ -39,66 +39,89 @@ pub struct Stats {
 
 impl Stats {
     pub async fn build(app: &App) -> FieldResult<Self> {
+        let thirty_days_ago = Utc::now() - chrono::Duration::days(30);
+        let oldest_date = app
+            .account()
+            .select()
+            .order_by(AccountOrderBy::CreatedAt)
+            .desc(true)
+            .optional()
+            .await?
+            .map(|a| a.attrs.created_at)
+            .unwrap_or(Utc::now());
 
-      let thirty_days_ago = Utc::now() - chrono::Duration::days(30);
-      let oldest_date = app.account().select().order_by(AccountOrderBy::CreatedAt).desc(true)
-          .optional().await?.map(|a| a.attrs.created_at ).unwrap_or(Utc::now());
+        let total_days = std::cmp::max(1, (Utc::now() - oldest_date).num_days());
+        let thirty_day_average = |x: i32| Decimal::from(x) / Decimal::from(total_days) * Decimal::from(30);
 
+        let total_active_handles = app
+            .db
+            .fetch_one_scalar::<i32>(sqlx::query_scalar!(
+                r#"SELECT count(distinct handle_id)::INT4 as "count!" FROM collabs"#
+            ))
+            .await?;
+        let currently_active: i32 = app.handle().select().status_eq(HandleStatus::Active).count().await?.try_into()?;
+        let joined_recently: i32 = app
+            .handle()
+            .select()
+            .status_eq(HandleStatus::Active)
+            .created_at_gt(thirty_days_ago)
+            .count()
+            .await?
+            .try_into()?;
 
-      let total_days = std::cmp::max(1, (Utc::now() - oldest_date).num_days());
-      let thirty_day_average = |x: i32| Decimal::from(x) / Decimal::from(total_days) * Decimal::from(30);
+        let total_collabs: i32 = app.collab().select().count().await?.try_into()?;
+        let recent_collabs: i32 = app.collab().select().created_at_gt(thirty_days_ago).count().await?.try_into()?;
 
-      let total_active_handles = app.db.fetch_one_scalar::<i32>(
-          sqlx::query_scalar!(r#"SELECT count(distinct handle_id)::INT4 as "count!" FROM collabs"#)
-      ).await?;
-      let currently_active: i32 = app.handle().select().status_eq(HandleStatus::Active).count().await?.try_into()?;
-      let joined_recently: i32 = app.handle().select().status_eq(HandleStatus::Active).created_at_gt(thirty_days_ago).count().await?.try_into()?;
+        let total_campaigns: i32 =
+            app.campaign().select().status_eq(CampaignStatus::Published).count().await?.try_into()?;
+        let recent_campaigns: i32 = app
+            .campaign()
+            .select()
+            .status_eq(CampaignStatus::Published)
+            .created_at_gt(thirty_days_ago)
+            .count()
+            .await?
+            .try_into()?;
 
-      let total_collabs: i32 = app.collab().select().count().await?.try_into()?;
-      let recent_collabs: i32 = app.collab().select().created_at_gt(thirty_days_ago).count().await?.try_into()?;
+        let total_rewards_paid: U256 = app
+            .collab()
+            .select()
+            .status_eq(CollabStatus::Cleared)
+            .all()
+            .await?
+            .iter()
+            .map(|c| c.reward_u256())
+            .fold(U256::zero(), |acc, x| acc + x);
 
-      let total_campaigns: i32 = app.campaign().select().status_eq(CampaignStatus::Published).count().await?.try_into()?;
-      let recent_campaigns: i32 = app.campaign().select().status_eq(CampaignStatus::Published).created_at_gt(thirty_days_ago).count().await?.try_into()?;
+        let recent_rewards_paid: U256 = app
+            .collab()
+            .select()
+            .status_eq(CollabStatus::Cleared)
+            .created_at_gt(thirty_days_ago)
+            .all()
+            .await?
+            .iter()
+            .map(|c| c.reward_u256())
+            .fold(U256::zero(), |acc, x| acc + x);
 
-      let total_rewards_paid: U256 = app
-        .collab()
-        .select()
-        .status_eq(CollabStatus::Cleared)
-        .all()
-        .await?
-        .iter()
-        .map(|c| c.reward_u256() )
-        .fold(U256::zero(), |acc, x| acc + x);
+        Ok(Stats {
+            id: 0,
+            total_active_handles,
+            currently_active,
+            joined_recently,
 
-      let recent_rewards_paid: U256 = app
-        .collab()
-        .select()
-        .status_eq(CollabStatus::Cleared)
-        .created_at_gt(thirty_days_ago)
-        .all()
-        .await?
-        .iter()
-        .map(|c| c.reward_u256() )
-        .fold(U256::zero(), |acc, x| acc + x);
+            total_collabs,
+            recent_collabs,
+            thirty_day_average_collabs: thirty_day_average(total_collabs),
 
-      Ok(Stats {
-          id: 0,
-          total_active_handles,
-          currently_active,
-          joined_recently,
+            total_campaigns,
+            recent_campaigns,
+            thirty_day_average_campaigns: thirty_day_average(total_campaigns),
 
-          total_collabs,
-          recent_collabs,
-          thirty_day_average_collabs: thirty_day_average(total_collabs),
-
-          total_campaigns,
-          recent_campaigns,
-          thirty_day_average_campaigns: thirty_day_average(total_campaigns),
-
-          total_rewards_paid: total_rewards_paid.encode_hex(),
-          recent_rewards_paid: recent_rewards_paid.encode_hex(),
-          thirty_day_average_rewards_paid: (total_rewards_paid / U256::from(total_days) * wei("30")).encode_hex(),
-          date: chrono::Utc::now()
-      })
+            total_rewards_paid: total_rewards_paid.encode_hex(),
+            recent_rewards_paid: recent_rewards_paid.encode_hex(),
+            thirty_day_average_rewards_paid: (total_rewards_paid / U256::from(total_days) * wei("30")).encode_hex(),
+            date: chrono::Utc::now(),
+        })
     }
 }

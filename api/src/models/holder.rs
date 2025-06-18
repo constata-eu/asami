@@ -60,7 +60,7 @@ impl HolderHub {
                 if u256(claim.balance()) <= u("4000") {
                     continue;
                 }
-                total_doc += u256(claim.amount()); 
+                total_doc += u256(claim.amount());
             }
 
             holder.update().estimated_total_doc_claimed(total_doc.encode_hex()).save().await?;
@@ -96,7 +96,13 @@ model! {
 }
 
 impl EstimatedFeePoolClaimHub {
-    pub async fn create_if_missing(&self, holder: &Holder, amount: U256, balance: U256, contract_cycle: U256) -> AsamiResult<()> {
+    pub async fn create_if_missing(
+        &self,
+        holder: &Holder,
+        amount: U256,
+        balance: U256,
+        contract_cycle: U256,
+    ) -> AsamiResult<()> {
         if self
             .select()
             .holder_id_eq(holder.id())
@@ -138,13 +144,7 @@ model! {
 
 impl FeePoolSnapshotHub {
     pub async fn create_if_missing(&self, cycle: U256, pool: U256, supply: U256) -> AsamiResult<()> {
-        if self
-            .select()
-            .cycle_eq(cycle.encode_hex())
-            .count()
-            .await?
-            > 0
-        {
+        if self.select().cycle_eq(cycle.encode_hex()).count().await? > 0 {
             return Ok(());
         }
 
