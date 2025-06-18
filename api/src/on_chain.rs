@@ -83,7 +83,7 @@ pub type DocContract = IERC20<AsamiMiddleware>;
 pub type AsamiContract = AsamiContractCode<AsamiMiddleware>;
 pub type CollectiveContract = CollectiveCode<AsamiProvider>;
 pub type PriceOracleContract = PriceOracleCode<AsamiProvider>;
-pub type UniswapContract = UniswapCode<AsamiProvider>;
+pub type UniswapContractInner = UniswapCode<AsamiProvider>;
 
 trait ReadonlyContract: Sized {
     fn from_config(config: &AppConfig, addr: &str) -> AsamiResult<Self> {
@@ -115,19 +115,31 @@ impl ReadonlyContract for PriceOracleContract {
     }
 }
 
-impl ReadonlyContract for UniswapContract {
+impl ReadonlyContract for UniswapContractInner {
     fn make(addr: Address, provider: Arc<AsamiProvider>) -> Self {
         Self::new(addr, provider)
     }
 }
 
+#[derive(Debug,Clone)]
+pub struct UniswapContract {
+    inner: UniswapContractInner,
+    decimals: usize,
+}
+
 impl UniswapContract {
+    pub fn from_config(config: &AppConfig, addr: &str, decimals: usize) -> AsamiResult<Self> {
+        Ok(Self {
+            inner: UniswapContractInner::from_config(config, addr)?,
+            decimals,
+        })
+    }
+
     pub async fn price(&self) -> AsamiResult<U256> {
-        let sqrt_price_x96 = self.slot_0().call().await?.0;
+        let sqrt_price_x96 = self.inner.slot_0().call().await?.0;
         let prod = sqrt_price_x96.checked_mul(sqrt_price_x96).ok_or_else(|| Error::runtime("checked mul of u256 failed"))?;
         let denom = U256::from(1) << 192;
-        // 18 to make the number 'wei'. 12 to fix for USDT precision.
-        let scale = U256::exp10(18 + 12);
+        let scale = U256::exp10(18 + (18 - self.decimals));
         Ok(prod * scale / denom)
     }
 }
@@ -142,6 +154,7 @@ pub struct OnChain {
     pub collective_contract: CollectiveContract,
     pub doc_price_contract: PriceOracleContract,
     pub rif_price_contract: UniswapContract,
+    pub asami_price_contract: UniswapContract,
 }
 
 impl OnChain {
@@ -189,7 +202,8 @@ impl OnChain {
             doc_contract: IERC20::new(doc_address, client.clone()),
             collective_contract: CollectiveContract::from_config(config, "0x78349782F753a593ceBE91298dAfdB9053719228")?,
             doc_price_contract: PriceOracleContract::from_config(config, "0xe2927a0620b82A66D67F678FC9B826b0E01b1BFd")?,
-            rif_price_contract: UniswapContract::from_config(config, "0xa89a86d3d9481a741833208676fa57d0f1d5c6cb")?,
+            rif_price_contract: UniswapContract::from_config(config, "0xa89a86d3d9481a741833208676fa57d0f1d5c6cb", 6)?,
+            asami_price_contract: UniswapContract::from_config(config, "0x90508e187c7defe5ca1768cea45e4a1ea818594b", 18)?,
             client,
         })
     }

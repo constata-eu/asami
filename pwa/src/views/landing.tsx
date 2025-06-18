@@ -241,9 +241,6 @@ const AboutToken = () => {
         }}
       >
         <Box>
-          <Lead sx={{ color: "primary.main", mb: "0.2em" }}>
-            {t("about_token.lead")}
-          </Lead>
           <Head2 sx={{ color: "primary.main" }}>{t("about_token.title")}</Head2>
         </Box>
         <Lead sx={{ color: "primary.main", my: "1em" }}>
@@ -259,18 +256,9 @@ const AboutToken = () => {
             size="large"
             color="primary"
             variant="outlined"
-            onClick={() => navigate("/whitepaper")}
+            onClick={() => navigate("/Token")}
           >
             {t("about_token.learn_more")}
-          </Button>
-          <Button
-            size="large"
-            color="primary"
-            variant="contained"
-            href="https://oku.trade/app/rootstock/pool/0x90508e187c7defe5ca1768cea45e4a1ea818594b?isFlipped=false"
-            target="_blank"
-          >
-            {t("about_token.trade")}
           </Button>
         </Stack>
       </CardContent>

@@ -462,11 +462,7 @@ impl TestUser {
         response.data.unwrap_or_else(|| panic!("No gql response. Error was {:?}", response.errors))
     }
 
-    pub async fn gql_response<T, Q>(
-        &self,
-        query: Q,
-        extra_headers: Vec<Header<'static>>,
-    ) -> graphql_client::Response<T>
+    pub async fn gql_response<T, Q>(&self, query: Q, extra_headers: Vec<Header<'static>>) -> graphql_client::Response<T>
     where
         Q: Serialize,
         T: DeserializeOwned + core::fmt::Debug,

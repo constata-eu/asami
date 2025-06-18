@@ -102,6 +102,8 @@ impl OnChainJob {
                 ))
                 .await?;
 
+            self.state.holder().hydrate_estimated_total_claims_for(ids.iter().copied()).await?;
+
             self.state.account().hydrate_on_chain_columns_for(account_ids.iter()).await?;
         }
 

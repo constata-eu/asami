@@ -52,6 +52,8 @@ pub use community_member::*;
 pub mod poll_texts;
 pub mod backer_disbursements;
 pub use backer_disbursements::*;
+pub mod value_series;
+pub use value_series::*;
 
 #[macro_export]
 macro_rules! make_sql_enum {

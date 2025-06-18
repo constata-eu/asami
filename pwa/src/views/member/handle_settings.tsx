@@ -25,7 +25,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  Link,
   ListItemIcon,
   Card,
 } from "@mui/material";
@@ -34,7 +33,6 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PollIcon from "@mui/icons-material/Poll";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import LockResetIcon from "@mui/icons-material/LockReset";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 import { BigText, Head2, Head3 } from "../../components/theme";
 import XIcon from "@mui/icons-material/X";
@@ -47,10 +45,7 @@ export const HandleSettings = ({ handles }) => {
   const translate = useTranslate();
 
   return (
-    <Card
-      sx={{ mb: "1em", minWidth: "250px", breakAfter: "column" }}
-      id={`configure-x-handle-card`}
-    >
+    <Card sx={{ mb: "1em", minWidth: "250px" }} id={`configure-x-handle-card`}>
       <CardContent
         sx={{ display: "flex", alignItems: "stretch", height: "100%" }}
       >

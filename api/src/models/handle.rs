@@ -18,6 +18,9 @@ model! {
     #[sqlx_model_hints(handle_status, default, op_in)]
     status: HandleStatus,
 
+    #[sqlx_model_hints(timestamptz, default, op_gt)]
+    created_at: DateTime<Utc>,
+
     // These columns are part of the account activity report
     // they are denormalized and re-hydrated when:
     // - A collab for one of the user handles user is settled.

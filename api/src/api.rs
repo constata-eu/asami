@@ -8,7 +8,7 @@ use rocket::{http::Status, serde::json::Json, State};
 use sqlx_models_orm::*;
 
 use super::{error::Error, models, *};
-use crate::models::{CampaignStatus, CollabStatus, CreateCampaignFromLinkInput};
+use crate::models::CreateCampaignFromLinkInput;
 
 mod current_session;
 use current_session::*;
@@ -32,12 +32,16 @@ mod audit_log_entry;
 use audit_log_entry::*;
 mod stats;
 use stats::*;
+mod token_stats;
+use token_stats::*;
 mod topic;
 use topic::*;
 mod handle_scoring;
 use handle_scoring::*;
 mod community_member;
 use community_member::*;
+mod holder;
+use holder::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -326,29 +330,17 @@ make_graphql_query! {
     [Topic, allTopics, allTopicsMeta, "_allTopicsMeta", TopicFilter, i32],
     [AuditLogEntry, allAuditLogEntries, allAuditLogEntriesMeta, "_allAuditLogEntriesMeta", AuditLogEntryFilter, i32],
     [CommunityMember, allCommunityMembers, allCommunityMembersMeta, "_allCommunityMembersMeta", CommunityMemberFilter, i32],
+    [Holder, allHolders, allHoldersMeta, "_allHoldersMeta", HolderFilter, i32],
   }
 
   #[graphql(name="Stats")]
   async fn stats(context: &Context, _id: i32) -> FieldResult<Stats> {
-      let total_rewards_paid: U256 = context.app
-        .collab()
-        .select()
-        .status_eq(CollabStatus::Cleared)
-        .all()
-        .await?
-        .iter()
-        .map(|c| c.reward_u256() )
-        .fold(U256::zero(), |acc, x| acc + x);
+      Stats::build(&context.app).await
+  }
 
-      Ok(Stats {
-          id: 0,
-          total_active_handles:
-              context.app.db.fetch_one_scalar::<i32>(sqlx::query_scalar("SELECT count(distinct handle_id)::INT4 FROM collabs")).await?,
-          total_collabs: context.app.collab().select().count().await?.try_into()?,
-          total_campaigns: context.app.campaign().select().status_eq(CampaignStatus::Published).count().await?.try_into()?,
-          total_rewards_paid: total_rewards_paid.encode_hex(),
-          date: chrono::Utc::now()
-      })
+  #[graphql(name="TokenStats")]
+  async fn token_stats(context: &Context, _id: i32) -> FieldResult<TokenStats> {
+      TokenStats::build(&context.app).await
   }
 }
 

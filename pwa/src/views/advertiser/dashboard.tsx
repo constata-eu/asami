@@ -72,7 +72,7 @@ const Dashboard = () => {
     <Box id="advertiser-dashboard">
       <ResponsiveAppBar />
       <Stack
-        my="3em"
+        mb="3em"
         gap="2em"
         direction="row"
         flexWrap="wrap"

@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(distinct handle_id)::INT4 as \"count!\" FROM collabs",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "0c0fd287e9f5c7c5ec8b48c96094f516b4879f7596c252a72a7594a9bbe1eabc"
+}

@@ -35,6 +35,7 @@ import { AccountList, AccountShow } from "./views/explorer/accounts";
 import { CollabList } from "./views/explorer/collabs";
 import { StatsShow } from "./views/explorer/stats";
 import Whitepaper from "./views/whitepaper";
+import Token from "./views/explorer/token";
 
 const Dashboard = () => {
   const [searchParams] = useSearchParams();
@@ -98,6 +99,7 @@ export const App = () => {
           <Resource name="Collab" list={CollabList} />
 
           <Resource name="Stats" show={StatsShow} />
+          <Resource name="TokenStats" />
 
           <Resource name="Topic" />
           <Resource name="CommunityMember" />
@@ -107,6 +109,7 @@ export const App = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/about" element={<About />} />
             <Route path="/whitepaper" element={<Whitepaper />} />
+            <Route path="/token" element={<Token />} />
             <Route path="/stripe-success" element={<StripeSuccess />} />
             <Route path="/stripe-cancel" element={<StripeCancel />} />
           </CustomRoutes>

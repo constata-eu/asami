@@ -27,7 +27,7 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import QueryStatsIcon from "@mui/icons-material/QueryStats";
 import LogoutIcon from "@mui/icons-material/Logout";
 import LoginIcon from "@mui/icons-material/Login";
-import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import WaterfallChartIcon from "@mui/icons-material/WaterfallChart";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
@@ -75,6 +75,12 @@ export const ResponsiveAppBar = ({
       icon: QueryStatsIcon,
       label: "app_bar.stats",
     },
+    token: {
+      id: "token",
+      onClick: () => navigate("/Token"),
+      icon: WaterfallChartIcon,
+      label: "app_bar.token",
+    },
     login: {
       id: "login",
       onClick: () => navigate("/login"),
@@ -113,29 +119,6 @@ export const ResponsiveAppBar = ({
     },
   };
 
-  const explorerItems = [
-    {
-      id: "accounts-menu-item",
-      href: "/Account",
-      text: "app_bar.accounts",
-    },
-    {
-      id: "handles-menu-item",
-      href: "/Handle",
-      text: "app_bar.handles",
-    },
-    {
-      id: "campaigns-menu-item",
-      href: "/Campaign",
-      text: "app_bar.campaigns",
-    },
-    {
-      id: "collabs-menu-item",
-      href: "/Collab",
-      text: "app_bar.collabs",
-    },
-  ];
-
   return (
     <>
       <AppBar position="static" color="transparent" elevation={0}>
@@ -169,52 +152,17 @@ export const ResponsiveAppBar = ({
               <IconEntry def={defs.home} />
               <IconEntry def={defs.x} />
               <IconEntry def={defs.help} />
-              {authenticated && <IconEntry def={defs.whitepaper} />}
-              {!authenticated && (
-                <Button
-                  onClick={defs.whitepaper.onClick}
-                  startIcon={<defs.whitepaper.icon />}
-                >
-                  {t(defs.whitepaper.label)}
-                </Button>
-              )}
-
-              <VerticalDivider />
-
-              {expandExplorer && <IconEntry def={defs.explorer} />}
-
-              {expandExplorer &&
-                explorerItems.map((i) => (
-                  <Button
-                    key={i.id}
-                    onClick={() => navigate(i.href)}
-                    color="primary"
-                    id={i.id}
-                    disableRipple
-                    sx={{ minWidth: 0 }}
-                  >
-                    {t(i.text)}
-                  </Button>
-                ))}
-
-              {!expandExplorer && (
-                <Button
-                  onClick={defs.explorer.onClick}
-                  startIcon={<defs.explorer.icon />}
-                >
-                  {t(defs.explorer.label)}
-                </Button>
-              )}
+              <TextEntry def={defs.whitepaper} />
+              <TextEntry def={defs.explorer} />
+              <TextEntry def={defs.token} />
 
               <VerticalDivider />
 
               {!authenticated && <TextEntry def={defs.login} />}
               {authenticated && (
                 <>
-                  {!expandExplorer && <TextEntry def={defs.myCampaigns} />}
-                  {expandExplorer && <IconEntry def={defs.myCampaigns} />}
-                  {!expandExplorer && <TextEntry def={defs.myCollabs} />}
-                  {expandExplorer && <IconEntry def={defs.myCollabs} />}
+                  <TextEntry def={defs.myCampaigns} />
+                  <TextEntry def={defs.myCollabs} />
                   <IconEntry def={defs.logout} />
                 </>
               )}
@@ -264,22 +212,8 @@ export const ResponsiveAppBar = ({
             <ListItemEntry def={defs.home} />
             {!authenticated && <ListItemEntry def={defs.login} />}
             <ListItemEntry def={defs.explorer} />
+            <ListItemEntry def={defs.token} />
 
-            {explorerItems.map((i) => (
-              <ListItem disablePadding>
-                <ListItemButton
-                  sx={{ ml: "2em" }}
-                  onClick={() => navigate(i.href)}
-                  fullWidth
-                  id={`mobile-menu-${i.id}`}
-                >
-                  <ListItemIcon sx={{ minWidth: 0 }}>
-                    <ArrowRightIcon color="inverted" sx={{ fontSize: "2em" }} />
-                  </ListItemIcon>
-                  <BigListItemText primary={t(i.text)} />
-                </ListItemButton>
-              </ListItem>
-            ))}
             <ListItemEntry def={defs.mobile_x} />
             <ListItemEntry def={defs.help} />
             <ListItemEntry def={defs.whitepaper} />
@@ -305,15 +239,29 @@ const IconEntry = ({ def }) => {
   );
 };
 
-const TextEntry = ({ def, variant }) => {
+const TextEntry = ({ def }) => {
   const t = useTranslate();
   return (
     <Button
       id={`menu-${def.id}`}
-      variant={variant}
       onClick={def.onClick}
       target={def.target}
       href={def.href}
+    >
+      {t(def.label)}
+    </Button>
+  );
+};
+
+const IconTextEntry = ({ def }) => {
+  const t = useTranslate();
+  return (
+    <Button
+      id={`menu-${def.id}`}
+      onClick={def.onClick}
+      target={def.target}
+      href={def.href}
+      startIcon={<def.icon />}
     >
       {t(def.label)}
     </Button>

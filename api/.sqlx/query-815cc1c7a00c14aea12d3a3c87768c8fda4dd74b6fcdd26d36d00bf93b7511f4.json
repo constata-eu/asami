@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE holders SET (id, \naddress, \nbalance, \nlast_auto_paid_cycle, \nis_contract, \nestimated_total_doc_claimed) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE address END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE balance END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE last_auto_paid_cycle END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE is_contract END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE estimated_total_doc_claimed END)) WHERE id = $1 RETURNING id as \"id!: i32\", \naddress as \"address!: String\", \nbalance as \"balance!: String\", \nlast_auto_paid_cycle as \"last_auto_paid_cycle!: String\", \nis_contract as \"is_contract!: bool\", \nestimated_total_doc_claimed as \"estimated_total_doc_claimed!: String\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "address!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "balance!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_auto_paid_cycle!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "is_contract!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "estimated_total_doc_claimed!: String",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "815cc1c7a00c14aea12d3a3c87768c8fda4dd74b6fcdd26d36d00bf93b7511f4"
+}

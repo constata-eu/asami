@@ -1,127 +1,159 @@
 import {
-  Datagrid,
-  List,
-  useSafeSetState,
   useTranslate,
-  SimpleShowLayout,
-  TextField,
-  DateField,
   NumberField,
   ShowBase,
+  useRecordContext,
+  FunctionField,
 } from "react-admin";
-import { BareLayout, DeckCard, ExplorerLayout } from "../layout";
-import { Box, Card, Divider, Stack, Typography } from "@mui/material";
+import { BareLayout, CardTable, DeckCard, ExplorerLayout } from "../layout";
+import { useNavigate } from "react-router-dom";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { AmountField } from "../../components/custom_fields";
-import { Head1, Lead } from "../../components/theme";
-import { BigNumField } from "../../components/custom_fields";
-
-/*
- TODO:
-
- Stats page will be a text + boxes like other sections.
-
- Club Public Explorer
- This is public club data,
- for transparency. 
- 
- - Active Handles.
-     - Total that ever collaborated.
-     - secondary numbers:
-       - Currently active.
-       - Joined last month.
-
-    * Allow filtering by kind.
-     [ Browse handles ]
-
- - Campaigns:
-     - total campaigns.
-     - secondary numbers:
-       - Last month.
-       - monthly average.
-
-     [ Browse campaigns ]
-
- - Collab rewards:
-     - Total collab rewards.
-     - secondary numbers:
-       - last month
-       - monthly average
-
-     [ Browse Collabs ]
-     
- - Collabs:
-     - Total collabs.
-     - secondary numbres:
-       - Last month
-       - monthly average.
-
- - Asami token:
-     - Average yield per 1000 tokens. 
-         44 DOC.
-
-     - secondary numbers:
-        - Total yield in history.
-        - 
-
- 
- - Campaigns:
-     - 
-     - Will show total campaign count.
-     - Total 
-
-
-*/
+import { BigText, Head1, Lead } from "../../components/theme";
+import { BigNumField, truncateEther } from "../../components/custom_fields";
+import { AttributeTable } from "../../components/attribute_table";
 
 export const StatsShow = () => {
   const t = useTranslate();
 
   return (
     <ExplorerLayout>
-      <Stack direction="row" gap="2em" alignItems="center" flexWrap="wrap">
-        <Box flex="1 1 300px">
-          <Head1>{t("explorer.stats.title")}</Head1>
-          <Lead>{t("explorer.stats.description")}</Lead>
-        </Box>
-        <ShowBase>
-          <Card sx={{ mt: "1em", justifySelf: "left" }} elevation={1}>
-            <SimpleShowLayout direction="row">
-              <NumberField source="totalActiveHandles" />
-              <NumberField source="totalCollabs" />
-              <NumberField source="totalCampaigns" />
-              <AmountField source="totalRewardsPaid" />
-              <DateField source="date" showTime />
-            </SimpleShowLayout>
-          </Card>
-        </ShowBase>
-      </Stack>
-
-      <Head1 sx={{ mt: "1em" }}>{t("explorer.oracle.title")}</Head1>
-      <Lead>{t("explorer.oracle.description")}</Lead>
-      <List
-        resource="OnChainJob"
-        disableSyncWithLocation
-        disableAuthentication
-        sort={{ field: "sleepUntil", order: "DESC" }}
-        exporter={false}
-      >
-        <Datagrid bulkActionButtons={false} expand={<ExpandOnChainJob />}>
-          <TextField source="id" />
-          <TextField source="status" sortable={false} />
-          <TextField source="kind" sortable={false} />
-          <DateField source="sleepUntil" showTime />
-          <DateField source="createdAt" showTime />
-        </Datagrid>
-      </List>
+      <ShowBase>
+        <Cards />
+      </ShowBase>
     </ExplorerLayout>
   );
 };
 
-const ExpandOnChainJob = () => (
-  <SimpleShowLayout>
-    <TextField source="txHash" />
-    <BigNumField textAlign="right" source="gasUsed" />
-    <BigNumField textAlign="right" source="nonce" />
-    <TextField source="block" />
-    <TextField source="statusLine" />
-  </SimpleShowLayout>
-);
+const Cards = () => {
+  const record = useRecordContext();
+  const t = useTranslate();
+
+  if (!record) {
+    return;
+  }
+
+  return (
+    <>
+      <Box p="0.5em">
+        <Head1>{t("explorer.stats.title")}</Head1>
+      </Box>
+      <Stack
+        my="1em"
+        gap="1em"
+        direction="row"
+        flexWrap="wrap"
+        alignItems="stretch"
+      >
+        <StatsCard
+          i18nScope="active_handles"
+          bigText={record.totalActiveHandles}
+          link="/Handle/"
+        >
+          <NumberField textAlign="right" source="currentlyActive" />
+          <NumberField textAlign="right" source="joinedRecently" />
+        </StatsCard>
+
+        <StatsCard
+          i18nScope="campaigns"
+          bigText={record.totalCampaigns}
+          link="/Campaign/"
+        >
+          <NumberField textAlign="right" source="recentCampaigns" />
+          <NumberField textAlign="right" source="thirtyDayAverageCampaigns" />
+        </StatsCard>
+
+        <StatsCard
+          i18nScope="collabs"
+          bigText={record.totalCollabs}
+          link="/Collab/"
+        >
+          <NumberField textAlign="right" source="recentCollabs" />
+          <NumberField textAlign="right" source="thirtyDayAverageCollabs" />
+        </StatsCard>
+
+        <StatsCard
+          i18nScope="rewards_paid"
+          bigText={`$ ${record.totalRewardsPaid ? truncateEther(record.totalRewardsPaid) : "?"}`}
+          link="/Collabs/"
+        >
+          <AmountField
+            textAlign="right"
+            currency="DOC"
+            source="recentRewardsPaid"
+          />
+          <AmountField
+            textAlign="right"
+            currency="DOC"
+            source="thirtyDayAverageRewardsPaid"
+          />
+        </StatsCard>
+      </Stack>
+    </>
+  );
+};
+
+const StatsCard = ({ i18nScope, bigText, link, children }) => {
+  const navigate = useNavigate();
+  const t = useTranslate();
+
+  return (
+    <Card sx={{ flex: "1 1 300px" }}>
+      <CardContent
+        sx={{ display: "flex", alignItems: "stretch", height: "100%" }}
+      >
+        <Box flexGrow={1} display="flex" flexDirection="column">
+          <Typography
+            mb="0.5em"
+            fontSize="1.4em"
+            fontFamily="'LeagueSpartanBold'"
+            lineHeight="1.1em"
+            letterSpacing="-0.05em"
+            textAlign="center"
+            color="secondary.main"
+          >
+            {t(`resources.Stats.show_page_cards.${i18nScope}.title`)}
+          </Typography>
+          <BigText
+            sx={{
+              fontSize: "3em",
+              lineHeight: "1em",
+              color: "secondary.main",
+              textAlign: "center",
+            }}
+          >
+            {bigText}
+          </BigText>
+          <Typography
+            color="secondary"
+            fontSize="1em"
+            letterSpacing="0em"
+            margin="auto"
+            padding="0"
+            fontWeight="100"
+            fontFamily="'LeagueSpartanLight'"
+            textTransform="uppercase"
+          >
+            {t(`resources.Stats.show_page_cards.${i18nScope}.subtitle`)}
+          </Typography>
+
+          <Box my="1.5em">
+            <AttributeTable fontSize="1em !important" resource="Stats">
+              {children}
+            </AttributeTable>
+          </Box>
+          <Button variant="outlined" fullWidth onClick={() => navigate(link)}>
+            {t(`resources.Stats.show_page_cards.${i18nScope}.button`)}
+          </Button>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
