@@ -34,7 +34,13 @@ export default () => {
             <NumberField source="totalActiveHandles" />
             <NumberField source="totalCollabs" />
             <NumberField source="totalCampaigns" />
-            <AmountField source="totalRewardsPaid" />
+            <NumberField
+              source="totalRewardsPaid"
+              options={{
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }}
+            />
           </AttributeTable>
         </ShowBase>
         <Box flex="2 0 auto"></Box>

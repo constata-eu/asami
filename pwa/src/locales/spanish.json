@@ -107,7 +107,10 @@
     },
     "Stats": {
       "fields": {
-        "totalActiveHandles": "Handles activos",
+        "totalActiveMembers": "Miembros del club",
+        "totalSignups": "Total registrados",
+        "advertisers": "Anunciantes",
+        "totalActiveHandles": "Total histórico",
         "currentlyActive": "Actualmente activos",
         "joinedRecently": "Menos de 30 días de antigüedad",
         "recentCampaigns": "Menos de 30 días de antigüedad",
@@ -125,6 +128,11 @@
         "rskApiOk": "Sincronizar con RSK"
       },
       "show_page_cards": {
+        "accounts": {
+          "title": "MIEMBROS",
+          "subtitle": "que interactuaron",
+          "button": "Explorar Miembros"
+        },
         "active_handles": {
           "title": "COLABORADORES",
           "subtitle": "con al menos una colaboración",
@@ -275,6 +283,7 @@
       "get_doc": "Conseguir DOC ahora",
       "form_title": "Lo que debes saber antes de lanzar",
       "service_summary": "Tu campaña se activará en cuanto la envíes. Es posible que tu wallet te pida autorización para usar DOC antes de continuar. Las campañas duran 15 días, y cualquier DOC no utilizado se devolverá automáticamente a tu wallet al finalizar.<br/>Los colaboradores reciben pagos en DOC según su nivel de influencia, lo que te ayuda a llegar a las audiencias más relevantes.<br/><strong>Importante: no hay reembolsos — incluso si no estás satisfecho con los resultados.</strong>. Recomendamos comenzar con un presupuesto pequeño de 30 DOC para ver cómo funciona Asami según tus objetivos.",
+      "get_doc_link": "https://moneyonchain.com/es/blog/quiero-mi-doc/",
       "done": {
         "title": "Campaña creada",
         "text": "Tu campaña ha sido creada. Puede tardar unos minutos en aparecer en tu panel de control.",

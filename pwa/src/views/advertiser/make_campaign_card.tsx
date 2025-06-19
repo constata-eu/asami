@@ -175,7 +175,7 @@ const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
             fullWidth
             target="_blank"
             variant="outlined"
-            href="https://wiki.moneyonchain.com/espanol-1/comenzando/que-es-lo-primero-que-debo-saber"
+            href={translate("make_campaign.with_doc.get_doc_link")}
           >
             {translate("make_campaign.with_doc.get_doc")}
           </Button>

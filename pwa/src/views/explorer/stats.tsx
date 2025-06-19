@@ -40,6 +40,12 @@ const Cards = () => {
     return;
   }
 
+  const docFormatter = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: false,
+  });
+
   return (
     <>
       <Box p="0.5em">
@@ -52,6 +58,15 @@ const Cards = () => {
         flexWrap="wrap"
         alignItems="stretch"
       >
+        <StatsCard
+          i18nScope="accounts"
+          bigText={record.totalActiveMembers}
+          link="/Account/"
+        >
+          <NumberField textAlign="right" source="totalSignups" />
+          <NumberField textAlign="right" source="totalAdvertisers" />
+        </StatsCard>
+
         <StatsCard
           i18nScope="active_handles"
           bigText={record.totalActiveHandles}
@@ -81,17 +96,19 @@ const Cards = () => {
 
         <StatsCard
           i18nScope="rewards_paid"
-          bigText={`$ ${record.totalRewardsPaid ? truncateEther(record.totalRewardsPaid) : "?"}`}
+          bigText={`$ ${record.totalRewardsPaid ? docFormatter.format(record.totalRewardsPaid) : "?"}`}
           link="/Collabs/"
         >
-          <AmountField
+          <FunctionField
+            render={(x) => `${docFormatter.format(x.recentRewardsPaid)} DOC`}
             textAlign="right"
-            currency="DOC"
             source="recentRewardsPaid"
           />
-          <AmountField
+          <FunctionField
+            render={(x) =>
+              `${docFormatter.format(x.thirtyDayAverageRewardsPaid)} DOC`
+            }
             textAlign="right"
-            currency="DOC"
             source="thirtyDayAverageRewardsPaid"
           />
         </StatsCard>
@@ -105,7 +122,7 @@ const StatsCard = ({ i18nScope, bigText, link, children }) => {
   const t = useTranslate();
 
   return (
-    <Card sx={{ flex: "1 1 300px" }}>
+    <Card sx={{ flex: "1 1 270px" }}>
       <CardContent
         sx={{ display: "flex", alignItems: "stretch", height: "100%" }}
       >

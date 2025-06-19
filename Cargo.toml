@@ -21,7 +21,7 @@ stripe-rust = { git = "https://github.com/constata-eu/stripe-rs", default-featur
 ] }
 
 sqlx = { version = "0.8.3", features = [
-  "bigdecimal",
+  "rust_decimal",
   "chrono",
   "migrate",
   "postgres",

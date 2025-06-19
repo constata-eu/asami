@@ -214,7 +214,7 @@ trait Showable<Model: SqlxModel<State = App>, Filter: Send>: Sized {
         Filter: 'async_trait,
     {
         let limit = per_page.unwrap_or(DEFAULT_PER_PAGE);
-        if limit >= 500 {
+        if limit >= 1001 {
             return Err(FieldError::new(
                 "Invalid pagination",
                 graphql_value!({ "internal_error": "Invalid pagination" }),
@@ -441,6 +441,6 @@ fn field_error(message: &str, second_message: &str) -> FieldError {
     FieldError::new(message, graphql_value!({ "internal_error": second_message }))
 }
 
-fn into_like_search(i: Option<String>) -> Option<String> {
+fn into_like_search(i: Option<impl std::fmt::Display>) -> Option<String> {
     i.map(|s| format!("%{s}%"))
 }

@@ -44,7 +44,7 @@ impl TokenStats {
         let (price, token_yield, payback) = Self::price_yield_payback(app).await?;
 
         let supply = app.value_series().get(AsamiSupply).await?;
-        let assigned = app.value_series().get(AsamiSupply).await?;
+        let assigned = app.value_series().get(AsamiAssignedTokens).await?;
         let unclaimed = (assigned.value_u256() - supply.value_u256()).encode_hex();
 
         let cycle_length: i32 = 60 * 60 * 24 * 15;

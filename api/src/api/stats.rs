@@ -6,6 +6,14 @@ use super::{models::*, *};
 pub struct Stats {
     #[graphql(description = "Unique numeric identifier of this resource")]
     pub id: i32,
+
+    #[graphql(description = "Members to ever be active")]
+    pub total_active_members: i32,
+    #[graphql(description = "Total signups")]
+    pub total_signups: i32,
+    #[graphql(description = "Members that created campaigns")]
+    pub total_advertisers: i32,
+
     #[graphql(description = "Handles that made at least one collab")]
     pub total_active_handles: i32,
     #[graphql(description = "Handles that have collaborated last 30 days")]
@@ -28,11 +36,11 @@ pub struct Stats {
     pub thirty_day_average_collabs: Decimal,
 
     #[graphql(description = "How much money was paid in rewards")]
-    pub total_rewards_paid: String,
+    pub total_rewards_paid: Decimal,
     #[graphql(description = "How much was paid in the last 30 days")]
-    pub recent_rewards_paid: String,
+    pub recent_rewards_paid: Decimal,
     #[graphql(description = "What's the average paid in rewards in 30 days")]
-    pub thirty_day_average_rewards_paid: String,
+    pub thirty_day_average_rewards_paid: Decimal,
     #[graphql(description = "Date in which these stats were calculated")]
     pub date: UtcDateTime,
 }
@@ -43,8 +51,8 @@ impl Stats {
         let oldest_date = app
             .account()
             .select()
-            .order_by(AccountOrderBy::CreatedAt)
-            .desc(true)
+            .order_by(AccountOrderBy::Id)
+            .desc(false)
             .optional()
             .await?
             .map(|a| a.attrs.created_at)
@@ -52,6 +60,27 @@ impl Stats {
 
         let total_days = std::cmp::max(1, (Utc::now() - oldest_date).num_days());
         let thirty_day_average = |x: i32| Decimal::from(x) / Decimal::from(total_days) * Decimal::from(30);
+
+        let total_active_members = app
+            .db
+            .fetch_one_scalar::<i32>(sqlx::query_scalar!(
+                r#"SELECT COUNT(*)::INT4 AS "count!"
+                FROM (
+                    SELECT distinct(member_id) as "count!" FROM collabs
+                    UNION
+                    SELECT distinct(account_id) as "count!" FROM campaigns
+                ) AS combined_users"#
+            ))
+            .await?;
+
+        let total_signups: i32 = app.account().select().count().await?.try_into()?;
+
+        let total_advertisers = app
+            .db
+            .fetch_one_scalar::<i32>(sqlx::query_scalar!(
+                r#"SELECT count(distinct account_id)::INT4 as "count!" FROM campaigns"#
+            ))
+            .await?;
 
         let total_active_handles = app
             .db
@@ -83,29 +112,22 @@ impl Stats {
             .await?
             .try_into()?;
 
-        let total_rewards_paid: U256 = app
-            .collab()
-            .select()
-            .status_eq(CollabStatus::Cleared)
-            .all()
-            .await?
-            .iter()
-            .map(|c| c.reward_u256())
-            .fold(U256::zero(), |acc, x| acc + x);
+        let total_rewards_paid: Decimal = app.db
+            .fetch_one_scalar(sqlx::query_scalar!(
+                r#"SELECT SUM(u256_hex_to_numeric(reward)) / '1e18'::numeric AS "sum!"
+                    FROM collabs WHERE status = 'cleared'"#)).await?;
 
-        let recent_rewards_paid: U256 = app
-            .collab()
-            .select()
-            .status_eq(CollabStatus::Cleared)
-            .created_at_gt(thirty_days_ago)
-            .all()
-            .await?
-            .iter()
-            .map(|c| c.reward_u256())
-            .fold(U256::zero(), |acc, x| acc + x);
+        let recent_rewards_paid: Decimal = app.db
+            .fetch_one_scalar(sqlx::query_scalar!(
+                r#"SELECT SUM(u256_hex_to_numeric(reward)) / '1e18'::numeric AS "sum!"
+                    FROM collabs WHERE status = 'cleared' AND created_at > $1"#,
+                thirty_days_ago)).await?;
 
         Ok(Stats {
             id: 0,
+            total_active_members,
+            total_signups,
+            total_advertisers,
             total_active_handles,
             currently_active,
             joined_recently,
@@ -118,9 +140,9 @@ impl Stats {
             recent_campaigns,
             thirty_day_average_campaigns: thirty_day_average(total_campaigns),
 
-            total_rewards_paid: total_rewards_paid.encode_hex(),
-            recent_rewards_paid: recent_rewards_paid.encode_hex(),
-            thirty_day_average_rewards_paid: (total_rewards_paid / U256::from(total_days) * wei("30")).encode_hex(),
+            total_rewards_paid,
+            recent_rewards_paid,
+            thirty_day_average_rewards_paid: total_rewards_paid / Decimal::from(total_days) * Decimal::from(30),
             date: chrono::Utc::now(),
         })
     }

@@ -107,6 +107,9 @@
     },
     "Stats": {
       "fields": {
+        "totalActiveMembers": "Active Members",
+        "totalSignups": "Total Signups",
+        "advertisers": "Advertisers",
         "totalActiveHandles": "Active Handles",
         "currentlyActive": "Currently active",
         "joinedRecently": "Less than 30 days old",
@@ -125,6 +128,11 @@
         "rskApiOk": "Sync with RSK"
       },
       "show_page_cards": {
+        "accounts": {
+          "title": "MEMBERS",
+          "subtitle": "to ever interact",
+          "button": "Explore Members"
+        },
         "active_handles": {
           "title": "HANDLES",
           "subtitle": "with at least one collab",
@@ -275,6 +283,7 @@
       "get_doc": "Get DOC now",
       "form_title": "What to know before you launch.",
       "service_summary": "Your campaign will go live as soon as it’s submitted. Your wallet may ask for DOC spending authorization before it can proceed. Campaigns run for 15 days, and any unused DOC will be automatically returned to your wallet at the end.<br/> Collaborators are paid in DOC based on their influence level, which helps you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small 30 DOC budget to see how Asami works for your goals.",
+      "get_doc_link": "https://moneyonchain.com/blog/i-want-my-doc/",
       "done": {
         "title": "Campaign created",
         "text": "Your campaign has been created. It may take a few minutes to show up in your dashboard.",

@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT SUM(u256_hex_to_numeric(reward)) / '1e18'::numeric AS \"sum!\"\n                    FROM collabs WHERE status = 'cleared'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sum!",
+        "type_info": "Numeric"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "b4b2381f46ae91f9e6497df5d5173a520faa1c090624d1ad445ae0a339a15250"
+}
