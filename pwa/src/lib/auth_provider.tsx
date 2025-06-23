@@ -35,7 +35,10 @@ function clearAuthKeys() {
 }
 
 export async function makeXLogin() {
-  return await makeXUrl("users.read tweet.read", "/x_login");
+  return await makeXUrl(
+    "tweet.write tweet.read users.read follows.read offline.access",
+    "/x_login",
+  );
 }
 
 export async function makeXAuthorize() {

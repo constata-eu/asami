@@ -94,7 +94,7 @@ export const ResponsiveAppBar = ({
       label: "app_bar.logout",
     },
     myCampaigns: {
-      id: "my-campaings",
+      id: "my-campaigns",
       onClick: () => {
         localStorage.setItem("asami_user_role", "advertiser");
         navigate("/dashboard");

@@ -390,16 +390,22 @@
         "will_do_it_later": "Lo haré luego"
       },
       "in_progress": {
-        "summary": "Estamos midiendo tu influencia @%{username}, esto puede tardar hasta una hora.",
+        "summary": "Estamos midiendo tu influencia @%{username}, esto puede tardar hasta 5 horas.",
         "dialog_title": "Midiendo la influencia de @%{username}",
-        "may_take_up_to_an_hour": "Tu puntaje puede tardar hasta una hora en estar listo.",
-        "check_the_poll": "Mientras tanto, revisa tu perfil de X para ver la encuesta que acabamos de publicar por ti — los votos de tu audiencia ayudarán a definir tu puntaje.",
+        "may_take_up_to_an_hour": "Tu lectura de influencia puede tardar hasta 5 horas en estar listo.",
+        "check_the_poll": "Mientras tanto, revisa tu perfil de X para ver la encuesta que acabamos de publicar por ti — los votos de tu audiencia ayudarán a definir tu puntaje. O si no te gusta, puedes borrarla.",
+        "got_it": "Entendido"
+      },
+      "reconnecting": {
+        "summary": "Estamos reconectando tu cuenta de X @%{username}, puede tardar hasta 5 horas.",
+        "dialog_title": "Reconectando @%{username}",
+        "may_take_up_to_an_hour": "Nos estamos asegurando de que la conexión con X sea funcional, esto puede tardar hasta 5 hoars.",
         "got_it": "Entendido"
       },
       "grant_permissions_again": {
         "summary": "Perdimos acceso a tu cuenta de X. Vuelve a conectarla para seguir colaborando.",
         "dialog_title": "Perdimos acceso a tu cuenta de X",
-        "cant_measure": "No podemos medir tu influencia en este momento, así que tu puntaje se reiniciará a 0.",
+        "cant_measure": "No podemos medir tu influencia en este momento, así que no podrás participar en campañas hasta que vuelvas a conectar tu cuenta.",
         "please_reconnect": "Por favor, vuelve a conectar tu cuenta de X para recuperar el acceso y seguir colaborando en campañas.",
         "reconnect": "Reconectar",
         "later": "Lo haré más tarde"
@@ -583,6 +589,7 @@
       "default_name": "Anónimo",
       "member": "miembro"
     },
+    "disconnected": "La conexión con X para esta cuenta se ha perdido. Puede reconectarse en cualquier momento y volverá a participar en campañas.",
     "scoring_in_progress": "Estamos evaluando este usuario",
     "advertiser_title": "Anunciante",
     "member_info_title": "Información del miembro",
@@ -593,7 +600,7 @@
       "high": "La interacción en X es alta, su audiencia está atenta. %{extra}",
       "none": "No pudimos detectar interacción auténtica en X. %{extra}"
     },
-    "offline_engagement_title": "Interacción fuera de X",
+    "offline_engagement_title": "Trabajo fuera de X",
     "audience_poll": {
       "title": "Encuesta a la audiencia",
       "high": "Una encuesta indica alta influencia. %{extra}",

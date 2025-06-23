@@ -83,6 +83,7 @@ mutation CreateGaslessAllowance {
     totalCampaigns
     totalCollabsReceived
     totalSpent
+    confirmedYield
     __typename
   }
 }
@@ -104,6 +105,7 @@ mutation CreateClaimAccountRequest($input: CreateClaimAccountRequestInput!) {
     totalCampaigns
     totalCollabsReceived
     totalSpent
+    confirmedYield
     __typename
   }
 }
@@ -128,7 +130,6 @@ mutation CreateXRefreshToken($token: String!, $verifier: String!) {
     accountId
     username
     userId
-    needsRefreshToken
     score
     currentScoringId
     lastScoring
@@ -159,7 +160,6 @@ mutation UpdateHandle($id: Int!, $data: AdminEditHandleInput!) {
     accountId
     username
     userId
-    needsRefreshToken
     score
     currentScoringId
     lastScoring
@@ -215,6 +215,7 @@ query Account($id: String!) {
     totalCampaigns
     totalCollabsReceived
     totalSpent
+    confirmedYield
     __typename
   }
 }
@@ -236,6 +237,7 @@ query AllAccounts($page: Int, $perPage: Int, $sortField: String, $sortOrder: Str
     totalCampaigns
     totalCollabsReceived
     totalSpent
+    confirmedYield
     __typename
   }
 }
@@ -311,7 +313,6 @@ query Handle($id: Int!) {
     accountId
     username
     userId
-    needsRefreshToken
     score
     currentScoringId
     lastScoring
@@ -342,7 +343,6 @@ query AllHandles($page: Int, $perPage: Int, $sortField: String, $sortOrder: Stri
     accountId
     username
     userId
-    needsRefreshToken
     score
     currentScoringId
     lastScoring
@@ -471,6 +471,7 @@ query Collab($id: Int!) {
     status
     disputeReason
     reward
+    createdAt
     fee
     collabTriggerUniqueId
     __typename
@@ -486,6 +487,7 @@ query AllCollabs($page: Int, $perPage: Int, $sortField: String, $sortOrder: Stri
     status
     disputeReason
     reward
+    createdAt
     fee
     collabTriggerUniqueId
     __typename
@@ -641,14 +643,66 @@ query AllCommunityMembersMeta($page: Int, $perPage: Int, $sortField: String, $so
     __typename
   }
 }
+query Holder($id: Int!) {
+  Holder(id: $id) {
+    id
+    address
+    balance
+    isContract
+    estimatedTotalDocClaimed
+    __typename
+  }
+}
+query AllHolders($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HolderFilter) {
+  allHolders(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    address
+    balance
+    isContract
+    estimatedTotalDocClaimed
+    __typename
+  }
+}
+query AllHoldersMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HolderFilter) {
+  _allHoldersMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
 query Stats($id: Int!) {
   Stats(id: $id) {
     id
+    totalActiveMembers
+    totalSignups
+    totalAdvertisers
     totalActiveHandles
-    totalCollabs
+    currentlyActive
+    joinedRecently
     totalCampaigns
+    recentCampaigns
+    thirtyDayAverageCampaigns
+    totalCollabs
+    recentCollabs
+    thirtyDayAverageCollabs
     totalRewardsPaid
+    recentRewardsPaid
+    thirtyDayAverageRewardsPaid
     date
+    __typename
+  }
+}
+query TokenStats($id: Int!) {
+  TokenStats(id: $id) {
+    id
+    tokenYield
+    price
+    payback
+    supply
+    unclaimed
+    issuanceRate
+    feePool
+    cycleStart
+    cycleEnd
     __typename
   }
 }

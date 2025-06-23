@@ -135,6 +135,7 @@ impl TestUser {
             .app
             .handle()
             .insert(InsertHandle {
+                status: models::HandleStatus::NeverConnected,
                 account_id: self.account_id().encode_hex(),
                 username: username.to_string(),
                 user_id: user_id.to_string(),
@@ -162,7 +163,7 @@ impl TestUser {
             .save()
             .await
             .expect("save audience size override")
-            .verify(poll["data"]["id"].as_str().unwrap().to_string())
+            .setup_with_poll(poll["data"]["id"].as_str().unwrap().to_string())
             .await
             .expect("could not verify handle");
 

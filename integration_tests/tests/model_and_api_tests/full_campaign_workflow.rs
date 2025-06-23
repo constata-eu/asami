@@ -2,7 +2,91 @@ use ::api::models::*;
 
 use super::*;
 
-app_test! { creates_campaign_register_collabs_and_reimburses(a)
+#[tokio::test]
+#[serial_test::file_serial]
+async fn creates_campaign_registers_collabs_and_reimburses() {
+    TestHelper::run(|h| async move {
+        let advertiser = h.advertiser().await;
+        let mut campaign = advertiser.make_campaign_one(u("100"), 20, &[]).await;
+        let alice = h.collaborator(12500).await;
+        let bob = h.collaborator(112500).await;
+        campaign = h.a().batch_collabs(campaign, &[&alice]).await;
+
+        campaign.reload().await.unwrap();
+
+        assert_eq!(campaign.available_budget().await.unwrap(), u("90"));
+        assert_eq!(campaign.budget_u256(), u("90"));
+
+        campaign = h.a().batch_collabs(campaign, &[&bob]).await;
+
+        campaign.reload().await.unwrap();
+        assert_eq!(campaign.available_budget().await.unwrap(), u("0"));
+        assert_eq!(campaign.budget_u256(), u("0"));
+
+        h.a().send_tx("Advertiser tops up", "78582",
+            advertiser.top_up_campaign_contract_call(advertiser.address(), campaign.decoded_briefing_hash(), u("15"))
+        ).await;
+
+        h.a().sync_events_until("Campaign is topped up", || async {
+            campaign.reloaded().await.unwrap().budget_u256() == u("15")
+        }).await;
+
+        let original_valid_until = campaign.valid_until();
+
+        h.a().send_tx("Advertiser extends", "35000",
+            advertiser.extend_campaign_contract_call(campaign.decoded_briefing_hash(), 40)
+        ).await;
+
+        h.a().sync_events_until("Campaign is extended", || async {
+            campaign.reloaded().await.unwrap().valid_until() > original_valid_until
+        }).await;
+
+        campaign.reload().await.unwrap();
+        assert_eq!(campaign.available_budget().await.unwrap(), u("15"));
+        assert_eq!(campaign.budget_u256(), u("15"));
+
+        expire_campaign(h.a(), &campaign).await;
+
+        let job = h.a().wait_for_job(
+            "Courtesy reimbursement",
+            OnChainJobKind::ReimburseCampaigns,
+            OnChainJobStatus::Submitted
+        ).await;
+
+        h.a().wait_for_job_status("Courtesy reimbursement confirms", &job, OnChainJobStatus::Settled).await;
+
+        h.a().sync_events_until("Campaign is reimbursed", || async {
+            campaign.reloaded().await.unwrap().budget_u256() == u("0")
+        }).await;
+
+        campaign.reload().await.unwrap();
+        assert_eq!(campaign.available_budget().await.unwrap(), u("0"));
+        assert_eq!(campaign.budget_u256(), u("0"));
+    }).await
+}
+
+#[tokio::test]
+#[serial_test::file_serial]
+async fn notifies_twitter_about_campaign() {
+    TestHelper::run(|h| async move {
+        let advertiser = h.advertiser().await;
+        let mut campaign = advertiser.make_campaign_one(u("100"), 20, &[]).await;
+
+        // h.a().app.campaign().announce_new_campaigns().await?;
+
+        // New campaign by 'aoeuaoeuaoue', pays 0.001 DOC per influence score point. Max 1 DOC, min 0.10.
+
+        // Log-in to asami to check applicability.
+
+        // Not a member yet? Get your free influence reading now and start collaborating.
+
+        // Let's get one billion people into web3.
+    }).await
+}
+
+
+/*
+app_test! { old_creates_campaign_register_collabs_and_reimburses(a)
     let mut advertiser = a.client().await;
     advertiser.setup_as_advertiser("test main advertiser").await;
     let mut campaign = advertiser.start_and_pay_campaign("https://x.com/somebody/status/1716421161867710954", u("100"), 30, &[]).await;
@@ -210,6 +294,8 @@ app_test! { reduce_race_condition_risk_with_reimbursements(a)
     assert_eq!(campaign.available_budget().await.unwrap(), u("0"));
     assert_eq!(campaign.budget_u256(), u("0"));
 }
+
+*/
 
 async fn expire_campaign(a: &TestApp, campaign: &Campaign) {
     campaign

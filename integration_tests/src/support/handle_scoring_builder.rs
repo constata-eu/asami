@@ -16,17 +16,17 @@ pub async fn pre_ingested_handle_scoring(
         .handle_scoring()
         .insert(InsertHandleScoring {
             handle_id: *handle.id(),
+            me_json: Some(me.to_string()),
+            tweets_json: Some(tweets_json(tweets).to_string()),
+            mentions_json: Some(mentions.to_string()),
+            reposts_json: Some(reposts.to_string()),
+            poll_json: poll.map(|x| x.to_string()),
+            status: HandleScoringStatus::Ingested,
         })
         .save()
         .await
         .unwrap()
         .update()
-        .status(HandleScoringStatus::Ingested)
-        .me_json(Some(me.to_string()))
-        .tweets_json(Some(tweets_json(tweets).to_string()))
-        .mentions_json(Some(mentions.to_string()))
-        .reposts_json(Some(reposts.to_string()))
-        .poll_json(poll.map(|x| x.to_string()))
         .save()
         .await
         .unwrap()

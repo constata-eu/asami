@@ -441,7 +441,7 @@ impl TestApp {
         .await;
     }
 
-    pub async fn batch_collabs(&self, mut campaign: models::Campaign, test_users: &[&TestUser]) {
+    pub async fn batch_collabs(&self, mut campaign: models::Campaign, test_users: &[&TestUser]) -> models::Campaign {
         use api::models::{OnChainJobKind, OnChainJobStatus};
 
         let mut claimed_ids = vec![];
@@ -498,6 +498,8 @@ impl TestApp {
                 assert_eq!(*cleared.status(), models::CollabStatus::Cleared, "Collab did not clear");
             }
         }
+
+        campaign
     }
 
     pub async fn register_collab(

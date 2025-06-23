@@ -53,9 +53,12 @@ enum HandleScoringStatus {
 }
 
 enum HandleStatus {
-  UNVERIFIED
-  VERIFIED
+  NEVER_CONNECTED
+  SETTING_UP
+  CONNECTING
   ACTIVE
+  DISCONNECTED
+  RECONNECTING
   INACTIVE
 }
 
@@ -213,6 +216,12 @@ input HandleScoringFilter {
   idEq: Int
 }
 
+input HolderFilter {
+  ids: [Int!]
+  idEq: Int
+  addressIlike: String
+}
+
 input OnChainJobFilter {
   ids: [Int!]
   idEq: Int
@@ -291,6 +300,8 @@ type Account {
   totalCollabsReceived: Int!
   "Total spent on collabs received"
   totalSpent: String!
+  "Historic confirmed yield from tokens"
+  confirmedYield: String!
 }
 
 "An message logged for any part of the system"
@@ -370,6 +381,8 @@ type Collab {
   disputeReason: String
   "The gross amount paid by the advertiser (campaign creator) for this collab."
   reward: String!
+  "Date in which the collab was registered"
+  createdAt: DateTime!
   "The fee deducted by asami from the gross amount, field only available when reward cleared."
   fee: String
   collabTriggerUniqueId: String!
@@ -403,8 +416,6 @@ type Handle {
   username: String!
   "The unique user_id in the given social network. This never changes."
   userId: String!
-  "The campaign manager has no refresh token to score this account"
-  needsRefreshToken: Boolean!
   "The score given to this handle by Asami's admin."
   score: String
   "The last scoring successfully applied to this handle."
@@ -473,6 +484,16 @@ type HandleScoring {
   audienceSizeOverride: Int
   audienceSizeOverrideReason: String
   score: String
+}
+
+"A holder of ASAMI tokens"
+type Holder {
+  "Unique numeric identifier of this resource"
+  id: Int!
+  address: String!
+  balance: String!
+  isContract: Boolean!
+  estimatedTotalDocClaimed: String!
 }
 
 type ListMetadata {
@@ -557,7 +578,11 @@ type Query {
   CommunityMember(id: Int!): CommunityMember!
   allCommunityMembers(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CommunityMemberFilter): [CommunityMember!]!
   _allCommunityMembersMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: CommunityMemberFilter): ListMetadata!
+  Holder(id: Int!): Holder!
+  allHolders(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: HolderFilter): [Holder!]!
+  _allHoldersMeta(page: Int, perPage: Int, sortField: String, sortOrder: String, filter: HolderFilter): ListMetadata!
   Stats(id: Int!): Stats!
+  TokenStats(id: Int!): TokenStats!
 }
 
 "A campaign started by an advertiser"
@@ -579,20 +604,55 @@ type Session {
   admin: Boolean!
 }
 
-"A contract call made by the campaign manager or oracle."
+"Global site stats."
 type Stats {
   "Unique numeric identifier of this resource"
   id: Int!
+  "Members to ever be active"
+  totalActiveMembers: Int!
+  "Total signups"
+  totalSignups: Int!
+  "Members that created campaigns"
+  totalAdvertisers: Int!
   "Handles that made at least one collab"
   totalActiveHandles: Int!
-  "How many collabs were made"
-  totalCollabs: Int!
+  "Handles that have collaborated last 30 days"
+  currentlyActive: Int!
+  "Handles who joined in the past 30 days"
+  joinedRecently: Int!
   "How many campaigns were run"
   totalCampaigns: Int!
+  "How many campaigns in the last 30 days."
+  recentCampaigns: Int!
+  "How many campaigns a month on average."
+  thirtyDayAverageCampaigns: Decimal!
+  "How many collabs were made"
+  totalCollabs: Int!
+  "How many collabs in teh past 30 days"
+  recentCollabs: Int!
+  "Whats the average collabs per month"
+  thirtyDayAverageCollabs: Decimal!
   "How much money was paid in rewards"
-  totalRewardsPaid: String!
+  totalRewardsPaid: Decimal!
+  "How much was paid in the last 30 days"
+  recentRewardsPaid: Decimal!
+  "What's the average paid in rewards in 30 days"
+  thirtyDayAverageRewardsPaid: Decimal!
   "Date in which these stats were calculated"
   date: DateTime!
+}
+
+type TokenStats {
+  id: Int!
+  tokenYield: String!
+  price: String!
+  payback: String!
+  supply: String!
+  unclaimed: String!
+  issuanceRate: String!
+  feePool: String!
+  cycleStart: Int!
+  cycleEnd: Int!
 }
 
 type Topic {

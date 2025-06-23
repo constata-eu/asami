@@ -17,8 +17,6 @@ pub struct Handle {
     username: String,
     #[graphql(description = "The unique user_id in the given social network. This never changes.")]
     user_id: String,
-    #[graphql(description = "The campaign manager has no refresh token to score this account")]
-    needs_refresh_token: bool,
 
     #[graphql(description = "The score given to this handle by Asami's admin.")]
     score: Option<String>,
@@ -26,6 +24,8 @@ pub struct Handle {
     current_scoring_id: Option<i32>,
     #[graphql(description = "Date in which the last scoring took place.")]
     last_scoring: Option<DateTime<Utc>>,
+    #[graphql(description = "Date in which a new scoring will happen.")]
+    next_scoring: Option<DateTime<Utc>>,
 
     #[graphql(description = "Topics assigned to this handle")]
     topic_ids: Vec<i32>,
@@ -110,10 +110,10 @@ impl Showable<models::Handle, HandleFilter> for Handle {
             topic_ids,
             current_scoring_id: d.attrs.current_scoring_id,
             last_scoring: d.attrs.last_scoring,
+            next_scoring: d.attrs.next_scoring,
             status: d.attrs.status,
             total_collabs: d.attrs.total_collabs,
             total_collab_rewards: d.attrs.total_collab_rewards,
-            needs_refresh_token: d.attrs.x_refresh_token.is_none(),
             online_engagement_override: d.attrs.online_engagement_override,
             online_engagement_override_reason: d.attrs.online_engagement_override_reason,
             offline_engagement_score: d.attrs.offline_engagement_score,
@@ -182,7 +182,7 @@ impl AdminEditHandleInput {
             .holder_score_override_reason(self.holder_score_override_reason)
             .audience_size_override(self.audience_size_override)
             .audience_size_override_reason(self.audience_size_override_reason)
-            .last_scoring(None)
+            .next_scoring(Some(Utc::now()))
             .save()
             .await?;
 

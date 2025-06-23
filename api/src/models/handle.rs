@@ -1,5 +1,5 @@
 use rocket::serde::json;
-use twitter_v2::{authorization::Oauth2Token, oauth2::*, TwitterApi};
+use twitter_v2::{authorization::Oauth2Token, oauth2::*, TwitterApi, User};
 
 use super::*;
 
@@ -15,7 +15,7 @@ model! {
     username: String,
     #[sqlx_model_hints(varchar, op_like)]
     user_id: String,
-    #[sqlx_model_hints(handle_status, default, op_in)]
+    #[sqlx_model_hints(handle_status, op_in)]
     status: HandleStatus,
 
     #[sqlx_model_hints(timestamptz, default, op_gt)]
@@ -36,6 +36,8 @@ model! {
     #[sqlx_model_hints(text, default, op_is_set)]
     invalidated_x_refresh_token: Option<String>,
 
+    #[sqlx_model_hints(timestamptz, default)]
+    next_scoring: Option<UtcDateTime>,
     #[sqlx_model_hints(varchar, default)]
     score: Option<String>,
     #[sqlx_model_hints(timestamptz, default)]
@@ -85,7 +87,12 @@ model! {
     audience_size_override_reason: Option<String>,
   },
   queries {
-      need_scoring("status IN ('verified', 'active') AND (last_scoring IS NULL OR last_scoring < $1)", date: UtcDateTime)
+      // We don't expect next_scoring to be null for active handles,
+      // but just in case, we force scoring on them.
+      // next_scoring should never be null for active handles.
+      need_scoring("
+          status IN ('connecting', 'reconnecting') OR
+              (status = 'active' AND (next_scoring < now() OR next_scoring IS NULL))")
   },
   has_many {
     HandleTopic(handle_id),
@@ -223,19 +230,9 @@ impl HandleHub {
         let existing = tx.select().user_id_eq(user_details.id.to_string()).optional().await?;
 
         let handle = if let Some(h) = existing {
-            if h.account_id() != &account_id {
-                return Err(Error::validation("x", "x_account_already_registered"));
-            }
-            h.update().x_refresh_token(Some(refresh_token)).save().await?
+            h.handle_update_refresh_token(refresh_token, account_id).await?
         } else {
-            tx.insert(InsertHandle {
-                account_id,
-                username: user_details.username.to_string(),
-                user_id: user_details.id.to_string(),
-                x_refresh_token: Some(refresh_token),
-            })
-            .save()
-            .await?
+            tx.setup_with_refresh_token(refresh_token, user_details.id.to_string(), user_details.username.to_string(), account_id).await?
         };
 
         tx.commit().await?;
@@ -243,24 +240,45 @@ impl HandleHub {
         Ok(handle)
     }
 
-    pub async fn verify_pending(&self) -> AsamiResult<Vec<Handle>> {
-        let result = self.verify_pending_inner().await;
+    pub async fn setup_with_refresh_token(&self, refresh_token: String, user_id: String, username: String, account_id: String) -> AsamiResult<Handle> {
+        if self.select().account_id_eq(&account_id).optional().await?.is_some() {
+            return Err(Error::validation("account_id", "account_has_another_x_handle"));
+        }
+
+        Ok(self.insert(InsertHandle {
+            account_id,
+            username,
+            user_id,
+            x_refresh_token: Some(refresh_token),
+            status: HandleStatus::SettingUp, 
+        })
+        .save()
+        .await?)
+    } 
+
+    pub async fn setup_pending(&self) -> AsamiResult<Vec<Handle>> {
+        let result = self.setup_pending_inner().await;
         if let Err(e) = result.as_ref() {
-            self.state.fail("verify_pending", "error", &format!("{e:?}")).await;
+            self.state.fail("setup_pending", "error", &format!("{e:?}")).await;
         }
         result
     }
 
-    pub async fn verify_pending_inner(&self) -> AsamiResult<Vec<Handle>> {
-        let scope = self.select().x_refresh_token_is_set(true).status_eq(HandleStatus::Unverified);
+    pub async fn setup_pending_inner(&self) -> AsamiResult<Vec<Handle>> {
+        let scope = self.select().status_eq(HandleStatus::SettingUp);
 
         if scope.count().await? == 0 {
-            self.state.info("verify_pending", "no_unverified_handles_found_skipping", ()).await;
+            self.state.info("setup_pending", "no_handles_to_setup_skipping", ()).await;
         }
 
         let mut handles = vec![];
 
         for handle in scope.all().await? {
+            if handle.poll_id().is_some() {
+                handle.skip_setup().await?;
+                continue;
+            }
+
             let Ok(twitter) = handle.clone().x_api_client().await else {
                 continue;
             };
@@ -279,15 +297,15 @@ impl HandleHub {
 
             match post_result {
                 Ok(post) => {
-                    self.state.fail("verify_pending", "post_returned", &post).await;
+                    self.state.fail("setup_pending", "post_returned", &post).await;
                     if let Some(poll_id) = post.into_data().map(|t| t.id.to_string()) {
-                        handles.push(handle.verify(poll_id).await?);
+                        handles.push(handle.setup_with_poll(poll_id).await?);
                     } else {
-                        self.state.fail("verify_pending", "no_poll_id_returned", ()).await;
+                        self.state.fail("setup_pending", "no_poll_id_returned", ()).await;
                     }
                 }
                 Err(e) => {
-                    self.state.fail("verify_pending", "creating_poll", format!("{e:?}")).await;
+                    self.state.fail("setup_pending", "creating_poll", format!("{e:?}")).await;
                 }
             }
             // We need to sleep here too.
@@ -309,7 +327,7 @@ impl HandleHub {
     }
 
     pub async fn score_pending_inner(&self) -> AsamiResult<Vec<Handle>> {
-        let pending = self.need_scoring(Utc::now() - chrono::Duration::days(20)).all().await?;
+        let pending = self.need_scoring().all().await?;
 
         if pending.is_empty() {
             self.state.info("score_pending", "no_handles_pending_scoring", ()).await;
@@ -355,9 +373,7 @@ impl Handle {
                 // These two scenarios seem to indicate we have a bad refresh token
                 // So we need to obtain a new one, we force this by deleting the refresh
                 // token which will prompt users to do this next time they log in.
-                let _ = self.fail("refresh_token_invalidated", format!("{e:?}")).await;
-                let invalidated = Some(refresh_token.clone());
-                self.update().invalidated_x_refresh_token(invalidated).x_refresh_token(None).save().await?;
+                self.handle_expired_refresh_token(e).await?;
                 Err(Error::validation("x_refresh_token", "failed_to_obtain_token"))
             }
             Err(e) => {
@@ -367,7 +383,37 @@ impl Handle {
         }
     }
 
-    pub async fn verify(self, poll_id: String) -> sqlx::Result<Self> {
+    pub async fn handle_update_refresh_token(self, refresh_token: String, account_id: String) -> AsamiResult<Handle> {
+        if self.account_id() != &account_id {
+            return Err(Error::validation("x", "update_rejected_account_id_mismatch"));
+        }
+        let next_status = match self.status() {
+            HandleStatus::NeverConnected => HandleStatus::SettingUp,
+            HandleStatus::Disconnected => HandleStatus::Reconnecting,
+            _ => return Err(Error::validation("x", "handle_does_not_need_refresh_token"))
+        };
+        Ok(self.update().status(next_status).x_refresh_token(Some(refresh_token)).save().await?)
+    }
+
+    pub async fn handle_expired_refresh_token(self, e: impl std::fmt::Debug) -> AsamiResult<Handle> {
+        let _ = self.fail("refresh_token_invalidated", format!("{e:?}")).await;
+        let invalidated = self.x_refresh_token().clone();
+        let next_status = match self.status() {
+            HandleStatus::NeverConnected | HandleStatus::SettingUp | HandleStatus::Connecting => HandleStatus::NeverConnected,  
+            _ => HandleStatus::Disconnected,
+            
+        };
+        Ok(self.update()
+            .invalidated_x_refresh_token(invalidated)
+            .x_refresh_token(None)
+            .status(next_status)
+            .save().await?)
+    }
+
+    pub async fn skip_setup(self) -> sqlx::Result<Self> {
+        self.update().status(HandleStatus::Connecting).save().await
+    }
+    pub async fn setup_with_poll(self, poll_id: String) -> sqlx::Result<Self> {
         let existing = self
             .state
             .auth_method()
@@ -399,7 +445,7 @@ impl Handle {
                 .await?;
         }
 
-        self.update().poll_id(Some(poll_id)).status(HandleStatus::Verified).save().await
+        self.update().poll_id(Some(poll_id)).status(HandleStatus::Connecting).save().await
     }
 
     // NOTE: If collab exists the error should be collab_exists.
@@ -543,9 +589,12 @@ model! {
 make_sql_enum![
     "handle_status",
     pub enum HandleStatus {
-        Unverified,
-        Verified,
-        Active,
-        Inactive,
+        NeverConnected, // New account with no valid access token. Setup -> adds refresh token to it.
+        SettingUp,    // Has first refresh token. Connect -> Creates poll and moves to connecting.. 
+        Connecting,   // Has token. Score -> Makes it Active or SettingUp.
+        Active,       // Account is usable.
+        Disconnected, // Existing account, with no valid access token. Reconnect -> adds new token to it.
+        Reconnecting, // Has renewed token. Score -> Makes it Active or Disconnected.
+        Inactive,     // Account was banned or made inactive. Will never be re-scored and cannot be reconnected.
     }
 ];

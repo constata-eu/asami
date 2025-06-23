@@ -390,16 +390,22 @@
         "will_do_it_later": "I'll do this later"
       },
       "in_progress": {
-        "summary": "We are measuring your influnce @%{username}, it may take up to one hour.",
+        "summary": "We are measuring your influnce @%{username}, it may take up to 5 hours.",
         "dialog_title": "Measuring influence for @%{username}",
-        "may_take_up_to_an_hour": "It may take up to an hour for your score to be ready.",
-        "check_the_poll": "In the meantime, check your X profile to see the poll we just posted for you — your audience’s votes will help shape your score!",
+        "may_take_up_to_an_hour": "It may take up to 5 hours for your score to be ready.",
+        "check_the_poll": "In the meantime, check your X profile to see the poll we just posted for you — your audience’s votes will help shape your score. If you don't like the poll you can delete it.",
+        "got_it": "Got it"
+      },
+      "reconnecting": {
+        "summary": "We're reconnecting your account @%{username}, it may take up to 5 hours.",
+        "dialog_title": "Reconnecting @%{username}",
+        "may_take_up_to_an_hour": "We're making sure the connection with X is usable, this may take up to 5 hours.",
         "got_it": "Got it"
       },
       "grant_permissions_again": {
         "summary": "We've lost access to your x account. Reconnect to keep collaborating.",
         "dialog_title": "We've Lost Access to Your X Account",
-        "cant_measure": "We can’t measure your influence right now, so your score will be reset to 0.",
+        "cant_measure": "We can’t measure your influence right now, so you won’t be able to participate in campaigns until you reconnect.",
         "please_reconnect": "Please reconnect your X account to restore access and continue collaborating in campaigns.",
         "reconnect": "Reconnect",
         "later": "I'll do this later"
@@ -583,6 +589,7 @@
       "default_name": "Valued Anon",
       "member": "member"
     },
+    "disconnected": "This account is currently disconnected from X. Once reconnected, it will resume participating in campaigns.",
     "scoring_in_progress": "We're scoring this handle",
     "advertiser_title": "Advertiser",
     "member_info_title": "Member Info",

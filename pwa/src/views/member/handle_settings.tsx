@@ -88,16 +88,20 @@ const HandleSettingsContent = ({ handles }) => {
     return <HandleInactive handle={handle} />;
   }
 
-  if (handle.needsRefreshToken) {
-    if (handle.status == "UNVERIFIED") {
-      return <GrantPermissionsAndMakePost />;
-    } else {
-      return <GrantPermissionsAgain />;
-    }
+  if (handle.status == "NEVER_CONNECTED") {
+    return <GrantPermissionsAndMakePost />;
+  }
+
+  if (handle.status == "DISCONNECTED") {
+    return <GrantPermissionsAgain />;
   }
 
   if (handle.status == "ACTIVE") {
     return <HandleStats handle={handle} id={`existing-x-handle-stats`} />;
+  }
+
+  if (handle.status == "RECONNECTING") {
+    return <ReconnectingHandle handle={handle} />;
   }
 
   return <HandleSubmissionInProgress handle={handle} />;
@@ -255,6 +259,49 @@ const HandleSubmissionInProgress = ({ handle }) => {
   );
 };
 
+const ReconnectingHandle = ({ handle }) => {
+  const [open, setOpen] = useState(true);
+  const translate = useTranslate();
+  const handleClose = () => setOpen(false);
+
+  return (
+    <>
+      <Box id={`handle-x-reconnecting-message`}>
+        <HeadX />
+        <Typography>
+          {translate(`handle_settings.x.reconnecting.summary`, {
+            username: handle.username,
+          })}
+        </Typography>
+      </Box>
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
+        <DialogTitle>
+          <Head3 sx={{ color: (theme) => theme.palette.primary.main }}>
+            {translate("handle_settings.x.reconnecting.dialog_title", {
+              username: handle.username,
+            })}
+          </Head3>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 1 }}>
+          <Typography variant="body1" gutterBottom>
+            {translate("handle_settings.x.reconnecting.may_take_up_to_an_hour")}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={handleClose}
+          >
+            {translate("handle_settings.x.in_progress.got_it")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+};
+
 const GrantPermissionsAndMakePost = () => {
   const [open, setOpen] = useState(true);
   const translate = useTranslate();
@@ -365,17 +412,14 @@ const GrantDialogTextLine = ({ primary, icon }) => (
   </ListItem>
 );
 
+const startXLogin = async () => {
+  const { url, verifier } = await makeXAuthorize();
+  localStorage.setItem("grantAccessOauthVerifier", verifier);
+  document.location.href = url;
+};
+
 const GrantPermissionsAgain = () => {
-  const [open, setOpen] = useState(true);
-  const handleClose = () => setOpen(false);
   const translate = useTranslate();
-
-  const startXLogin = async () => {
-    const { url, verifier } = await makeXAuthorize();
-    localStorage.setItem("grantAccessOauthVerifier", verifier);
-    document.location.href = url;
-  };
-
   return (
     <>
       <Box id="grant-x-permission-again">
@@ -392,48 +436,61 @@ const GrantPermissionsAgain = () => {
           {translate("handle_settings.x.grant_permissions_again.reconnect")}
         </Button>
       </Box>
-
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
-        <DialogTitle>
-          <Head3 sx={{ color: (theme) => theme.palette.primary.main }}>
-            {translate(
-              "handle_settings.x.grant_permissions_again.dialog_title",
-            )}
-          </Head3>
-        </DialogTitle>
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2}>
-            <Typography variant="body1">
-              {translate(
-                "handle_settings.x.grant_permissions_again.cant_measure",
-              )}
-            </Typography>
-            <Typography variant="body1">
-              {translate(
-                "handle_settings.x.grant_permissions_again.please_reconnect",
-              )}
-            </Typography>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            id="button-cancel-grant-permissions-again"
-            fullWidth
-            onClick={handleClose}
-          >
-            {translate("handle_settings.x.grant_permissions_again.later")}
-          </Button>
-          <Button
-            id="button-grant-x-permission-again"
-            variant="contained"
-            color="primary"
-            fullWidth
-            onClick={startXLogin}
-          >
-            {translate("handle_settings.x.grant_permissions_again.reconnect")}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <GrantPermissionsAgainDialog />
     </>
+  );
+};
+
+export const GrantPermissionsAgainDialog = () => {
+  const [open, setOpen] = useState(true);
+  const handleClose = () => setOpen(false);
+  const translate = useTranslate();
+
+  return (
+    <Dialog
+      id="grant-permission-again-dialog"
+      open={open}
+      onClose={handleClose}
+      fullWidth
+      maxWidth="xs"
+    >
+      <DialogTitle>
+        <Head3 sx={{ color: (theme) => theme.palette.primary.main }}>
+          {translate("handle_settings.x.grant_permissions_again.dialog_title")}
+        </Head3>
+      </DialogTitle>
+      <DialogContent>
+        <Box display="flex" flexDirection="column" gap={2}>
+          <Typography variant="body1">
+            {translate(
+              "handle_settings.x.grant_permissions_again.cant_measure",
+            )}
+          </Typography>
+          <Typography variant="body1">
+            {translate(
+              "handle_settings.x.grant_permissions_again.please_reconnect",
+            )}
+          </Typography>
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          id="button-cancel-grant-permissions-again"
+          fullWidth
+          onClick={handleClose}
+        >
+          {translate("handle_settings.x.grant_permissions_again.later")}
+        </Button>
+        <Button
+          id="button-grant-x-permission-again"
+          variant="contained"
+          color="primary"
+          fullWidth
+          onClick={startXLogin}
+        >
+          {translate("handle_settings.x.grant_permissions_again.reconnect")}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };

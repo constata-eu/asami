@@ -79,4 +79,3 @@ path = "src/migrator.rs"
 [[bin]]
 name = "trace_transaction"
 path = "src/trace_transaction.rs"
-

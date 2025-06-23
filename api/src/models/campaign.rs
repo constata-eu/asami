@@ -466,16 +466,11 @@ impl Campaign {
             .optional()
             .await?
         else {
-            self.state.info("sync_x_collabs", "make_x_collab_no_handle", (self.id(), user_id)).await;
+            self.state.info("sync_x_collabs", "make_x_collab_no_active_handle_found", (self.id(), user_id)).await;
             return Ok(None);
         };
 
         let log_pointer = (self.id(), handle.id());
-
-        if *handle.status() != HandleStatus::Active {
-            self.state.info("sync_x_collabs", "make_x_collab_inactive_handle", log_pointer).await;
-            return Ok(None);
-        }
 
         let trigger = handle.user_id();
 

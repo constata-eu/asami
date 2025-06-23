@@ -43,6 +43,18 @@ impl Error {
     }
 }
 
+impl From<serde_json::Error> for Error {
+    fn from(err: serde_json::Error) -> Error {
+        Error::runtime(&err.to_string())
+    }
+}
+
+impl From<std::num::ParseIntError> for Error {
+    fn from(err: std::num::ParseIntError) -> Error {
+        Error::runtime(&err.to_string())
+    }
+}
+
 impl From<validators::errors::EmailError> for Error {
     fn from(err: validators::errors::EmailError) -> Error {
         Error::validation("invalid_email_address", &err.to_string())
