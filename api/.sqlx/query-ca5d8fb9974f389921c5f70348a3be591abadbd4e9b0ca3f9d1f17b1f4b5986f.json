@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT count(*) as \"count!\" FROM handles WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR username = $8::varchar) AND (NOT $9::boolean OR username LIKE $10::varchar) AND (NOT $11::boolean OR username ILIKE $12::varchar) AND (NOT $13::boolean OR user_id = $14::varchar) AND (NOT $15::boolean OR user_id LIKE $16::varchar) AND (NOT $17::boolean OR status = $18::handle_status) AND (NOT $19::boolean OR status = ANY(CAST($20 as handle_status[])) ) AND (NOT $21::boolean OR created_at = $22::timestamptz) AND (NOT $23::boolean OR created_at > $24::timestamptz) AND (NOT $25::boolean OR force_hydrate = $26::boolean) AND (NOT $27::boolean OR total_collabs = $28::int4) AND (NOT $29::boolean OR total_collab_rewards = $30::varchar) AND (NOT $31::boolean OR x_refresh_token = $32::text) AND ($33::boolean IS NULL OR (($33::boolean AND x_refresh_token IS NOT NULL) OR (NOT $33::boolean AND x_refresh_token IS NULL))) AND (NOT $34::boolean OR invalidated_x_refresh_token = $35::text) AND ($36::boolean IS NULL OR (($36::boolean AND invalidated_x_refresh_token IS NOT NULL) OR (NOT $36::boolean AND invalidated_x_refresh_token IS NULL))) AND (NOT $37::boolean OR score = $38::varchar) AND (NOT $39::boolean OR last_scoring = $40::timestamptz) AND (NOT $41::boolean OR current_scoring_id = $42::int4) AND (NOT $43::boolean OR online_engagement_override = $44::engagement_score) AND (NOT $45::boolean OR online_engagement_override_reason = $46::text) AND (NOT $47::boolean OR offline_engagement_score = $48::engagement_score) AND (NOT $49::boolean OR offline_engagement_description = $50::text) AND (NOT $51::boolean OR poll_id = $52::varchar) AND (NOT $53::boolean OR poll_ends_at = $54::timestamptz) AND (NOT $55::boolean OR poll_override = $56::poll_score) AND (NOT $57::boolean OR poll_override_reason = $58::varchar) AND (NOT $59::boolean OR operational_status_override = $60::operational_status) AND (NOT $61::boolean OR operational_status_override_reason = $62::text) AND (NOT $63::boolean OR referrer_score_override = $64::boolean) AND (NOT $65::boolean OR referrer_score_override_reason = $66::text) AND (NOT $67::boolean OR holder_score_override = $68::boolean) AND (NOT $69::boolean OR holder_score_override_reason = $70::text) AND (NOT $71::boolean OR audience_size_override = $72::int4) AND (NOT $73::boolean OR audience_size_override_reason = $74::text)",
+  "query": "SELECT count(*) as \"count!\" FROM handles WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR username = $8::varchar) AND (NOT $9::boolean OR username LIKE $10::varchar) AND (NOT $11::boolean OR username ILIKE $12::varchar) AND (NOT $13::boolean OR user_id = $14::varchar) AND (NOT $15::boolean OR user_id LIKE $16::varchar) AND (NOT $17::boolean OR status = $18::handle_status) AND (NOT $19::boolean OR status = ANY(CAST($20 as handle_status[])) ) AND (NOT $21::boolean OR created_at = $22::timestamptz) AND (NOT $23::boolean OR created_at > $24::timestamptz) AND (NOT $25::boolean OR force_hydrate = $26::boolean) AND (NOT $27::boolean OR total_collabs = $28::int4) AND (NOT $29::boolean OR total_collab_rewards = $30::varchar) AND (NOT $31::boolean OR x_refresh_token = $32::text) AND ($33::boolean IS NULL OR (($33::boolean AND x_refresh_token IS NOT NULL) OR (NOT $33::boolean AND x_refresh_token IS NULL))) AND (NOT $34::boolean OR invalidated_x_refresh_token = $35::text) AND ($36::boolean IS NULL OR (($36::boolean AND invalidated_x_refresh_token IS NOT NULL) OR (NOT $36::boolean AND invalidated_x_refresh_token IS NULL))) AND (NOT $37::boolean OR next_scoring = $38::timestamptz) AND (NOT $39::boolean OR score = $40::varchar) AND (NOT $41::boolean OR last_scoring = $42::timestamptz) AND (NOT $43::boolean OR current_scoring_id = $44::int4) AND (NOT $45::boolean OR online_engagement_override = $46::engagement_score) AND (NOT $47::boolean OR online_engagement_override_reason = $48::text) AND (NOT $49::boolean OR offline_engagement_score = $50::engagement_score) AND (NOT $51::boolean OR offline_engagement_description = $52::text) AND (NOT $53::boolean OR poll_id = $54::varchar) AND (NOT $55::boolean OR poll_ends_at = $56::timestamptz) AND (NOT $57::boolean OR poll_override = $58::poll_score) AND (NOT $59::boolean OR poll_override_reason = $60::varchar) AND (NOT $61::boolean OR operational_status_override = $62::operational_status) AND (NOT $63::boolean OR operational_status_override_reason = $64::text) AND (NOT $65::boolean OR referrer_score_override = $66::boolean) AND (NOT $67::boolean OR referrer_score_override_reason = $68::text) AND (NOT $69::boolean OR holder_score_override = $70::boolean) AND (NOT $71::boolean OR holder_score_override_reason = $72::text) AND (NOT $73::boolean OR audience_size_override = $74::int4) AND (NOT $75::boolean OR audience_size_override_reason = $76::text)",
   "describe": {
     "columns": [
       {
@@ -33,9 +33,12 @@
             "name": "handle_status",
             "kind": {
               "Enum": [
-                "unverified",
-                "verified",
+                "never_connected",
+                "setting_up",
+                "connecting",
                 "active",
+                "disconnected",
+                "reconnecting",
                 "inactive"
               ]
             }
@@ -51,9 +54,12 @@
                   "name": "handle_status",
                   "kind": {
                     "Enum": [
-                      "unverified",
-                      "verified",
+                      "never_connected",
+                      "setting_up",
+                      "connecting",
                       "active",
+                      "disconnected",
+                      "reconnecting",
                       "inactive"
                     ]
                   }
@@ -78,6 +84,8 @@
         "Bool",
         "Text",
         "Bool",
+        "Bool",
+        "Timestamptz",
         "Bool",
         "Varchar",
         "Bool",
@@ -168,5 +176,5 @@
       null
     ]
   },
-  "hash": "7c293ae8e0253f74539e6c16917b6a425e39d78594e49af3c42cc490d99df0bd"
+  "hash": "ca5d8fb9974f389921c5f70348a3be591abadbd4e9b0ca3f9d1f17b1f4b5986f"
 }

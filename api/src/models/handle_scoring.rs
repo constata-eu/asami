@@ -19,19 +19,19 @@ model! {
     id: i32,
     #[sqlx_model_hints(int4)]
     handle_id : i32,
-    #[sqlx_model_hints(handle_scoring_status, default)]
+    #[sqlx_model_hints(handle_scoring_status)]
     status: HandleScoringStatus,
     #[sqlx_model_hints(timestamptz, default)]
     created_at: DateTime<Utc>,
-    #[sqlx_model_hints(text, default)]
+    #[sqlx_model_hints(text)]
     me_json: Option<String>,
-    #[sqlx_model_hints(text, default)]
+    #[sqlx_model_hints(text)]
     tweets_json: Option<String>,
-    #[sqlx_model_hints(text, default)]
+    #[sqlx_model_hints(text)]
     mentions_json: Option<String>,
-    #[sqlx_model_hints(text, default)]
+    #[sqlx_model_hints(text)]
     reposts_json: Option<String>,
-    #[sqlx_model_hints(text, default)]
+    #[sqlx_model_hints(text)]
     poll_json: Option<String>,
 
     #[sqlx_model_hints(int4, default)]
@@ -122,67 +122,55 @@ const NOT_ENOUGH_IMPRESSIONS: usize = 300;
 impl_loggable!(HandleScoring);
 
 impl HandleScoringHub {
-    pub async fn create_and_apply(&self, item: Handle) -> AsamiResult<HandleScoring> {
-        self.create(item).await?.apply().await
-    }
+    pub async fn create_and_apply(&self, item: Handle) -> AsamiResult<()> {
+        let id = item.id().clone();
 
-    pub async fn create(&self, handle: Handle) -> AsamiResult<HandleScoring> {
-        let scoring = self
-            .insert(InsertHandleScoring {
-                handle_id: handle.attrs.id,
-            })
-            .save()
-            .await?;
-
-        let mut update = scoring.clone().update().status(HandleScoringStatus::Ingested);
-
-        match handle.clone().x_api_client().await {
-            Ok(api) => {
-                match self.ingest(api, handle.poll_id()).await {
-                    Ok((me, tweets, mentions, reposts_json, maybe_poll)) => {
-                        update = update
-                            .me_json(Some(me))
-                            .tweets_json(Some(tweets))
-                            .mentions_json(Some(mentions))
-                            .reposts_json(Some(reposts_json))
-                            .poll_json(maybe_poll);
-                    }
-                    Err(e) => {
-                        self.state
-                            .fail(
-                                "score_pending",
-                                "ingestion_error",
-                                format!("handle:{} {e:?}", handle.id()),
-                            )
-                            .await;
-                    }
-                };
-            }
+        match self.create(item).await {
+            Ok(scoring) => { scoring.apply().await?; }
             Err(e) => {
                 self.state
                     .fail(
                         "score_pending",
-                        "twitter_client_issues",
-                        format!("handle:{} {e:?}", handle.id()),
+                        "creating_scoring",
+                        format!("handle:{id} {e:?}"),
                     )
                     .await;
             }
-        };
+        }
 
-        Ok(update.save().await?)
+        Ok(())
+    }
+
+    pub async fn create(&self, handle: Handle) -> AsamiResult<HandleScoring> {
+        let api = handle.clone().x_api_client().await?;
+
+        let (me, tweets, mentions, reposts, maybe_poll) = self.ingest(api, handle.poll_id()).await?;
+        
+        Ok(self
+            .insert(InsertHandleScoring {
+                handle_id: handle.attrs.id,
+                status: HandleScoringStatus::Ingested,
+                me_json: Some(me),
+                tweets_json: Some(tweets),
+                mentions_json: Some(mentions),
+                reposts_json: Some(reposts),
+                poll_json: maybe_poll
+            })
+            .save()
+            .await?)
     }
 
     pub async fn ingest(
         &self,
         api: TwitterApi<Oauth2Token>,
         poll_id: &Option<String>,
-    ) -> anyhow::Result<(String, String, String, String, Option<String>)> {
+    ) -> AsamiResult<(String, String, String, String, Option<String>)> {
         let me = api.get_users_me().user_fields(build_user_fields()).send().await?;
 
         let me_json = serde_json::to_string(&me)?;
 
         let Some(user_id) = me.payload().data().map(|u| u.id) else {
-            return Err(anyhow::anyhow!("user_data_was_empty: {me:?}"));
+            return Err(Error::runtime(&format!("user_data_was_empty: {me:?}")));
         };
 
         let now = Utc::now();
@@ -382,6 +370,7 @@ impl HandleScoring {
             .update()
             .current_scoring_id(Some(*self.id()))
             .last_scoring(Some(*self.created_at()))
+            .next_scoring(Some(Utc::now() + chrono::Duration::days(20)))
             .score(Some(score.clone()))
             .status(HandleStatus::Active)
             .save()

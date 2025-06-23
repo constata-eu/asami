@@ -88,12 +88,12 @@ const HandleSettingsContent = ({ handles }) => {
     return <HandleInactive handle={handle} />;
   }
 
-  if (handle.needsRefreshToken) {
-    if (handle.status == "UNVERIFIED") {
-      return <GrantPermissionsAndMakePost />;
-    } else {
-      return <GrantPermissionsAgain />;
-    }
+  if (handle.status == "NEVER_CONNECTED") {
+    return <GrantPermissionsAndMakePost />;
+  }
+
+  if (handle.status == "DISCONNECTED") {
+    return <GrantPermissionsAgain />;
   }
 
   if (handle.status == "ACTIVE") {

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE handles SET (id, \naccount_id, \nusername, \nuser_id, \nstatus, \ncreated_at, \nforce_hydrate, \ntotal_collabs, \ntotal_collab_rewards, \nx_refresh_token, \ninvalidated_x_refresh_token, \nscore, \nlast_scoring, \ncurrent_scoring_id, \nonline_engagement_override, \nonline_engagement_override_reason, \noffline_engagement_score, \noffline_engagement_description, \npoll_id, \npoll_ends_at, \npoll_override, \npoll_override_reason, \noperational_status_override, \noperational_status_override_reason, \nreferrer_score_override, \nreferrer_score_override_reason, \nholder_score_override, \nholder_score_override_reason, \naudience_size_override, \naudience_size_override_reason) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE account_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE username END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE user_id END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE status END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE created_at END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE force_hydrate END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE total_collabs END), (CASE $18::boolean WHEN TRUE THEN $19 ELSE total_collab_rewards END), (CASE $20::boolean WHEN TRUE THEN $21 ELSE x_refresh_token END), (CASE $22::boolean WHEN TRUE THEN $23 ELSE invalidated_x_refresh_token END), (CASE $24::boolean WHEN TRUE THEN $25 ELSE score END), (CASE $26::boolean WHEN TRUE THEN $27 ELSE last_scoring END), (CASE $28::boolean WHEN TRUE THEN $29 ELSE current_scoring_id END), (CASE $30::boolean WHEN TRUE THEN $31 ELSE online_engagement_override END), (CASE $32::boolean WHEN TRUE THEN $33 ELSE online_engagement_override_reason END), (CASE $34::boolean WHEN TRUE THEN $35 ELSE offline_engagement_score END), (CASE $36::boolean WHEN TRUE THEN $37 ELSE offline_engagement_description END), (CASE $38::boolean WHEN TRUE THEN $39 ELSE poll_id END), (CASE $40::boolean WHEN TRUE THEN $41 ELSE poll_ends_at END), (CASE $42::boolean WHEN TRUE THEN $43 ELSE poll_override END), (CASE $44::boolean WHEN TRUE THEN $45 ELSE poll_override_reason END), (CASE $46::boolean WHEN TRUE THEN $47 ELSE operational_status_override END), (CASE $48::boolean WHEN TRUE THEN $49 ELSE operational_status_override_reason END), (CASE $50::boolean WHEN TRUE THEN $51 ELSE referrer_score_override END), (CASE $52::boolean WHEN TRUE THEN $53 ELSE referrer_score_override_reason END), (CASE $54::boolean WHEN TRUE THEN $55 ELSE holder_score_override END), (CASE $56::boolean WHEN TRUE THEN $57 ELSE holder_score_override_reason END), (CASE $58::boolean WHEN TRUE THEN $59 ELSE audience_size_override END), (CASE $60::boolean WHEN TRUE THEN $61 ELSE audience_size_override_reason END)) WHERE id = $1 RETURNING id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nusername as \"username!: String\", \nuser_id as \"user_id!: String\", \nstatus as \"status!: HandleStatus\", \ncreated_at as \"created_at!: DateTime < Utc >\", \nforce_hydrate as \"force_hydrate!: bool\", \ntotal_collabs as \"total_collabs!: i32\", \ntotal_collab_rewards as \"total_collab_rewards!: String\", \nx_refresh_token as \"x_refresh_token!: Option < String >\", \ninvalidated_x_refresh_token as \"invalidated_x_refresh_token!: Option < String >\", \nscore as \"score!: Option < String >\", \nlast_scoring as \"last_scoring!: Option < UtcDateTime >\", \ncurrent_scoring_id as \"current_scoring_id!: Option < i32 >\", \nonline_engagement_override as \"online_engagement_override!: Option < EngagementScore >\", \nonline_engagement_override_reason as \"online_engagement_override_reason!: Option < String >\", \noffline_engagement_score as \"offline_engagement_score!: EngagementScore\", \noffline_engagement_description as \"offline_engagement_description!: Option < String >\", \npoll_id as \"poll_id!: Option < String >\", \npoll_ends_at as \"poll_ends_at!: Option < DateTime < Utc > >\", \npoll_override as \"poll_override!: Option < PollScore >\", \npoll_override_reason as \"poll_override_reason!: Option < String >\", \noperational_status_override as \"operational_status_override!: Option < OperationalStatus >\", \noperational_status_override_reason as \"operational_status_override_reason!: Option < String >\", \nreferrer_score_override as \"referrer_score_override!: Option < bool >\", \nreferrer_score_override_reason as \"referrer_score_override_reason!: Option < String >\", \nholder_score_override as \"holder_score_override!: Option < bool >\", \nholder_score_override_reason as \"holder_score_override_reason!: Option < String >\", \naudience_size_override as \"audience_size_override!: Option < i32 >\", \naudience_size_override_reason as \"audience_size_override_reason!: Option < String >\"",
+  "query": "UPDATE handles SET (id, \naccount_id, \nusername, \nuser_id, \nstatus, \ncreated_at, \nforce_hydrate, \ntotal_collabs, \ntotal_collab_rewards, \nx_refresh_token, \ninvalidated_x_refresh_token, \nnext_scoring, \nscore, \nlast_scoring, \ncurrent_scoring_id, \nonline_engagement_override, \nonline_engagement_override_reason, \noffline_engagement_score, \noffline_engagement_description, \npoll_id, \npoll_ends_at, \npoll_override, \npoll_override_reason, \noperational_status_override, \noperational_status_override_reason, \nreferrer_score_override, \nreferrer_score_override_reason, \nholder_score_override, \nholder_score_override_reason, \naudience_size_override, \naudience_size_override_reason) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE account_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE username END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE user_id END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE status END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE created_at END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE force_hydrate END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE total_collabs END), (CASE $18::boolean WHEN TRUE THEN $19 ELSE total_collab_rewards END), (CASE $20::boolean WHEN TRUE THEN $21 ELSE x_refresh_token END), (CASE $22::boolean WHEN TRUE THEN $23 ELSE invalidated_x_refresh_token END), (CASE $24::boolean WHEN TRUE THEN $25 ELSE next_scoring END), (CASE $26::boolean WHEN TRUE THEN $27 ELSE score END), (CASE $28::boolean WHEN TRUE THEN $29 ELSE last_scoring END), (CASE $30::boolean WHEN TRUE THEN $31 ELSE current_scoring_id END), (CASE $32::boolean WHEN TRUE THEN $33 ELSE online_engagement_override END), (CASE $34::boolean WHEN TRUE THEN $35 ELSE online_engagement_override_reason END), (CASE $36::boolean WHEN TRUE THEN $37 ELSE offline_engagement_score END), (CASE $38::boolean WHEN TRUE THEN $39 ELSE offline_engagement_description END), (CASE $40::boolean WHEN TRUE THEN $41 ELSE poll_id END), (CASE $42::boolean WHEN TRUE THEN $43 ELSE poll_ends_at END), (CASE $44::boolean WHEN TRUE THEN $45 ELSE poll_override END), (CASE $46::boolean WHEN TRUE THEN $47 ELSE poll_override_reason END), (CASE $48::boolean WHEN TRUE THEN $49 ELSE operational_status_override END), (CASE $50::boolean WHEN TRUE THEN $51 ELSE operational_status_override_reason END), (CASE $52::boolean WHEN TRUE THEN $53 ELSE referrer_score_override END), (CASE $54::boolean WHEN TRUE THEN $55 ELSE referrer_score_override_reason END), (CASE $56::boolean WHEN TRUE THEN $57 ELSE holder_score_override END), (CASE $58::boolean WHEN TRUE THEN $59 ELSE holder_score_override_reason END), (CASE $60::boolean WHEN TRUE THEN $61 ELSE audience_size_override END), (CASE $62::boolean WHEN TRUE THEN $63 ELSE audience_size_override_reason END)) WHERE id = $1 RETURNING id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nusername as \"username!: String\", \nuser_id as \"user_id!: String\", \nstatus as \"status!: HandleStatus\", \ncreated_at as \"created_at!: DateTime < Utc >\", \nforce_hydrate as \"force_hydrate!: bool\", \ntotal_collabs as \"total_collabs!: i32\", \ntotal_collab_rewards as \"total_collab_rewards!: String\", \nx_refresh_token as \"x_refresh_token!: Option < String >\", \ninvalidated_x_refresh_token as \"invalidated_x_refresh_token!: Option < String >\", \nnext_scoring as \"next_scoring!: Option < UtcDateTime >\", \nscore as \"score!: Option < String >\", \nlast_scoring as \"last_scoring!: Option < UtcDateTime >\", \ncurrent_scoring_id as \"current_scoring_id!: Option < i32 >\", \nonline_engagement_override as \"online_engagement_override!: Option < EngagementScore >\", \nonline_engagement_override_reason as \"online_engagement_override_reason!: Option < String >\", \noffline_engagement_score as \"offline_engagement_score!: EngagementScore\", \noffline_engagement_description as \"offline_engagement_description!: Option < String >\", \npoll_id as \"poll_id!: Option < String >\", \npoll_ends_at as \"poll_ends_at!: Option < DateTime < Utc > >\", \npoll_override as \"poll_override!: Option < PollScore >\", \npoll_override_reason as \"poll_override_reason!: Option < String >\", \noperational_status_override as \"operational_status_override!: Option < OperationalStatus >\", \noperational_status_override_reason as \"operational_status_override_reason!: Option < String >\", \nreferrer_score_override as \"referrer_score_override!: Option < bool >\", \nreferrer_score_override_reason as \"referrer_score_override_reason!: Option < String >\", \nholder_score_override as \"holder_score_override!: Option < bool >\", \nholder_score_override_reason as \"holder_score_override_reason!: Option < String >\", \naudience_size_override as \"audience_size_override!: Option < i32 >\", \naudience_size_override_reason as \"audience_size_override_reason!: Option < String >\"",
   "describe": {
     "columns": [
       {
@@ -31,9 +31,12 @@
             "name": "handle_status",
             "kind": {
               "Enum": [
-                "unverified",
-                "verified",
+                "never_connected",
+                "setting_up",
+                "connecting",
                 "active",
+                "disconnected",
+                "reconnecting",
                 "inactive"
               ]
             }
@@ -72,21 +75,26 @@
       },
       {
         "ordinal": 11,
+        "name": "next_scoring!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
         "name": "score!: Option < String >",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 12,
+        "ordinal": 13,
         "name": "last_scoring!: Option < UtcDateTime >",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 13,
+        "ordinal": 14,
         "name": "current_scoring_id!: Option < i32 >",
         "type_info": "Int4"
       },
       {
-        "ordinal": 14,
+        "ordinal": 15,
         "name": "online_engagement_override!: Option < EngagementScore >",
         "type_info": {
           "Custom": {
@@ -102,12 +110,12 @@
         }
       },
       {
-        "ordinal": 15,
+        "ordinal": 16,
         "name": "online_engagement_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 16,
+        "ordinal": 17,
         "name": "offline_engagement_score!: EngagementScore",
         "type_info": {
           "Custom": {
@@ -123,22 +131,22 @@
         }
       },
       {
-        "ordinal": 17,
+        "ordinal": 18,
         "name": "offline_engagement_description!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 18,
+        "ordinal": 19,
         "name": "poll_id!: Option < String >",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 19,
+        "ordinal": 20,
         "name": "poll_ends_at!: Option < DateTime < Utc > >",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 20,
+        "ordinal": 21,
         "name": "poll_override!: Option < PollScore >",
         "type_info": {
           "Custom": {
@@ -155,12 +163,12 @@
         }
       },
       {
-        "ordinal": 21,
+        "ordinal": 22,
         "name": "poll_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 22,
+        "ordinal": 23,
         "name": "operational_status_override!: Option < OperationalStatus >",
         "type_info": {
           "Custom": {
@@ -177,37 +185,37 @@
         }
       },
       {
-        "ordinal": 23,
+        "ordinal": 24,
         "name": "operational_status_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 24,
+        "ordinal": 25,
         "name": "referrer_score_override!: Option < bool >",
         "type_info": "Bool"
       },
       {
-        "ordinal": 25,
+        "ordinal": 26,
         "name": "referrer_score_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 26,
+        "ordinal": 27,
         "name": "holder_score_override!: Option < bool >",
         "type_info": "Bool"
       },
       {
-        "ordinal": 27,
+        "ordinal": 28,
         "name": "holder_score_override_reason!: Option < String >",
         "type_info": "Text"
       },
       {
-        "ordinal": 28,
+        "ordinal": 29,
         "name": "audience_size_override!: Option < i32 >",
         "type_info": "Int4"
       },
       {
-        "ordinal": 29,
+        "ordinal": 30,
         "name": "audience_size_override_reason!: Option < String >",
         "type_info": "Text"
       }
@@ -229,9 +237,12 @@
             "name": "handle_status",
             "kind": {
               "Enum": [
-                "unverified",
-                "verified",
+                "never_connected",
+                "setting_up",
+                "connecting",
                 "active",
+                "disconnected",
+                "reconnecting",
                 "inactive"
               ]
             }
@@ -249,6 +260,8 @@
         "Text",
         "Bool",
         "Text",
+        "Bool",
+        "Timestamptz",
         "Bool",
         "Varchar",
         "Bool",
@@ -352,6 +365,7 @@
       true,
       true,
       true,
+      true,
       false,
       true,
       true,
@@ -368,5 +382,5 @@
       true
     ]
   },
-  "hash": "d3ff0270a242813bd8c79ec65ac1be6ef2a7509147ced95505c0b760ef4ae77f"
+  "hash": "aebac2c3c3e156bc24cf946a34fea2cf19ed9187a4b7ce8ab8187505deb702b7"
 }

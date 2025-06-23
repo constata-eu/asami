@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM (SELECT 1 FROM handles WHERE \n          status IN ('connecting', 'reconnecting') OR\n              (status = 'active' AND next_scoring < now()))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "aa201aa3b39c7a96fafa1fd81d36a49e7307b865f9b10fa0ae4e199239cef8a2"
+}

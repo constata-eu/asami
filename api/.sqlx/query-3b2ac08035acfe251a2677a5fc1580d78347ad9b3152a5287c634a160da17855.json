@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO handle_scorings (handle_id) VALUES ($1) ON CONFLICT (id) DO UPDATE SET id = handle_scorings.id RETURNING id as \"id!: i32\", \nhandle_id as \"handle_id!: i32\", \nstatus as \"status!: HandleScoringStatus\", \ncreated_at as \"created_at!: DateTime < Utc >\", \nme_json as \"me_json!: Option < String >\", \ntweets_json as \"tweets_json!: Option < String >\", \nmentions_json as \"mentions_json!: Option < String >\", \nreposts_json as \"reposts_json!: Option < String >\", \npoll_json as \"poll_json!: Option < String >\", \npost_count as \"post_count!: i32\", \nimpression_count as \"impression_count!: i32\", \nghost_account as \"ghost_account!: bool\", \nrepost_fatigue as \"repost_fatigue!: bool\", \nindeterminate_audience as \"indeterminate_audience!: bool\", \nfollowed as \"followed!: bool\", \nliked as \"liked!: bool\", \nreplied as \"replied!: bool\", \nreposted as \"reposted!: bool\", \nmentioned as \"mentioned!: bool\", \nonline_engagement_score as \"online_engagement_score!: EngagementScore\", \nonline_engagement_override as \"online_engagement_override!: Option < EngagementScore >\", \nonline_engagement_override_reason as \"online_engagement_override_reason!: Option < String >\", \noffline_engagement_score as \"offline_engagement_score!: EngagementScore\", \noffline_engagement_description as \"offline_engagement_description!: Option < String >\", \npoll_id as \"poll_id!: Option < String >\", \npoll_score as \"poll_score!: Option < PollScore >\", \npoll_override as \"poll_override!: Option < PollScore >\", \npoll_override_reason as \"poll_override_reason!: Option < String >\", \noperational_status_score as \"operational_status_score!: OperationalStatus\", \noperational_status_override as \"operational_status_override!: Option < OperationalStatus >\", \noperational_status_override_reason as \"operational_status_override_reason!: Option < String >\", \nreferrer_score as \"referrer_score!: bool\", \nreferrer_score_override as \"referrer_score_override!: Option < bool >\", \nreferrer_score_override_reason as \"referrer_score_override_reason!: Option < String >\", \nholder_score as \"holder_score!: bool\", \nholder_score_override as \"holder_score_override!: Option < bool >\", \nholder_score_override_reason as \"holder_score_override_reason!: Option < String >\", \nauthority as \"authority!: i32\", \naudience_size as \"audience_size!: i32\", \naudience_size_override as \"audience_size_override!: Option < i32 >\", \naudience_size_override_reason as \"audience_size_override_reason!: Option < String >\", \nscore as \"score!: Option < String >\"",
+  "query": "INSERT INTO handle_scorings (handle_id, \nstatus, \nme_json, \ntweets_json, \nmentions_json, \nreposts_json, \npoll_json) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO UPDATE SET id = handle_scorings.id RETURNING id as \"id!: i32\", \nhandle_id as \"handle_id!: i32\", \nstatus as \"status!: HandleScoringStatus\", \ncreated_at as \"created_at!: DateTime < Utc >\", \nme_json as \"me_json!: Option < String >\", \ntweets_json as \"tweets_json!: Option < String >\", \nmentions_json as \"mentions_json!: Option < String >\", \nreposts_json as \"reposts_json!: Option < String >\", \npoll_json as \"poll_json!: Option < String >\", \npost_count as \"post_count!: i32\", \nimpression_count as \"impression_count!: i32\", \nghost_account as \"ghost_account!: bool\", \nrepost_fatigue as \"repost_fatigue!: bool\", \nindeterminate_audience as \"indeterminate_audience!: bool\", \nfollowed as \"followed!: bool\", \nliked as \"liked!: bool\", \nreplied as \"replied!: bool\", \nreposted as \"reposted!: bool\", \nmentioned as \"mentioned!: bool\", \nonline_engagement_score as \"online_engagement_score!: EngagementScore\", \nonline_engagement_override as \"online_engagement_override!: Option < EngagementScore >\", \nonline_engagement_override_reason as \"online_engagement_override_reason!: Option < String >\", \noffline_engagement_score as \"offline_engagement_score!: EngagementScore\", \noffline_engagement_description as \"offline_engagement_description!: Option < String >\", \npoll_id as \"poll_id!: Option < String >\", \npoll_score as \"poll_score!: Option < PollScore >\", \npoll_override as \"poll_override!: Option < PollScore >\", \npoll_override_reason as \"poll_override_reason!: Option < String >\", \noperational_status_score as \"operational_status_score!: OperationalStatus\", \noperational_status_override as \"operational_status_override!: Option < OperationalStatus >\", \noperational_status_override_reason as \"operational_status_override_reason!: Option < String >\", \nreferrer_score as \"referrer_score!: bool\", \nreferrer_score_override as \"referrer_score_override!: Option < bool >\", \nreferrer_score_override_reason as \"referrer_score_override_reason!: Option < String >\", \nholder_score as \"holder_score!: bool\", \nholder_score_override as \"holder_score_override!: Option < bool >\", \nholder_score_override_reason as \"holder_score_override_reason!: Option < String >\", \nauthority as \"authority!: i32\", \naudience_size as \"audience_size!: i32\", \naudience_size_override as \"audience_size_override!: Option < i32 >\", \naudience_size_override_reason as \"audience_size_override_reason!: Option < String >\", \nscore as \"score!: Option < String >\"",
   "describe": {
     "columns": [
       {
@@ -309,7 +309,25 @@
     ],
     "parameters": {
       "Left": [
-        "Int4"
+        "Int4",
+        {
+          "Custom": {
+            "name": "handle_scoring_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "ingested",
+                "applied",
+                "discarded"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text"
       ]
     },
     "nullable": [
@@ -357,5 +375,5 @@
       true
     ]
   },
-  "hash": "7a2025fa086c1d40cf41bd3a1b7ec378e7c7f32ba1da2e3f653b75b4c5ae6e41"
+  "hash": "3b2ac08035acfe251a2677a5fc1580d78347ad9b3152a5287c634a160da17855"
 }

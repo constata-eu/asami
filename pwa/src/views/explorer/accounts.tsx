@@ -216,7 +216,7 @@ const ScoringCardTable = ({ handle }) => {
               {handle.username}
             </Typography>
             <BigText sx={{ textAlign: "center" }}>
-              {BigInt(handle.score)}
+              <Box id="score-value">{BigInt(handle.score)}</Box>
               <Typography
                 fontSize="0.4em"
                 letterSpacing="0em"

@@ -187,6 +187,7 @@ impl CurrentSession {
                                 username,
                                 user_id: auth_method.lookup_key().clone(),
                                 x_refresh_token: None,
+                                status: HandleStatus::NeverConnected,
                             })
                             .save()
                             .await?;
