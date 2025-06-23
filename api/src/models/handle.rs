@@ -87,9 +87,12 @@ model! {
     audience_size_override_reason: Option<String>,
   },
   queries {
+      // We don't expect next_scoring to be null for active handles,
+      // but just in case, we force scoring on them.
+      // next_scoring should never be null for active handles.
       need_scoring("
           status IN ('connecting', 'reconnecting') OR
-              (status = 'active' AND next_scoring < now())")
+              (status = 'active' AND (next_scoring < now() OR next_scoring IS NULL))")
   },
   has_many {
     HandleTopic(handle_id),
@@ -229,7 +232,7 @@ impl HandleHub {
         let handle = if let Some(h) = existing {
             h.handle_update_refresh_token(refresh_token, account_id).await?
         } else {
-            tx.setup_with_refresh_token(refresh_token, user_details, account_id).await?
+            tx.setup_with_refresh_token(refresh_token, user_details.id.to_string(), user_details.username.to_string(), account_id).await?
         };
 
         tx.commit().await?;
@@ -237,15 +240,15 @@ impl HandleHub {
         Ok(handle)
     }
 
-    pub async fn setup_with_refresh_token(&self, refresh_token: String, user_details: &User, account_id: String) -> AsamiResult<Handle> {
+    pub async fn setup_with_refresh_token(&self, refresh_token: String, user_id: String, username: String, account_id: String) -> AsamiResult<Handle> {
         if self.select().account_id_eq(&account_id).optional().await?.is_some() {
             return Err(Error::validation("account_id", "account_has_another_x_handle"));
         }
 
         Ok(self.insert(InsertHandle {
             account_id,
-            username: user_details.username.to_string(),
-            user_id: user_details.id.to_string(),
+            username,
+            user_id,
             x_refresh_token: Some(refresh_token),
             status: HandleStatus::SettingUp, 
         })

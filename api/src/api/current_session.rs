@@ -101,7 +101,7 @@ impl CurrentSession {
         Self::validate_recaptcha(req, app).await?;
         let pubkey = Self::get_login_pubkey(req)?;
         let nonce = Self::validate_jwt(jwt, &pubkey, req, &body).await?;
-        let (kind, lookup_key, auth_data, x_username) = Self::validate_auth_data(app, req).await?;
+        let (kind, lookup_key, auth_data, x_username, x_refresh_token) = Self::validate_auth_data(app, req).await?;
         let Outcome::Success(lang) = Lang::from_request(req).await else {
             return Err(ApiAuthError::Unexpected("could_not_retrieve_lang"));
         };
@@ -158,12 +158,14 @@ impl CurrentSession {
 
         let user = auth_method.user().await?;
 
+        let account_id = user.account_id().await?;
+
         let session = auth_try!(
             app.session()
                 .insert(InsertSession {
                     id: key_id,
                     user_id: user.attrs.id,
-                    account_id: user.account_id().await?,
+                    account_id: account_id.clone(),
                     auth_method_id: auth_method.attrs.id,
                     pubkey,
                     nonce,
@@ -174,26 +176,24 @@ impl CurrentSession {
             "could_not_insert_session"
         );
 
+        if kind == AuthMethodKind::X {
+            if let Some(username) = x_username {
+                if let Some(refresh_token) = x_refresh_token {
+                    let user_id = auth_method.lookup_key().clone();
+                    let existing = app.handle().select().user_id_eq(&user_id).optional().await?;
+
+                    if let Some(h) = existing {
+                        h.update().x_refresh_token(Some(refresh_token)).save().await?;
+                    } else {
+                        app.handle().setup_with_refresh_token(refresh_token, user_id.to_string(), username.to_string(), account_id).await?;
+                    };
+                }
+            }
+        }
+
         if let Some(account) = new_account {
-            match kind {
-                AuthMethodKind::Eip712 => {
-                    account.create_claim_account_request(lookup_key, auth_data, session.attrs.id.clone()).await?;
-                }
-                AuthMethodKind::X => {
-                    if let Some(username) = x_username {
-                        app.handle()
-                            .insert(InsertHandle {
-                                account_id: account.id().clone(),
-                                username,
-                                user_id: auth_method.lookup_key().clone(),
-                                x_refresh_token: None,
-                                status: HandleStatus::NeverConnected,
-                            })
-                            .save()
-                            .await?;
-                    }
-                }
-                _ => {}
+            if kind == AuthMethodKind::Eip712 {
+                account.create_claim_account_request(lookup_key, auth_data, session.attrs.id.clone()).await?;
             }
         }
 
@@ -219,7 +219,7 @@ impl CurrentSession {
     async fn validate_auth_data(
         app: &App,
         req: &Request<'_>,
-    ) -> Result<(AuthMethodKind, String, String, Option<String>), ApiAuthError> {
+    ) -> Result<(AuthMethodKind, String, String, Option<String>, Option<String>), ApiAuthError> {
         let auth_method_kind_string = auth_some!(
             req.headers().get_one("Auth-Method-Kind"),
             "no_auth_method_kind_in_headers"
@@ -230,7 +230,7 @@ impl CurrentSession {
         );
         let auth_data = auth_some!(req.headers().get_one("Auth-Data"), "no_auth_data_in_headers");
 
-        let (lookup_key, x_username) = match auth_method_kind {
+        let (lookup_key, x_username, x_refresh_token) = match auth_method_kind {
             AuthMethodKind::OneTimeToken => {
                 let key = auth_try!(
                     app.one_time_token().select().used_eq(false).value_eq(auth_data.to_string()).one().await,
@@ -243,7 +243,7 @@ impl CurrentSession {
                 .attrs
                 .lookup_key;
 
-                (key, None)
+                (key, None, None)
             }
             AuthMethodKind::X => {
                 let client = auth_try!(app.settings.x.oauth_client("/x_login"), "could_not_make_oauth_client");
@@ -255,19 +255,21 @@ impl CurrentSession {
 
                 let res = client.request_token(auth_code, verifier).await;
                 let token = auth_try!(res, "could_not_fetch_oauth_token");
+                let refresh_token = auth_some!(token.refresh_token().map(|t| t.secret().clone()), "no_x_refresh_token_on_login");
                 let twitter = twitter_v2::TwitterApi::new(token);
 
                 let x = auth_try!(twitter.get_users_me().send().await, "could_not_find_twitter_me");
                 let user = auth_some!(x.into_data(), "no_twitter_payload_data");
-                (user.id.to_string(), Some(user.username))
+
+                (user.id.to_string(), Some(user.username), Some(refresh_token))
             }
             AuthMethodKind::Eip712 => {
                 let key = eip_712_sig_to_address(app.settings.rsk.chain_id, auth_data).map_err(ApiAuthError::Fail)?;
-                (key, None)
+                (key, None, None)
             }
         };
 
-        Ok((auth_method_kind, lookup_key, auth_data.to_string(), x_username))
+        Ok((auth_method_kind, lookup_key, auth_data.to_string(), x_username, x_refresh_token))
     }
 
     async fn validate_recaptcha(req: &Request<'_>, app: &App) -> Result<(), ApiAuthError> {

@@ -47,7 +47,8 @@ async fn shows_member_profile_page() {
         w.wait_for_text(".MuiSnackbarContent-message", "Element updated").await;
 
         let reloaded = user.handle.as_ref().unwrap().reloaded().await.unwrap();
-        assert!(reloaded.last_scoring().is_none());
+        assert!(reloaded.last_scoring().is_some());
+        assert!(reloaded.next_scoring().unwrap() <= Utc::now());
         assert_eq!(
             reloaded.attrs.offline_engagement_description.unwrap(),
             "Founder de un proyecto WEB3 en argentina"

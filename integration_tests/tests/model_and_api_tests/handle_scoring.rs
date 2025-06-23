@@ -73,12 +73,13 @@ async fn applies_empty_score() {
             .handle_scoring()
             .insert(InsertHandleScoring {
                 handle_id: *handle.id(),
+                status: HandleScoringStatus::Ingested,
+                me_json: None,
+                tweets_json: None,
+                mentions_json: None,
+                reposts_json: None,
+                poll_json: None,
             })
-            .save()
-            .await
-            .unwrap()
-            .update()
-            .status(HandleScoringStatus::Ingested)
             .save()
             .await
             .unwrap()
@@ -95,7 +96,8 @@ async fn applies_empty_score() {
 
         assert!(handle.current_scoring_id().is_none());
         assert!(handle.last_scoring().is_none());
-        assert_eq!(*handle.status(), HandleStatus::Unverified);
+        assert!(handle.next_scoring().unwrap() <= Utc::now());
+        assert_eq!(*handle.status(), HandleStatus::NeverConnected);
         assert_eq!(handle.score(), &Some(weihex("0")));
 
         let applied_scoring = pre_ingested_handle_scoring(
@@ -135,12 +137,13 @@ async fn applies_empty_score() {
             .handle_scoring()
             .insert(InsertHandleScoring {
                 handle_id: *handle.id(),
+                status: HandleScoringStatus::Ingested,
+                me_json: None,
+                tweets_json: None,
+                mentions_json: None,
+                reposts_json: None,
+                poll_json: None,
             })
-            .save()
-            .await
-            .unwrap()
-            .update()
-            .status(HandleScoringStatus::Ingested)
             .save()
             .await
             .unwrap()

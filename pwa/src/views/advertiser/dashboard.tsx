@@ -35,6 +35,7 @@ import { ResponsiveAppBar } from "../responsive_app_bar";
 import { AmountField } from "../../components/custom_fields";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import ThumbDownIcon from "@mui/icons-material/ThumbDown";
+import { GrantPermissionsAgainDialog } from "../member/handle_settings";
 
 const Dashboard = () => {
   useAuthenticated();
@@ -44,6 +45,15 @@ const Dashboard = () => {
     { id: getAuthKeys().session.accountId },
     { refetchInterval: (d) => (d?.status == "CLAIMED" ? false : 5000) },
   );
+
+  const handles = useListController({
+    disableSyncWithLocation: true,
+    filter: { accountIdEq: getAuthKeys().session.accountId },
+    queryOptions: {
+      refetchInterval: 20000,
+    },
+    resource: "Handle",
+  });
 
   const listContext = useListController({
     debounce: 500,
@@ -60,7 +70,7 @@ const Dashboard = () => {
     resource: "Campaign",
   });
 
-  if (isLoading || listContext.isLoading || !data) {
+  if (isLoading || listContext.isLoading || handles.isLoading || !data) {
     return (
       <Container maxWidth="md">
         <Skeleton animation="wave" />
@@ -68,9 +78,12 @@ const Dashboard = () => {
     );
   }
 
+  const handle = handles.data?.[0];
+
   return (
     <Box id="advertiser-dashboard">
       <ResponsiveAppBar />
+      {handle?.status == "DISCONNECTED" && <GrantPermissionsAgainDialog />}
       <Stack
         mb="3em"
         gap="2em"

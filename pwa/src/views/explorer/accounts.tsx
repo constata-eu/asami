@@ -18,7 +18,14 @@ import {
 import { viewPostUrl } from "../../lib/campaign";
 import { useParams, Link } from "react-router-dom";
 import { ExplorerLayout } from "../layout";
-import { Box, Card, CardContent, styled, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  styled,
+  Typography,
+} from "@mui/material";
 import { AddressField, AmountField } from "../../components/custom_fields";
 import XIcon from "@mui/icons-material/X";
 import BadgeIcon from "@mui/icons-material/Badge";
@@ -59,6 +66,7 @@ export const AccountList = () => {
     <ExplorerLayout>
       <Head1>{t("explorer.accounts.title")}</Head1>
       <Lead>{t("explorer.accounts.description")}</Lead>
+
       <List
         disableAuthentication
         filters={filters}
@@ -129,6 +137,16 @@ const AccountCardTable = () => {
     <>
       <RecordContextProvider value={showAccount.record}>
         <Head1 sx={{ color: "primary.main" }}>{showAccount.record.name}</Head1>
+        {(handle.status == "DISCONNECTED" ||
+          handle.status == "RECONNECTING") && (
+          <Alert
+            id="account-disconnected"
+            sx={{ mt: "1em" }}
+            severity="warning"
+          >
+            {t("account_show.disconnected")}
+          </Alert>
+        )}
         <HorizontalCardTable mt="2em">
           {handle &&
             (handle.currentScoringId ? (

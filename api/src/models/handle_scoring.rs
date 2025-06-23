@@ -696,6 +696,7 @@ impl HandleScoring {
                 .update()
                 .current_scoring_id(Some(*self.id()))
                 .last_scoring(Some(*self.created_at()))
+                .next_scoring(Some(Utc::now() + chrono::Duration::days(3)))
                 .score(Some(weihex("0")))
                 .status(HandleStatus::Active)
                 .save()
