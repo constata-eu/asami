@@ -519,10 +519,16 @@ impl HandleScoring {
 
         let is_low_verified_audience = verified_count == 0 || m.followers_count / verified_count > 70;
 
-        let is_followed = (m.following_count == 0 || verified_count / m.following_count > 8) && verified_count > 200;
+        let is_followed = (m.following_count == 0 || verified_count / m.following_count >= 1) && verified_count > 200;
 
         (is_low_verified_audience, is_followed)
     }
+
+    /*
+    verified_count: 354,
+    follower_count: 9548,
+    following_count: 100,
+    */
 
     fn is_liked(tweets: &[Tweet]) -> bool {
         let mut very_liked = 0;
@@ -689,14 +695,16 @@ impl HandleScoring {
             handle.handle_scoring_scope().status_eq(HandleScoringStatus::Applied).count().await? == 0;
 
         if some_recently_applied || never_applied_any {
-            Ok(self.update().status(HandleScoringStatus::Discarded).save().await?)
+            Ok(self.update()
+                .status(HandleScoringStatus::Discarded)
+                .save().await?)
         } else {
             self.handle()
                 .await?
                 .update()
                 .current_scoring_id(Some(*self.id()))
                 .last_scoring(Some(*self.created_at()))
-                .next_scoring(Some(Utc::now() + chrono::Duration::days(3)))
+                .next_scoring(Some(Utc::now() + chrono::Duration::days(7)))
                 .score(Some(weihex("0")))
                 .status(HandleStatus::Active)
                 .save()

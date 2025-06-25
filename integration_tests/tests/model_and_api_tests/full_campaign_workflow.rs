@@ -65,26 +65,6 @@ async fn creates_campaign_registers_collabs_and_reimburses() {
     }).await
 }
 
-#[tokio::test]
-#[serial_test::file_serial]
-async fn notifies_twitter_about_campaign() {
-    TestHelper::run(|h| async move {
-        let advertiser = h.advertiser().await;
-        let mut campaign = advertiser.make_campaign_one(u("100"), 20, &[]).await;
-
-        // h.a().app.campaign().announce_new_campaigns().await?;
-
-        // New campaign by 'aoeuaoeuaoue', pays 0.001 DOC per influence score point. Max 1 DOC, min 0.10.
-
-        // Log-in to asami to check applicability.
-
-        // Not a member yet? Get your free influence reading now and start collaborating.
-
-        // Let's get one billion people into web3.
-    }).await
-}
-
-
 /*
 app_test! { old_creates_campaign_register_collabs_and_reimburses(a)
     let mut advertiser = a.client().await;

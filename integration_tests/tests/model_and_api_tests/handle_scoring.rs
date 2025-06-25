@@ -47,6 +47,7 @@ async fn full_authority_scoring() {
 
         ScoringExpectations { ..Default::default() }.assert_matches(&scoring, &handle);
 
+        assert!(handle.next_scoring().unwrap() > Utc::now());
         assert_eq!(handle.score(), scoring.score());
     })
     .await;
@@ -96,7 +97,7 @@ async fn applies_empty_score() {
 
         assert!(handle.current_scoring_id().is_none());
         assert!(handle.last_scoring().is_none());
-        assert!(handle.next_scoring().unwrap() <= Utc::now());
+        assert!(handle.next_scoring().is_none());
         assert_eq!(*handle.status(), HandleStatus::NeverConnected);
         assert_eq!(handle.score(), &Some(weihex("0")));
 
@@ -195,6 +196,51 @@ async fn average_authority_scoring() {
         handle.reload().await.unwrap();
 
         ScoringExpectations::average().assert_matches(&scoring, &handle);
+
+        assert_eq!(handle.score(), scoring.score());
+    })
+    .await;
+}
+
+#[tokio::test]
+#[serial_test::file_serial]
+async fn is_not_followed_due_to_followed_to_follower_ratio() {
+    TestHelper::run(|h| async move {
+        let account = h.user().await.signed_up().await.unverified("asami_tester", user_id()).await;
+        let mut handle = account.handle.clone().unwrap();
+        handle = handle
+            .update()
+            .poll_id(Some(poll_tweet_id()))
+            .referrer_score_override(Some(true))
+            .holder_score_override(Some(true))
+            .offline_engagement_score(EngagementScore::High)
+            .save()
+            .await
+            .unwrap();
+
+        let scoring = pre_ingested_handle_scoring(
+            &handle,
+            me_json("201", true), // Even when verified, they are not followed enough.
+            &[
+                reply_to_own_tweet(500, 0, 2, 11, 1),
+                quoting_someone_elses_tweet(300, 0, 2, 11, 1),
+                tweet_hello_world(300, 0, 0, 11, 0),
+                tweet_goodbye_world(550, 0, 1, 11, 0),
+                tweet_foo_bar(50, 0, 0, 0, 1),
+                tweet_poll(300, 0, 0, 3, 0),
+            ],
+            mentions_json(10, 16),
+            Some(poll_json(1, 3, 4, 5)),
+            reposts_json(),
+        )
+        .await
+        .apply()
+        .await
+        .unwrap();
+
+        handle.reload().await.unwrap();
+
+        ScoringExpectations { followed: false, ..Default::default() }.assert_matches(&scoring, &handle);
 
         assert_eq!(handle.score(), scoring.score());
     })
@@ -950,17 +996,17 @@ async fn pre_ingested_handle_scoring(
         .handle_scoring()
         .insert(InsertHandleScoring {
             handle_id: *handle.id(),
+            me_json: Some(me.to_string()),
+            tweets_json: Some(tweets_json(tweets).to_string()),
+            mentions_json: Some(mentions.to_string()),
+            reposts_json: Some(reposts.to_string()),
+            poll_json: poll.map(|x| x.to_string()),
+            status: HandleScoringStatus::Ingested,
         })
         .save()
         .await
         .unwrap()
         .update()
-        .status(HandleScoringStatus::Ingested)
-        .me_json(Some(me.to_string()))
-        .tweets_json(Some(tweets_json(tweets).to_string()))
-        .mentions_json(Some(mentions.to_string()))
-        .reposts_json(Some(reposts.to_string()))
-        .poll_json(poll.map(|x| x.to_string()))
         .save()
         .await
         .unwrap()
@@ -980,8 +1026,8 @@ fn me_json(followers: &str, verified: bool) -> Value {
         "description": "",
         "protected": false,
         "public_metrics": {
-          "followers_count": 1,
-          "following_count": 3,
+          "followers_count": 9000,
+          "following_count": 300,
           "tweet_count": 14,
           "listed_count": 0
         },
@@ -1453,6 +1499,7 @@ impl ScoringExpectations {
             online_engagement_score: EngagementScore::Average,
             offline_engagement_score: EngagementScore::None,
             operational_status_score: OperationalStatus::Normal,
+            indeterminate_audience: true,
             referrer_score_override: None,
             holder_score_override: None,
             authority: 25,

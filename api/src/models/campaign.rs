@@ -87,6 +87,11 @@ model! {
     repost_count: i32,
     #[sqlx_model_hints(int4, default)]
     like_count: i32,
+
+    #[sqlx_model_hints(varchar, default, op_is_set)]
+    x_announcement_id_es: Option<String>,
+    #[sqlx_model_hints(varchar, default, op_is_set)]
+    x_announcement_id_en: Option<String>,
   },
   queries {
       needing_report("valid_until IS NOT NULL AND valid_until < now() AND report_hash IS NULL LIMIT 20"),

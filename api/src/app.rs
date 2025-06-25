@@ -13,6 +13,8 @@ use sqlx::{
 use sqlx_models_orm::Db;
 use twitter_v2::authorization::Oauth2Client;
 
+use crate::models::campaign_announcement::CampaignAnnouncement;
+
 use super::{models::*, on_chain::OnChain, *};
 
 #[derive(Clone)]
@@ -122,6 +124,10 @@ impl App {
             .status(AccountStatus::Claimed)
             .save()
             .await?)
+    }
+
+    pub fn campaign_announcement(&self) -> CampaignAnnouncement {
+        CampaignAnnouncement::new(self)
     }
 }
 

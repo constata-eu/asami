@@ -1,5 +1,5 @@
 use rocket::serde::json;
-use twitter_v2::{authorization::Oauth2Token, oauth2::*, TwitterApi, User};
+use twitter_v2::{authorization::Oauth2Token, oauth2::*, TwitterApi};
 
 use super::*;
 
