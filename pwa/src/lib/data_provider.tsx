@@ -212,7 +212,6 @@ export const defaultDataProvider = async () => {
               accountId
               username
               userId
-              needsRefreshToken
               score
               topicIds
               status
