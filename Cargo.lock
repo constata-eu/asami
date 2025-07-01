@@ -188,6 +188,7 @@ dependencies = [
  "jwt-simple",
  "lingua",
  "mockito",
+ "rand 0.7.3",
  "regex",
  "reqwest",
  "rocket",

@@ -39,6 +39,7 @@ import AsamiLogo from "../assets/logo.svg?react";
 import { Head2, Head3 } from "../components/theme";
 import { useContext, useEffect, useState } from "react";
 import { publicDataProvider } from "../lib/data_provider";
+import { useEmbedded } from "../components/embedded_context";
 
 const Login = () => {
   const [pubDataProvider, setPubDataProvider] = useState();
@@ -46,6 +47,8 @@ const Login = () => {
 
   const authProvider = useAuthProvider();
   const redirect = useRedirect();
+  const isEmbedded = false;
+  //const isEmbedded = useEmbedded();
 
   useEffect(() => {
     authProvider
@@ -84,12 +87,27 @@ const Login = () => {
           i18nProvider={i18nProvider}
           dataProvider={pubDataProvider}
         >
-          <LoginSelector />
+          {isEmbedded ? <WalletConnectTrigger /> : <LoginSelector />}
         </CoreAdminContext>
         <AsamiLogo width="250px" height="auto" />
       </Box>
     </BareLayout>
   );
+};
+
+const WalletConnectTrigger = () => {
+  const { signLoginMessage } = useContracts();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    async function init() {
+      const code = await signLoginMessage(true);
+      navigate(`/eip712_login?code=${code}`);
+    }
+    init();
+  }, []);
+
+  return <span>Wallet connect Trigger here</span>;
 };
 
 const LoginSelector = ({ open, setOpen }) => {

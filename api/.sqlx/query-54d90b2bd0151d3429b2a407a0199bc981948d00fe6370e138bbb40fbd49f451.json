@@ -1,0 +1,71 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO account_merges (code, \nsource_id) VALUES ($1, $2) RETURNING id as \"id!: i32\", \ncode as \"code!: Option < String >\", \nstatus as \"status!: AccountMergeStatus\", \ncreated_at as \"created_at!: UtcDateTime\", \nsource_id as \"source_id!: String\", \ndestination_id as \"destination_id!: Option < String >\", \ndestination_signature as \"destination_signature!: Option < String >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "code!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "status!: AccountMergeStatus",
+        "type_info": {
+          "Custom": {
+            "name": "account_merge_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "destination_signed",
+                "all_signed",
+                "abandoned"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "source_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "destination_id!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "destination_signature!: Option < String >",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "54d90b2bd0151d3429b2a407a0199bc981948d00fe6370e138bbb40fbd49f451"
+}

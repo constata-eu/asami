@@ -1,3 +1,4 @@
+use juniper::GraphQLEnum;
 use rocket::{
     self,
     request::{self, FromRequest, Outcome, Request},
@@ -5,7 +6,7 @@ use rocket::{
 
 use super::*;
 
-#[derive(sqlx::Type, Copy, Clone, Debug, serde::Deserialize, PartialEq, serde::Serialize)]
+#[derive(sqlx::Type, Copy, Clone, Debug, serde::Deserialize, PartialEq, serde::Serialize, GraphQLEnum)]
 #[sqlx(type_name = "language", rename_all = "lowercase")]
 pub enum Lang {
     Es,

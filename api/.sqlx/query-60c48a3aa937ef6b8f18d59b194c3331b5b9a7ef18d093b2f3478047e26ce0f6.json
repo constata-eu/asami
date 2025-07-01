@@ -1,0 +1,68 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM account_merges WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR code = $4::varchar) AND (NOT $5::boolean OR status = $6::account_merge_status) AND (NOT $7::boolean OR status = ANY(CAST($8 as account_merge_status[])) ) AND (NOT $9::boolean OR created_at = $10::timestamptz) AND (NOT $11::boolean OR source_id = $12::varchar) AND (NOT $13::boolean OR destination_id = $14::varchar) AND (NOT $15::boolean OR destination_signature = $16::varchar)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "account_merge_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "destination_signed",
+                "all_signed",
+                "abandoned"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "account_merge_status[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "account_merge_status",
+                  "kind": {
+                    "Enum": [
+                      "pending",
+                      "destination_signed",
+                      "all_signed",
+                      "abandoned"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "60c48a3aa937ef6b8f18d59b194c3331b5b9a7ef18d093b2f3478047e26ce0f6"
+}

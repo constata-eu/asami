@@ -55,6 +55,8 @@ pub use backer_disbursements::*;
 pub mod value_series;
 pub use value_series::*;
 pub mod campaign_announcement;
+pub mod account_merge;
+pub use account_merge::*;
 
 #[macro_export]
 macro_rules! make_sql_enum {

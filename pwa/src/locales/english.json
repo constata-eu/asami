@@ -389,6 +389,13 @@
         "lets_go": "Let's go",
         "will_do_it_later": "I'll do this later"
       },
+      "select_device": {
+        "dialog_title": "How do you connect to X?"
+      },
+      "login_elsewhere": {
+        "dialog_title": "Visit this link.",
+        "description": "Open it on this device's mobile browser, or on your computer web browser, anywhere where you have already logged in to X, to continue connecting your account"
+      },
       "in_progress": {
         "summary": "We are measuring your influnce @%{username}, it may take up to 5 hours.",
         "dialog_title": "Measuring influence for @%{username}",

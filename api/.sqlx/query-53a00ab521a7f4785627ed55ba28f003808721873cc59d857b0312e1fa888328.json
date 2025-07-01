@@ -1,0 +1,96 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE account_merges SET (id, \ncode, \nstatus, \ncreated_at, \nsource_id, \ndestination_id, \ndestination_signature) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE code END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE status END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE created_at END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE source_id END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE destination_id END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE destination_signature END)) WHERE id = $1 RETURNING id as \"id!: i32\", \ncode as \"code!: Option < String >\", \nstatus as \"status!: AccountMergeStatus\", \ncreated_at as \"created_at!: UtcDateTime\", \nsource_id as \"source_id!: String\", \ndestination_id as \"destination_id!: Option < String >\", \ndestination_signature as \"destination_signature!: Option < String >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "code!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "status!: AccountMergeStatus",
+        "type_info": {
+          "Custom": {
+            "name": "account_merge_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "destination_signed",
+                "all_signed",
+                "abandoned"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "source_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "destination_id!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "destination_signature!: Option < String >",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "account_merge_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "destination_signed",
+                "all_signed",
+                "abandoned"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "53a00ab521a7f4785627ed55ba28f003808721873cc59d857b0312e1fa888328"
+}

@@ -15,6 +15,8 @@ use super::*;
 model! {
   state: App,
   table: one_time_tokens,
+  #[derive(juniper::GraphQLObject)]
+  #[graphql(name = "OneTimeToken")]
   struct OneTimeToken {
     #[sqlx_model_hints(int4, default)]
     id: i32,
@@ -54,6 +56,37 @@ pub struct Email {
 }
 
 impl OneTimeTokenHub {
+    pub fn rand_value() -> String {
+        let config = BasicConfig {
+            separator: "-".into(),
+            capitalize_first: false.into(),
+            ..Default::default()
+        };
+        config.to_scheme().generate()
+    }
+
+    pub async fn create_for_session_migration(&self, user_id: i32) -> AsamiResult<OneTimeToken> {
+        let value = Self::rand_value();
+        let lookup_key = format!("session_migration:{value}");
+
+        self.state.auth_method().insert(InsertAuthMethod{
+            user_id,
+            kind: AuthMethodKind::OneTimeToken,
+            lookup_key: lookup_key.clone(),
+        }).save().await?;
+        
+        Ok(self
+            .insert(InsertOneTimeToken {
+                value,
+                lookup_key,
+                user_id: None,
+                email: None,
+                lang: Lang::En,
+            })
+            .save()
+            .await?)
+    }
+
     pub async fn create_for_email(
         &self,
         email: String,
@@ -62,12 +95,7 @@ impl OneTimeTokenHub {
     ) -> AsamiResult<OneTimeToken> {
         let canonical = email.to_lowercase();
         Email::parse_string(&canonical)?;
-        let config = BasicConfig {
-            separator: "-".into(),
-            capitalize_first: false.into(),
-            ..Default::default()
-        };
-        let value = config.to_scheme().generate();
+        let value = Self::rand_value();
 
         Ok(self
             .insert(InsertOneTimeToken {

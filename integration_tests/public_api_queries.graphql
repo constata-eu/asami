@@ -124,6 +124,20 @@ mutation CreateEmailLoginLink($email: String!) {
     __typename
   }
 }
+mutation CreateOneTimeToken {
+  createOneTimeToken {
+    id
+    value
+    lookupKey
+    used
+    userId
+    expiresAt
+    sentAt
+    email
+    lang
+    __typename
+  }
+}
 mutation CreateXRefreshToken($token: String!, $verifier: String!) {
   createXRefreshToken(token: $token, verifier: $verifier) {
     id
@@ -133,6 +147,7 @@ mutation CreateXRefreshToken($token: String!, $verifier: String!) {
     score
     currentScoringId
     lastScoring
+    nextScoring
     topicIds
     status
     totalCollabs
@@ -163,6 +178,7 @@ mutation UpdateHandle($id: Int!, $data: AdminEditHandleInput!) {
     score
     currentScoringId
     lastScoring
+    nextScoring
     topicIds
     status
     totalCollabs
@@ -316,6 +332,7 @@ query Handle($id: Int!) {
     score
     currentScoringId
     lastScoring
+    nextScoring
     topicIds
     status
     totalCollabs
@@ -346,6 +363,7 @@ query AllHandles($page: Int, $perPage: Int, $sortField: String, $sortOrder: Stri
     score
     currentScoringId
     lastScoring
+    nextScoring
     topicIds
     status
     totalCollabs

@@ -42,6 +42,8 @@ mod community_member;
 use community_member::*;
 mod holder;
 use holder::*;
+mod account_merge;
+use account_merge::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -331,6 +333,7 @@ make_graphql_query! {
     [AuditLogEntry, allAuditLogEntries, allAuditLogEntriesMeta, "_allAuditLogEntriesMeta", AuditLogEntryFilter, i32],
     [CommunityMember, allCommunityMembers, allCommunityMembersMeta, "_allCommunityMembersMeta", CommunityMemberFilter, i32],
     [Holder, allHolders, allHoldersMeta, "_allHoldersMeta", HolderFilter, i32],
+    [AccountMerge, allAccountMerges, allAccountMergesMeta, "_allAccountMergesMeta", AccountMergeFilter, i32],
   }
 
   #[graphql(name="Stats")]
@@ -393,6 +396,31 @@ impl Mutation {
                 .attrs
                 .id,
         })
+    }
+
+    pub async fn create_one_time_token(context: &Context) -> FieldResult<models::OneTimeTokenAttrs> {
+        Ok(context
+            .app
+            .one_time_token()
+            .create_for_session_migration(context.user_id()?)
+            .await?
+            .attrs
+        )
+    }
+
+    pub async fn create_account_merge(context: &Context) -> FieldResult<AccountMerge> {
+        let merge = context
+            .app
+            .account_merge()
+            .get_or_create(&context.account().await?)
+            .await?;
+
+        Ok(AccountMerge::db_to_graphql(context, merge).await?)
+    }
+
+    pub async fn update_account_merge(context: &Context, id: String, data: String) -> FieldResult<bool> {
+        context.app.account_merge().accept_with_code(id, data).await?;
+        Ok(true)
     }
 
     pub async fn create_x_refresh_token(context: &Context, token: String, verifier: String) -> FieldResult<Handle> {

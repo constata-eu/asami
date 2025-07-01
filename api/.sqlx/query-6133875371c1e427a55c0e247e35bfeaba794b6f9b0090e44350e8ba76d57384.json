@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT SUM(u256_hex_to_numeric(reward)) / '1e18'::numeric AS \"sum!\"\n                    FROM collabs WHERE status = 'cleared' AND created_at > $1",
+  "query": "SELECT COALESCE(SUM(u256_hex_to_numeric(reward)) / '1e18'::numeric, 1) AS \"sum!\"\n                    FROM collabs WHERE status = 'cleared' AND created_at > $1",
   "describe": {
     "columns": [
       {
@@ -18,5 +18,5 @@
       null
     ]
   },
-  "hash": "0736cabfc43a3deb93de65e4eda1558be1d78bff764cfb0c9f0f46049a4f5445"
+  "hash": "6133875371c1e427a55c0e247e35bfeaba794b6f9b0090e44350e8ba76d57384"
 }
