@@ -471,7 +471,13 @@ impl Campaign {
             .optional()
             .await?
         else {
-            self.state.info("sync_x_collabs", "make_x_collab_no_active_handle_found", (self.id(), user_id)).await;
+            self.state
+                .info(
+                    "sync_x_collabs",
+                    "make_x_collab_no_active_handle_found",
+                    (self.id(), user_id),
+                )
+                .await;
             return Ok(None);
         };
 

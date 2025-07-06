@@ -26,7 +26,6 @@ async fn embedded_mode_has_simplified_ux() {
         h.web().navigate("/embedded").await;
         h.web().driver.refresh().await.unwrap();
 
-
         h.web().navigate("/").await;
         h.web().wait_for("#member-dashboard").await;
     })
@@ -42,9 +41,9 @@ async fn migrates_account_that_was_connected() {
         let mut alice = h.collaborator(12500).await;
         let eve = h.collaborator(12500).await;
         alice.claim_account().await;
-        h.a().batch_collabs(campaign, &[&alice,&eve]).await;
+        h.a().batch_collabs(campaign, &[&alice, &eve]).await;
 
-        // Now bob should login to web. 
+        // Now bob should login to web.
         let mut bob = h.user().await.signed_up().await;
         bob.claim_account().await;
 
@@ -109,9 +108,9 @@ async fn enforces_recent_session_for_merge() {
         let mut alice = h.collaborator(12500).await;
         let eve = h.collaborator(12500).await;
         alice.claim_account().await;
-        h.a().batch_collabs(campaign, &[&alice,&eve]).await;
+        h.a().batch_collabs(campaign, &[&alice, &eve]).await;
 
-        // Now bob should login to web. 
+        // Now bob should login to web.
         let mut bob = h.user().await.signed_up().await;
         bob.claim_account().await;
 
@@ -133,14 +132,21 @@ async fn enforces_recent_session_for_merge() {
         h.web().navigate(&format!("/m/{code}")).await;
         h.web().wait_for("#accept-merge-button").await;
 
-        h.web().driver.execute(r#"
+        h.web()
+            .driver
+            .execute(
+                r#"
             localStorage.setItem(
               "session",
               JSON.stringify({
                 ...JSON.parse(localStorage.getItem("session")),
                 "createdAt": "2020-01-01T00:00:00.000000Z"
               })
-            )"#, vec![]).await.unwrap();
+            )"#,
+                vec![],
+            )
+            .await
+            .unwrap();
 
         h.web().driver.refresh().await.unwrap();
 
@@ -170,7 +176,13 @@ async fn merge_link_times_out_can_create_a_new_one() {
         h.web().navigate("/").await;
         h.web().click("#menu-logout").await;
 
-        let code = h.a().app.account_merge().find(1).await.unwrap()
+        let code = h
+            .a()
+            .app
+            .account_merge()
+            .find(1)
+            .await
+            .unwrap()
             .update()
             .created_at(Utc::now() - chrono::Duration::days(1))
             .save()
@@ -192,10 +204,7 @@ async fn merge_link_times_out_can_create_a_new_one() {
         h.web().click("#start-merging-button").await;
         h.web().wait_for("#merge-link-text").await;
 
-        let new_code = h.a().app.account_merge().find(2).await.unwrap()
-            .attrs
-            .code
-            .unwrap();
+        let new_code = h.a().app.account_merge().find(2).await.unwrap().attrs.code.unwrap();
 
         alice.login_to_web_with_otp().await;
         h.web().navigate(&format!("/m/{new_code}")).await;
@@ -205,7 +214,6 @@ async fn merge_link_times_out_can_create_a_new_one() {
     })
     .await;
 }
-
 
 #[tokio::test(flavor = "multi_thread")]
 #[serial_test::file_serial]
@@ -230,7 +238,9 @@ async fn session_age_is_server_side_validated() {
         h.web().navigate(&format!("/m/{code}")).await;
 
         // Session gets old here, before attempting the merge.
-        h.a().app.session()
+        h.a()
+            .app
+            .session()
             .select()
             .user_id_eq(alice.user_id())
             .order_by(models::SessionOrderBy::CreatedAt)
@@ -267,10 +277,7 @@ async fn cannot_merge_to_itself() {
         h.web().click("#menu-logout").await;
         bob.login_to_web_with_otp().await;
 
-        let code = h.a().app.account_merge().find(1).await.unwrap()
-            .attrs
-            .code
-            .unwrap();
+        let code = h.a().app.account_merge().find(1).await.unwrap().attrs.code.unwrap();
 
         h.web().navigate(&format!("/m/{code}")).await;
 
@@ -298,7 +305,18 @@ async fn can_continue_connecting_to_x_elsewhere() {
         h.web().click("#device-option-other_device_button").await;
         h.web().wait_for("#grant-elsewhere-container").await;
 
-        let code = h.a().app.one_time_token().select().order_by(models::OneTimeTokenOrderBy::Id).desc(true).one().await.unwrap().attrs.value;
+        let code = h
+            .a()
+            .app
+            .one_time_token()
+            .select()
+            .order_by(models::OneTimeTokenOrderBy::Id)
+            .desc(true)
+            .one()
+            .await
+            .unwrap()
+            .attrs
+            .value;
 
         h.web().navigate(&format!("/s/{code}")).await;
         TestApp::try_until(10, 10, "redirect to X login", || async {

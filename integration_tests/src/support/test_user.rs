@@ -279,7 +279,7 @@ impl TestUser {
                 lang: lang::Lang::Es,
                 lookup_key: format!("one_time_token:{}", &token),
                 user_id: None,
-                expires_at: models::OneTimeTokenHub::default_expiration()
+                expires_at: models::OneTimeTokenHub::default_expiration(),
             })
             .save()
             .await

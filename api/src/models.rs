@@ -54,8 +54,8 @@ pub mod poll_texts;
 pub use backer_disbursements::*;
 pub mod value_series;
 pub use value_series::*;
-pub mod campaign_announcement;
 pub mod account_merge;
+pub mod campaign_announcement;
 pub use account_merge::*;
 
 #[macro_export]

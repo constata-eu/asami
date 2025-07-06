@@ -112,16 +112,22 @@ impl Stats {
             .await?
             .try_into()?;
 
-        let total_rewards_paid: Decimal = app.db
+        let total_rewards_paid: Decimal = app
+            .db
             .fetch_one_scalar(sqlx::query_scalar!(
                 r#"SELECT COALESCE(SUM(u256_hex_to_numeric(reward)) / '1e18'::numeric, 0) AS "sum!"
-                    FROM collabs WHERE status = 'cleared'"#)).await?;
+                    FROM collabs WHERE status = 'cleared'"#
+            ))
+            .await?;
 
-        let recent_rewards_paid: Decimal = app.db
+        let recent_rewards_paid: Decimal = app
+            .db
             .fetch_one_scalar(sqlx::query_scalar!(
                 r#"SELECT COALESCE(SUM(u256_hex_to_numeric(reward)) / '1e18'::numeric, 1) AS "sum!"
                     FROM collabs WHERE status = 'cleared' AND created_at > $1"#,
-                thirty_days_ago)).await?;
+                thirty_days_ago
+            ))
+            .await?;
 
         Ok(Stats {
             id: 0,

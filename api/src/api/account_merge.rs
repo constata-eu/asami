@@ -33,7 +33,10 @@ impl Showable<models::AccountMerge, AccountMergeFilter> for AccountMerge {
         None // No sorting supported.
     }
 
-    fn filter_to_select(context: &Context, _filter: Option<AccountMergeFilter>) -> FieldResult<models::SelectAccountMerge> {
+    fn filter_to_select(
+        context: &Context,
+        _filter: Option<AccountMergeFilter>,
+    ) -> FieldResult<models::SelectAccountMerge> {
         Ok(models::SelectAccountMerge {
             destination_id_eq: Some(context.account_id()?),
             created_at_gt: Some(AccountMergeHub::active_code_threshold()),
@@ -53,9 +56,7 @@ impl Showable<models::AccountMerge, AccountMergeFilter> for AccountMerge {
     async fn db_to_graphql(_context: &Context, d: models::AccountMerge) -> AsamiResult<Self> {
         // Source address should always be there otherwise the request cannot be created.
         let destination = d.destination_account().await?.decoded_addr()?.map(|x| format!("{x:?}"));
-        let source = d.source_account().await?
-            .and_then(|a| a.decoded_addr().ok())
-            .map(|x| format!("{x:?}") );
+        let source = d.source_account().await?.and_then(|a| a.decoded_addr().ok()).map(|x| format!("{x:?}"));
 
         Ok(AccountMerge {
             id: d.attrs.id,

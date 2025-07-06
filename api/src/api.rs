@@ -1,6 +1,7 @@
 use ethers::{abi::AbiEncode, types::U256};
 use juniper::{
-    graphql_object, graphql_value, EmptySubscription, FieldError, FieldResult, GraphQLInputObject, GraphQLObject, IntoFieldError, IntrospectionFormat
+    graphql_object, graphql_value, EmptySubscription, FieldError, FieldResult, GraphQLInputObject, GraphQLObject,
+    IntoFieldError, IntrospectionFormat,
 };
 use juniper_rocket::{graphiql_source, GraphQLResponse};
 use rocket::{http::Status, serde::json::Json, State};
@@ -398,28 +399,22 @@ impl Mutation {
     }
 
     pub async fn create_one_time_token(context: &Context) -> FieldResult<models::OneTimeTokenAttrs> {
-        Ok(context
-            .app
-            .one_time_token()
-            .create_for_session_migration(context.user_id()?)
-            .await?
-            .attrs
-        )
+        Ok(context.app.one_time_token().create_for_session_migration(context.user_id()?).await?.attrs)
     }
 
     pub async fn create_account_merge(context: &Context) -> FieldResult<AccountMerge> {
-        let merge = context
-            .app
-            .account_merge()
-            .get_or_create(&context.account().await?)
-            .await?;
+        let merge = context.app.account_merge().get_or_create(&context.account().await?).await?;
 
         Ok(AccountMerge::db_to_graphql(context, merge).await?)
     }
 
     pub async fn update_account_merge(context: &Context, id: String) -> FieldResult<bool> {
-        context.app.account_merge().accept_with_code(&context.current_session()?.0, context.account().await?, id)
-            .await.map_err(|e| e.into_field_error())?;
+        context
+            .app
+            .account_merge()
+            .accept_with_code(&context.current_session()?.0, context.account().await?, id)
+            .await
+            .map_err(|e| e.into_field_error())?;
         Ok(true)
     }
 

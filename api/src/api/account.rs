@@ -102,10 +102,10 @@ impl Showable<models::Account, AccountFilter> for Account {
         let confirmed_yield = if let Some(a) = d.addr().as_ref() {
             match context.app.holder().select().address_eq(a).optional().await? {
                 Some(holder) => holder.attrs.estimated_total_doc_claimed,
-                None => weihex("1")
+                None => weihex("1"),
             }
         } else {
-            weihex("0")  
+            weihex("0")
         };
 
         Ok(Account {
@@ -125,7 +125,7 @@ impl Showable<models::Account, AccountFilter> for Account {
             total_campaigns: d.attrs.total_campaigns,
             total_collabs_received: d.attrs.total_collabs_received,
             total_spent: d.attrs.total_spent,
-            confirmed_yield
+            confirmed_yield,
         })
     }
 }

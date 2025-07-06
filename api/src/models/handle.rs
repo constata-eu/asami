@@ -232,7 +232,13 @@ impl HandleHub {
         let handle = if let Some(h) = existing {
             h.handle_update_refresh_token(refresh_token, account_id).await?
         } else {
-            tx.setup_with_refresh_token(refresh_token, user_details.id.to_string(), user_details.username.to_string(), account_id).await?
+            tx.setup_with_refresh_token(
+                refresh_token,
+                user_details.id.to_string(),
+                user_details.username.to_string(),
+                account_id,
+            )
+            .await?
         };
 
         tx.commit().await?;
@@ -240,21 +246,28 @@ impl HandleHub {
         Ok(handle)
     }
 
-    pub async fn setup_with_refresh_token(&self, refresh_token: String, user_id: String, username: String, account_id: String) -> AsamiResult<Handle> {
+    pub async fn setup_with_refresh_token(
+        &self,
+        refresh_token: String,
+        user_id: String,
+        username: String,
+        account_id: String,
+    ) -> AsamiResult<Handle> {
         if self.select().account_id_eq(&account_id).optional().await?.is_some() {
             return Err(Error::validation("account_id", "account_has_another_x_handle"));
         }
 
-        Ok(self.insert(InsertHandle {
-            account_id,
-            username,
-            user_id,
-            x_refresh_token: Some(refresh_token),
-            status: HandleStatus::SettingUp, 
-        })
-        .save()
-        .await?)
-    } 
+        Ok(self
+            .insert(InsertHandle {
+                account_id,
+                username,
+                user_id,
+                x_refresh_token: Some(refresh_token),
+                status: HandleStatus::SettingUp,
+            })
+            .save()
+            .await?)
+    }
 
     pub async fn setup_pending(&self) -> AsamiResult<Vec<Handle>> {
         let result = self.setup_pending_inner().await;
@@ -390,7 +403,7 @@ impl Handle {
         let next_status = match self.status() {
             HandleStatus::NeverConnected => HandleStatus::SettingUp,
             HandleStatus::Disconnected => HandleStatus::Reconnecting,
-            _ => return Err(Error::validation("x", "handle_does_not_need_refresh_token"))
+            _ => return Err(Error::validation("x", "handle_does_not_need_refresh_token")),
         };
         Ok(self.update().status(next_status).x_refresh_token(Some(refresh_token)).save().await?)
     }
@@ -399,15 +412,18 @@ impl Handle {
         let _ = self.fail("refresh_token_invalidated", format!("{e:?}")).await;
         let invalidated = self.x_refresh_token().clone();
         let next_status = match self.status() {
-            HandleStatus::NeverConnected | HandleStatus::SettingUp | HandleStatus::Connecting => HandleStatus::NeverConnected,  
+            HandleStatus::NeverConnected | HandleStatus::SettingUp | HandleStatus::Connecting => {
+                HandleStatus::NeverConnected
+            }
             _ => HandleStatus::Disconnected,
-            
         };
-        Ok(self.update()
+        Ok(self
+            .update()
             .invalidated_x_refresh_token(invalidated)
             .x_refresh_token(None)
             .status(next_status)
-            .save().await?)
+            .save()
+            .await?)
     }
 
     pub async fn skip_setup(self) -> sqlx::Result<Self> {
@@ -590,11 +606,11 @@ make_sql_enum![
     "handle_status",
     pub enum HandleStatus {
         NeverConnected, // New account with no valid access token. Setup -> adds refresh token to it.
-        SettingUp,    // Has first refresh token. Connect -> Creates poll and moves to connecting.. 
-        Connecting,   // Has token. Score -> Makes it Active or SettingUp.
-        Active,       // Account is usable.
-        Disconnected, // Existing account, with no valid access token. Reconnect -> adds new token to it.
-        Reconnecting, // Has renewed token. Score -> Makes it Active or Disconnected.
-        Inactive,     // Account was banned or made inactive. Will never be re-scored and cannot be reconnected.
+        SettingUp,      // Has first refresh token. Connect -> Creates poll and moves to connecting..
+        Connecting,     // Has token. Score -> Makes it Active or SettingUp.
+        Active,         // Account is usable.
+        Disconnected,   // Existing account, with no valid access token. Reconnect -> adds new token to it.
+        Reconnecting,   // Has renewed token. Score -> Makes it Active or Disconnected.
+        Inactive,       // Account was banned or made inactive. Will never be re-scored and cannot be reconnected.
     }
 ];

@@ -56,13 +56,9 @@ pub struct Email {
 
 impl OneTimeTokenHub {
     pub fn rand_value() -> String {
-        use rand::{thread_rng, Rng};
         use rand::distributions::Alphanumeric;
-        thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(6)
-            .collect::<String>()
-            .to_uppercase()
+        use rand::{thread_rng, Rng};
+        thread_rng().sample_iter(&Alphanumeric).take(6).collect::<String>().to_uppercase()
     }
 
     pub fn default_expiration() -> DateTime<Utc> {
@@ -73,12 +69,16 @@ impl OneTimeTokenHub {
         let value = Self::rand_value();
         let lookup_key = format!("session_migration:{value}");
 
-        self.state.auth_method().insert(InsertAuthMethod{
-            user_id,
-            kind: AuthMethodKind::OneTimeToken,
-            lookup_key: lookup_key.clone(),
-        }).save().await?;
-        
+        self.state
+            .auth_method()
+            .insert(InsertAuthMethod {
+                user_id,
+                kind: AuthMethodKind::OneTimeToken,
+                lookup_key: lookup_key.clone(),
+            })
+            .save()
+            .await?;
+
         Ok(self
             .insert(InsertOneTimeToken {
                 value,

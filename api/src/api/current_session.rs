@@ -185,7 +185,14 @@ impl CurrentSession {
                     if let Some(h) = existing {
                         h.update().x_refresh_token(Some(refresh_token)).save().await?;
                     } else {
-                        app.handle().setup_with_refresh_token(refresh_token, user_id.to_string(), username.to_string(), account_id).await?;
+                        app.handle()
+                            .setup_with_refresh_token(
+                                refresh_token,
+                                user_id.to_string(),
+                                username.to_string(),
+                                account_id,
+                            )
+                            .await?;
                     };
                 }
             }
@@ -233,11 +240,13 @@ impl CurrentSession {
         let (lookup_key, x_username, x_refresh_token) = match auth_method_kind {
             AuthMethodKind::OneTimeToken => {
                 let key = auth_try!(
-                    app.one_time_token().select()
+                    app.one_time_token()
+                        .select()
                         .expires_at_gt(Utc::now())
                         .used_eq(false)
                         .value_eq(auth_data.to_string())
-                        .one().await,
+                        .one()
+                        .await,
                     "invalid_one_time_token"
                 )
                 .update()
@@ -259,7 +268,10 @@ impl CurrentSession {
 
                 let res = client.request_token(auth_code, verifier).await;
                 let token = auth_try!(res, "could_not_fetch_oauth_token");
-                let refresh_token = auth_some!(token.refresh_token().map(|t| t.secret().clone()), "no_x_refresh_token_on_login");
+                let refresh_token = auth_some!(
+                    token.refresh_token().map(|t| t.secret().clone()),
+                    "no_x_refresh_token_on_login"
+                );
                 let twitter = twitter_v2::TwitterApi::new(token);
 
                 let x = auth_try!(twitter.get_users_me().send().await, "could_not_find_twitter_me");
@@ -273,7 +285,13 @@ impl CurrentSession {
             }
         };
 
-        Ok((auth_method_kind, lookup_key, auth_data.to_string(), x_username, x_refresh_token))
+        Ok((
+            auth_method_kind,
+            lookup_key,
+            auth_data.to_string(),
+            x_username,
+            x_refresh_token,
+        ))
     }
 
     async fn validate_recaptcha(req: &Request<'_>, app: &App) -> Result<(), ApiAuthError> {
