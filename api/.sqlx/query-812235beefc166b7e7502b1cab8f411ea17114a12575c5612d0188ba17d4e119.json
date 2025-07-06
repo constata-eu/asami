@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM sessions WHERE (NOT $1::boolean OR id = $2::varchar) AND (NOT $3::boolean OR id = ANY(CAST($4 as varchar[])) ) AND (NOT $5::boolean OR user_id = $6::int4) AND (NOT $7::boolean OR account_id = $8::varchar) AND (NOT $9::boolean OR auth_method_id = $10::int4) AND (NOT $11::boolean OR pubkey = $12::varchar) AND (NOT $13::boolean OR nonce = $14::bigint) AND (NOT $15::boolean OR created_at = $16::timestamptz) AND (NOT $17::boolean OR updated_at = $18::timestamptz) AND (NOT $19::boolean OR logged_out_at = $20::timestamptz) AND (NOT $21::boolean OR admin = $22::boolean)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Varchar",
+        "Bool",
+        "VarcharArray",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int8",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "812235beefc166b7e7502b1cab8f411ea17114a12575c5612d0188ba17d4e119"
+}

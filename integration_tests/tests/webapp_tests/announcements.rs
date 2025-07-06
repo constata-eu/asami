@@ -10,13 +10,9 @@ async fn sends_announcements() {
         let a = &h.test_app.app;
         let advertiser = h.advertiser().await;
         let mut good = advertiser.make_campaign_one(u("15"), 11, &[]).await;
-        let mut too_small = advertiser.start_and_pay_campaign(
-            "https://x.com/somebody/status/1933626442178326847",
-            u("5"),
-            11,
-            &[]
-        )
-        .await;
+        let mut too_small = advertiser
+            .start_and_pay_campaign("https://x.com/somebody/status/1933626442178326847", u("5"), 11, &[])
+            .await;
 
         let tester_user = std::env::var("X_TESTER_USERNAME").unwrap();
         let tester_pass = std::env::var("X_TESTER_PASSWORD").unwrap();
@@ -45,7 +41,6 @@ async fn sends_announcements() {
         assert!(too_small.x_announcement_id_es().is_none());
         assert!(too_small.x_announcement_id_en().is_none());
 
-    
         handle.update().username("asami_club_es".to_string()).save().await.unwrap();
         a.campaign_announcement().send_pending_announcements().await.unwrap();
         good.reload().await.unwrap();
@@ -56,11 +51,12 @@ async fn sends_announcements() {
         assert!(good.x_announcement_id_en().is_none());
         assert!(too_small.x_announcement_id_es().is_none());
         assert!(too_small.x_announcement_id_en().is_none());
-    
+
         a.campaign_announcement().send_pending_announcements().await.unwrap();
         good.reload().await.unwrap();
         too_small.reload().await.unwrap();
 
         assert_eq!(old_id, *good.x_announcement_id_es());
-    }).await;
+    })
+    .await;
 }

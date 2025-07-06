@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO account_merges (code, \ndestination_id) VALUES ($1, $2) RETURNING id as \"id!: i32\", \ncode as \"code!: Option < String >\", \nstatus as \"status!: AccountMergeStatus\", \ncreated_at as \"created_at!: UtcDateTime\", \ndestination_id as \"destination_id!: String\", \nsource_id as \"source_id!: Option < String >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "code!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "status!: AccountMergeStatus",
+        "type_info": {
+          "Custom": {
+            "name": "account_merge_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "done",
+                "abandoned"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "destination_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "source_id!: Option < String >",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "32a288692580dc990042ccb14ac77cd578b0e04cfede3397b7734c21903e094b"
+}

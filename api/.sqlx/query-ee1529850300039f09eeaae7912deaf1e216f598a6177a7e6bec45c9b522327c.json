@@ -1,0 +1,86 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE account_merges SET (id, \ncode, \nstatus, \ncreated_at, \ndestination_id, \nsource_id) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE code END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE status END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE created_at END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE destination_id END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE source_id END)) WHERE id = $1 RETURNING id as \"id!: i32\", \ncode as \"code!: Option < String >\", \nstatus as \"status!: AccountMergeStatus\", \ncreated_at as \"created_at!: UtcDateTime\", \ndestination_id as \"destination_id!: String\", \nsource_id as \"source_id!: Option < String >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "code!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "status!: AccountMergeStatus",
+        "type_info": {
+          "Custom": {
+            "name": "account_merge_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "done",
+                "abandoned"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "destination_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "source_id!: Option < String >",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "account_merge_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "done",
+                "abandoned"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "ee1529850300039f09eeaae7912deaf1e216f598a6177a7e6bec45c9b522327c"
+}

@@ -377,6 +377,7 @@
       "locked_until": "Valores vigentes hasta"
     },
     "x": {
+      "will_do_it_later": "Lo haré luego",
       "grant_permissions_and_make_posts": {
         "summary": "Conecta tu cuenta de X para obtener tu lectura personalizada de influencia. Es divertido y te permite unirte a campañas en X para ganar cripto por hacer reposts.",
         "get_started": "Empezar",
@@ -386,8 +387,21 @@
         "you_will_earn_rewards": "Después de eso, vas a ver campañas que puedes repostear para empezar a ganar recompensas.",
         "you_can_revoke": "Puedes revocar los permisos en cualquier momento desde X y reiniciar tu influencia.",
         "help_text": "¿Necesitas ayuda? Pregunta a nuestro <a href=\"https://robot.asami.club\" target=\"_blank\" rel=\"noopener\">chatbot</a> o únete a nuestro <a href=\"https://t.me/asami_club\" target=\"_blank\" rel=\"noopener\">grupo de Telegram</a>.",
-        "lets_go": "Hagámoslo ahora",
-        "will_do_it_later": "Lo haré luego"
+        "lets_go": "Hagámoslo ahora"
+      },
+      "select_device": {
+        "dialog_title": "¿Cómo quieres conectar tu cuenta de X?",
+        "login_here_button": "Iniciar sesión en X desde Beexo",
+        "login_here_text": "Usa tu usuario y contraseña de X dentro de Beexo. No es lo mejor si usas 2FA o si olvidaste tu contraseña.",
+        "other_device_button": "Usar X desde otra app o dispositivo",
+        "other_device_text": "Continúa en un navegador o app donde ya tengas sesión iniciada en X. Ideal si usas 2FA o si falla el inicio en Beexo.",
+        "merge_account_button": "Unir mi cuenta vieja de Asami",
+        "merge_account_text": "¿Ya tenías otra cuenta de Asami conectada a X? Puedes moverla ahora a tu cuenta en Beexo."
+      },
+      "login_elsewhere": {
+        "dialog_title": "Usar X desde otra app o dispositivo",
+        "description": "Abre este enlace en un navegador donde ya tengas sesión iniciada en X — como el navegador de tu movil o tu portátil — para terminar de conectar tu cuenta.",
+        "copy": "Copiar enlace"
       },
       "in_progress": {
         "summary": "Estamos midiendo tu influencia @%{username}, esto puede tardar hasta 5 horas.",
@@ -507,7 +521,8 @@
       "data_outside_the_eu": "Tus datos podrían transferirse fuera de la UE y almacenarse para siempre, debido a nuestro interés legítimo en mantener la transparencia en blockchain.",
       "no_guarantees": "El servicio se ofrece tal como está, sin garantías de adecuación para un propósito específico, y puede cambiar o desactivarse en cualquier momento.",
       "local_laws": "Eres responsable de asegurarte de que tu uso de Asami cumpla con las leyes locales y los términos de plataformas como X. Nosotros no hemos tenido problemas, pero lo mencionamos por precaución."
-    }
+    },
+    "wallet_connect": "Conectando via Beexo"
   },
   "about_us": {
     "go_back_button": "Volver",
@@ -725,6 +740,59 @@
     "holders": {
       "title": "Titulares de Tokens",
       "description": "Titulares actuales, saldos y rendimiento. El total es estimado — algunos pagos exitosos pueden no haberse contabilizado."
+    }
+  },
+  "merge_accounts": {
+    "changed_my_mind": "Cambié de opinión, fusionaré más tarde.",
+    "welcome": {
+      "title": "Fusionando cuentas",
+      "title_1": "Tu cuenta antigua de Asami se fusionará con esta.",
+      "text_1": "Después de la fusión, podrás acceder a esta cuenta unificada usando tu usuario de X, tu correo electrónico o esta billetera — cualquiera de los métodos que hubieras configurado antes. Si tu cuenta antigua tenía una billetera vinculada, ya no podrás usar esa billetera para iniciar sesión. Cualquier RBTC, ASAMI o DOC que tengas en esa billetera permanecerá allí — tendrás que mover esos fondos manualmente si los quieres en tu nueva billetera.",
+      "title_2": "Necesitarás confirmar la fusión desde tu cuenta antigua.",
+      "text_2": "Generaremos un enlace seguro que deberás abrir mientras estás conectado con tu cuenta antigua — idealmente desde otro dispositivo donde ya tengas la sesión activa. Si eso no es posible, puedes cerrar sesión aquí e iniciar sesión temporalmente con tu cuenta antigua.",
+      "title_3": "Antes de comenzar, un recordatorio rápido.",
+      "text_3": "La fusión debe ser aprobada desde la cuenta antigua para protegerte contra abusos. Asegúrate de reclamar cualquier recompensa pendiente (ASAMI o DOC) en tu cuenta antigua antes de continuar, ya que no podrás acceder a esas recompensas después de fusionar.",
+      "button": "Comenzar la fusión de mi cuenta"
+    },
+    "pending": {
+      "title": "Visita este enlace desde tu cuenta antigua.",
+      "lead": "En el dispositivo donde tienes iniciada sesión con tu cuenta antigua de Asami, abre:",
+      "you_will_need_to_accept": "Tendrás que aprobar la solicitud de fusión desde esa cuenta.",
+      "notice": "Tienes 10 minutos para completar este paso — pero no te preocupes, puedes volver a comenzar tantas veces como necesites si se vence el tiempo. Si estás usando Rabby o MetaMask, toca la barra de direcciones de tu navegador y pega allí el enlace.",
+      "copy_link": "Copiar enlace"
+    },
+    "done": {
+      "title": "Cuenta fusionada con éxito",
+      "message": "Tu usuario de X, historial de campañas y colaboraciones pasadas ahora forman parte de esta cuenta.",
+      "button": "Continuar"
+    },
+    "accept_merge": {
+      "title": "Autoriza la fusión con tu nueva cuenta de Asami.",
+      "description": "Estás a punto de fusionar esta cuenta con una nueva. Tu usuario de X, puntuación e historial completo de colaboraciones se transferirán. Los fondos en tu billetera antigua (RBTC, DOC, ASAMI) no se moverán — tendrás que enviarlos manualmente si los necesitas.",
+      "pending_rewards_warning": "Tienes ASAMI o DOC sin reclamar. Recomendamos reclamarlos antes de continuar.",
+      "wallet_loss_warning": "Ya no podrás acceder a tu cuenta de Asami con la billetera %{addr}.",
+      "security_alert_title": "No continúes si no comenzaste este proceso.",
+      "security_alert_text": "Si alguien más te envió este enlace y tú no iniciaste la fusión, podrían estar intentando tomar control de tu cuenta. Simplemente cierra esta ventana para cancelar.",
+      "cta_button": "Aceptar la fusión",
+      "confirm_dialog": {
+        "title": "¿Estás seguro de que quieres fusionar tus cuentas?",
+        "description": "Esta acción es permanente. Solo continúa si entiendes el proceso y tú lo iniciaste.",
+        "cancel_button": "No, cancelar fusión",
+        "confirm_button": "Sí, fusionar mis cuentas"
+      },
+      "done": {
+        "title": "Fusión completa",
+        "message": "Tus cuentas se han fusionado correctamente. Ahora puedes cerrar esta ventana y volver a tu nueva cuenta de Asami."
+      },
+      "error": {
+        "title": "No se pudo fusionar",
+        "messages": {
+          "session_is_too_old": "Debes iniciar sesion nuevamente antes de aceptar fusionar tu cuenta",
+          "no_active_code": "El link utilizado para fusionar cuentas ya no está activo. Solo tienes 10 minutos para hacer este proceso. Pero puedes iniciar el proceso nuevamente cuando quieras.",
+          "cannot_merge_to_yourself": "Para aprobar la fusión debes iniciar sesión con tu vieja cuenta, no con la nueva.",
+          "unknown": "Se produjo un error inesperado intentando fusionar tus cuentas."
+        }
+      }
     }
   }
 }

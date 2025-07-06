@@ -248,6 +248,20 @@ export const defaultDataProvider = async () => {
           }
         `,
       };
+    } else if (resource === "AccountMerge" && fetchType == "UPDATE") {
+      const parser = function (data) {
+        return { data: { id: params.id } };
+      };
+
+      return {
+        parseResponse: parser,
+        variables: params,
+        query: gql`
+          mutation ($id: String!) {
+            updateAccountMerge(id: $id)
+          }
+        `,
+      };
     } else {
       return buildQuery(introspection)(fetchType, resource, params);
     }

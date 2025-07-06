@@ -7,6 +7,8 @@ import {
   TextField,
   ResourceContextProvider,
   NumberField,
+  useDataProvider,
+  useNotify,
 } from "react-admin";
 import { DeckCard } from "../layout";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +29,10 @@ import {
   ListItemText,
   ListItemIcon,
   Card,
+  Paper,
+  Modal,
+  CardActions,
+  Container,
 } from "@mui/material";
 
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -34,12 +40,19 @@ import PollIcon from "@mui/icons-material/Poll";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import LockResetIcon from "@mui/icons-material/LockReset";
 
-import { BigText, Head2, Head3 } from "../../components/theme";
+import {
+  backgroundGradientRules,
+  BigText,
+  Head2,
+  Head3,
+  paperBackground,
+} from "../../components/theme";
 import XIcon from "@mui/icons-material/X";
 import { makeXAuthorize } from "../../lib/auth_provider";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AttributeTable } from "../../components/attribute_table";
 import { AmountField } from "../../components/custom_fields";
+import { useEmbedded } from "../../components/embedded_context";
 
 export const HandleSettings = ({ handles }) => {
   const translate = useTranslate();
@@ -304,7 +317,15 @@ const ReconnectingHandle = ({ handle }) => {
 
 const GrantPermissionsAndMakePost = () => {
   const [open, setOpen] = useState(true);
+  const [step, setStep] = useState("PLAN");
   const translate = useTranslate();
+  const isEmbedded = useEmbedded();
+  const navigate = useNavigate();
+
+  const onCancel = () => {
+    setStep("PLAN");
+    setOpen(false);
+  };
 
   const startXLogin = async () => {
     const { url, verifier } = await makeXAuthorize();
@@ -344,64 +365,208 @@ const GrantPermissionsAndMakePost = () => {
         }}
         maxWidth="sm"
       >
-        <DialogTitle>
-          <Head3 sx={{ color: (theme) => theme.palette.primary.main }}>
-            {translate(
-              "handle_settings.x.grant_permissions_and_make_posts.dialog_title",
-            )}
-          </Head3>
-        </DialogTitle>
-        <DialogContent>
-          <List disablePadding>
-            <GrantDialogTextLine
-              icon={<CheckCircleIcon />}
-              primary={translate(
-                "handle_settings.x.grant_permissions_and_make_posts.we_will_check_your_activity",
-              )}
-            />
-            <GrantDialogTextLine
-              icon={<PollIcon />}
-              primary={translate(
-                "handle_settings.x.grant_permissions_and_make_posts.we_will_post_a_poll",
-              )}
-            />
-            <GrantDialogTextLine
-              icon={<CampaignIcon />}
-              primary={translate(
-                "handle_settings.x.grant_permissions_and_make_posts.you_will_earn_rewards",
-              )}
-            />
-            <GrantDialogTextLine
-              icon={<LockResetIcon />}
-              primary={translate(
-                "handle_settings.x.grant_permissions_and_make_posts.you_can_revoke",
-              )}
-            />
-          </List>{" "}
-        </DialogContent>
-        <DialogActions>
-          <Button
-            id="button-cancel-grant-permission-and-make-post"
-            fullWidth
-            onClick={() => setOpen(false)}
-          >
-            {translate(
-              "handle_settings.x.grant_permissions_and_make_posts.will_do_it_later",
-            )}
-          </Button>
-          <Button
-            id="button-grant-permission-and-make-post"
-            fullWidth
-            variant="contained"
-            onClick={startXLogin}
-          >
-            {translate(
-              "handle_settings.x.grant_permissions_and_make_posts.lets_go",
-            )}
-          </Button>
-        </DialogActions>
+        {step == "PLAN" && (
+          <GrantDialogPlanStep
+            onOk={() => (isEmbedded ? setStep("SELECT_DEVICE") : startXLogin())}
+            onCancel={onCancel}
+          />
+        )}
+        {step == "SELECT_DEVICE" && (
+          <GrantDialogSelectDeviceStep
+            loginHere={startXLogin}
+            loginElsewhere={() => setStep("LOGIN_ELSEWHERE")}
+            mergeAccount={() => navigate("/merge-accounts")}
+            onCancel={onCancel}
+          />
+        )}
+        {step == "LOGIN_ELSEWHERE" && (
+          <GrantDialogLoginElsewhereStep onCancel={onCancel} />
+        )}
       </Dialog>
     </>
+  );
+};
+
+const GrantDialogPlanStep = ({ onOk, onCancel }) => {
+  const translate = useTranslate();
+
+  return (
+    <>
+      <DialogTitle>
+        <Head3 sx={{ color: (theme) => theme.palette.primary.main }}>
+          {translate(
+            "handle_settings.x.grant_permissions_and_make_posts.dialog_title",
+          )}
+        </Head3>
+      </DialogTitle>
+      <DialogContent>
+        <List disablePadding>
+          <GrantDialogTextLine
+            icon={<CheckCircleIcon />}
+            primary={translate(
+              "handle_settings.x.grant_permissions_and_make_posts.we_will_check_your_activity",
+            )}
+          />
+          <GrantDialogTextLine
+            icon={<PollIcon />}
+            primary={translate(
+              "handle_settings.x.grant_permissions_and_make_posts.we_will_post_a_poll",
+            )}
+          />
+          <GrantDialogTextLine
+            icon={<CampaignIcon />}
+            primary={translate(
+              "handle_settings.x.grant_permissions_and_make_posts.you_will_earn_rewards",
+            )}
+          />
+          <GrantDialogTextLine
+            icon={<LockResetIcon />}
+            primary={translate(
+              "handle_settings.x.grant_permissions_and_make_posts.you_can_revoke",
+            )}
+          />
+        </List>{" "}
+      </DialogContent>
+      <DialogActions>
+        <Button
+          id="button-cancel-grant-permission-and-make-post"
+          fullWidth
+          onClick={onCancel}
+        >
+          {translate("handle_settings.x.will_do_it_later")}
+        </Button>
+        <Button
+          id="button-grant-permission-and-make-post"
+          fullWidth
+          variant="contained"
+          onClick={onOk}
+        >
+          {translate(
+            "handle_settings.x.grant_permissions_and_make_posts.lets_go",
+          )}
+        </Button>
+      </DialogActions>
+    </>
+  );
+};
+
+const GrantDialogSelectDeviceStep = ({
+  loginHere,
+  loginElsewhere,
+  mergeAccount,
+  onCancel,
+}) => {
+  const t = useTranslate();
+
+  return (
+    <WizModal title="handle_settings.x.select_device.dialog_title">
+      <DeviceOption
+        text="login_here_text"
+        button="login_here_button"
+        onClick={loginHere}
+      />
+      <DeviceOption
+        text="other_device_text"
+        button="other_device_button"
+        onClick={loginElsewhere}
+      />
+      <DeviceOption
+        text="merge_account_text"
+        button="merge_account_button"
+        onClick={mergeAccount}
+      />
+      <Button fullWidth variant="contained" color="inverted" onClick={onCancel}>
+        {t("handle_settings.x.will_do_it_later")}
+      </Button>
+    </WizModal>
+  );
+};
+
+const DeviceOption = ({ text, button, onClick }) => {
+  const t = useTranslate();
+  return (
+    <Card>
+      <CardContent>
+        <Typography>{t(`handle_settings.x.select_device.${text}`)}</Typography>
+      </CardContent>
+      <CardActions>
+        <Button
+          id={`device-option-${button}`}
+          fullWidth
+          variant="contained"
+          onClick={onClick}
+        >
+          {t(`handle_settings.x.select_device.${button}`)}
+        </Button>
+      </CardActions>
+    </Card>
+  );
+};
+
+const GrantDialogLoginElsewhereStep = ({ onCancel }) => {
+  const notify = useNotify();
+  const t = useTranslate();
+  const dataProvider = useDataProvider();
+  const [token, setToken] = useState<String>();
+  const isRun = useRef(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(token);
+    } catch (err) {
+      console.error("cannot_copy", err);
+    }
+  };
+
+  // useEffect para traerse un one time login.
+  useEffect(() => {
+    if (isRun.current) {
+      return;
+    }
+    isRun.current = true;
+
+    async function fetchData() {
+      try {
+        const res = await dataProvider.create("OneTimeToken", { data: {} });
+        setToken(`asami.club/#/s/${res.data.value}`);
+      } catch (err) {
+        notify("Could not create your token", {
+          type: "error",
+        });
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  if (!token) {
+    return <></>;
+  }
+
+  return (
+    <WizModal title="handle_settings.x.login_elsewhere.dialog_title">
+      <Card id="grant-elsewhere-container">
+        <CardContent>
+          <Typography mb="1em">
+            {t("handle_settings.x.login_elsewhere.description")}
+          </Typography>
+          <Typography
+            fontFamily="monospace"
+            sx={{ "word-break": "break-word" }}
+          >
+            {token}
+          </Typography>
+        </CardContent>
+        <CardActions>
+          <Button fullWidth variant="contained" onClick={handleCopy}>
+            {t("handle_settings.x.login_elsewhere.copy")}
+          </Button>
+        </CardActions>
+      </Card>
+      <Button fullWidth variant="contained" color="inverted" onClick={onCancel}>
+        {t("handle_settings.x.will_do_it_later")}
+      </Button>
+    </WizModal>
   );
 };
 
@@ -492,5 +657,28 @@ export const GrantPermissionsAgainDialog = () => {
         </Button>
       </DialogActions>
     </Dialog>
+  );
+};
+
+const WizModal = ({ title, children }) => {
+  const t = useTranslate();
+  return (
+    <Modal
+      open={true}
+      slotProps={{
+        backdrop: {
+          style: backgroundGradientRules(100),
+        },
+      }}
+    >
+      <Container maxWidth="md" sx={{ p: "1em", height: "100%" }}>
+        <Stack gap="1em" height="100%">
+          <Head3 sx={{ color: (theme) => theme.palette.primary.main }}>
+            {t(title)}
+          </Head3>
+          {children}
+        </Stack>
+      </Container>
+    </Modal>
   );
 };

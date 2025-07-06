@@ -147,7 +147,7 @@ export const authProvider: AuthProvider = {
     return Promise.resolve();
   },
   checkAuth: () => {
-    let allSet = _.every(["sessionPublicKey", "sessionPrivateKey"], (k) =>
+    const allSet = _.every(["sessionPublicKey", "sessionPrivateKey"], (k) =>
       localStorage.getItem(k),
     );
     return allSet

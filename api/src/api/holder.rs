@@ -33,7 +33,7 @@ impl Showable<models::Holder, HolderFilter> for Holder {
 
     fn filter_to_select(_context: &Context, filter: Option<HolderFilter>) -> FieldResult<models::SelectHolder> {
         if let Some(f) = filter {
-            let address = f.address_ilike.as_ref().map(|x| x.strip_prefix("0x").unwrap_or(x) );
+            let address = f.address_ilike.as_ref().map(|x| x.strip_prefix("0x").unwrap_or(x));
             Ok(models::SelectHolder {
                 id_in: f.ids,
                 id_eq: f.id_eq,

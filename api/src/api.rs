@@ -1,7 +1,7 @@
 use ethers::{abi::AbiEncode, types::U256};
 use juniper::{
     graphql_object, graphql_value, EmptySubscription, FieldError, FieldResult, GraphQLInputObject, GraphQLObject,
-    IntrospectionFormat,
+    IntoFieldError, IntrospectionFormat,
 };
 use juniper_rocket::{graphiql_source, GraphQLResponse};
 use rocket::{http::Status, serde::json::Json, State};
@@ -42,6 +42,8 @@ mod community_member;
 use community_member::*;
 mod holder;
 use holder::*;
+mod account_merge;
+use account_merge::*;
 
 type JsonResult<T> = AsamiResult<Json<T>>;
 
@@ -331,6 +333,7 @@ make_graphql_query! {
     [AuditLogEntry, allAuditLogEntries, allAuditLogEntriesMeta, "_allAuditLogEntriesMeta", AuditLogEntryFilter, i32],
     [CommunityMember, allCommunityMembers, allCommunityMembersMeta, "_allCommunityMembersMeta", CommunityMemberFilter, i32],
     [Holder, allHolders, allHoldersMeta, "_allHoldersMeta", HolderFilter, i32],
+    [AccountMerge, allAccountMerges, allAccountMergesMeta, "_allAccountMergesMeta", AccountMergeFilter, i32],
   }
 
   #[graphql(name="Stats")]
@@ -395,6 +398,26 @@ impl Mutation {
         })
     }
 
+    pub async fn create_one_time_token(context: &Context) -> FieldResult<models::OneTimeTokenAttrs> {
+        Ok(context.app.one_time_token().create_for_session_migration(context.user_id()?).await?.attrs)
+    }
+
+    pub async fn create_account_merge(context: &Context) -> FieldResult<AccountMerge> {
+        let merge = context.app.account_merge().get_or_create(&context.account().await?).await?;
+
+        Ok(AccountMerge::db_to_graphql(context, merge).await?)
+    }
+
+    pub async fn update_account_merge(context: &Context, id: String) -> FieldResult<bool> {
+        context
+            .app
+            .account_merge()
+            .accept_with_code(&context.current_session()?.0, context.account().await?, id)
+            .await
+            .map_err(|e| e.into_field_error())?;
+        Ok(true)
+    }
+
     pub async fn create_x_refresh_token(context: &Context, token: String, verifier: String) -> FieldResult<Handle> {
         let handle = context
             .app
@@ -406,7 +429,7 @@ impl Mutation {
 
     pub async fn update_handle(context: &Context, id: i32, data: AdminEditHandleInput) -> FieldResult<Handle> {
         if !context.current_session()?.0.admin() {
-            return Err(Error::service("authentication", "asami_authentication_needed").into());
+            return Err(Error::service("authentication", "asami_authentication_needed").into_field_error());
         }
 
         data.process(context, id).await

@@ -16,17 +16,19 @@ impl CampaignAnnouncement {
             "asami_club",
             |a| a.x_announcement_id_en_is_set(false),
             |u, id| u.x_announcement_id_en(id),
-            &CAMPAIGN_ALERTS_EN
-        ).await?;
+            &CAMPAIGN_ALERTS_EN,
+        )
+        .await?;
         self.send_pending_from(
             "asami_club_es",
             |a| a.x_announcement_id_es_is_set(false),
             |u, id| u.x_announcement_id_es(id),
-            &CAMPAIGN_ALERTS_ES
-        ).await?;
+            &CAMPAIGN_ALERTS_ES,
+        )
+        .await?;
         Ok(())
     }
-    
+
     pub async fn send_pending_from(
         &self,
         username: &str,
@@ -42,15 +44,31 @@ impl CampaignAnnouncement {
             return Ok(());
         };
 
-        let campaigns = select(self.app.campaign().select()).status_eq(CampaignStatus::Published).budget_gt(u("10").encode_hex()).all().await?;
+        let campaigns = select(self.app.campaign().select())
+            .status_eq(CampaignStatus::Published)
+            .budget_gt(u("10").encode_hex())
+            .all()
+            .await?;
 
         for campaign in campaigns {
             let idx = usize::try_from(*campaign.id()).unwrap_or(0) % 20;
 
-           let text = texts[idx]
-                .replace("{rate}", &format!("{:.2}", wei_to_decimal_safe(campaign.price_per_point_u256() * wei("100"))? ))
-                .replace("{min}", &format!("{:.2}", wei_to_decimal_safe(campaign.min_individual_reward_u256())?))
-                .replace("{max}", &format!("{:.2}", wei_to_decimal_safe(campaign.max_individual_reward_u256())?));
+            let text = texts[idx]
+                .replace(
+                    "{rate}",
+                    &format!(
+                        "{:.2}",
+                        wei_to_decimal_safe(campaign.price_per_point_u256() * wei("100"))?
+                    ),
+                )
+                .replace(
+                    "{min}",
+                    &format!("{:.2}", wei_to_decimal_safe(campaign.min_individual_reward_u256())?),
+                )
+                .replace(
+                    "{max}",
+                    &format!("{:.2}", wei_to_decimal_safe(campaign.max_individual_reward_u256())?),
+                );
 
             let post_result = twitter
                 .post_tweet()
@@ -164,5 +182,3 @@ const CAMPAIGN_ALERTS_ES: [&str; 20] = [
 
     "👑 ¿Este contenido merece tu sello? Revisa tu panel si quieres asegurarte, o simplemente dale RT. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
 ];
-
-

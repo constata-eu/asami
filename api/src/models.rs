@@ -54,7 +54,9 @@ pub mod poll_texts;
 pub use backer_disbursements::*;
 pub mod value_series;
 pub use value_series::*;
+pub mod account_merge;
 pub mod campaign_announcement;
+pub use account_merge::*;
 
 #[macro_export]
 macro_rules! make_sql_enum {
@@ -174,7 +176,7 @@ pub fn d_to_u64(d: Decimal) -> U64 {
     U64::from_dec_str(&d.to_string()).unwrap_or(U64::zero())
 }
 
-pub fn make_login_to_asami_typed_data(chain_id: u64) -> Result<TypedData, String> {
+pub fn make_login_to_asami_typed_data(chain_id: u64, message: &str) -> Result<TypedData, String> {
     let json = serde_json::json!( {
       "types": {
         "EIP712Domain": [
@@ -188,14 +190,18 @@ pub fn make_login_to_asami_typed_data(chain_id: u64) -> Result<TypedData, String
       },
       "primaryType": "Acceptance",
       "domain": { "name": "Asami", "version": "1", "chainId": chain_id.to_string() },
-      "message": { "content": "Login to Asami" }
+      "message": { "content": message }
     });
 
     serde_json::from_value(json).map_err(|_| "unexpected_invalid_json".to_string())
 }
 
 pub fn eip_712_sig_to_address(chain_id: u64, signature: &str) -> Result<String, String> {
-    let payload = make_login_to_asami_typed_data(chain_id)?;
+    eip_712_message_sig_to_address("Login to Asami", chain_id, signature)
+}
+
+pub fn eip_712_message_sig_to_address(message: &str, chain_id: u64, signature: &str) -> Result<String, String> {
+    let payload = make_login_to_asami_typed_data(chain_id, message)?;
     let sig = Signature::from_str(signature).map_err(|_| "invalid_auth_data_signature".to_string())?;
     sig.recover_typed_data(&payload)
         .map(|a| a.encode_hex())

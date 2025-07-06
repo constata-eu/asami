@@ -19,7 +19,7 @@ export const ContractsProvider = ({ children }) => {
     }
   };
 
-  const contracts = async (expected_signer) => {
+  const contracts = async (expected_signer, isEmbedded) => {
     if (values) {
       await require_signer(
         expected_signer,
@@ -30,7 +30,9 @@ export const ContractsProvider = ({ children }) => {
     }
 
     const config = await (await fetch(`${Settings.apiDomain}/config`)).json();
-    const { provider, disconnect } = await rLogin.connect();
+    const { provider, disconnect } = isEmbedded
+      ? await rLogin.connectTo("walletconnect")
+      : await rLogin.connect();
     provider.on("accountsChanged", async () => {
       await disconnect;
       setValues(null);
@@ -60,9 +62,13 @@ export const ContractsProvider = ({ children }) => {
     return newVals;
   };
 
-  const signLoginMessage = async () => {
+  const signLoginMessage = async (
+    isEmbedded: boolean,
+    message = "Login to Asami",
+    expectedSigner = null,
+  ) => {
     try {
-      const { signer, provider } = await contracts();
+      const { signer, provider } = await contracts(expectedSigner, isEmbedded);
 
       const address = await signer.getAddress();
 
@@ -73,7 +79,7 @@ export const ContractsProvider = ({ children }) => {
           chainId: Settings.rsk.chainId,
         },
         message: {
-          content: "Login to Asami",
+          content: message,
         },
         primaryType: "Acceptance",
         types: {

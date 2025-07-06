@@ -5,6 +5,7 @@ import {
   CustomRoutes,
   useStore,
   Authenticated,
+  useAuthenticated,
 } from "react-admin";
 import { ContractsProvider } from "./components/contracts_context";
 import { Settings } from "./settings";
@@ -26,6 +27,7 @@ import {
   XGrantAccess,
   Eip712Login,
   OneTimeTokenLogin,
+  SessionMigrationForX,
 } from "./views/oauth_redirect";
 import polyglotI18nProvider from "ra-i18n-polyglot";
 import { messages, browserLocale } from "./i18n";
@@ -36,16 +38,30 @@ import { CollabList } from "./views/explorer/collabs";
 import { StatsShow } from "./views/explorer/stats";
 import Whitepaper from "./views/whitepaper";
 import Token from "./views/explorer/token";
+import { EmbeddedProvider } from "./components/embedded_context";
+import { MergeAccounts, AcceptMergeFromSource } from "./views/merge_accounts";
 
 const Dashboard = () => {
   const [searchParams] = useSearchParams();
   const storedRole = localStorage.getItem("asami_user_role");
   const role = searchParams.get("role") || storedRole || "member";
-  return (
-    <Authenticated>
-      {role == "advertiser" ? <AdvertiserDashboard /> : <MemberDashboard />}
-    </Authenticated>
-  );
+  const { isPending, isError } = useAuthenticated(); // redirects to login if not authenticated
+
+  if (isPending || isError) {
+    return <></>;
+  }
+
+  return role == "advertiser" ? <AdvertiserDashboard /> : <MemberDashboard />;
+};
+
+const Embedded = () => {
+  localStorage.setItem("embedded", "true");
+  return <Dashboard />;
+};
+
+const UnEmbedded = () => {
+  localStorage.removeItem("embedded");
+  return <Dashboard />;
 };
 
 export const App = () => {
@@ -75,55 +91,62 @@ export const App = () => {
   return (
     <ContractsProvider>
       <GoogleReCaptchaProvider reCaptchaKey={Settings.recaptchaSiteKey}>
-        <Admin
-          dashboard={Dashboard}
-          disableTelemetry={true}
-          theme={asamiTheme}
-          layout={BareLayout}
-          loginPage={Login}
-          authProvider={authProvider}
-          dataProvider={dataProvider}
-          i18nProvider={i18nProvider}
-        >
-          <Resource
-            name="Handle"
-            list={HandleList}
-            edit={HandleEdit}
-            recordRepresentation={(record) => record.username}
-          />
-
-          <Resource name="Campaign" list={CampaignList} show={CampaignShow} />
-
-          <Resource name="Account" list={AccountList} show={AccountShow} />
-
-          <Resource name="Collab" list={CollabList} />
-
-          <Resource name="Stats" show={StatsShow} />
-          <Resource name="TokenStats" />
-
-          <Resource name="Topic" />
-          <Resource name="CommunityMember" />
-
-          <CustomRoutes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/whitepaper" element={<Whitepaper />} />
-            <Route path="/token" element={<Token />} />
-            <Route path="/stripe-success" element={<StripeSuccess />} />
-            <Route path="/stripe-cancel" element={<StripeCancel />} />
-          </CustomRoutes>
-
-          <CustomRoutes noLayout>
-            <Route
-              path="/one_time_token_login"
-              element={<OneTimeTokenLogin />}
+        <EmbeddedProvider>
+          <Admin
+            dashboard={Dashboard}
+            disableTelemetry={true}
+            theme={asamiTheme}
+            layout={BareLayout}
+            loginPage={Login}
+            authProvider={authProvider}
+            dataProvider={dataProvider}
+            i18nProvider={i18nProvider}
+          >
+            <Resource
+              name="Handle"
+              list={HandleList}
+              edit={HandleEdit}
+              recordRepresentation={(record) => record.username}
             />
-            <Route path="/x_login" element={<XLogin />} />
-            <Route path="/eip712_login" element={<Eip712Login />} />
-            <Route path="/x_grant_access" element={<XGrantAccess />} />
-          </CustomRoutes>
-        </Admin>
+
+            <Resource name="Campaign" list={CampaignList} show={CampaignShow} />
+
+            <Resource name="Account" list={AccountList} show={AccountShow} />
+
+            <Resource name="Collab" list={CollabList} />
+
+            <Resource name="Stats" show={StatsShow} />
+            <Resource name="TokenStats" />
+
+            <Resource name="Topic" />
+            <Resource name="CommunityMember" />
+
+            <CustomRoutes>
+              <Route path="/embedded" element={<Embedded />} />
+              <Route path="/un-embedded" element={<UnEmbedded />} />
+              <Route path="/" element={<Landing />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/whitepaper" element={<Whitepaper />} />
+              <Route path="/token" element={<Token />} />
+            </CustomRoutes>
+
+            <CustomRoutes noLayout>
+              <Route path="/merge-accounts" element={<MergeAccounts />} />
+              <Route path="/stripe-success" element={<StripeSuccess />} />
+              <Route path="/stripe-cancel" element={<StripeCancel />} />
+              <Route path="/s/:token" element={<SessionMigrationForX />} />
+              <Route path="/m/:code" element={<AcceptMergeFromSource />} />
+              <Route
+                path="/one_time_token_login"
+                element={<OneTimeTokenLogin />}
+              />
+              <Route path="/x_login" element={<XLogin />} />
+              <Route path="/eip712_login" element={<Eip712Login />} />
+              <Route path="/x_grant_access" element={<XGrantAccess />} />
+            </CustomRoutes>
+          </Admin>
+        </EmbeddedProvider>
       </GoogleReCaptchaProvider>
     </ContractsProvider>
   );

@@ -279,6 +279,7 @@ impl TestUser {
                 lang: lang::Lang::Es,
                 lookup_key: format!("one_time_token:{}", &token),
                 user_id: None,
+                expires_at: models::OneTimeTokenHub::default_expiration(),
             })
             .save()
             .await
@@ -313,7 +314,7 @@ impl TestUser {
         wallet: &LocalWallet,
     ) -> graphql_client::Response<gql::create_claim_account_request::ResponseData> {
         let rsk = &self.test_app.app.settings.rsk;
-        let payload = models::make_login_to_asami_typed_data(rsk.chain_id).unwrap();
+        let payload = models::make_login_to_asami_typed_data(rsk.chain_id, "Login to Asami").unwrap();
         let signature = wallet.sign_typed_data(&payload).await.unwrap().to_string();
 
         self.gql(

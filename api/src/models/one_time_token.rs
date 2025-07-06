@@ -7,7 +7,6 @@
  * the old one will be removed.
  */
 
-use chbs::{config::BasicConfig, prelude::*};
 use validators::{models::Host, prelude::*};
 
 use super::*;
@@ -15,6 +14,8 @@ use super::*;
 model! {
   state: App,
   table: one_time_tokens,
+  #[derive(juniper::GraphQLObject)]
+  #[graphql(name = "OneTimeToken")]
   struct OneTimeToken {
     #[sqlx_model_hints(int4, default)]
     id: i32,
@@ -28,7 +29,7 @@ model! {
     // to an existing user, but it's not used yet.
     #[sqlx_model_hints(int4)]
     user_id: Option<i32>,
-    #[sqlx_model_hints(timestamptz, default)]
+    #[sqlx_model_hints(timestamptz, op_gt)]
     expires_at: DateTime<Utc>,
     #[sqlx_model_hints(timestamptz, default, op_is_set)]
     sent_at: Option<DateTime<Utc>>,
@@ -54,6 +55,43 @@ pub struct Email {
 }
 
 impl OneTimeTokenHub {
+    pub fn rand_value() -> String {
+        use rand::distributions::Alphanumeric;
+        use rand::{thread_rng, Rng};
+        thread_rng().sample_iter(&Alphanumeric).take(6).collect::<String>().to_uppercase()
+    }
+
+    pub fn default_expiration() -> DateTime<Utc> {
+        Utc::now() + chrono::Duration::minutes(20)
+    }
+
+    pub async fn create_for_session_migration(&self, user_id: i32) -> AsamiResult<OneTimeToken> {
+        let value = Self::rand_value();
+        let lookup_key = format!("session_migration:{value}");
+
+        self.state
+            .auth_method()
+            .insert(InsertAuthMethod {
+                user_id,
+                kind: AuthMethodKind::OneTimeToken,
+                lookup_key: lookup_key.clone(),
+            })
+            .save()
+            .await?;
+
+        Ok(self
+            .insert(InsertOneTimeToken {
+                value,
+                lookup_key,
+                user_id: None,
+                email: None,
+                lang: Lang::En,
+                expires_at: Self::default_expiration(),
+            })
+            .save()
+            .await?)
+    }
+
     pub async fn create_for_email(
         &self,
         email: String,
@@ -62,12 +100,7 @@ impl OneTimeTokenHub {
     ) -> AsamiResult<OneTimeToken> {
         let canonical = email.to_lowercase();
         Email::parse_string(&canonical)?;
-        let config = BasicConfig {
-            separator: "-".into(),
-            capitalize_first: false.into(),
-            ..Default::default()
-        };
-        let value = config.to_scheme().generate();
+        let value = Self::rand_value();
 
         Ok(self
             .insert(InsertOneTimeToken {
@@ -75,6 +108,7 @@ impl OneTimeTokenHub {
                 lookup_key: format!("email:{canonical}"),
                 user_id,
                 email: Some(canonical),
+                expires_at: Self::default_expiration(),
                 lang,
             })
             .save()
@@ -94,8 +128,8 @@ impl OneTimeTokenHub {
             };
 
             let content = match token.lang() {
-                lang::Lang::Es => format!("<a href=\"{}/#/one_time_token_login?token={}\">Visita este link</a> para ingresar a asami.club. Si no estás intentando iniciar sesión, puedes ignorar este correo.", self.state.settings.pwa_host, token.value()),
-                _ => format!("<a href=\"{}/#/one_time_token_login?token={}\">Visit this link</a> to log-in to asami.club. If you're not trying to log-in, you can ignore this email.", self.state.settings.pwa_host, token.value()),
+                lang::Lang::Es => format!("<a href=\"{}/#/one_time_token_login?token={}\">Visita este link</a> para ingresar a asami.club, tienes 10 minutos. Si no estás intentando iniciar sesión, puedes ignorar este correo.", self.state.settings.pwa_host, token.value()),
+                _ => format!("<a href=\"{}/#/one_time_token_login?token={}\">Visit this link</a> to log-in to asami.club, you have 10 minutes. If you're not trying to log-in, you can ignore this email.", self.state.settings.pwa_host, token.value()),
             };
 
             self.state.send_mail(email, subject, &content).await?;

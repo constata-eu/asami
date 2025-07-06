@@ -83,7 +83,7 @@ export const green = "#3a9780";
 export const brightGreen = "#388e3c";
 export const dark = "#1d3644";
 
-const backgroundGradientRules = (opacity = 100) => {
+export const backgroundGradientRules = (opacity = 100) => {
   const yellow = alpha("#FFE203", (opacity * 27) / 100.0 / 100.0);
   const one = alpha("#FFADB9", opacity / 100);
   const two = alpha("#F8F4D7", opacity / 100);
@@ -106,7 +106,7 @@ const backgroundGradientRules = (opacity = 100) => {
   };
 };
 
-const paperBackground = {
+export const paperBackground = {
   backgroundSize: "100% 100%",
   backgroundPosition: "0px 0px,0px 0px,0px 0px,0px 0px,0px 0px",
   backgroundImage: `
@@ -290,6 +290,11 @@ const baseHeadingStyles = (theme, smallSize, largeSize) => ({
 export const Head1 = styled("h1")(({ theme }) =>
   baseHeadingStyles(theme, "50px", "60px"),
 );
+
+export const Head1Primary = styled("h1")(({ theme }) => ({
+  ...baseHeadingStyles(theme, "50px", "60px"),
+  color: pink,
+}));
 
 export const Head2 = styled("h2")(({ theme }) =>
   baseHeadingStyles(theme, "35px", "45px"),

@@ -62,6 +62,11 @@ enum HandleStatus {
   INACTIVE
 }
 
+enum Lang {
+  ES
+  EN
+}
+
 enum OnChainJobKind {
   PROMOTE_SUB_ACCOUNTS
   ADMIN_LEGACY_CLAIM_ACCOUNT
@@ -422,6 +427,8 @@ type Handle {
   currentScoringId: Int
   "Date in which the last scoring took place."
   lastScoring: DateTime
+  "Date in which a new scoring will happen."
+  nextScoring: DateTime
   "Topics assigned to this handle"
   topicIds: [Int!]!
   "Status of this handle."
@@ -508,6 +515,7 @@ type Mutation {
   createClaimAccountRequest(input: CreateClaimAccountRequestInput!): Account!
   createCampaignPreference(input: CreateCampaignPreferenceInput!): CampaignPreference!
   createEmailLoginLink(email: String!): EmailLoginLink!
+  createOneTimeToken: OneTimeTokenAttrs!
   createXRefreshToken(token: String!, verifier: String!): Handle!
   updateHandle(id: Int!, data: AdminEditHandleInput!): Handle!
   updateCommunityMember(id: Int!, data: EditCommunityMemberInput!): CommunityMember!
@@ -535,6 +543,18 @@ type OnChainJob {
   sleepUntil: DateTime!
   "When this job was first scheduled"
   createdAt: DateTime!
+}
+
+type OneTimeTokenAttrs {
+  id: Int!
+  value: String!
+  lookupKey: String!
+  used: Boolean!
+  userId: Int
+  expiresAt: DateTime!
+  sentAt: DateTime
+  email: String
+  lang: Lang!
 }
 
 "Private fields for the campaign owner only"

@@ -20,8 +20,8 @@ model! {
     created_at: UtcDateTime,
     #[sqlx_model_hints(timestamptz, default)]
     updated_at: Option<UtcDateTime>,
-    #[sqlx_model_hints(int4, default)]
-    deletion_id: Option<i32>,
+    #[sqlx_model_hints(timestamptz, default)]
+    logged_out_at: Option<UtcDateTime>,
     #[sqlx_model_hints(boolean)]
     admin: bool
   },

@@ -14,10 +14,10 @@ import {
   useRedirect,
 } from "react-admin";
 import { useNavigate } from "react-router-dom";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useParams } from "react-router-dom";
 import { Head2, Head3, Lead } from "../components/theme";
 import { BareLayout } from "./layout";
-import authProvider from "../lib/auth_provider";
+import authProvider, { makeXAuthorize } from "../lib/auth_provider";
 import { NoAccounts, LiveHelp, Replay } from "@mui/icons-material";
 import { GoogleReCaptcha } from "react-google-recaptcha-v3";
 import AsamiLogo from "../assets/logo.svg?react";
@@ -57,16 +57,24 @@ export const XLogin = () => {
   );
 };
 
-const RegularLogin = ({ authData, authMethodKind }) => {
+const RegularLogin = ({ authData, authMethodKind, afterLogin }) => {
   const navigate = useNavigate();
   const translate = useTranslate();
   const [error, setError] = useState();
+  const hasVerified = useRef(false);
 
   const onVerify = useCallback(
     async (recaptchaToken) => {
+      if (hasVerified.current) {
+        return;
+      }
+      hasVerified.current = true;
       try {
         await authProvider.login(authMethodKind, authData, recaptchaToken);
-        navigate("/dashboard");
+        const redirectTo =
+          localStorage.getItem("postLoginRedirect") || "/dashboard";
+        localStorage.removeItem("postLoginRedirect");
+        afterLogin ? afterLogin() : navigate(redirectTo);
       } catch (e) {
         setError(e.message || translate("oauth_redirect.unexpected_error"));
       }
@@ -138,6 +146,7 @@ export const XGrantAccess = () => {
   const translate = useTranslate();
   const code = searchParams.get("code");
   const verifier = localStorage.getItem("grantAccessOauthVerifier");
+  console.log("When granting access verifier was ", verifier);
   const [error, setError] = useState<null | string>(null);
   const redirect = useRedirect();
   const dataProvider = useDataProvider();
@@ -204,5 +213,41 @@ const Layout = ({ hasRedirectState, children }) => {
         <AsamiLogo width="150px" height="auto" />
       </Box>
     </BareLayout>
+  );
+};
+
+export const SessionMigrationForX = () => {
+  const [href, setHref] = useState();
+  const { token } = useParams<{ token: string }>();
+  const isRun = useRef(false);
+
+  useEffect(() => {
+    if (isRun.current) {
+      return;
+    }
+    isRun.current = true;
+
+    async function init() {
+      const { url, verifier } = await makeXAuthorize();
+      console.log("On session migration verifier was ", verifier);
+      localStorage.setItem("grantAccessOauthVerifier", verifier);
+      setHref(url);
+    }
+
+    init();
+  });
+
+  if (!href) {
+    return <></>;
+  }
+
+  return (
+    <Layout hasRedirectState={token}>
+      <RegularLogin
+        authData={token}
+        authMethodKind="OneTimeToken"
+        afterLogin={() => (document.location.href = href)}
+      />
+    </Layout>
   );
 };

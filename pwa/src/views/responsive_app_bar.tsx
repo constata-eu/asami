@@ -31,6 +31,8 @@ import WaterfallChartIcon from "@mui/icons-material/WaterfallChart";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+import { useEmbedded } from "../components/embedded_context";
+import { backgroundGradientRules, paperBackground } from "../components/theme";
 
 export const ResponsiveAppBar = ({
   expandExplorer = false,
@@ -43,6 +45,7 @@ export const ResponsiveAppBar = ({
   const navigate = useNavigate();
   const { authenticated } = useAuthState();
   const logout = useLogout();
+  const isEmbedded = useEmbedded();
 
   const defs = {
     home: {
@@ -127,21 +130,34 @@ export const ResponsiveAppBar = ({
           sx={{
             mt: "1em",
             mb: {
-              xs: "1.5em",
+              xs: "0.5em",
               md: "2.5em",
             },
             gap: "1em",
             flexWrap: { xs: "nowrap", sm: "wrap" },
-            alignItems: "flex-end",
+            alignItems: isMobile ? "center" : "flex-end",
           }}
         >
-          <AsamiLogo width="250px" height="100%" />
+          {!isMobile && <AsamiLogo width="250px" height="100%" />}
           <Box sx={{ flexGrow: 1 }} />
 
           {isMobile ? (
-            <IconButton color="inverted" onClick={() => setOpen(true)}>
-              <MenuIcon sx={{ fontSize: "1.5em" }} />
-            </IconButton>
+            <Box
+              display="flex"
+              flexWrap="nowrap"
+              whiteSpace="nowrap"
+              alignItems="center"
+            >
+              {authenticated && (
+                <>
+                  <IconTextEntry def={defs.myCampaigns} />
+                  <IconTextEntry def={defs.myCollabs} />
+                </>
+              )}
+              <IconButton color="primary" onClick={() => setOpen(true)}>
+                <MenuIcon sx={{ fontSize: "1.5em" }} />
+              </IconButton>
+            </Box>
           ) : (
             <Box
               display="flex"
@@ -149,8 +165,8 @@ export const ResponsiveAppBar = ({
               whiteSpace="nowrap"
               alignItems="center"
             >
-              <IconEntry def={defs.home} />
-              <IconEntry def={defs.x} />
+              {!isEmbedded && <IconEntry def={defs.home} />}
+              {!isEmbedded && <IconEntry def={defs.x} />}
               <IconEntry def={defs.help} />
               <TextEntry def={defs.whitepaper} />
               <TextEntry def={defs.explorer} />
@@ -163,7 +179,7 @@ export const ResponsiveAppBar = ({
                 <>
                   <TextEntry def={defs.myCampaigns} />
                   <TextEntry def={defs.myCollabs} />
-                  <IconEntry def={defs.logout} />
+                  {!isEmbedded && <IconEntry def={defs.logout} />}
                 </>
               )}
             </Box>
@@ -177,16 +193,8 @@ export const ResponsiveAppBar = ({
         onClose={() => setOpen(false)}
         PaperProps={{
           sx: {
-            color: (theme) => theme.palette.inverted.main,
-            backgroundSize: "100% 100%",
-            backgroundPosition: "0px 0px,0px 0px,0px 0px,0px 0px,0px 0px",
-            backgroundImage: `
-              radial-gradient(49% 81% at 45% 47%, #214255 0%, #0d314600 100%),
-              radial-gradient(113% 91% at 17% -2%, #4d5962 1%, #0000ff00 99%),
-              radial-gradient(142% 91% at 83% 7%, #147bb6b3 1%, #19303d 99%),
-              radial-gradient(142% 91% at -6% 74%, #4B6574 1%, #081b2763 99%),
-              radial-gradient(142% 91% at 111% 84%, #282426a8 0%, #533f4921 100%)
-            `,
+            ...backgroundGradientRules(100),
+            color: "primary.main",
           },
         }}
       >
@@ -196,7 +204,7 @@ export const ResponsiveAppBar = ({
               <CloseIcon
                 sx={{
                   fontSize: "2em",
-                  color: (theme) => theme.palette.inverted.main,
+                  color: "primary.main",
                 }}
               />
             </IconButton>
@@ -209,15 +217,19 @@ export const ResponsiveAppBar = ({
                 <ListItemEntry def={defs.myCollabs} />
               </>
             )}
-            <ListItemEntry def={defs.home} />
-            {!authenticated && <ListItemEntry def={defs.login} />}
+            {!isEmbedded && <ListItemEntry def={defs.home} />}
+            {!authenticated && !isEmbedded && (
+              <ListItemEntry def={defs.login} />
+            )}
             <ListItemEntry def={defs.explorer} />
             <ListItemEntry def={defs.token} />
 
-            <ListItemEntry def={defs.mobile_x} />
+            {!isEmbedded && <ListItemEntry def={defs.mobile_x} />}
             <ListItemEntry def={defs.help} />
             <ListItemEntry def={defs.whitepaper} />
-            {authenticated && <ListItemEntry def={defs.logout} />}
+            {authenticated && !isEmbedded && (
+              <ListItemEntry def={defs.logout} />
+            )}
           </List>
         </DialogContent>
       </Dialog>
@@ -305,7 +317,7 @@ const ListItemEntry = ({ def }) => {
         fullWidth
       >
         <ListItemIcon>
-          <def.icon color="inverted" sx={{ fontSize: "2em", mr: "0.5em" }} />
+          <def.icon color="primary" sx={{ fontSize: "2em", mr: "0.5em" }} />
         </ListItemIcon>
         <BigListItemText primary={t(def.label)} />
       </ListItemButton>

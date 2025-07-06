@@ -123,18 +123,14 @@ impl_loggable!(HandleScoring);
 
 impl HandleScoringHub {
     pub async fn create_and_apply(&self, item: Handle) -> AsamiResult<()> {
-        let id = item.id().clone();
+        let id = *item.id();
 
         match self.create(item).await {
-            Ok(scoring) => { scoring.apply().await?; }
+            Ok(scoring) => {
+                scoring.apply().await?;
+            }
             Err(e) => {
-                self.state
-                    .fail(
-                        "score_pending",
-                        "creating_scoring",
-                        format!("handle:{id} {e:?}"),
-                    )
-                    .await;
+                self.state.fail("score_pending", "creating_scoring", format!("handle:{id} {e:?}")).await;
             }
         }
 
@@ -145,7 +141,7 @@ impl HandleScoringHub {
         let api = handle.clone().x_api_client().await?;
 
         let (me, tweets, mentions, reposts, maybe_poll) = self.ingest(api, handle.poll_id()).await?;
-        
+
         Ok(self
             .insert(InsertHandleScoring {
                 handle_id: handle.attrs.id,
@@ -154,7 +150,7 @@ impl HandleScoringHub {
                 tweets_json: Some(tweets),
                 mentions_json: Some(mentions),
                 reposts_json: Some(reposts),
-                poll_json: maybe_poll
+                poll_json: maybe_poll,
             })
             .save()
             .await?)
@@ -695,9 +691,7 @@ impl HandleScoring {
             handle.handle_scoring_scope().status_eq(HandleScoringStatus::Applied).count().await? == 0;
 
         if some_recently_applied || never_applied_any {
-            Ok(self.update()
-                .status(HandleScoringStatus::Discarded)
-                .save().await?)
+            Ok(self.update().status(HandleScoringStatus::Discarded).save().await?)
         } else {
             self.handle()
                 .await?

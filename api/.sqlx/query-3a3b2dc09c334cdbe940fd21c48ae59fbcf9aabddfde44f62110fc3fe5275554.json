@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE on_chain_job_accounts SET account_id = $1 WHERE account_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3a3b2dc09c334cdbe940fd21c48ae59fbcf9aabddfde44f62110fc3fe5275554"
+}
