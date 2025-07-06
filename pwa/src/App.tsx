@@ -39,10 +39,7 @@ import { StatsShow } from "./views/explorer/stats";
 import Whitepaper from "./views/whitepaper";
 import Token from "./views/explorer/token";
 import { EmbeddedProvider } from "./components/embedded_context";
-import {
-  MergeAccounts,
-  SignMergeFromDestination,
-} from "./views/merge_accounts";
+import { MergeAccounts, AcceptMergeFromSource } from "./views/merge_accounts";
 
 const Dashboard = () => {
   const [searchParams] = useSearchParams();
@@ -59,6 +56,11 @@ const Dashboard = () => {
 
 const Embedded = () => {
   localStorage.setItem("embedded", "true");
+  return <Dashboard />;
+};
+
+const UnEmbedded = () => {
+  localStorage.removeItem("embedded");
   return <Dashboard />;
 };
 
@@ -121,19 +123,20 @@ export const App = () => {
 
             <CustomRoutes>
               <Route path="/embedded" element={<Embedded />} />
-              <Route path="/merge-accounts" element={<MergeAccounts />} />
+              <Route path="/un-embedded" element={<UnEmbedded />} />
               <Route path="/" element={<Landing />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/about" element={<About />} />
               <Route path="/whitepaper" element={<Whitepaper />} />
               <Route path="/token" element={<Token />} />
-              <Route path="/stripe-success" element={<StripeSuccess />} />
-              <Route path="/stripe-cancel" element={<StripeCancel />} />
             </CustomRoutes>
 
             <CustomRoutes noLayout>
+              <Route path="/merge-accounts" element={<MergeAccounts />} />
+              <Route path="/stripe-success" element={<StripeSuccess />} />
+              <Route path="/stripe-cancel" element={<StripeCancel />} />
               <Route path="/s/:token" element={<SessionMigrationForX />} />
-              <Route path="/m/:code" element={<SignMergeFromDestination />} />
+              <Route path="/m/:code" element={<AcceptMergeFromSource />} />
               <Route
                 path="/one_time_token_login"
                 element={<OneTimeTokenLogin />}

@@ -23,23 +23,39 @@ async fn creates_campaign_registers_collabs_and_reimburses() {
         assert_eq!(campaign.available_budget().await.unwrap(), u("0"));
         assert_eq!(campaign.budget_u256(), u("0"));
 
-        h.a().send_tx("Advertiser tops up", "78582",
-            advertiser.top_up_campaign_contract_call(advertiser.address(), campaign.decoded_briefing_hash(), u("15"))
-        ).await;
+        h.a()
+            .send_tx(
+                "Advertiser tops up",
+                "78582",
+                advertiser.top_up_campaign_contract_call(
+                    advertiser.address(),
+                    campaign.decoded_briefing_hash(),
+                    u("15"),
+                ),
+            )
+            .await;
 
-        h.a().sync_events_until("Campaign is topped up", || async {
-            campaign.reloaded().await.unwrap().budget_u256() == u("15")
-        }).await;
+        h.a()
+            .sync_events_until("Campaign is topped up", || async {
+                campaign.reloaded().await.unwrap().budget_u256() == u("15")
+            })
+            .await;
 
         let original_valid_until = campaign.valid_until();
 
-        h.a().send_tx("Advertiser extends", "35000",
-            advertiser.extend_campaign_contract_call(campaign.decoded_briefing_hash(), 40)
-        ).await;
+        h.a()
+            .send_tx(
+                "Advertiser extends",
+                "35000",
+                advertiser.extend_campaign_contract_call(campaign.decoded_briefing_hash(), 40),
+            )
+            .await;
 
-        h.a().sync_events_until("Campaign is extended", || async {
-            campaign.reloaded().await.unwrap().valid_until() > original_valid_until
-        }).await;
+        h.a()
+            .sync_events_until("Campaign is extended", || async {
+                campaign.reloaded().await.unwrap().valid_until() > original_valid_until
+            })
+            .await;
 
         campaign.reload().await.unwrap();
         assert_eq!(campaign.available_budget().await.unwrap(), u("15"));
@@ -47,22 +63,28 @@ async fn creates_campaign_registers_collabs_and_reimburses() {
 
         expire_campaign(h.a(), &campaign).await;
 
-        let job = h.a().wait_for_job(
-            "Courtesy reimbursement",
-            OnChainJobKind::ReimburseCampaigns,
-            OnChainJobStatus::Submitted
-        ).await;
+        let job = h
+            .a()
+            .wait_for_job(
+                "Courtesy reimbursement",
+                OnChainJobKind::ReimburseCampaigns,
+                OnChainJobStatus::Submitted,
+            )
+            .await;
 
         h.a().wait_for_job_status("Courtesy reimbursement confirms", &job, OnChainJobStatus::Settled).await;
 
-        h.a().sync_events_until("Campaign is reimbursed", || async {
-            campaign.reloaded().await.unwrap().budget_u256() == u("0")
-        }).await;
+        h.a()
+            .sync_events_until("Campaign is reimbursed", || async {
+                campaign.reloaded().await.unwrap().budget_u256() == u("0")
+            })
+            .await;
 
         campaign.reload().await.unwrap();
         assert_eq!(campaign.available_budget().await.unwrap(), u("0"));
         assert_eq!(campaign.budget_u256(), u("0"));
-    }).await
+    })
+    .await
 }
 
 /*

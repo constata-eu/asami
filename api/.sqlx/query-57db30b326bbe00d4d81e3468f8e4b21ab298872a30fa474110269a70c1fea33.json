@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE community_members SET member_id = $1 WHERE member_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "57db30b326bbe00d4d81e3468f8e4b21ab298872a30fa474110269a70c1fea33"
+}

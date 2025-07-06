@@ -61,12 +61,20 @@ const RegularLogin = ({ authData, authMethodKind, afterLogin }) => {
   const navigate = useNavigate();
   const translate = useTranslate();
   const [error, setError] = useState();
+  const hasVerified = useRef(false);
 
   const onVerify = useCallback(
     async (recaptchaToken) => {
+      if (hasVerified.current) {
+        return;
+      }
+      hasVerified.current = true;
       try {
         await authProvider.login(authMethodKind, authData, recaptchaToken);
-        afterLogin ? afterLogin() : navigate("/dashboard");
+        const redirectTo =
+          localStorage.getItem("postLoginRedirect") || "/dashboard";
+        localStorage.removeItem("postLoginRedirect");
+        afterLogin ? afterLogin() : navigate(redirectTo);
       } catch (e) {
         setError(e.message || translate("oauth_redirect.unexpected_error"));
       }

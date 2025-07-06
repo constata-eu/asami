@@ -17,6 +17,7 @@ import {
   CoreAdminContext,
   useTranslate,
   I18nContext,
+  useRedirect,
 } from "react-admin";
 
 import { TwitterTweetEmbed } from "react-twitter-embed";
@@ -28,12 +29,19 @@ import CampaignListEmpty from "./campaign_list_empty";
 import StatsCard from "./stats_card";
 import { ResponsiveAppBar } from "./responsive_app_bar";
 import { contentId } from "../lib/campaign";
+import { useEmbedded } from "../components/embedded_context";
 
 export default () => {
   const t = useTranslate();
   const navigate = useNavigate();
   const [pubDataProvider, setPubDataProvider] = useState();
   const i18nProvider = useContext(I18nContext);
+  const isEmbedded = useEmbedded();
+  const redirect = useRedirect();
+
+  if (isEmbedded) {
+    redirect("/login");
+  }
 
   useEffect(() => {
     async function initApp() {
@@ -102,14 +110,6 @@ const PublicCampaignList = ({ loginAs }) => {
     },
     resource: "Campaign",
   });
-
-  useEffect(() => {
-    async function initApp() {
-      const prov = await publicDataProvider();
-      setPubDataProvider(prov);
-    }
-    initApp();
-  }, []);
 
   if (listContext.isLoading) {
     return <></>;

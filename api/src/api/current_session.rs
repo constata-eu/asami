@@ -207,7 +207,7 @@ impl CurrentSession {
         let jwt_meta = auth_try!(Token::decode_metadata(jwt), "bad_jwt_metadata");
         let key_id = auth_some!(jwt_meta.key_id(), "no_key_id_in_jwt").to_string();
         let session = auth_try!(app.session().find(key_id).await, "session_for_kid_not_found");
-        auth_assert!(session.deletion_id().is_none(), "session_was_deleted");
+        auth_assert!(session.logged_out_at().is_none(), "session_was_logged_out");
         let nonce = Self::validate_jwt(jwt, &session.attrs.pubkey, req, &body).await?;
         auth_assert!(nonce > session.attrs.nonce, "invalid_nonce");
         Ok(auth_try!(
@@ -233,7 +233,11 @@ impl CurrentSession {
         let (lookup_key, x_username, x_refresh_token) = match auth_method_kind {
             AuthMethodKind::OneTimeToken => {
                 let key = auth_try!(
-                    app.one_time_token().select().used_eq(false).value_eq(auth_data.to_string()).one().await,
+                    app.one_time_token().select()
+                        .expires_at_gt(Utc::now())
+                        .used_eq(false)
+                        .value_eq(auth_data.to_string())
+                        .one().await,
                     "invalid_one_time_token"
                 )
                 .update()

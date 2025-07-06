@@ -1,9 +1,32 @@
-import { Alert, AlertTitle, Button, Stack, Typography } from "@mui/material";
+import {
+  Alert,
+  AlertTitle,
+  Box,
+  Button,
+  Card,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { useState } from "react";
-import { useAuthenticated, useDataProvider, useGetOne } from "react-admin";
-import { useParams } from "react-router-dom";
+import {
+  useAuthenticated,
+  useDataProvider,
+  useGetList,
+  useGetOne,
+  useLogout,
+  useTranslate,
+} from "react-admin";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getAuthKeys } from "../lib/auth_provider";
 import { useContracts } from "../components/contracts_context";
+import { useEmbedded } from "../components/embedded_context";
+import { Head1, Head1Primary, Head2, Head3, Lead } from "../components/theme";
 
 export const MergeAccounts = () => {
   const { isPending, isError } = useAuthenticated(); // redirects to login if not authenticated
@@ -18,12 +41,32 @@ const AccountMergeManager = (onClick) => {
   const [step, setStep] = useState("WELCOME");
   const [request, setRequest] = useState(null);
   const dataProvider = useDataProvider();
+  const navigate = useNavigate();
+  const t = useTranslate();
 
-  // Attempt loading an existing merge request.
-  // Set the current step if one is found.
-  //useEffect();
+  const { isLoading } = useGetList(
+    "AccountMerge",
+    {
+      pagination: { page: 1, perPage: 1 },
+      sort: {},
+      filter: {},
+    },
+    {
+      refetchInterval: 5000,
+      onSuccess: (response) => {
+        const item = response?.data?.[0];
+        if (item) {
+          setRequest(item);
+          setStep(item.status);
+        }
+      },
+    },
+  );
 
-  // createRequest()
+  if (isLoading) {
+    return <></>;
+  }
+
   const createRequest = async () => {
     const response = await dataProvider.create("AccountMerge", { data: {} });
     setRequest(response.data);
@@ -31,104 +74,197 @@ const AccountMergeManager = (onClick) => {
   };
 
   return (
-    <>
+    <Container maxWidth="md" sx={{ py: "1em" }}>
       {step == "WELCOME" && <Welcome onClick={() => createRequest()} />}
       {step == "PENDING" && <Pending request={request} />}
-      {step == "DESTINATION_SIGNED" && <DestinationSigned request={request} />}
-    </>
+      {step != "DONE" && (
+        <Button
+          id="changed-my-mind"
+          sx={{ mt: "2em" }}
+          fullWidth
+          onClick={() => navigate("/")}
+        >
+          {t("merge_accounts.changed_my_mind")}
+        </Button>
+      )}
+      {step == "DONE" && <Done request={request} />}
+    </Container>
   );
 };
 
 const Welcome = ({ onClick }) => {
+  const t = useTranslate();
   return (
-    <Stack>
-      <Typography>Ok, so you want to merge your account</Typography>
-      <Typography>
-        - So, you had an account and want to change your wallet, we'll help you
-        merge both accounts. - Your main wallet is going to be this one, all
-        future rewards will be claimed to the new one. - You won't be able to
-        log-in to asami using your old wallet. - Any RBTC, ASAMI or DOC will
-        remain on your old wallet, you'll have to move them to your new wallet
-        if you want to. - The asami smart contract will remember you had another
-        wallet. - Before we start: Make sure your old account has no pending DOC
-        or ASAMI rewards, if it does, claim them first. - The process is like
-        this: - We'll generate a special link here, which you'll have to visit
-        from your existing account, which you may have on another device. -
-        You'll have to approve the merge on your old account first. - Then
-        you'll have to confirm the merge process again here.
-      </Typography>
-      <Button sx={{ mt: "1em" }} variant="outlined" fullWidth onClick={onClick}>
-        Let's start merging.
+    <Stack gap="2em">
+      <Head1Primary>{t("merge_accounts.welcome.title")}</Head1Primary>
+      <Box>
+        <Head3>{t("merge_accounts.welcome.title_1")}</Head3>
+        <Typography>{t("merge_accounts.welcome.text_1")}</Typography>
+      </Box>
+      <Box>
+        <Head3>{t("merge_accounts.welcome.title_2")}</Head3>
+        <Typography>{t("merge_accounts.welcome.text_2")}</Typography>
+      </Box>
+      <Box>
+        <Head3>{t("merge_accounts.welcome.title_3")}</Head3>
+        <Typography>{t("merge_accounts.welcome.text_3")}</Typography>
+      </Box>
+      <Button
+        id="start-merging-button"
+        sx={{ mt: "1em" }}
+        variant="contained"
+        fullWidth
+        onClick={onClick}
+      >
+        {t("merge_accounts.welcome.button")}
       </Button>
     </Stack>
   );
 };
 
 const Pending = ({ request }) => {
+  const t = useTranslate();
+  const link = `asami.club/m/${request.code}`;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+    } catch (err) {
+      console.error("cannot_copy", err);
+    }
+  };
+
   return (
-    <>
+    <Stack gap="1em">
+      <Head1Primary>{t("merge_accounts.pending.title")}</Head1Primary>
+      <Lead>{t("merge_accounts.pending.lead")}</Lead>
+      <Paper sx={{ p: "1em", textAlign: "center" }}>
+        <Typography id="merge-link-text" sx={{ fontFamily: "monospace" }}>
+          {link}
+        </Typography>
+      </Paper>
       <Typography>
-        In the device where your old account is, visit https://somelink and
-        approve the merge request. You have 10 minutes to do this. But you can
-        start over as many times as you need if this time expires. If you are
-        using Rabby or Metamask you can click the address bar and enter the url
-        there. Maybe show a QR here too ?
+        {t("merge_accounts.pending.you_will_need_to_accept")}
       </Typography>
-      <Typography>{request.code}</Typography>
-      <Button sx={{ mt: "1em" }} variant="outlined" fullWidth>
-        I changed my mind, I'll merge later.
+      <Typography>{t("merge_accounts.pending.notice")}</Typography>
+      <Button
+        id="copy-merge-link"
+        sx={{ mt: "1em" }}
+        variant="contained"
+        fullWidth
+        onClick={handleCopy}
+      >
+        {t("merge_accounts.pending.copy_link")}
       </Button>
-    </>
+    </Stack>
   );
 };
 
-const DestinationSigned = ({ request }) => {
+const Done = ({ request }) => {
+  const navigate = useNavigate();
+  const t = useTranslate();
   return (
-    <>
-      <Typography>
-        Ok, you just approved your merge request with wallet ending in "XYZXYZ".
-        Is that correct?
-      </Typography>
-      <Button sx={{ mt: "1em" }} variant="outlined" fullWidth>
-        Yes, that's correct.
+    <Stack id="account-merged-succesfully" gap="1em">
+      <Head1Primary>{t("merge_accounts.done.title")}</Head1Primary>
+      <Typography>{t("merge_accounts.done.message")}</Typography>
+      <Button
+        sx={{ mt: "1em" }}
+        variant="contained"
+        fullWidth
+        onClick={() => navigate("/")}
+      >
+        {t("merge_accounts.done.button")}
       </Button>
-    </>
+    </Stack>
   );
 };
 
-export const SignMergeFromDestination = () => {
+export const AcceptMergeFromSource = () => {
   const { isPending, isError } = useAuthenticated(); // redirects to login if not authenticated
 
   if (isPending || isError) {
     return <></>;
   }
-  return <SignMergeFromDestinationInner />;
+  return <AcceptMergeFromSourceInner />;
 };
 
-const SignMergeFromDestinationInner = () => {
-  const navigate = useNavigate();
+const AcceptMergeFromSourceInner = () => {
+  const logout = useLogout();
+  const location = useLocation();
+  const t = useTranslate();
+  const [open, setOpen] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState(false);
   const { code } = useParams<{ code: string }>();
   const { data, isLoading } = useGetOne(
     "Account",
     { id: getAuthKeys().session.accountId },
-    { refetchInterval: 10000 },
+    { refetchInterval: done ? false : 10000 },
   );
-  const { signLoginMessage } = useContracts();
+  const dataProvider = useDataProvider();
 
-  const signAcceptance = async () => {
-    const code = await signLoginMessage(false);
+  const sendAcceptance = async () => {
+    try {
+      await dataProvider.update("AccountMerge", { id: code });
+      setDone(true);
+    } catch (e) {
+      setError(
+        e?.body?.graphQLErrors?.[0]?.extensions?.error?.message || "unknown",
+      );
+    }
   };
+
+  const reLogin = () => {
+    localStorage.setItem("postLoginRedirect", `${location.pathname}`);
+    logout();
+  };
+
+  const timestamp = new Date(
+    getAuthKeys().session.createdAt.replace(/(\.\d{3})\d*Z$/, "$1Z"),
+  );
+  const now = new Date();
+  const mustRelogin = now - timestamp > 10 * 60 * 1000;
 
   if (isLoading || !data) {
     return <></>;
   }
 
-  if (!data.addr) {
+  if (error) {
     return (
-      <Typography>
-        This destination account has no wallet associated to it. Maybe you need
-        to log-out and log back in with the right account.
-      </Typography>
+      <Container sx={{ p: "1em", height: "100%" }} maxWidth="sm">
+        <Alert
+          icon={false}
+          id={`alert-error-${error}`}
+          severity="error"
+          variant="filled"
+        >
+          <AlertTitle>
+            <Head1 sx={{ color: "inverted.main" }}>
+              {t("merge_accounts.accept_merge.error.title")}
+            </Head1>
+          </AlertTitle>
+          <Typography>
+            {t(`merge_accounts.accept_merge.error.messages.${error}`)}
+          </Typography>
+        </Alert>
+      </Container>
+    );
+  }
+
+  if (done) {
+    return (
+      <Container sx={{ p: "1em", height: "100%" }} maxWidth="sm">
+        <Alert id="merge-done" severity="primary" variant="filled">
+          <AlertTitle>
+            <Head1 sx={{ color: "inverted.main" }}>
+              {t("merge_accounts.accept_merge.done.title")}
+            </Head1>
+          </AlertTitle>
+          <Typography>
+            {t("merge_accounts.accept_merge.done.message")}
+          </Typography>
+        </Alert>
+      </Container>
     );
   }
 
@@ -137,53 +273,88 @@ const SignMergeFromDestinationInner = () => {
     BigInt(data.unclaimedAsamiBalance) > BigInt(0);
 
   return (
-    <>
-      <Typography>STEP 2: ACCEPT MERGING YOUR ACCOUNT</Typography>
+    <Container maxWidth="md">
+      <Stack gap="1em">
+        <Head1Primary>{t("merge_accounts.accept_merge.title")}</Head1Primary>
 
-      <Typography>
-        This process only changes this old wallet to a new one, while keeping
-        your X account linked, as well as your score and campaign and
-        collaboration history. It does not move funds from the old wallet, if
-        you want to move your RBTC, DOC or ASAMI you'll have to send the funds
-        from the old wallet to the new one yourself.
-      </Typography>
-      {hasPending && (
-        <Typography>
-          You have unclaimed ASAMI and DOC. We suggest you claim them before you
-          continue merging your accounts.
-        </Typography>
-      )}
+        {!mustRelogin && (
+          <Alert severity="warning" variant="filled">
+            <AlertTitle>
+              {t("merge_accounts.accept_merge.security_alert_title")}
+            </AlertTitle>
+            <Typography>
+              {t("merge_accounts.accept_merge.security_alert_text")}
+            </Typography>
+          </Alert>
+        )}
 
-      <Typography>
-        You will not be able to log-in to asami using your wallet wallet
-        anymore.
-      </Typography>
+        <Typography>{t("merge_accounts.accept_merge.description")}</Typography>
 
-      <Alert severity="error">
-        <AlertTitle>Don't sign if you did not start this process.</AlertTitle>
-        You won't be able to access your asami account using wallet {
-          data.addr
-        }{" "}
-        anymore. If you didn't start this process, or someone shared this link
-        with you, they may be trying to steal your Asami account.
-      </Alert>
+        {!!data.addr && (
+          <Typography>
+            {t("merge_accounts.accept_merge.wallet_loss_warning", {
+              addr: data.addr,
+            })}
+          </Typography>
+        )}
 
-      <Button
-        sx={{ mt: "1em" }}
-        variant="outlined"
-        fullWidth
-        onClick={signAcceptance}
-      >
-        Sign merge acceptance.
-      </Button>
-      <Button
-        sx={{ mt: "1em" }}
-        variant="outlined"
-        fullWidth
-        onClick={navigate("/")}
-      >
-        I'll do this later.
-      </Button>
-    </>
+        {hasPending && (
+          <Typography>
+            {t("merge_accounts.accept_merge.pending_rewards_warning")}
+          </Typography>
+        )}
+
+        {mustRelogin && (
+          <Button
+            id="login-again"
+            sx={{ mt: "1em" }}
+            variant="contained"
+            fullWidth
+            onClick={reLogin}
+          >
+            Login again to merge
+          </Button>
+        )}
+        {!mustRelogin && (
+          <Button
+            id="accept-merge-button"
+            sx={{ mt: "1em" }}
+            variant="contained"
+            fullWidth
+            onClick={() => setOpen(true)}
+          >
+            {t("merge_accounts.accept_merge.cta_button")}
+          </Button>
+        )}
+      </Stack>
+      <Dialog open={open}>
+        <DialogTitle>
+          {t("merge_accounts.accept_merge.confirm_dialog.title")}
+        </DialogTitle>
+        <DialogContent>
+          {t("merge_accounts.accept_merge.confirm_dialog.description")}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            id="cancel-merge-button"
+            sx={{ mt: "1em" }}
+            variant="outlined"
+            fullWidth
+            onClick={() => setOpen(false)}
+          >
+            {t("merge_accounts.accept_merge.confirm_dialog.cancel_button")}
+          </Button>
+          <Button
+            id="confirm-merge-button"
+            sx={{ mt: "1em" }}
+            variant="outlined"
+            fullWidth
+            onClick={sendAcceptance}
+          >
+            {t("merge_accounts.accept_merge.confirm_dialog.confirm_button")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
 };

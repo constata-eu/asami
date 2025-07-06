@@ -11,10 +11,10 @@ pub struct AccountMerge {
     id: i32,
     #[graphql(description = "Unique and temporal numeric identifier of this resource")]
     code: Option<String>,
-    #[graphql(description = "Address initiating the merge")]
-    source: Option<String>,
-    #[graphql(description = "Address accepting the merge")]
+    #[graphql(description = "Address where the merge is going to")]
     destination: Option<String>,
+    #[graphql(description = "Address accepting to be merged into another account")]
+    source: Option<String>,
     #[graphql(description = "Date when this request was created")]
     created_at: DateTime<Utc>,
     #[graphql(description = "Status of the merge request")]
@@ -33,13 +33,10 @@ impl Showable<models::AccountMerge, AccountMergeFilter> for AccountMerge {
         None // No sorting supported.
     }
 
-    fn filter_to_select(context: &Context, filter: Option<AccountMergeFilter>) -> FieldResult<models::SelectAccountMerge> {
-        // Selecting account merges could be reasonable for the same user.
-        // Filters are totally ignored.
-
+    fn filter_to_select(context: &Context, _filter: Option<AccountMergeFilter>) -> FieldResult<models::SelectAccountMerge> {
         Ok(models::SelectAccountMerge {
-            source_id_eq: Some(context.account_id()?),
-            status_in: Some(vec![AccountMergeStatus::Pending, AccountMergeStatus::DestinationSigned]),
+            destination_id_eq: Some(context.account_id()?),
+            created_at_gt: Some(AccountMergeHub::active_code_threshold()),
             ..Default::default()
         })
     }
@@ -47,24 +44,24 @@ impl Showable<models::AccountMerge, AccountMergeFilter> for AccountMerge {
     fn select_by_id(context: &Context, id: i32) -> FieldResult<models::SelectAccountMerge> {
         Ok(models::SelectAccountMerge {
             id_eq: Some(id),
-            source_id_eq: Some(context.account_id()?),
-            status_in: Some(vec![AccountMergeStatus::Pending, AccountMergeStatus::DestinationSigned]),
+            destination_id_eq: Some(context.account_id()?),
+            created_at_gt: Some(AccountMergeHub::active_code_threshold()),
             ..Default::default()
         })
     }
 
     async fn db_to_graphql(_context: &Context, d: models::AccountMerge) -> AsamiResult<Self> {
         // Source address should always be there otherwise the request cannot be created.
-        let source = d.source_account().await?.decoded_addr()?.map(|x| format!("{x:?}"));
-        let destination = d.destination_account().await?
+        let destination = d.destination_account().await?.decoded_addr()?.map(|x| format!("{x:?}"));
+        let source = d.source_account().await?
             .and_then(|a| a.decoded_addr().ok())
             .map(|x| format!("{x:?}") );
 
         Ok(AccountMerge {
             id: d.attrs.id,
             code: d.attrs.code,
-            source,
             destination,
+            source,
             created_at: d.attrs.created_at,
             status: d.attrs.status,
         })

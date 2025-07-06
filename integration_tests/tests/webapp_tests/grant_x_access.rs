@@ -3,21 +3,6 @@ use models::HandleScoringStatus;
 
 use super::*;
 
-/*
--- Scoring should not be attempted for 'paused' handles.
--- A failure when scoring should not leave an empty scoring.
--- Failures to retrieve data with a valid api token should leave an empty scoring.
-
--- A notification or twitter message is sent when their x access is lost.
-
--- Usually, a handle will be paused *before* getting a 0 score applied, but this is still possible.
-    -- We need a better distinction between scoring errors:
-        - Other api connection errors will discard the scoring and re-schedule. Never sets a 0 score. 
-        - Actual empty data from the API can discard the scoring and re-schedule or apply it as 0 if stale. 
-            - Staleness is decided by date, not by how many attempts.
-            - Stale is twice whatever the 're-check' threshold is.
-*/
-
 #[tokio::test(flavor = "multi_thread")]
 #[serial_test::file_serial]
 async fn grant_x_access() {
@@ -80,7 +65,7 @@ async fn grant_x_access() {
     assert!(handle.x_refresh_token().is_none());
     assert_eq!(*handle.status(), HandleStatus::Disconnected);
 
-    // Go to the public profile and check the disconnected message. 
+    // Go to the public profile and check the disconnected message.
 
     w.driver.refresh().await.unwrap();
     w.wait_for("#grant-x-permission-again").await;
@@ -113,7 +98,8 @@ async fn can_grant_from_login() {
         w.click("[data-testid=OAuth_Consent_Button]").await;
 
         w.wait_for("#handle-x-submission-in-progress-message").await;
-    }).await;
+    })
+    .await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -159,7 +145,8 @@ async fn reproduce_revoked_access_bug() {
         handle.reload().await.unwrap();
         dbg!(handle.x_refresh_token());
         dbg!(handle.clone().x_api_client().await).unwrap();
-    }).await;
+    })
+    .await;
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -204,5 +191,6 @@ async fn shows_disconnected_and_reconnecting_states() {
 
         h.web().click("#menu-my-collabs").await;
         h.web().wait_for("#handle-x-reconnecting-message").await;
-    }).await;
+    })
+    .await;
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE account_merges SET (id, \ncode, \nstatus, \ncreated_at, \nsource_id, \ndestination_id, \ndestination_signature) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE code END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE status END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE created_at END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE source_id END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE destination_id END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE destination_signature END)) WHERE id = $1 RETURNING id as \"id!: i32\", \ncode as \"code!: Option < String >\", \nstatus as \"status!: AccountMergeStatus\", \ncreated_at as \"created_at!: UtcDateTime\", \nsource_id as \"source_id!: String\", \ndestination_id as \"destination_id!: Option < String >\", \ndestination_signature as \"destination_signature!: Option < String >\"",
+  "query": "UPDATE account_merges SET (id, \ncode, \nstatus, \ncreated_at, \ndestination_id, \nsource_id) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE code END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE status END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE created_at END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE destination_id END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE source_id END)) WHERE id = $1 RETURNING id as \"id!: i32\", \ncode as \"code!: Option < String >\", \nstatus as \"status!: AccountMergeStatus\", \ncreated_at as \"created_at!: UtcDateTime\", \ndestination_id as \"destination_id!: String\", \nsource_id as \"source_id!: Option < String >\"",
   "describe": {
     "columns": [
       {
@@ -22,8 +22,7 @@
             "kind": {
               "Enum": [
                 "pending",
-                "destination_signed",
-                "all_signed",
+                "done",
                 "abandoned"
               ]
             }
@@ -37,18 +36,13 @@
       },
       {
         "ordinal": 4,
-        "name": "source_id!: String",
+        "name": "destination_id!: String",
         "type_info": "Varchar"
       },
       {
         "ordinal": 5,
-        "name": "destination_id!: Option < String >",
+        "name": "source_id!: Option < String >",
         "type_info": "Varchar"
-      },
-      {
-        "ordinal": 6,
-        "name": "destination_signature!: Option < String >",
-        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -65,8 +59,7 @@
             "kind": {
               "Enum": [
                 "pending",
-                "destination_signed",
-                "all_signed",
+                "done",
                 "abandoned"
               ]
             }
@@ -77,9 +70,7 @@
         "Bool",
         "Varchar",
         "Bool",
-        "Varchar",
-        "Bool",
-        "Text"
+        "Varchar"
       ]
     },
     "nullable": [
@@ -88,9 +79,8 @@
       false,
       false,
       false,
-      true,
       true
     ]
   },
-  "hash": "53a00ab521a7f4785627ed55ba28f003808721873cc59d857b0312e1fa888328"
+  "hash": "ee1529850300039f09eeaae7912deaf1e216f598a6177a7e6bec45c9b522327c"
 }

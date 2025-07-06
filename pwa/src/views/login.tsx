@@ -36,7 +36,7 @@ import XIcon from "@mui/icons-material/X";
 import { isMobile } from "react-device-detect";
 import SendIcon from "@mui/icons-material/Send";
 import AsamiLogo from "../assets/logo.svg?react";
-import { Head2, Head3 } from "../components/theme";
+import { Head1Primary, Head2, Head3 } from "../components/theme";
 import { useContext, useEffect, useState } from "react";
 import { publicDataProvider } from "../lib/data_provider";
 import { useEmbedded } from "../components/embedded_context";
@@ -47,8 +47,7 @@ const Login = () => {
 
   const authProvider = useAuthProvider();
   const redirect = useRedirect();
-  const isEmbedded = false;
-  //const isEmbedded = useEmbedded();
+  const isEmbedded = useEmbedded();
 
   useEffect(() => {
     authProvider
@@ -98,6 +97,7 @@ const Login = () => {
 const WalletConnectTrigger = () => {
   const { signLoginMessage } = useContracts();
   const navigate = useNavigate();
+  const t = useTranslate();
 
   useEffect(() => {
     async function init() {
@@ -107,7 +107,7 @@ const WalletConnectTrigger = () => {
     init();
   }, []);
 
-  return <span>Wallet connect Trigger here</span>;
+  return <Head1Primary>{t("login_form.wallet_connect")}</Head1Primary>;
 };
 
 const LoginSelector = ({ open, setOpen }) => {

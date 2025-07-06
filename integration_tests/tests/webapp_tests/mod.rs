@@ -2,6 +2,7 @@ pub use integration_tests::support::{self, *};
 pub mod adds_tokens_to_wallet;
 pub mod advertiser_community;
 pub mod announcements;
+pub mod embedded_mode;
 pub mod full_flow_to_reward;
 pub mod grant_x_access;
 pub mod landing;

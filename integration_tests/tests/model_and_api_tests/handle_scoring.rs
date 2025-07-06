@@ -240,7 +240,11 @@ async fn is_not_followed_due_to_followed_to_follower_ratio() {
 
         handle.reload().await.unwrap();
 
-        ScoringExpectations { followed: false, ..Default::default() }.assert_matches(&scoring, &handle);
+        ScoringExpectations {
+            followed: false,
+            ..Default::default()
+        }
+        .assert_matches(&scoring, &handle);
 
         assert_eq!(handle.score(), scoring.score());
     })

@@ -220,6 +220,7 @@ impl Selenium {
                 lookup_key: "one_time_token".to_string(),
                 email: None,
                 user_id: None,
+                expires_at: models::OneTimeTokenHub::default_expiration(),
             })
             .save()
             .await
@@ -264,6 +265,11 @@ impl Selenium {
     }
 
     pub async fn login(&self, test_user: &TestUser) {
+        self.login_base(test_user).await;
+        self.wait_for("#member-dashboard").await;
+    }
+
+    pub async fn login_base(&self, test_user: &TestUser) {
         let token = format!("web-login-{}", Utc::now().timestamp());
 
         self.app
@@ -274,6 +280,7 @@ impl Selenium {
                 lookup_key: token.clone(),
                 email: None,
                 user_id: None,
+                expires_at: models::OneTimeTokenHub::default_expiration(),
             })
             .save()
             .await
@@ -292,7 +299,6 @@ impl Selenium {
 
         self.goto("http://127.0.0.1:5173/").await;
         self.goto(&format!("http://127.0.0.1:5173/#/one_time_token_login?token={token}")).await;
-        self.wait_for("#member-dashboard").await;
     }
 
     pub async fn goto_member_dashboard(&self) {

@@ -30,6 +30,9 @@ import {
   ListItemIcon,
   Card,
   Paper,
+  Modal,
+  CardActions,
+  Container,
 } from "@mui/material";
 
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -37,7 +40,13 @@ import PollIcon from "@mui/icons-material/Poll";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import LockResetIcon from "@mui/icons-material/LockReset";
 
-import { BigText, Head2, Head3 } from "../../components/theme";
+import {
+  backgroundGradientRules,
+  BigText,
+  Head2,
+  Head3,
+  paperBackground,
+} from "../../components/theme";
 import XIcon from "@mui/icons-material/X";
 import { makeXAuthorize } from "../../lib/auth_provider";
 import { useEffect, useRef, useState } from "react";
@@ -306,29 +315,12 @@ const ReconnectingHandle = ({ handle }) => {
   );
 };
 
-/* 
-  Si es embedded, se muestra una segunda página preguntando:
-    * Continuar en Beexo, puede que necesites ingresar tu usuario y contraseña de X.
-
-    * Utilizar otro dispositivo donde ya tengo sesión de X iniciada.
-        * Necesitamos una landing diferente: Recibe un one time login, hace el login,
-        y directamente redirige al authorization de X. 
-
-    * Ya tenía una cuenta de asami, pero quiero usarla con esta wallet.
-
-      * Creamos el pedido de vinculación. Visita este link para vincular tu cuenta
-        "akakakak" a la wallet "abcdededl".
-        Necesitarás iniciar sesióñ con tu vieja cuenta para aprobar la vinculación,
-        recomendamos que lo abras en un ordenador.
-        Abrirlo aquí.
-        Abrirlo en otro dispositivo. (copiar, QR).
-
-*/
 const GrantPermissionsAndMakePost = () => {
   const [open, setOpen] = useState(true);
   const [step, setStep] = useState("PLAN");
   const translate = useTranslate();
   const isEmbedded = useEmbedded();
+  const navigate = useNavigate();
 
   const onCancel = () => {
     setStep("PLAN");
@@ -383,15 +375,12 @@ const GrantPermissionsAndMakePost = () => {
           <GrantDialogSelectDeviceStep
             loginHere={startXLogin}
             loginElsewhere={() => setStep("LOGIN_ELSEWHERE")}
-            maybeMergeAccount={() => setStep("MAYBE_MERGE_ACCOUNT")}
+            mergeAccount={() => navigate("/merge-accounts")}
             onCancel={onCancel}
           />
         )}
         {step == "LOGIN_ELSEWHERE" && (
           <GrantDialogLoginElsewhereStep onCancel={onCancel} />
-        )}
-        {step == "MAYBE_MERGE_ACCOUNT" && (
-          <MaybeMergeAccount onCancel={onCancel} />
         )}
       </Dialog>
     </>
@@ -444,9 +433,7 @@ const GrantDialogPlanStep = ({ onOk, onCancel }) => {
           fullWidth
           onClick={onCancel}
         >
-          {translate(
-            "handle_settings.x.grant_permissions_and_make_posts.will_do_it_later",
-          )}
+          {translate("handle_settings.x.will_do_it_later")}
         </Button>
         <Button
           id="button-grant-permission-and-make-post"
@@ -466,65 +453,70 @@ const GrantDialogPlanStep = ({ onOk, onCancel }) => {
 const GrantDialogSelectDeviceStep = ({
   loginHere,
   loginElsewhere,
-  maybeMergeAccount,
+  mergeAccount,
   onCancel,
 }) => {
-  const translate = useTranslate();
+  const t = useTranslate();
 
   return (
-    <>
-      <DialogTitle>
-        <Head3 sx={{ color: (theme) => theme.palette.primary.main }}>
-          {translate("handle_settings.x.select_device.dialog_title")}
-        </Head3>
-      </DialogTitle>
-      <DialogContent>
-        <Stack gap="1em">
-          <Stack gap="0.5em">
-            <Typography variant="body2">
-              You can login to X in Beexo, it should be OK unless you don't
-              remember your password.
-            </Typography>
-            <Button fullWidth variant="contained" onClick={loginHere}>
-              I'll login to X here
-            </Button>
-          </Stack>
-          <Stack gap="0.5em">
-            <Typography variant="body2">
-              You can use an existing session on the X mobile app or on a
-              different device. Also use this option if you use 2FA on X and
-              doesn't work with Beexo.
-            </Typography>
-            <Button fullWidth variant="contained" onClick={loginElsewhere}>
-              I'll use an X session elsewhere
-            </Button>
-          </Stack>
+    <WizModal title="handle_settings.x.select_device.dialog_title">
+      <DeviceOption
+        text="login_here_text"
+        button="login_here_button"
+        onClick={loginHere}
+      />
+      <DeviceOption
+        text="other_device_text"
+        button="other_device_button"
+        onClick={loginElsewhere}
+      />
+      <DeviceOption
+        text="merge_account_text"
+        button="merge_account_button"
+        onClick={mergeAccount}
+      />
+      <Button fullWidth variant="contained" color="inverted" onClick={onCancel}>
+        {t("handle_settings.x.will_do_it_later")}
+      </Button>
+    </WizModal>
+  );
+};
 
-          <Stack gap="0.5em">
-            <Typography variant="body2">
-              Did you already have an asami account with your X account linked
-              to it? You can move your existing ASAMI account into Beexo.
-            </Typography>
-            <Button fullWidth variant="contained" onClick={maybeMergeAccount}>
-              Move my Asami account into Beexo
-            </Button>
-          </Stack>
-
-          <Button fullWidth variant="outlined" onClick={onCancel}>
-            I'll do this later
-          </Button>
-        </Stack>
-      </DialogContent>
-    </>
+const DeviceOption = ({ text, button, onClick }) => {
+  const t = useTranslate();
+  return (
+    <Card>
+      <CardContent>
+        <Typography>{t(`handle_settings.x.select_device.${text}`)}</Typography>
+      </CardContent>
+      <CardActions>
+        <Button
+          id={`device-option-${button}`}
+          fullWidth
+          variant="contained"
+          onClick={onClick}
+        >
+          {t(`handle_settings.x.select_device.${button}`)}
+        </Button>
+      </CardActions>
+    </Card>
   );
 };
 
 const GrantDialogLoginElsewhereStep = ({ onCancel }) => {
   const notify = useNotify();
-  const translate = useTranslate();
+  const t = useTranslate();
   const dataProvider = useDataProvider();
-  const [token, setToken] = useState();
+  const [token, setToken] = useState<String>();
   const isRun = useRef(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(token);
+    } catch (err) {
+      console.error("cannot_copy", err);
+    }
+  };
 
   // useEffect para traerse un one time login.
   useEffect(() => {
@@ -536,7 +528,7 @@ const GrantDialogLoginElsewhereStep = ({ onCancel }) => {
     async function fetchData() {
       try {
         const res = await dataProvider.create("OneTimeToken", { data: {} });
-        setToken(res.data.value);
+        setToken(`asami.club/#/s/${res.data.value}`);
       } catch (err) {
         notify("Could not create your token", {
           type: "error",
@@ -552,16 +544,11 @@ const GrantDialogLoginElsewhereStep = ({ onCancel }) => {
   }
 
   return (
-    <>
-      <DialogTitle>
-        <Head3 sx={{ color: (theme) => theme.palette.primary.main }}>
-          {translate("handle_settings.x.login_elsewhere.dialog_title")}
-        </Head3>
-      </DialogTitle>
-      <DialogContent>
-        <Stack gap="1em">
-          <Typography>
-            {translate("handle_settings.x.login_elsewhere.description")}
+    <WizModal title="handle_settings.x.login_elsewhere.dialog_title">
+      <Card id="grant-elsewhere-container">
+        <CardContent>
+          <Typography mb="1em">
+            {t("handle_settings.x.login_elsewhere.description")}
           </Typography>
           <Typography
             fontFamily="monospace"
@@ -569,66 +556,17 @@ const GrantDialogLoginElsewhereStep = ({ onCancel }) => {
           >
             {token}
           </Typography>
-          <Button fullWidth variant="contained" onClick={onCancel}>
-            Copy link
+        </CardContent>
+        <CardActions>
+          <Button fullWidth variant="contained" onClick={handleCopy}>
+            {t("handle_settings.x.login_elsewhere.copy")}
           </Button>
-
-          <Button fullWidth variant="outlined" onClick={onCancel}>
-            I changed my mind
-          </Button>
-        </Stack>
-      </DialogContent>
-    </>
-  );
-};
-
-const MaybeMergeAccount = ({ onCancel }) => {
-  const translate = useTranslate();
-  const navigate = useNavigate();
-
-  return (
-    <>
-      <DialogTitle>
-        <Head3 sx={{ color: (theme) => theme.palette.primary.main }}>
-          Was your old account connected to a wallet?
-        </Head3>
-      </DialogTitle>
-      <DialogContent>
-        <Stack gap="1em">
-          <Typography variant="h5">
-            No, I was ONLY using X or email to log-in.
-          </Typography>
-          <Typography>
-            Just connect your wallet then. Go to your browser, login to Asami,
-            and look for the option to 'Connect your wallet' in your dashboard.
-            Select the 'Wallet connect' option and search for Beexo, it may be
-            the only option available. "Wallet Connect", supported by Beexo,
-            means you can use your beexo wallet in a variety of devices, you can
-            use Asami *from within beexo* or in your web browser seamlessly.
-          </Typography>
-
-          <Typography variant="h5">
-            Yes, I had a wallet connected already.
-          </Typography>
-          <Typography>
-            If you already had an account with your wallet and X handle in it,
-            we can merge it here, you'll lose access with your old wallet, and
-            will need to approve the merge from your old account as well.
-          </Typography>
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={() => navigate("/merge-accounts")}
-          >
-            Merge with my old account
-          </Button>
-
-          <Button fullWidth variant="outlined" onClick={onCancel}>
-            I changed my mind
-          </Button>
-        </Stack>
-      </DialogContent>
-    </>
+        </CardActions>
+      </Card>
+      <Button fullWidth variant="contained" color="inverted" onClick={onCancel}>
+        {t("handle_settings.x.will_do_it_later")}
+      </Button>
+    </WizModal>
   );
 };
 
@@ -719,5 +657,28 @@ export const GrantPermissionsAgainDialog = () => {
         </Button>
       </DialogActions>
     </Dialog>
+  );
+};
+
+const WizModal = ({ title, children }) => {
+  const t = useTranslate();
+  return (
+    <Modal
+      open={true}
+      slotProps={{
+        backdrop: {
+          style: backgroundGradientRules(100),
+        },
+      }}
+    >
+      <Container maxWidth="md" sx={{ p: "1em", height: "100%" }}>
+        <Stack gap="1em" height="100%">
+          <Head3 sx={{ color: (theme) => theme.palette.primary.main }}>
+            {t(title)}
+          </Head3>
+          {children}
+        </Stack>
+      </Container>
+    </Modal>
   );
 };

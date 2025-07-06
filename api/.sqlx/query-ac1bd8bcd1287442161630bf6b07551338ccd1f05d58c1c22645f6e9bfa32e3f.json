@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "INSERT INTO account_merges (code, \nsource_id) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET id = account_merges.id RETURNING id as \"id!: i32\", \ncode as \"code!: Option < String >\", \nstatus as \"status!: AccountMergeStatus\", \ncreated_at as \"created_at!: UtcDateTime\", \nsource_id as \"source_id!: String\", \ndestination_id as \"destination_id!: Option < String >\", \ndestination_signature as \"destination_signature!: Option < String >\"",
+  "query": "INSERT INTO account_merges (code, \ndestination_id) VALUES ($1, $2) ON CONFLICT (id) DO UPDATE SET id = account_merges.id RETURNING id as \"id!: i32\", \ncode as \"code!: Option < String >\", \nstatus as \"status!: AccountMergeStatus\", \ncreated_at as \"created_at!: UtcDateTime\", \ndestination_id as \"destination_id!: String\", \nsource_id as \"source_id!: Option < String >\"",
   "describe": {
     "columns": [
       {
@@ -22,8 +22,7 @@
             "kind": {
               "Enum": [
                 "pending",
-                "destination_signed",
-                "all_signed",
+                "done",
                 "abandoned"
               ]
             }
@@ -37,18 +36,13 @@
       },
       {
         "ordinal": 4,
-        "name": "source_id!: String",
+        "name": "destination_id!: String",
         "type_info": "Varchar"
       },
       {
         "ordinal": 5,
-        "name": "destination_id!: Option < String >",
+        "name": "source_id!: Option < String >",
         "type_info": "Varchar"
-      },
-      {
-        "ordinal": 6,
-        "name": "destination_signature!: Option < String >",
-        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -63,9 +57,8 @@
       false,
       false,
       false,
-      true,
       true
     ]
   },
-  "hash": "33acb1d952fb97f6df85fba48e8fda7cc5bd36ff9a356137365a251cba94dd1c"
+  "hash": "ac1bd8bcd1287442161630bf6b07551338ccd1f05d58c1c22645f6e9bfa32e3f"
 }

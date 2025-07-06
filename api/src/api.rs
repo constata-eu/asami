@@ -1,7 +1,6 @@
 use ethers::{abi::AbiEncode, types::U256};
 use juniper::{
-    graphql_object, graphql_value, EmptySubscription, FieldError, FieldResult, GraphQLInputObject, GraphQLObject,
-    IntrospectionFormat,
+    graphql_object, graphql_value, EmptySubscription, FieldError, FieldResult, GraphQLInputObject, GraphQLObject, IntoFieldError, IntrospectionFormat
 };
 use juniper_rocket::{graphiql_source, GraphQLResponse};
 use rocket::{http::Status, serde::json::Json, State};
@@ -418,8 +417,9 @@ impl Mutation {
         Ok(AccountMerge::db_to_graphql(context, merge).await?)
     }
 
-    pub async fn update_account_merge(context: &Context, id: String, data: String) -> FieldResult<bool> {
-        context.app.account_merge().accept_with_code(id, data).await?;
+    pub async fn update_account_merge(context: &Context, id: String) -> FieldResult<bool> {
+        context.app.account_merge().accept_with_code(&context.current_session()?.0, context.account().await?, id)
+            .await.map_err(|e| e.into_field_error())?;
         Ok(true)
     }
 
@@ -434,7 +434,7 @@ impl Mutation {
 
     pub async fn update_handle(context: &Context, id: i32, data: AdminEditHandleInput) -> FieldResult<Handle> {
         if !context.current_session()?.0.admin() {
-            return Err(Error::service("authentication", "asami_authentication_needed").into());
+            return Err(Error::service("authentication", "asami_authentication_needed").into_field_error());
         }
 
         data.process(context, id).await

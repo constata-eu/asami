@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT count(*) as \"count!\" FROM account_merges WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR code = $4::varchar) AND (NOT $5::boolean OR status = $6::account_merge_status) AND (NOT $7::boolean OR status = ANY(CAST($8 as account_merge_status[])) ) AND (NOT $9::boolean OR created_at = $10::timestamptz) AND (NOT $11::boolean OR source_id = $12::varchar) AND (NOT $13::boolean OR destination_id = $14::varchar) AND (NOT $15::boolean OR destination_signature = $16::varchar)",
+  "query": "SELECT count(*) as \"count!\" FROM account_merges WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR code = $4::varchar) AND (NOT $5::boolean OR status = $6::account_merge_status) AND (NOT $7::boolean OR status = ANY(CAST($8 as account_merge_status[])) ) AND (NOT $9::boolean OR created_at = $10::timestamptz) AND (NOT $11::boolean OR created_at > $12::timestamptz) AND (NOT $13::boolean OR destination_id = $14::varchar) AND (NOT $15::boolean OR source_id = $16::varchar)",
   "describe": {
     "columns": [
       {
@@ -22,8 +22,7 @@
             "kind": {
               "Enum": [
                 "pending",
-                "destination_signed",
-                "all_signed",
+                "done",
                 "abandoned"
               ]
             }
@@ -40,8 +39,7 @@
                   "kind": {
                     "Enum": [
                       "pending",
-                      "destination_signed",
-                      "all_signed",
+                      "done",
                       "abandoned"
                     ]
                   }
@@ -53,7 +51,7 @@
         "Bool",
         "Timestamptz",
         "Bool",
-        "Varchar",
+        "Timestamptz",
         "Bool",
         "Varchar",
         "Bool",
@@ -64,5 +62,5 @@
       null
     ]
   },
-  "hash": "60c48a3aa937ef6b8f18d59b194c3331b5b9a7ef18d093b2f3478047e26ce0f6"
+  "hash": "323089f7ee255a5a0b8a5f51856799640ad180fa607b2a9f1cc738b11e0b3499"
 }

@@ -377,6 +377,7 @@
       "locked_until": "Values in force until"
     },
     "x": {
+      "will_do_it_later": "I'll do this later",
       "grant_permissions_and_make_posts": {
         "summary": "Connect your X account to get your personalized influence reading. It’s fun, and lets you join campaigns on X to earn crypto for reposting.",
         "get_started": "Get Started",
@@ -386,15 +387,21 @@
         "you_will_earn_rewards": "After that, you’ll see campaigns you can repost to start earning rewards.",
         "you_can_revoke": "You can revoke permissions anytime on X, and reset your influence.",
         "help_text": "Need help? Ask our <a href=\"https://bot.asami.club\" target=\"_blank\" rel=\"noopener\">chatbot</a> or join our <a href=\"https://t.me/asami_club\" target=\"_blank\" rel=\"noopener\">Telegram group</a>.",
-        "lets_go": "Let's go",
-        "will_do_it_later": "I'll do this later"
+        "lets_go": "Let's go"
       },
       "select_device": {
-        "dialog_title": "How do you connect to X?"
+        "dialog_title": "How do you want to connect your X account?",
+        "login_here_button": "Login to X here",
+        "login_here_text": "Use your X username and password inside Beexo. Not ideal if you use 2FA or forgot your password.",
+        "other_device_button": "Use X from another app or device",
+        "other_device_text": "Continue in a browser or app where you're already logged in to X. Best for 2FA users or if login fails in Beexo.",
+        "merge_account_button": "Merge my old Asami account",
+        "merge_account_text": "Already connected X to another Asami account? You can move it here into your Beexo account."
       },
       "login_elsewhere": {
-        "dialog_title": "Visit this link.",
-        "description": "Open it on this device's mobile browser, or on your computer web browser, anywhere where you have already logged in to X, to continue connecting your account"
+        "dialog_title": "Use X from another app or device",
+        "description": "Open this link in a browser where you're already logged in to X — like your mobile browser or your computer — to finish connecting your account.",
+        "copy": "Copy link"
       },
       "in_progress": {
         "summary": "We are measuring your influnce @%{username}, it may take up to 5 hours.",
@@ -514,7 +521,8 @@
       "data_outside_the_eu": "Your data may be transferred outside the EU and stored forever, given our legitimate interest in blockchain transparency.",
       "no_guarantees": "The service is provided as is, with no guarantees of suitability for any specific purpose, and may be changed or discontinued at any time.",
       "local_laws": "You are responsible for ensuring your asami usage complies with local laws and third-party platform terms — like X. We haven’t run into any issues ourselves, but we include this just to cover our bases."
-    }
+    },
+    "wallet_connect": "Connecting with Beexo"
   },
   "about_us": {
     "go_back_button": "Go Back",
@@ -732,6 +740,59 @@
     "holders": {
       "title": "Token Holders",
       "description": "Current holders, balances, and yield. Yield totals are estimated — some claim events may be missing."
+    }
+  },
+  "merge_accounts": {
+    "changed_my_mind": "I changed my mind, I'll merge later.",
+    "welcome": {
+      "title": "Merging accounts",
+      "title_1": "Your old Asami account will be merged into this one.",
+      "text_1": "After the merge, you’ll be able to access this unified account using your X handle, your email, or this wallet — whichever method you had set up before. If your old account had a wallet linked, you won’t be able to use that wallet to log in anymore. Any RBTC, ASAMI, or DOC in that wallet will stay there — you’ll need to move those funds manually if you want them in your new wallet.",
+      "title_2": "You’ll need to confirm the merge from your old account.",
+      "text_2": "We’ll generate a secure link that you need to open while logged in with your old account — ideally from a different device where the session is already active. If that’s not an option, you can log out here and log in with your old account temporarily.",
+      "title_3": "Before starting, a quick reminder.",
+      "text_3": "The merge must be approved from the old account to protect against abuse. Make sure to claim any unclaimed rewards (ASAMI or DOC) in your old account before continuing, as you won’t be able to access those rewards after merging.",
+      "button": "Start merging my account"
+    },
+    "pending": {
+      "title": "Visit this link on your old account.",
+      "lead": "On the device where you're logged in to your old Asami account, open:",
+      "you_will_need_to_accept": "You’ll need to approve the merge request from that account.",
+      "notice": "You have 10 minutes to complete this step — but don’t worry, you can start over as many times as needed if it expires. If you're using Rabby or MetaMask, tap the address bar in your browser and paste the link there.",
+      "copy_link": "Copy link"
+    },
+    "done": {
+      "title": "Account merged successfully",
+      "message": "Your X handle, campaign history, and past collaborations are now part of this account.",
+      "button": "Continue"
+    },
+    "accept_merge": {
+      "title": "Authorize merge into your new Asami account.",
+      "description": "You're about to merge this account into a new one. Your X handle, score, and full collaboration history will carry over. Funds in your old wallet (RBTC, DOC, ASAMI) won’t move — you’ll need to send them manually if needed.",
+      "pending_rewards_warning": "You have unclaimed ASAMI or DOC. We recommend claiming them before continuing.",
+      "wallet_loss_warning": "You won’t be able to access your Asami account using the wallet %{addr} anymore.",
+      "security_alert_title": "Don’t continue unless you started this process.",
+      "security_alert_text": "If someone else sent you this link and you didn’t start the merge yourself, they might be trying to take control of your account. Just close this window to cancel.",
+      "cta_button": "Accept the merge",
+      "confirm_dialog": {
+        "title": "Are you sure you want to merge your accounts?",
+        "description": "This action is permanent. Only continue if you understand the process and you’re the one who initiated it.",
+        "cancel_button": "No, cancel merge",
+        "confirm_button": "Yes, merge my accounts"
+      },
+      "done": {
+        "title": "Merge complete",
+        "message": "Your accounts have been successfully merged. You can now close this window and return to your new Asami account."
+      },
+      "error": {
+        "title": "Could not merge",
+        "messages": {
+          "session_is_too_old": "You need to logout and log back in before accepting a merge.",
+          "no_active_code": "The merge link expired. Remember you only have ten minutes. But you can start the process again",
+          "cannot_merge_to_yourself": "To approve the merge you should log-in with your old account, not the new one.",
+          "unknown": "An unexpected error ocurred while merging your accounts"
+        }
+      }
     }
   }
 }

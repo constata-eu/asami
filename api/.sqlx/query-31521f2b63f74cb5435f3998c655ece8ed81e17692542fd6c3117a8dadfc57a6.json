@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE collabs SET member_id = $1 WHERE member_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "31521f2b63f74cb5435f3998c655ece8ed81e17692542fd6c3117a8dadfc57a6"
+}

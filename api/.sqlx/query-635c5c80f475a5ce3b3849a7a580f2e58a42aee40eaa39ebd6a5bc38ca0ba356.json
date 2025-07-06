@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE sessions SET (id, \nuser_id, \naccount_id, \nauth_method_id, \npubkey, \nnonce, \ncreated_at, \nupdated_at, \ndeletion_id, \nadmin) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE user_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE account_id END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE auth_method_id END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE pubkey END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE nonce END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE created_at END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE updated_at END), (CASE $18::boolean WHEN TRUE THEN $19 ELSE deletion_id END), (CASE $20::boolean WHEN TRUE THEN $21 ELSE admin END)) WHERE id = $1 RETURNING id as \"id!: String\", \nuser_id as \"user_id!: i32\", \naccount_id as \"account_id!: String\", \nauth_method_id as \"auth_method_id!: i32\", \npubkey as \"pubkey!: String\", \nnonce as \"nonce!: i64\", \ncreated_at as \"created_at!: UtcDateTime\", \nupdated_at as \"updated_at!: Option < UtcDateTime >\", \ndeletion_id as \"deletion_id!: Option < i32 >\", \nadmin as \"admin!: bool\"",
+  "query": "UPDATE sessions SET (id, \nuser_id, \naccount_id, \nauth_method_id, \npubkey, \nnonce, \ncreated_at, \nupdated_at, \nlogged_out_at, \nadmin) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE user_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE account_id END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE auth_method_id END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE pubkey END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE nonce END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE created_at END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE updated_at END), (CASE $18::boolean WHEN TRUE THEN $19 ELSE logged_out_at END), (CASE $20::boolean WHEN TRUE THEN $21 ELSE admin END)) WHERE id = $1 RETURNING id as \"id!: String\", \nuser_id as \"user_id!: i32\", \naccount_id as \"account_id!: String\", \nauth_method_id as \"auth_method_id!: i32\", \npubkey as \"pubkey!: String\", \nnonce as \"nonce!: i64\", \ncreated_at as \"created_at!: UtcDateTime\", \nupdated_at as \"updated_at!: Option < UtcDateTime >\", \nlogged_out_at as \"logged_out_at!: Option < UtcDateTime >\", \nadmin as \"admin!: bool\"",
   "describe": {
     "columns": [
       {
@@ -45,8 +45,8 @@
       },
       {
         "ordinal": 8,
-        "name": "deletion_id!: Option < i32 >",
-        "type_info": "Int4"
+        "name": "logged_out_at!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
       },
       {
         "ordinal": 9,
@@ -74,7 +74,7 @@
         "Bool",
         "Timestamp",
         "Bool",
-        "Int4",
+        "Timestamptz",
         "Bool",
         "Bool"
       ]
@@ -92,5 +92,5 @@
       false
     ]
   },
-  "hash": "e7fd1143ad9a64e7a0f288ec7ca42d701afa892d27041b608cebfa528d41e304"
+  "hash": "635c5c80f475a5ce3b3849a7a580f2e58a42aee40eaa39ebd6a5bc38ca0ba356"
 }

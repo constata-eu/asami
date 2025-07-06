@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE collabs SET advertiser_id = $1 WHERE advertiser_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7c4f332eea6ebbcf564517f69c1b36a5ac6b3ac8ad8ae00d11f7468a02b4bfde"
+}
