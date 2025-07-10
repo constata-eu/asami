@@ -34,7 +34,7 @@ export const ContractsProvider = ({ children }) => {
     const connectToWalletConnect = (): Promise<any> =>
       new Promise(async (resolve, reject) => {
         rLogin.setupHandlers(resolve, reject)
-        const provider = rLogin.userProviders[1];
+        const provider = rLogin.userProviders[rLogin.userProviders.length - 1];
         rLogin.coreRef.current.state.selectedProviderUserOption = {provider: provider };
         rLogin.coreRef.current.preConnectChecklist(provider);
       });

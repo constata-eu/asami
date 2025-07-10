@@ -7,6 +7,8 @@ async fn only_walletconnect_on_embedded_mode() {
         let mut bob = h.user().await.signed_up().await;
         bob.claim_account().await;
 
+        h.web().navigate("/").await;
+        TestApp::wait_for_enter("back and fort here").await;
         h.web().navigate("/embedded").await;
         h.web().wait_for("w3m-modal").await;
     })
@@ -321,7 +323,7 @@ async fn can_continue_connecting_to_x_elsewhere() {
         h.web().navigate(&format!("/s/{code}")).await;
         TestApp::try_until(10, 10, "redirect to X login", || async {
             h.web().driver.current_url().await.unwrap().to_string().starts_with("https://x.com/i/flow/login")
-        });
+        }).await;
     })
     .await;
 }
