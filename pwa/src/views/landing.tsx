@@ -39,17 +39,21 @@ export default () => {
   const isEmbedded = useEmbedded();
   const redirect = useRedirect();
 
-  if (isEmbedded) {
-    redirect("/login");
-  }
-
   useEffect(() => {
+    if (isEmbedded) {
+      return redirect("/login");
+    }
+
     async function initApp() {
       const prov = await publicDataProvider();
       setPubDataProvider(prov);
     }
     initApp();
   }, []);
+
+  if (isEmbedded) {
+    return <></>
+  }
 
   if (!pubDataProvider) {
     return <></>;

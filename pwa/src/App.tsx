@@ -22,6 +22,7 @@ import AdvertiserDashboard from "./views/advertiser/dashboard";
 import MemberDashboard from "./views/member/dashboard";
 import { StripeSuccess, StripeCancel } from "./views/stripe";
 import { Container, Skeleton } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import {
   XLogin,
   XGrantAccess,
@@ -55,7 +56,25 @@ const Dashboard = () => {
 };
 
 const Embedded = () => {
-  localStorage.setItem("embedded", "true");
+  const [run, setRun] = useState<boolean>(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    async function init() {
+      if (!localStorage.getItem("embedded")) {
+        localStorage.setItem("embedded", "true");
+        document.location.reload();
+      } else {
+        setRun(true);
+      }
+    }
+    init();
+  }, []);
+
+  if (!run) {
+    return <></>;
+  }
+
   return <Dashboard />;
 };
 

@@ -37,7 +37,7 @@ import { isMobile } from "react-device-detect";
 import SendIcon from "@mui/icons-material/Send";
 import AsamiLogo from "../assets/logo.svg?react";
 import { Head1Primary, Head2, Head3 } from "../components/theme";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { publicDataProvider } from "../lib/data_provider";
 import { useEmbedded } from "../components/embedded_context";
 
@@ -98,9 +98,14 @@ const WalletConnectTrigger = () => {
   const { signLoginMessage } = useContracts();
   const navigate = useNavigate();
   const t = useTranslate();
+  const triggered = useRef(false);
 
   useEffect(() => {
     async function init() {
+      if (triggered.current) {
+        return;
+      }
+      triggered.current = true;
       const code = await signLoginMessage(true);
       navigate(`/eip712_login?code=${code}`);
     }

@@ -30,9 +30,17 @@ export const ContractsProvider = ({ children }) => {
     }
 
     const config = await (await fetch(`${Settings.apiDomain}/config`)).json();
-    const { provider, disconnect } = isEmbedded
-      ? await rLogin.connectTo("walletconnect")
-      : await rLogin.connect();
+    
+    const connectToWalletConnect = (): Promise<any> =>
+      new Promise(async (resolve, reject) => {
+        rLogin.setupHandlers(resolve, reject)
+        const provider = rLogin.userProviders[1];
+        rLogin.coreRef.current.state.selectedProviderUserOption = {provider: provider };
+        rLogin.coreRef.current.preConnectChecklist(provider);
+      });
+
+    const { provider, disconnect } = isEmbedded ? await connectToWalletConnect() : await rLogin.connect();
+
     provider.on("accountsChanged", async () => {
       await disconnect;
       setValues(null);
