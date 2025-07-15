@@ -1,167 +1,294 @@
 # Asami Club Whitepaper
 
-This whitepaper describes the system as intended, some features already exist, others are under development. { .lead }
+This whitepaper describes the system and ecosystem as envisioned and was last revised on july 2025.
 
 ---
 
 ## 1. Overview
 
-Asami.club is a decentralized protocol that allows anyone to fund or earn from trend creation on social media. At the heart of the system is a simple but powerful mechanism: an Advertiser sets aside a USD-denominated budget to amplify a message, and Collaborators earn a portion of that budget by reposting it on their own X (formerly Twitter) accounts.
+In Web3, where openness, decentralization, and community are core values, spreading ideas through top-down media campaigns is expensive, often viewed with suspicion, and ultimately ineffective for long-term user adoption. While traditional advertising can create short-term visibility, it rarely builds trust or fosters belonging. Most meaningful growth in this space has come from early users and explainers — people who share what they’ve discovered out of curiosity, belief, or a desire to help others.
 
-This budget is held and paid out in DOC (Dollar on Chain), a Bitcoin-backed stablecoin, ensuring payments are reliable and not exposed to crypto market volatility. DOC is the main economic reward that Collaborators receive—it's how they are paid for their work, directly, and in real time.
+These individuals, whom we call **Advocates**, act as curators, interpreters, and amplifiers. They repost, translate, and contextualize emerging projects. They bring visibility, legitimacy, and early traction. But because their contributions are informal and often unpaid, they are easily overlooked. Many drift away. Some are quietly absorbed by ecosystems that offer more recognition. Others simply give up.
 
-Alongside DOC payments, all participants also receive ASAMI tokens. These tokens serve multiple purposes: they act as a signal of alignment with the club, grant governance rights over the protocol's fee rate, and provide revenue sharing from the fees collected. This dual reward system gives both immediate (DOC) and long-term (ASAMI) incentives to participate.
-
-The protocol is implemented as a smart contract on Rootstock (RSK), a Bitcoin sidechain that supports Ethereum-compatible smart contracts. Rootstock was chosen for its security model (merged-mined with Bitcoin), its uptime record, and its use of Bitcoin as native currency. All campaign rewards and budgets are in DOC, while ASAMI tokens are distributed based on the fees retained.
+Not because they were wrong — but because the ecosystem gave them no reason to continue.
 
 ---
 
-## 2. Project History, discoveries, and current state.
+### A Structural Gap
 
-Asami.club began as an experimental idea rooted in the emerging capabilities of decentralized social media and web3 infrastructure. In early explorations, we realized that while social media platforms have always been monetized by advertising, the actual work of spreading influence—liking, reposting, commenting—was almost never compensated fairly or directly.
+Web3 projects do care about visibility, but the tools available to them are limited. Most marketing budgets end up:
 
-### 2.1 From Nostr to X
+* On platforms that are **misaligned with Web3 values**, or that restrict blockchain-related content outright.
+* Or in **incentivized usage schemes**, paying individuals to complete tasks, register accounts, or simulate engagement — often attracting users who vanish as soon as the rewards stop.
 
-Our first prototype was built on Nostr, a decentralized social media protocol. We developed a smart contract that would accept funds from advertisers and allow anyone to claim a portion of those funds by posting a verifiable message on Nostr. These claims were secured using cryptographic signatures native to the protocol. While conceptually elegant and fully decentralized, the model had two major problems:
-- The cryptographic operations were expensive, leading to high on-chain fees.
-- Nostr's user base at the time was too small to attract meaningful advertiser interest.
+What these approaches lack is a way to recognize and support **genuine advocacy** — not usage, not artificial engagement, but public expression of interest and belief.
 
-We then pivoted to X (formerly Twitter), recognizing that a bridge was needed between traditional and decentralized media. This required a hybrid model where collaborations would be verified off-chain and submitted by an oracle—specifically, the Campaign Manager.
+Open source and decentralized projects succeed when they find and retain **voluntary advocates**. But most have no systematic way to identify them, thank them, or encourage them to continue.
 
-### 2.2 Testing the Market Assumptions
+---
 
-The core idea behind Asami was based on two assumptions:
-- That **social media users would be willing to get paid to repost content**, and
-- That **brands and projects would see value in reposts made by real people**, especially when compared to fake engagement bought through traditional means.
+### The Asami Protocol
 
-We confirmed both sides of the market exist. Collaborators enthusiastically joined and were willing to repost content in exchange for rewards. Advertisers, for their part, appreciated the idea of real, peer-driven amplification. However, challenges emerged in turning this potential into a functioning, efficient market.
+**Asami.club is a decentralized protocol for recognizing and rewarding Web3 advocates.** It helps Projects:
 
-Crypto-based payments were a **superpower on the Collaborator side**—they allowed instant, borderless rewards with no intermediaries. But they also **limited the advertiser base**, as many brands still depend on fiat and traditional payment infrastructure. Asami will need to integrate fiat onramps like Stripe to fully address this mismatch.
+* Reach real people who publicly support them,
+* Thank them transparently,
+* And build a durable network of aligned voices.
 
-And as with any market, **price discovery** is key. We confirmed there was supply and demand—but the two sides struggled to meet at the right price. Many Collaborators expected high payouts (e.g. $5 per repost) regardless of audience size or engagement. Advertisers, in turn, found that campaigns weren’t delivering enough value per dollar spent. Campaigns began offering lower rewards, which drove away the more valuable Collaborators and left mostly those being overpaid—further lowering campaign effectiveness.
+Before participating in any campaign, each user is scored and tagged by Asami through a **periodic influence measurement process**. This baseline scoring evaluates tweet impressions, engagement patterns, verified follower ratios, language, and Web3 relevance. Only those who meet the quality threshold are admitted into the pool of eligible Advocates.
 
-### 2.3 Scoring Friction and Collaborator Supply
+Once curated into this pool, Advocates can **discover campaigns and opt in voluntarily** by reposting content they believe in. Projects create campaigns by selecting a post (typically a tweet) and allocating a budget using DOC, a Bitcoin-backed stablecoin.
 
-This downward spiral revealed two key problems:
+When an eligible Advocate reposts, they may receive:
 
-1. **Faulty influence scoring algorithms** resulted in overpayment for low-quality accounts, enabling abuse and reducing advertiser satisfaction. We responded by designing a new algorithm (outlined in this whitepaper) that introduces stricter, layered authority measurements.
+* A modest DOC reward, as a public thank-you.
+* ASAMI tokens, which offer protocol revenue sharing and governance participation.
 
-2. **An insufficient number of Collaborators** led to price stickiness. A small group of participants could dominate campaign rewards and disincentivize growth. Worse still, some were disincentivized from inviting others, as it would dilute their earnings.
+This payment is **not an incentive to repost** — it is a way to **recognize and acknowledge** visibility already given. It also serves as a **signal of responsibility**: by accepting a public reward for a public action, the Advocate demonstrates transparency and moral ownership over the message they amplified.
 
-To counter this, we introduced a dedicated reward mechanism for successful referrals. Now, inviting valuable new members is directly incentivized and recognized in the influence score itself.
+From that point, **Projects can begin curating their own advocate community**. They may observe who participated, maintain allowlists and blacklists, and create campaigns that are fully open, semi-restricted, or exclusive to a trusted group. This lets them balance **exploration** (finding new potential Advocates) with **exploitation** (working with known, effective voices). Some projects may even follow up outside Asami for deeper engagement, such as content creation or ambassadorships.
 
-### 2.4 Feature Learnings and Future Fixes
+### Benefits to the Ecosystem
 
-Additional ideas emerged to further align incentives and help the market function:
+Asami is one possible solution to the challenge of growing Web3 through trust, not noise. Unlike platforms that pay people to use a product or perform arbitrary tasks, Asami is focused on **recognizing genuine, voluntary advocacy**.
 
-- **Collaborator-driven pricing feedback**: Collaborators should be able to suggest their preferred rate when joining or rejecting a campaign. This data could help advertisers better price campaigns and tailor expectations.
+It provides a structure for:
 
-- **Advertiser allow/deny lists**: Advertisers need better tools to curate who can participate in their campaigns. These lists will allow them to block underperforming or off-brand Collaborators and provide signals for identifying influencer fatigue.
+* Encouraging Advocates to keep sharing the things they already care about.
+* Helping Projects discover and appreciate these early supporters.
+* Keeping the interaction public, modest, and mutually beneficial — without compromising independence or integrity.
 
-### 2.5 What We Learned and What Comes Next
+Because all interactions are on-chain and participation is permissionless, there are no contracts, no private deals, and no hidden influence. And because each campaign helps Projects identify aligned voices, the outcome is not just visibility — it is **community formation**.
 
-After a full year of running this protocol in the real world, two conclusions became indisputable:
+This creates a **circular economy of reputation and support**: Projects fund campaigns, Advocates receive recognition, and both sides help the Web3 ecosystem grow in alignment with its values.
 
-1. **We need more collaborators.** The platform only works if advertisers can access a wide range of real people to amplify their messages. Organic growth isn't enough—we must actively bring new collaborators in. This likely requires dedicated marketing and paid advertising efforts.
+---
 
-2. **We need a reliable influence scoring system.** Mistakes in the scoring algorithm can destabilize the entire economy by rewarding the wrong actors and undermining advertiser trust. The scoring algorithm must be carefully maintained, open to revision, and continuously validated.
+## 2. Project History, Discoveries, and Current State
 
-Both of these responsibilities—growing the collaborator base and maintaining the scoring logic—fall naturally to **Campaign Managers**, who sit at the intersection between advertisers, collaborators, and the protocol. As of today, there is only one Campaign Manager fulfilling this role, and they are actively working on solutions.
+In 2023, **Nostr** was reimagining social media as a decentralized platform — one built around simple cryptography and permissionless participation. It was being promoted by passionate advocates, much like other movements before it, including Bitcoin. What set Nostr apart was that it wasn’t just a neutral protocol — it actively supported its early users through **social signaling and micro-rewards** like likes and zaps.
+
+This sparked the original idea behind Asami: what if we combined this culture of **social advocacy** with **smart contracts**, allowing people to be rewarded — not for usage, but for amplification? If someone chose to repost a message on Nostr, a smart contract could verify that action and automatically send them a reward. No centralized ad broker, no negotiation — just a trustless thank-you.
+
+### 2.1 From Protocol Experiments to Practical Advocacy
+
+The first Asami prototype implemented exactly this idea: a smart contract that received funds from a Project and let anyone claim a reward by reposting a message on Nostr. While technically elegant and fully decentralized, two critical limitations emerged:
+
+* Verifying reposts cryptographically on-chain was **too expensive to scale**, especially for micropayments.
+* Nostr’s **user base was still too small** to attract significant campaign interest from Projects.
+
+This led to a pivot: Asami integrated with **X (formerly Twitter)**, embracing a hybrid model. Reposts are now verified off-chain by a third party — the Campaign Manager — and recorded on-chain. This reduced cost while enabling wider reach, without compromising the protocol’s values of transparency and traceability.
+
+### 2.2 Market Assumptions and What We Learned
+
+Asami was built on two core assumptions:
+
+* That **Web3 users would be willing to repost content they believe in**, if they felt respected and acknowledged.
+* That **Web3 Projects would prefer authentic visibility from real Advocates**, rather than fake engagement or inflated metrics.
+
+Both proved true — but execution required nuance.
+
+Advocates joined enthusiastically, often reposting without expectation of high payouts. Projects appreciated seeing organic support. But it quickly became clear that **a fair and stable reward system** required:
+
+* Accurate influence measurement,
+* Healthy pricing expectations,
+* And mechanisms for Projects to **build their own communities**, not just rent attention.
+
+It also became obvious that the goal was never to “pay people to post.” Instead, the reward had to be framed — and designed — as a **thank-you**, delivered publicly, and modestly, only after the act of advocacy.
+
+### 2.3 Early Challenges and Solutions
+
+Several early frictions informed the protocol's evolution:
+
+* **Unreliable scoring**: Initial models based on follower count were easy to exploit. The current influence scoring algorithm uses recent tweet impressions, engagement ratios, mentions, verified follower-to-following ratios, and optional manual input. Scores are updated periodically, independent of campaign participation. This creates a baseline filter that ensures only authentic, relevant accounts can participate in campaigns.
+
+* **Limited advocate growth**: A small number of early Advocates dominated early rewards. To encourage new voices, Asami added **referral incentives** and tracks long-term participation.
+
+* **Frictions in campaign creation**: While Advocates could receive crypto easily, many Projects — especially those with Web2-native marketing teams — preferred using credit cards. To support them, Asami integrated **Stripe payments**, allowing campaigns to be funded without crypto. (A 20% fee applies to offset costs and slippage.)
+
+* **From reach to relationship**: Projects didn’t just want impressions — they wanted connection. Campaigns began to function as discovery tools: ways to find potential Advocates, observe them in action, and then invite them into curated allowlists for future campaigns. Projects now balance **exploration** (testing interest) with **exploitation** (working with known supporters), and can contact trusted Advocates outside the platform if desired.
+
+### 2.4 Web3-Only Focus and Long-Term Vision
+
+Originally, Asami left open the possibility of broader use. But over time, it became clear that **Web3 Projects are best aligned** with the protocol’s values: transparency, decentralization, and community-based growth.
+
+Asami is now focused exclusively on the Web3 ecosystem. Its mission is to help Projects:
+
+* Reach aligned Advocates,
+* Recognize them fairly,
+* And grow their communities sustainably.
+
+As of mid-2025, the system is live and fully operational. Campaigns run daily. Scoring is active. Advocates sign up with X or email, and link wallets when they’re ready. Stripe onboarding works. Gasless withdrawals are available. The protocol is open-source, evolving, and welcoming new Campaign Managers and integrations.
+
+To reinforce the tone of appreciation rather than compensation, Asami adopted the **peanut** as its mascot — a playful reminder that rewards may be modest, but they’re sincere. Visibility, not wealth, is what Advocates contribute. The DOC and ASAMI tokens they receive are simply **a public thank-you**.
+
+Looking ahead, Asami’s focus remains on:
+
+* Advancing the technical and philosophical framework for measuring genuine influence,
+* Expanding to new platforms and interaction types (e.g., comments, likes, LinkedIn, Nostr through oracles),
+* And enabling **per-action scoring**, where Advocates can be appreciated for the reach of a specific post or quote tweet, not just their overall account.
+* Supporting Bitcoin and Lightning Network (LN) payments for campaign funding, with automatic DOC conversion and lower fees than credit cards — expanding accessibility while preserving campaign integrity.
+
+---
+
+Perfect — based on everything you’ve said, including the Spanish text and the nuanced tone you want (welcoming but not naive), here’s a fully rewritten **Section 3: Ecosystem Roles and Stakeholders** that reflects the new language, structure, and mission of Asami.
 
 ---
 
 ## 3. Ecosystem Roles and Stakeholders
 
-This section outlines the key participants in the Asami ecosystem and the roles they play within the protocol. Each stakeholder type—Advertisers, Collaborators, Campaign Managers, and Token Holders—has a specific function, set of incentives, rights, and responsibilities. Understanding these roles is essential to grasp how the Asami system operates and how decisions, value, and rewards flow through the network.
+The Asami protocol brings together three main roles:
 
-### 3.1 Advertisers
-**Who they are:** Anyone who wants to promote a post. This can include individuals, projects, startups, agencies, brands, or fans supporting someone else.
+* **Projects**, who want to increase their visibility and build a network of trusted supporters.
+* **Advocates**, who amplify messages they believe in and receive public acknowledgment for doing so.
+* **Campaign Managers**, who operate the infrastructure and enforce protocol-level rules like repost registration and influence scoring.
 
-**What they do:** An Advertiser creates a "campaign" by selecting a post (usually from X), defining a total DOC budget, setting a duration, and specifying how rewards are distributed among Collaborators based on their influence scores.
+Each participant plays a distinct part in the system, with clearly defined rights, responsibilities, and expectations.
 
-**Rights:**
-- Decide how much to pay per unit of influence.
-- Set minimum and maximum payouts to ensure the budget is distributed widely.
-- Add more funds or extend a campaign at any time.
-- Withdraw unused funds once a campaign ends.
-- Choose a Campaign Manager for each campaign and switch freely from one campaign to another.
-- Decide which accounts are allowed or blocked from participating in their campaign, using allow/reject lists with the help of the Campaign Manager.
+---
 
-**Obligations:**
-- Accept that once a campaign is live, it cannot be canceled.
-- Trust the Campaign Manager to fairly register reposts and apply the influence scoring method.
+### 3.1 Projects
 
-**Additional Notes:**
-Advertisers are not guaranteed Collaborators will repost their message. Collaborators choose campaigns voluntarily, creating a self-filtering system where only aligned users amplify a message.
+**Who they are:** Anyone running a Web3 initiative — protocols, dApps, DAOs, tooling projects, artists, infrastructure providers, or community-driven movements — who wants to engage real people to amplify their message.
 
-### 3.2 Collaborators
-**Who they are:** Social media users with real audiences who choose to amplify messages and earn for doing so.
-
-**What they do:** Collaborators browse the list of active campaigns for which they are eligible and decide which messages they want to repost. When they repost a campaign’s post, their action is registered by the Campaign Manager and they receive a payment in DOC.
+**What they do:** Projects create campaigns by selecting a post (usually on X), defining a budget in DOC, and choosing a Campaign Manager. They can then set parameters for how rewards are distributed and who may participate.
 
 **Rights:**
-- Choose which campaigns to repost. No one is forced to participate.
-- Get paid in DOC for successful reposts, based on their influence level and the campaign's payout rules.
-- Receive ASAMI tokens as part of protocol revenue sharing.
-- Request a review of their influence score or category assignment (e.g., language), following a defined process.
+
+* Set campaign budget, duration, and payout structure.
+* Restrict or allow participation using allowlists and blocklists.
+* Review participants and curate an evolving list of trusted Advocates.
+* Fund campaigns using DOC, credit card (via Stripe), or soon, Bitcoin and LN.
+* Choose and switch Campaign Managers freely.
+* Withdraw unused funds once a campaign ends.
 
 **Obligations:**
-- Maintain reposts for a minimum period. Premature deletions may affect future eligibility.
-- Operate a legitimate X account with genuine activity. Accounts that only repost without original contributions, or show signs of artificial engagement, may be excluded.
 
-**Limitations and Important Details:**
-- Collaborations are registered on a first-come, first-served basis. Once a campaign runs out of funds, no further payments are made.
-- If a repost is valid but unfunded, it may be marked as "unpaid" and still earn ASAMI tokens, or be eligible for future rewards if funds are added later.
-- Collaborators may be filtered out from certain campaigns due to low scores, missing categories, or other factors set by Advertisers or the Campaign Manager.
+* Accept that campaigns, once live, are non-reversible.
+* Trust the Campaign Manager to apply repost registration and influence scoring fairly.
 
-**Disputing Influence Scores:**
-If a Collaborator believes their influence score is inaccurate, they must:
-- Read the Influence Measurement section of this whitepaper.
-- Identify the exact part of the scoring algorithm they believe has been incorrectly applied.
-- Compare their score to similar accounts.
-- Provide evidence (e.g., engagement metrics, poll results, referral stats).
+**Notes:**
 
-Vague complaints such as "my score is too low" will be redirected to this process. No review will be initiated without a clear, evidence-based request.
+* Projects may create open campaigns to discover new Advocates (exploration), or exclusive ones for pre-vetted communities (exploitation).
+* Reposts are voluntary — Projects cannot force anyone to amplify their content.
+* All payments are public and traceable on-chain.
+
+---
+
+### 3.2 Advocates
+
+**Who they are:** Social media users — primarily on X — who have a genuine audience and choose to responsibly amplify Web3 projects.
+
+Advocates don’t have to be celebrities, founders, or industry insiders. Every genuine voice matters. Some Advocates may just be getting started, sharing new projects with friends, coworkers, or a small but real audience. That’s welcomed. Advocacy is not about being loud — it’s about being aligned.
+
+**What they do:** Advocates browse eligible campaigns (after passing Asami’s baseline scoring) and choose what to repost. If their repost meets campaign requirements, they receive a modest payment in DOC and ASAMI tokens.
+
+**What defines a real Advocate:**
+Asami defines an Advocate as a person who:
+
+* Possesses and grows a **genuine audience** on X.
+* **Shares Web3 content responsibly**, expressing real interest or insight.
+* Is **not reposting blindly** or purely for reward collection.
+* Brings **real visibility** to the projects they amplify.
+
+This means reposting alone is not enough — Advocates are expected to show engagement, understanding, and relevance.
+
+**Rights:**
+
+* Choose which campaigns to repost — participation is always voluntary.
+* Be rewarded (in DOC and ASAMI) if their repost is valid and impactful.
+* Request a review of their influence score or assigned tags (e.g., language, region).
+* Use gasless withdrawals to claim earnings.
+
+**Obligations:**
+
+* Maintain reposts for a minimum time period.
+* Operate a legitimate X account with organic activity.
+* Avoid reposting every campaign without context or judgment.
+* Accept that their score may change over time, and not all changes will result in payment.
+
+**About Scoring and Growth:**
+
+Asami's influence scoring is imperfect by design. We are still discovering how to best measure real influence. If you’re starting your journey as an Advocate, and your score is low — don’t be discouraged. Keep learning, discussing, and expressing your thoughts online. Quote tweets, honest takes, critical reviews, and thoughtful engagement all count. Avoid relying on AI-generated content or gimmicks — they tend to lower real reach and reduce long-term value.
+
+Some users may try to increase their score as a matter of pride or recognition — and that’s healthy. But if the score becomes an obsession, or is treated as an income source, disappointment is likely. Rewards in Asami are not guaranteed, nor intended to be a financial livelihood.
+
+We know that our scoring algorithm may not fully recognize your value. If that happens, it’s not necessarily because you lack influence — it may be that we don’t yet have the tools to measure the kind of influence you bring. Over time, as both your audience and our tools improve, we hope your score will reflect your effort.
+
+**Disputes:**
+Advocates may request a review of their score, but they must:
+
+* Reference specific parts of the scoring criteria.
+* Compare their activity to others with similar profiles.
+* Provide supporting links or metrics (e.g., engagement stats, referrals).
+* Link to their public Asami profile.
+
+General complaints like “my score is too low” without evidence may be ignored.
+
+---
 
 ### 3.3 Campaign Managers
-**Who they are:** Operators who manage campaigns, calculate influence, register reposts, and optionally provide additional services to the other parties.
 
-**What they do:** The Campaign Manager is the main actor connecting Advertisers and Collaborators. They register reposts, run the influence scoring algorithm, enforce rules, and manage payments (including gasless withdrawals).
+**Who they are:** Independent operators who run the Asami protocol software, process reposts, score influence, manage user tagging, and enforce campaign rules.
+
+**What they do:**
+
+* Detect and register reposts.
+* Calculate influence using their own logic.
+* Handle gasless withdrawals and user support.
+* Manage allowlists/blacklists on behalf of Projects.
+* Optionally offer services such as content strategy or analytics.
 
 **Rights:**
-- Implement and change their own influence measurement algorithms.
-- Determine which Collaborators are eligible for each campaign.
-- Register reposts submitted by eligible Collaborators and assign DOC rewards according to the campaign's influence-based payout structure.
-- Maintain allow/deny lists of users, assign categories (e.g., language or region), and validate engagement.
-- Set an optional fee for their service, on top of the protocol's fee.
-- Offer extra services (e.g., content writing, strategy) to Advertisers and Collaborators.
+
+* Define and update their own influence scoring logic.
+* Decide which Advocates are eligible for campaigns.
+* Maintain public leaderboards, tags, and engagement labels.
+* Set their own fees (on top of protocol fees, if desired).
 
 **Obligations:**
-- Act within the boundaries of each Advertiser’s campaign rules.
-- Use clear, reproducible influence measurement methods, and disclose the logic behind them.
-- Be responsive to Collaborator inquiries, especially when questions arise about scoring or eligibility.
 
-**Limitations:**
-- Once a Collaboration is registered and funds paid, the action is final. They cannot claw back rewards, even if abuse is later discovered.
-- Campaign Managers have no control over the Asami smart contract itself.
-- If their decisions are considered unfair or unclear, they may lose the trust of both Advertisers and Collaborators, which may cause others to emerge as alternative Campaign Managers.
+* Use clear and reproducible logic.
+* Be responsive to well-formed user inquiries.
+* Operate transparently — all campaign logic should be open to audit.
+* Follow campaign rules as defined by each Project.
+
+**Limits:**
+
+* Cannot reverse payments once made.
+* Cannot override smart contract logic.
+* Can be replaced at any time — Projects and Advocates may choose other managers.
+
+Asami does not give Campaign Managers any privileged access. Their authority comes from the quality of their service and their ability to earn trust. If they fail to act transparently, or if their scoring is unreasonable, others can launch competing Campaign Managers at any time.
 
 ### 3.4 Token Holders
-**Who they are:** Anyone holding ASAMI tokens. This includes all Collaborators, Advertisers, and Campaign Managers who have earned tokens.
 
-**What they do:** ASAMI token holders participate in the long-term direction of the protocol by receiving revenue and voting on the fee rate.
+**Who they are:** Anyone who holds ASAMI tokens — including Advocates, Projects, and Campaign Managers who received tokens through campaign participation or direct purchase.
+
+**What they do:** ASAMI token holders benefit from long-term alignment with the protocol. They receive a share of collected fees and participate in protocol-level governance.
 
 **Rights:**
-- Earn a proportional share of fees retained by the protocol.
-- Vote on changes to the protocol’s fee rate using a weighted average system.
-- Hold, transfer, or sell their tokens freely.
+
+* Receive a proportional share of DOC fees retained by the protocol.
+* Vote on the protocol’s fee rate via a weighted average mechanism.
+* Hold, transfer, or sell ASAMI tokens freely.
 
 **Obligations:**
-- None enforced by the protocol, but responsible voting and alignment with long-term value are expected.
 
-**Additional Notes:**
-- Token holders do not have direct influence over campaigns or roles.
-- The only governance power currently available is the ability to vote on the protocol fee rate. See the Tokenomics section for more details on how ASAMI issuance and governance work.
+* None enforced by the protocol. However, responsible governance is expected from those who care about Asami’s future.
+
+**Notes:**
+
+* Holding ASAMI tokens does not grant power over campaign decisions or scoring.
+* Token holders **do not control** Campaign Managers or influence individual campaign outcomes.
+* The only shared governance mechanism currently live is the ability to vote on the protocol-wide **fee rate**, which affects revenue distribution and token issuance.
+
+> 💡 In practice, this means that token holders help balance two goals:
+>
+> * Higher fees increase the pool of DOC distributed to holders, but also inflate token supply and may reduce campaign participation.
+> * Lower fees grow the ecosystem and reduce inflation, but reduce short-term returns.
+
+Governance is thus minimal, incentive-driven, and transparent. Token holding is a form of **participation in the club’s future**, not a lever of control over others.
 
 ---
 
@@ -175,126 +302,324 @@ Audience Size is a quantitative measure of how many people actually see a user's
 
 This measurement is pessimistic: no audience is assumed unless it can be proven via impressions. Impression counts can still be manipulated, so the system checks for statistical correlation between impressions and engagements (likes, comments, reposts). Accounts with abnormal ratios or signs of manipulation may have their Audience Size set to zero.
 
+Thanks for the clarification — you're absolutely right. The original **Authority** section (4.2) had a layered, step-by-step breakdown of each criterion contributing to the score, and that level of detail is necessary to maintain transparency and rigor. Splitting it up is a great solution.
+
+Here’s the updated **Section 4: Influence Measurement**, with just the **intro** and the full **Subsection 4.1: Audience Size**, rewritten to include everything as discussed:
+
+---
+
+## 4. Influence Measurement
+
+In Asami, influence determines whether an Advocate can participate in campaigns and how much they are rewarded. But unlike follower counts or blue checkmarks, Asami treats influence as a working model — **a dynamic, data-driven estimate** that aims to reflect both reach and trustworthiness.
+
+The system doesn’t claim to measure “true influence” perfectly. Instead, it uses available public data to make the best possible approximation at a given moment in time — and improves over time. Influence scores are recalculated **periodically** (currently every 20 days), regardless of campaign activity. This ensures fairness and avoids gaming or rapid manipulation.
+
+Each Advocate’s influence is defined by the combination of:
+
+* **Audience Size** — how many people likely see their posts
+* **Authority** — how meaningful or credible their voice is
+
+These two scores are **multiplied** to produce a final Influence Score, which controls eligibility and reward size for campaigns. The date of each user's **last and next scoring** is displayed on their public Asami profile.
+
+---
+
+### 4.1 Audience Size
+
+Audience Size measures how many people are likely to see a user’s content on X — not based on followers, but on actual tweet impressions.
+
+To calculate Audience Size, Asami:
+
+* Collects **all public posts and replies** from the last 30 days
+* Computes the **average impressions** across those posts
+* Computes the **median impressions** from the same set
+* Then **averages those two values** to produce a final Audience Size.
+
+This hybrid method reduces the effect of outliers (like a one-off viral tweet) while still rewarding consistent activity. By including **replies**, the system captures both profile-based and conversational posting styles — but with some caveats.
+
+> 📝 **Note on Replies:** Replies tend to receive fewer impressions than original posts. So Advocates who rely heavily on replies may show a lower Audience Size, even if they’re active. This behavior may be adjusted in future algorithm versions. However, if a user’s replies drive strong engagement, their **authority score** will likely reflect that — so thoughtful engagement is still rewarded.
+
+Audience Size is always calculated pessimistically — if real visibility cannot be demonstrated through public metrics, no audience is assumed.
+
 ### 4.2 Authority
 
-Authority reflects how much sway a user has over their audience, regardless of its size. A small but highly devoted audience may be more valuable than a large, indifferent one. The concept of authority is subtle and complex, and Asami approaches it using a multi-criteria system. Each criterion below contributes to the overall Authority percentage, which ranges from 0% to 100%. If no authority can be proven, the score is zero.
+Authority measures **how much weight your voice carries with your audience**. It's not enough to be seen — the system also looks for signs that people pay attention, engage, and possibly trust what you share.
 
-A Campaign Manager may apply these metrics automatically, subjectively, or via manual review. Here are the factors that contribute to the authority calculation, along with their intended purpose:
+Authority is calculated through a layered evaluation of several public signals. If no meaningful engagement can be detected, Authority is set to 0%, and the user becomes ineligible for campaign rewards — regardless of Audience Size.
+
+Each criterion below adds or modifies the score. The result is a percentage from 0% to 100%, multiplied with Audience Size to produce the final Influence Score.
 
 #### Engagement Received on X
-This is the foundational requirement. If an account's posts generate no engagement from real users, it likely has no real influence.
-- **None**: Suggests posts are ignored, or audience is composed of bots. Results in authority score of 0%, and all other criteria are skipped.
-- **Average**: Shows regular interaction. Adds 25%.
-- **High**: Indicates strong interest in the account. Adds 50%.
+
+This is the **core criterion**. If a user's posts consistently receive no meaningful engagement from others, they are not considered influential.
+
+Asami evaluates:
+
+* The ratio of **likes, replies, comments, quote tweets, and retweets** to impressions
+* Whether the user is **mentioned by others**, especially in **high-profile posts**
+* The user’s **verification status** (e.g. X Premium, legacy checkmark)
+* The number of **verified followers**, relative to total followers
+
+A high number of impressions with little to no interaction will result in **low authority**, and thus, a low overall Influence Score.
+
+Scoring tiers:
+
+* **None**: Posts are mostly ignored, or engagement is artificial → 0%
+* **Average**: Consistent, organic interaction → +25%
+* **High**: Strong engagement, public interest → +50%
 
 #### Direct Audience Polling
-The user may post an anonymous poll asking followers how much they trust their recommendations. This gives insight into how people perceive the user's influence.
-- **None**: No useful data. Adds 0%.
-- **Average**: Indicates moderate trust. Adds 10%.
-- **High**: Demonstrates loyal followers. Adds 20%.
-- **Reverse**: Most voters report they would do the opposite of what the user says. This **divides** the "Engagement Received on X" authority score in half.
 
-> Example poll: 
-> _"If I recommend something, what do you usually do? a) Follow it blindly, b) Consider it, c) Ignore it, d) Do the opposite."_
+Advocates may run anonymous polls to ask their followers how much they trust their recommendations. These polls give insight into perceived authority.
+
+Example prompt:
+
+> *“If I recommend a project, do you usually: (a) Follow it blindly, (b) Consider it, (c) Ignore it, (d) Do the opposite?”*
+
+Scoring tiers:
+
+* **None**: No recent polling → +0%
+* **Average**: Mixed responses, some trust → +10%
+* **High**: Clear positive consensus → +20%
+* **Reverse**: Most say they’d do the opposite → cuts Engagement score in half
 
 #### Engagement Outside X
-Some individuals are influential in other contexts: they run podcasts, write books, lead communities, etc. This accounts for off-platform reputation.
-- **None**: Adds 0%.
-- **Average**: Public presence verified. Adds 5%.
-- **High**: Established and respected figure. Adds 10%.
+
+Some people have meaningful influence in other environments (e.g. podcasts, conferences, meetups, DAOs). This criterion accounts for **off-platform reputation**.
+
+Scoring tiers:
+
+* **None**: No notable presence outside X → +0%
+* **Average**: Active in adjacent communities → +5%
+* **High**: Recognized voice in Web3 circles → +10%
+
+Evidence can be submitted manually during a review.
 
 #### Status on X
-The account’s operational status affects its credibility.
-- **Banned/Shadowbanned**: Influence is set to 0% and all other criteria are skipped.
-- **Normal**: No change.
-- **Enhanced**: Verified, premium, or trusted status. Adds 10%.
+
+The functional status of an account matters.
+
+Scoring rules:
+
+* **Banned, restricted, or shadowbanned**: Authority = 0%
+* **Normal operational account**: No change
+* **Verified / Premium**: +10%
 
 #### Referral Authority
-Users who successfully invite others to join Asami demonstrate influence, particularly if those referrals are high-quality.
-- **Valid referrals from active accounts**: Adds 10%.
+
+Advocates who refer others to Asami and help them succeed demonstrate influence.
+
+Scoring rule:
+
+* **Successful referrals from active accounts** → +10%
 
 #### Token Holding Behavior
-Because Campaign Managers and Advertisers are paid in ASAMI, they may prefer to reward users who are aligned with the club's success.
-- **Holding ASAMI tokens instead of selling**: Adds 10%.
 
-### 4.3 Authority Score Calculation
+Advocates who **hold ASAMI tokens** instead of immediately selling them signal alignment with the project and its long-term success.
 
-The final Authority percentage is calculated as follows:
-- Start with **Engagement on X**. If None, total score is 0%.
-- If Average or High, add the base (25% or 50%), then apply:
-  - **Audience Polling**: Adds 0%, 10%, 20%, or divides the score in half if Reverse.
-  - **Off-X Engagement**: Adds 0%, 5%, or 10%.
-  - **X Status**: Adds 0% or 10%, unless Banned, which sets to 0%.
-  - **Referrals**: Adds 10% if criteria met.
-  - **Token Holding**: Adds 10% if criteria met.
+Scoring rule:
 
-The Authority score is then multiplied by the Audience Size to calculate the final **Influence Level** used in reward distribution.
+* **Holding tokens during the scoring window** → +10%
 
-This layered system aims to be fair, transparent, and resistant to manipulation, while still allowing for evolution as new signals become useful.
+#### Final Calculation
+
+To calculate Authority:
+
+1. Start with the base from **Engagement Received on X**
+
+   * If 0%, all other factors are skipped.
+2. Add (or modify) the rest:
+
+   * Audience Polling
+   * Off-X Presence
+   * X Account Status
+   * Referrals
+   * Token Holding
+
+Maximum possible Authority: **100%**
+Minimum: **0%** (with no engagement or ineligible signals)
+
+> 🎯 **Note:** The system is designed to reward behavior that leads to real, earned trust — not vanity metrics. Buying likes, reposting blindly, or creating superficial interactions will not improve your score. Authority is earned slowly and lost quickly.
+
+### 4.3 Final Influence Score
+
+Once an Advocate’s **Audience Size** and **Authority** are calculated, they are **multiplied** to produce their final **Influence Score**.
+
+This score is used to:
+
+* Determine eligibility for participating in campaigns
+* Allocate DOC and ASAMI token rewards
+* Rank Advocates on public leaderboards
+
+The Influence Score is refreshed **periodically** (currently every 20 days), independently of campaigns. This ensures that all participants are scored fairly based on recent behavior and that new Advocates have a chance to qualify without needing to wait for specific campaigns.
+
+This model rewards both reach and trust. A large audience without engagement produces a weak score. A credible voice with no audience also scores low. The most effective Advocates are those who are **seen and respected** — and ideally, **consistent over time**.
+
+### 4.4 A Note on Transparency and Limits
+
+Asami does not pretend to measure influence perfectly. Influence is contextual, evolving, and hard to quantify — especially when data is incomplete or activity is subtle.
+
+Some Advocates may feel under-scored, particularly if their value lies in quiet networks, private interactions, or off-platform influence that Asami cannot yet detect.
+
+If you are one of them:
+
+* You are welcome to request a scoring review using the standard public process.
+* But don’t take your current score as a judgment of your worth, potential, or integrity.
+
+> **Your journey and ours may meet at a destination.**
+> If you continue building an organic audience, engaging thoughtfully, and advocating sincerely — and as we keep refining our algorithm to better detect genuine influence — there is a good chance we will eventually align.
+
+We are not trying to capture all types of influence — only the kinds we can measure with confidence, in a way that’s fair and reproducible. As our methods improve, we hope to reward more Advocates in more contexts.
+
+Until then, remember: Asami’s score is just a score. Your voice is yours.
 
 ---
 
 ## 5. Tokenomics and ASAMI Distribution
 
-The ASAMI token is the native asset of the Asami.club protocol. It has a fixed maximum supply of **21 million tokens**, similar to Bitcoin, and is designed to distribute ownership of the protocol’s revenue and growth.
+The **ASAMI token** is the native asset of the Asami.club protocol. It was designed to provide **equity and upside** to the people who make the club grow: **Advocates**, **Campaign Managers**, and **Projects**.
+
+Unlike platforms that rely on up-front funding or token sales, Asami only issues tokens when there is **real usage** of the protocol. The ASAMI token aligns incentives around sustained participation and responsible advocacy — not speculation.
+
+All token-related data and stats are available publicly at [asami.club/#/Token](https://asami.club/#/Token).
 
 ### 5.1 Revenue Sharing and Incentives
 
-Every time a Collaborator is paid in DOC for reposting a campaign, **10%** of that payment is retained by the protocol as a fee. These fees, collected in DOC, are pooled and distributed every 15 days to all ASAMI token holders. The amount each holder receives is proportional to the number of ASAMI tokens they hold.
+The Asami protocol redistributes its revenue back to the people who grow it — not just through token issuance, but through **revenue sharing** tied to token holding.
 
-> 📥 For example, if you hold 1% of all ASAMI tokens, you will receive 1% of the revenue pool collected in that period.
+Every 15-day cycle, the **protocol fee pool** — collected from all paid collaborations — is distributed among eligible ASAMI holders. This creates an incentive to **hold tokens** and **participate long-term**, rather than speculate or flip.
 
-This makes holding ASAMI tokens attractive as a form of **passive income**, since it gives access to future revenue generated by ongoing campaigns.
+#### Eligibility Rules
 
-> 💡 Holding ASAMI is like owning a share in a decentralized ad economy. The more campaigns run through the protocol, the larger the revenue pool becomes.
+To receive your share of the revenue pool, you must:
 
-This structure incentivizes all stakeholders to grow the platform:
-- **Advertisers** fund campaigns and receive ASAMI tokens as part of each campaign payout.
-- **Collaborators** earn ASAMI in addition to DOC rewards.
-- **Campaign Managers** earn the largest share of ASAMI when they actively register collaborations.
+* ✅ **Hold at least 4,000 ASAMI tokens**
+* ✅ **Not move your tokens during the current 15-day cycle**
+* ✅ **Have claimed your tokens into a personal wallet (not a contract)**
+
+Token cycles are tied to the **smart contract periods**, not simply rolling windows. The exact date range for each cycle is visible on the [Token Stats page](https://asami.club/#/Token).
+
+> ⛔ **Important:**
+>
+> * If you **move your tokens** (transfer, sell, stake, or otherwise send them) during a given period, you become ineligible for that period's rewards.
+> * If you haven’t **claimed your tokens**, they won’t count. Only claimed balances are eligible.
+> * ASAMI tokens **held by contracts** — including liquidity pools — do **not** receive revenue sharing unless explicitly enabled by their code.
+
+#### What Happens to Unclaimed Shares?
+
+When a user is eligible but **does not claim** their revenue share during the claim window, their unused portion is **returned to the fee pool** and rolled over into the **next cycle’s rewards**.
+
+This creates:
+
+* **Simplicity** — no late claims or dangling obligations
+* **Fairness** — rewards go to active participants
+* **Composability** — external contracts may implement strategies to distribute to their users, but this is opt-in and out of protocol scope
+
+This system ensures that early and committed participants receive **passive income** in proportion to their contributions, while keeping ASAMI's supply aligned with real protocol usage.
 
 ### 5.2 Governance via Fee Voting
 
-ASAMI token holders also have the ability to vote on the protocol's fee rate.
+ASAMI token holders participate in **a single governance mechanism**: setting the protocol fee rate that determines how much of each campaign’s budget is allocated to the token issuance pool.
 
-The voting system uses a **weighted average model**: each token holder submits a percentage they believe the fee should be (e.g., 5%, 15%, 30%). The final fee is computed by averaging all votes, weighted by the number of tokens held.
+This rate directly influences:
 
-> 🗳️ For example, if one user holding 10,000 tokens votes for 5% and another holding 1,000 tokens votes for 100%, the resulting fee will reflect the weighted average, not the median.
+* How many ASAMI tokens will be issued in future periods
+* The relative value of being an Advocate or Campaign Manager
+* The sustainability of the protocol’s reward structure
 
-This tug-of-war design creates healthy dynamics:
-- **Higher fees** result in more revenue sharing, but also more token inflation.
-- **Lower fees** reduce earnings for holders but may attract more advertisers and collaborators.
+Rather than managing campaigns, whitelists, or any operational functions, token holders shape the **long-term behavior of the platform** through this lever.
 
-This governance tool allows token holders to influence the long-term economics of the platform while balancing their own incentives.
+> 🗳 **One Token, One Vote**
+> Voting is weighted by each address’s ASAMI balance at the time of snapshot. The final rate is the weighted average of all votes.
+
+#### Example:
+
+If the current protocol fee is 20%, and the community feels that token issuance is too aggressive, large holders can vote for a lower fee — say, 15%. If most votes support this change, the next cycle will adjust the fee accordingly.
+
+This design ensures that:
+
+* The platform remains flexible, but not chaotic
+* Token holders express preferences without micromanaging
+* Changes happen incrementally, with built-in damping
+
+Governance is implemented **on-chain** in the protocol’s smart contract and can be audited [here](https://github.com/constata-eu/asami/blob/38651663a124c714d2e599661f9abf3976e5f628/contract/contracts/AsamiCore.sol#L711).
 
 ### 5.3 Issuance Model and Fairness
 
-The protocol targets issuing **100,000 ASAMI tokens every 15 days**, but this amount is adjusted dynamically based on:
-- The DOC fees collected during the previous period
-- The total ASAMI supply issued so far
+Asami’s token issuance is designed to be **proportional, transparent, and fair**. Tokens are only issued when someone **funds a campaign** and another person **collaborates with it** — anchoring the value of ASAMI in real advocacy.
 
-Tokens are issued each time a campaign reward is paid. The fee retained by the protocol (10% of the DOC reward) is converted into ASAMI tokens using the current issuance rate. These tokens are then split among participants:
-- **40% to the Campaign Manager**
-- **30% to the Collaborator**
-- **30% to the Advertiser**
+There are no allocations for founders, investors, or insiders. Every token issued comes from actual usage of the platform.
 
-> 🧮 **Example:**
-> A campaign pays a Collaborator 20 DOC. The protocol retains 2 DOC (10%).
-> If the issuance rate is 1000 ASAMI per DOC, then 2000 ASAMI are minted:
-> - 800 go to the Campaign Manager
-> - 600 to the Collaborator
-> - 600 to the Advertiser
+#### How It Works
 
-There was no **premine**, and no **special allocation** was made to insiders. The only large holder ("whale") is the current Campaign Manager, who earned roughly 40% of issued tokens simply by being the only manager to date and registering all collaborations.
+Every 15 days, the protocol evaluates:
 
-This transparent and fair issuance system ensures that:
-- Participation is rewarded proportionally
-- Token distribution follows real platform activity
-- Incentives remain aligned for long-term sustainability
+* How many DOC were collected in fees from registered collaborations
+* Whether the protocol’s issuance rate needs to increase or decrease
+* A maximum issuance cap of **100,000 ASAMI** per period (target, not guarantee)
 
-By combining revenue sharing, voting power, and fair issuance, ASAMI tokens function as both a yield-generating asset and a tool for decentralized governance.
+If campaigns slow down, fewer tokens are minted. If engagement increases, issuance may rise — but never above the cap. This makes ASAMI a **work-based currency**, not a speculative one.
 
----
+#### Token Distribution Per Collaboration
+
+Each collaboration triggers a **fee-based issuance** of ASAMI tokens. These are distributed as follows:
+
+* 🥜 **40%** to the **Campaign Manager** who registered the campaign
+* 🥜 **30%** to the **Advocate** who reposted the campaign
+* 🥜 **30%** to the **Project** (Advertiser) that funded it
+
+This model reinforces a healthy dynamic:
+
+* Campaign Managers are incentivized to bring great campaigns and manage quality
+* Advocates are rewarded for meaningful reach
+* Projects earn long-term equity by showing up early and funding the ecosystem
+
+> ❗ **Note:** Projects only receive ASAMI when funding campaigns **on-chain via Rootstock** using DOC. Campaigns funded through **Stripe** or future **Bitcoin/Lightning** gateways do not result in ASAMI being issued to advertisers — though Advocates and Campaign Managers still earn their share.
+
+#### Example: Earning 1,000 ASAMI
+
+If a campaign resulted in 1,000 ASAMI being issued:
+
+* 400 go to the Campaign Manager
+* 300 go to the Advocate
+* 300 go to the Project that funded the campaign (if DOC was used on Rootstock)
+
+No matter your role, you earn in proportion to your contribution. There’s no need to stake, lock, or speculate — only to participate.
+
+The only large token holder today is the current Campaign Manager, who has registered all campaigns to date and received \~40% of the ASAMI issued, as per protocol rules.
+
+Here is **Section 5.4: Claiming and Holding Tokens**, incorporating all the key mechanics of how ASAMI tokens are claimed, what it means to hold them, and how holding connects to governance and revenue sharing:
+
+### 5.4 Claiming and Holding Tokens
+
+ASAMI tokens are not sent automatically. To become a token holder, each participant must take the **deliberate step** to claim their tokens.
+
+This design reflects Asami’s philosophy: **ownership should be intentional**, and participation should remain voluntary at all times.
+
+#### Claiming Your Tokens
+
+If you've earned ASAMI by participating in a campaign — whether as an **Advocate**, a **Campaign Manager**, or a **Project** — you can claim them at any time.
+
+To do so:
+
+* Connect a **Rootstock-compatible wallet**
+* Visit your public profile or the Token page
+* Claim your accumulated tokens to your wallet address
+
+You can also choose to delay claiming — but **unclaimed tokens do not receive revenue sharing**.
+
+#### Holding Tokens
+
+Once claimed, your tokens must be **held untouched** for an entire 15-day cycle to qualify for revenue sharing.
+
+This means:
+
+* No transfers, swaps, or moves during the cycle
+* Tokens must reside in a personal wallet (not a liquidity pool or other contract)
+* Holding over **4,000 ASAMI** is required to qualify for distribution
+
+If you move your tokens — even momentarily — your share for that cycle is forfeited.
+
+Asami’s claim-and-hold model ties incentives directly to commitment. It ensures that only active, deliberate participants shape the club’s future — and that early supporters are **rewarded modestly and fairly** over time.
 
 ## 6. Technical Architecture
 
@@ -309,7 +634,7 @@ Rootstock was chosen because it offers:
 
 Rootstock uses **RBTC** as its native gas currency and is a battle-tested network with low fees and stable operation, making it a solid foundation for Asami.
 
-### 6.2 Campaign Transactions and Payments
+### 6.2 Why Dollar on Chain (DOC)
 Campaign budgets are denominated in **DOC (Dollar on Chain)**, a stablecoin also native to Rootstock and issued by Money on Chain. It is:
 - Over-collateralized with Bitcoin
 - Widely used in the Rootstock ecosystem
@@ -352,128 +677,289 @@ To onboard users who are new to Rootstock, the Campaign Manager offers a **gasle
 
 This mechanism makes onboarding seamless for non-crypto users and serves as a type of RBTC faucet while preserving full ownership over rewards.
 
-### 6.6 Payment Gateway Integration (Planned)
+### 6.6 Payment Gateway Integration
 To improve the Advertiser experience, Campaign Managers may integrate fiat onramps like **Stripe** to:
 - Accept credit card or bank payments
 - Automatically convert funds into DOC
 - Fund campaigns directly from Web2 platforms
+- A 20% processing fee applies to cover costs and discourage off-chain dependency.
+- Campaigns funded via Stripe do not issue ASAMI tokens.
 
-This will further lower the barrier to entry for new advertisers.
-
-In sum, Asami’s technical architecture balances decentralization, transparency, and ease of use—powered by Rootstock’s stable and secure environment, and built for onboarding the next generation of trend creators and advertisers into Web3.
+This further lowers the barrier to entry for new advertisers.
 
 ---
 
 ## 7. Governance
 
-Asami operates under a decentralized and pragmatic model of governance. There are **no legal contracts** or off-chain obligations between members of the platform. All relationships between stakeholders—Advertisers, Collaborators, Campaign Managers, and Token Holders—are governed by the logic and constraints of the Asami smart contract and the practical discretion of each party. Participation is entirely voluntary and “as-is.”
+Asami is not governed by a company, a DAO, or a social contract. It is governed by what is **enforceable in software** and what is **voluntarily chosen by participants**.
 
-### 7.1 Roles Are Defined by Action, Not Obligation
-- **Advertisers** fund campaigns but are not required to include any specific Collaborators.
-- **Collaborators** choose which campaigns to participate in and may decline any without explanation.
-- **Campaign Managers** act at their own discretion and are not legally bound to act on behalf of any party beyond the behavior enforced by the smart contract.
-- **Token Holders** may participate in governance, but are not owed any direct benefit by other participants.
+There are no obligations between participants beyond what is encoded in the smart contract. The protocol has no built-in authority, committee, or process for making decisions on behalf of others. All roles are opt-in, and all behavior is bounded by code and incentives.
 
-### 7.2 The “As-Is” Model and Its Consequences
-Because all interactions are permissionless and governed by code:
-- There are **no service-level agreements** between parties.
-- **Advertisers** have no guarantee that a Collaborator will participate in their campaign, or that the Campaign Manager will act in a specific way beyond registering valid collaborations and distributing rewards.
-- **Campaign Managers** are under no legal obligation to refund advertisers or re-score Collaborators. Once funds are allocated to a campaign, the Campaign Manager manages them autonomously and is not liable to advertisers for how rewards are distributed, provided the process follows the smart contract rules.
-- **Collaborators** are not guaranteed participation, visibility, or payment unless their repost is successfully registered and funded under an active campaign. Even then, payment cannot be reclaimed from them under any circumstances.
-- Any **Advertiser** may exclude any Collaborator from their campaigns without justification.
-- Any **Collaborator** may decline to participate in any campaign or leave the platform at any time.
+This minimalist approach avoids the complexity, politics, and ambiguity that typically emerge in systems with layered governance structures. Instead, it embraces transparency, modularity, and economic alignment. If someone wants something to work differently, they must:
 
-### 7.3 Accountability Through Competition
-If any party (Advertiser, Collaborator, or Token Holder) is dissatisfied with how a Campaign Manager operates:
-- They may stop using that Campaign Manager’s services.
-- They may **support or fund** the creation of an alternative Campaign Manager who follows different rules or applies a more agreeable scoring algorithm.
+* Write software that does it
+* Convince others to use it
+* Or fork the protocol and offer an alternative
 
-The system self-regulates through choice and transparency rather than coercion or appeal. The current Campaign Manager has no special access or privileges in the protocol. Any new participant who builds compliant tools can become a Campaign Manager and compete for campaigns and Collaborator attention.
+Asami’s governance model is narrow by design. Its goal is to support **open collaboration without expectation**, and to **keep power and responsibility localized** to the role that exercises them.
 
-### 7.4 Token-Based Parameter Voting
-The only shared, protocol-wide governance function is the ability to vote on the **Asami protocol fee**. This fee is currently set at 10% and may be adjusted through a weighted average voting system:
-- Token Holders submit a preferred percentage (0–100%) as their vote.
-- The final value is calculated by weighting each vote based on the number of ASAMI tokens held.
+### 7.1 Voluntary Participation and Role Boundaries
 
-> 📊 Example: One user holding 5,000 ASAMI votes for a 10% fee. Another user holding 500 ASAMI votes for a 50% fee. The outcome will be closer to 10%, based on the weighted average.
+Every participant in Asami.club chooses their role freely and assumes no obligations beyond what is expressed in the smart contract or the public interface. These roles — **Project**, **Advocate**, **Campaign Manager**, and **Token Holder** — are **independent**, **replaceable**, and **non-hierarchical**.
 
-This voting mechanism aligns incentives:
-- Raising the fee may increase revenue sharing, but also causes token inflation and may discourage Collaborator participation.
-- Lowering the fee reduces revenue sharing but may improve platform growth and campaign appeal.
+There is no interpersonal governance, no central team, and no support obligation between roles. This section outlines what each role can expect, and what they are **not** entitled to.
 
-The protocol’s simplicity is its strength: clear incentives, minimal governance, and decentralized control through voluntary cooperation.
+#### Projects
+
+* Projects can create campaigns to reward visibility and recruit advocates.
+* They can choose whether to whitelist, blacklist, or remain open to all eligible Advocates.
+* They are responsible for selecting a **Campaign Manager** to register their campaign on-chain.
+* By using the default website (asami.club), they are selecting the **default Campaign Manager** currently operating the platform.
+* They cannot demand custom scoring, explanations, or changes to campaign manager decisions.
+* They are not entitled to refunds, even if a campaign yields few or no reposts.
+* Projects funding campaigns through off-chain methods (e.g., Stripe, LN) may not receive ASAMI tokens.
+
+#### Advocates
+
+* Advocates can choose to repost campaigns that match their interests and values.
+* Their influence is assessed using a public algorithm and recalculated periodically.
+* Advocates are **not guaranteed participation**, payment, or visibility in any given campaign.
+* If they feel miscategorized or under-scored, they may submit a detailed report via the Asami robot — but the Campaign Manager retains discretion over scoring.
+* Advocates are free to stop participating or pursue other platforms at any time.
+
+#### Campaign Managers
+
+* Campaign Managers are **not part of the smart contract**. They are **off-chain entities** that perform operational responsibilities:
+  * Scoring Advocates
+  * Registering campaign and collaboration data
+  * Managing frontends and providing support
+* **Any person or group** with technical capabilities can become a Campaign Manager and run their own frontend on top of the smart contract.
+* There is currently **only one Campaign Manager** running on asami.club. Its operation is subsidized, as the infrastructure costs exceed what is collected in fees.
+* Campaign Managers are **not required** to explain scoring decisions or provide support. They retain full discretion over how to run their operations.
+
+#### Token Holders
+
+* Token holders vote on the protocol fee rate, which governs the flow of new ASAMI tokens.
+* They have no authority over campaigns, scoring, or platform operations.
+* Their only influence is over the **economic balance** of the protocol through voting.
+
+### 7.2 The As-Is Model and Its Consequences
+
+There are no service-level agreements between parties. The protocol exists as-is, and participants agree to operate within its boundaries. The roles of Project, Advocate, and Campaign Manager each have clear limitations:
+
+#### Projects
+
+* Are not entitled to support from Campaign Managers.
+* Are not entitled to refunds or explanations if a campaign receives no reposts.
+* Can be denied service at the sole discretion of the Campaign Manager.
+* Are not entitled to token issuance when funding campaigns through Stripe or non-rootstock methods.
+
+#### Advocates
+
+* Are not entitled to participate in any particular campaign.
+* Are not entitled to explanations or adjustments to their score.
+* Are not entitled to compensation unless they have successfully participated in a campaign as defined by the smart contract.
+* Can leave the platform at any time.
+
+#### Campaign Managers
+
+* Are under no obligation to refund advertisers or re-score Advocates.
+* Are not expected to respond to complaints.
+* May change scoring criteria and structure as they see fit.
+* May stop operating at any time.
+
+### 7.3 Complaint Resolution
+
+Asami.club minimizes obligations and keeps interactions transparent. Because there are no off-chain guarantees or interpersonal commitments, most complaints cannot be formally “resolved.” However, well-reasoned reports can still help improve the system over time.
+
+If you believe something is wrong — for example, a mis-scored Advocate, an ineligible campaign, or unfair campaign visibility — you may submit a report for public review. To be considered:
+
+* Reports must include **specific comparative evidence** with public links (e.g., X profiles, Asami profile pages, tweets, or stats).
+* Vague, emotional, or purely subjective claims will not be addressed.
+* Reports should focus on relative fairness: “This account received a reward for X, while mine did not, despite Y.”
+
+Campaign Managers **may** consider these reports but are **under no obligation** to respond, explain, or make changes. The scoring algorithm is periodically updated, and constructive input may influence future versions — but no retroactive adjustments will be made.
+
+If any participant — Project, Advocate, or Token Holder — is dissatisfied with how a Campaign Manager operates:
+
+* They may stop using that Campaign Manager’s services.
+* They may support or fund the creation of an **alternative Campaign Manager** who applies different rules, curates differently, or uses another scoring model.
+
+The system **self-regulates through choice and transparency**, not coercion or appeal. The current Campaign Manager has **no special access or privileges** in the smart contract. Anyone with the technical means may register campaigns and collaborations, or build their own front-end to serve different users and preferences.
+
+### 7.4 Fee Rate Voting
+
+Asami does not support general-purpose governance. Token Holders have no say over who participates, how scores are assigned, or which Advocates or Projects are allowed.
+
+However, they do vote on **one key parameter**: the **protocol fee rate**. This is the percentage charged to advertisers when they fund a campaign, and it determines how many ASAMI tokens are minted in response to those fees. A higher fee results in more tokens being issued, and a larger fee pool to be distributed.
+
+#### How Voting Works
+
+* Every 15 days, a new “contract cycle” begins.
+* During each cycle, Token Holders may signal their preferred fee rate by voting directly on-chain.
+* The system calculates a **weighted average** of all votes based on each voter’s token balance.
+* At the end of the cycle, the selected fee rate is locked in and applied to the next period’s activity.
+
+Example:
+
+* If most Token Holders vote for a 20% fee, but a large whale votes for 10% with 60% of the token supply, the resulting fee rate will move closer to 10%, but still reflect the weighted average of all input.
+
+Token holders can view the current fee rate, past votes, and upcoming cycles at: [https://asami.club/#/Token](https://asami.club/#/Token)
+
+This is the **only governance mechanism in Asami**, and it is designed to:
+
+* Let token holders indirectly influence issuance volume and incentive alignment.
+* Avoid open-ended proposals, subjective interpretation, or social pressure.
+* Keep governance minimal, mechanical, and predictable.
 
 ---
 
-## 8. Security and Abuse Prevention
+## 8. Communication, Transparency & Security
 
-The Asami protocol is implemented as a smart contract. By itself, it cannot be abused, unless a software error or vulnerability is discovered in the contract code. It enforces rules deterministically, holds and disburses funds, and executes the logic of ASAMI issuance, DOC fee retention, and on-chain recordkeeping. It is neutral and agnostic about the quality of campaigns or the actors involved.
+Asami is built to be open by default — not just in its on-chain protocol, but in the way it engages with Advocates, Projects, and Campaign Managers. Every aspect of the system is designed to encourage visibility, accountability, and public discourse.
 
-On the other hand, **Campaign Managers** operate the systems that evaluate eligibility, measure influence levels, register reposts, and distribute campaign funds. These systems are much more susceptible to manipulation and abuse, because they must rely on off-chain signals and data inputs from platforms like X (Twitter). Since Campaign Managers ultimately decide how campaign budgets are distributed among Collaborators, bad actors pretending to be genuine Collaborators may attempt to **trick or manipulate these systems** to receive funds without delivering value to Advertisers.
+Transparency fosters trust. But openness also creates opportunities for abuse, confusion, and edge cases. That’s why Asami balances its transparency with a modest but thoughtful layer of security measures, quality filters, and support guidelines — all shaped to protect the ecosystem without undermining its permissionless nature.
 
-Because Campaign Managers aim to remain open to as many Collaborators as possible—encouraging growth and participation—they often rely on automated systems to onboard and evaluate members. This necessary scalability also introduces **attack surfaces** for manipulation, making robust abuse detection essential.
+In this section, we describe how Asami communicates, how its data can be verified, and how it mitigates manipulation or misuse — all while maintaining the club’s spirit of voluntary, public collaboration.
 
-### 8.1 Types of Abuse
+### 8.1 Public-First Design
 
-The most common and anticipated forms of abuse encountered by Campaign Manager systems include:
+Asami.club communicates openly by design. Instead of relying on private chats or closed forums, the club maintains its presence and most of its discussion in public spaces — especially on X (formerly Twitter). This encourages accountability, reduces ambiguity, and helps new users understand how the system works simply by observing it in action.
 
-- **Artificial Inflation of Impressions**: Would-be Collaborators may attempt to boost their visibility through bots or purchased traffic. If impressions are not statistically consistent with engagement metrics like replies or likes, the Campaign Manager may assign zero audience value.
+Support requests are handled through clearly defined channels, and only for specific technical issues. The public Telegram support groups exist for cases where:
 
-- **Low-Effort or Blind Reposting**: Some accounts repost every campaign without context or original engagement. These accounts dilute campaign value and are excluded or deprioritized.
+* The website is not working as expected.
+* You cannot link your X account, email, or wallet.
+* You registered a campaign or reposted one, but it doesn’t appear or hasn’t been paid after a reasonable delay.
+* You attempted to create a campaign that never appeared.
 
-- **AI or Script-Based Engagement**: Campaign Managers detect and ignore repetitive, inconsequential comments (“GM”, “🔥”, etc.) generated by scripts or AI. These are not meaningful indicators of real influence.
+All other questions must first be directed to the [Asami Robot](https://robot.asami.club), which can help advocates explore public data, understand influence scoring, and prepare a proper report. General commentary or feedback should take place publicly by mentioning the official club account (e.g., `@asami_club_es`) on X.
 
-- **Reverse Influence**: Accounts that routinely provoke negative sentiment or backlash may be flagged using polling and sentiment analysis. Their influence is adjusted accordingly.
+Support channels are not general-purpose helpdesks, nor are they places to debate influence scores or request campaign access. Moderators may ignore or remove messages that do not follow the pinned support guidelines.
 
-- **Off-X Influence Not Captured by Metrics**: Some influential individuals may not have strong X metrics but exert influence through external means (e.g., public speaking, podcasts). These cases require manual evidence review.
+This public-first approach is intentional. It mirrors the values of Web3 — where participants take initiative, explore open data, and interact with code and contracts rather than centralized authorities.
 
-- **Referral Manipulation / Sybil Attacks**: Some users may try to gain referral authority by onboarding low-quality or self-controlled accounts. Referrals must lead to active, genuine members to be counted.
+### 8.2 Transparency by Design
 
-### 8.2 The Campaign Manager’s Role in Prevention
+Asami.club is built on the principle of verifiability. While not every individual data point can be made public due to platform restrictions — such as X’s API terms — the system is designed to ensure that all structural decisions, core logic, and resulting outcomes are transparent and open to scrutiny.
 
-Each Campaign Manager implements its own algorithm for scoring, abuse detection, and collaboration eligibility. Their systems typically include:
+Key components available for public inspection include:
 
-- **Pessimistic Audience Scoring**: No audience is assigned unless impressions are corroborated by consistent engagement data.
-- **Authority Calculation via Multiple Signals**: Engagement, polling, referrals, and token-holding behaviors all contribute to a Collaborator’s score.
-- **Eligibility Filtering**: Collaborations are only accepted if the repost meets the manager’s quality, audience, and timing thresholds.
-- **Flagging and Blacklisting**: Suspected abusive actors may be deprioritized or barred from participating in future campaigns.
+* **Campaign metadata**: who created the campaign, which Advocates participated, what rewards were promised and paid, and how many impressions were delivered.
+* **Advocate profiles**: publicly accessible on Asami, showing their influence score, campaign history, and earnings.
+* **Token and revenue data**: total ASAMI tokens issued, fee pool balances, distribution events, and historical stats at [asami.club/#/Token](https://asami.club/#/Token).
+* **Collaboration records**: including the campaign, the repost, the payout, and the timestamp — all verifiable and stored on-chain.
 
-Because Campaign Managers are not bound to accept every participant and must maintain Advertiser trust, they are empowered to use both **automated logic** and **manual review**. Their decisions are not enforced by the smart contract, but by discretion, trust, and competition. Ultimately, a Campaign Manager that allows abuse will lose Advertiser confidence.
+The **influence scoring algorithm is fully open source and versioned**, so anyone can understand how scores are calculated and how the system evolves. While the raw data used in scoring — such as impressions and engagement metrics from X — may not be shareable due to X’s terms, the methodology and results are auditable within those limits.
 
-### 8.3 Rights and Responsibilities of Collaborators
+Campaign performance, token issuance, and participant contributions are all verifiable through public interfaces or on-chain inspection. There is no private or privileged backend; all users, projects, and third parties interact with the same transparent data.
 
-Collaborators who disagree with their influence score or category assignment may:
-- Request a review with specific evidence.
-- Compare their score with others via the public leaderboard.
-- Provide off-chain evidence (e.g., podcast audience size, referral success).
+This design encourages accountability without depending on trust in any specific actor.
 
-However, they should understand that:
-- Influence scores are **relative** and **not guaranteed rights**.
-- Campaign Managers are not required to maintain or explain scoring decisions beyond what is stated in this whitepaper.
-- Participation in campaigns is at the Campaign Manager’s discretion.
-- Once earned, rewards (DOC or ASAMI) cannot be taken back.
+### 8.3 Preventing Abuse and Misuse
 
-### 8.4 Protocol Transparency and Limits
+Asami includes multiple layers of protection to reduce manipulation, spam, and exploitative behavior — particularly around influence scoring, campaign participation, and reward distribution.
 
-The Asami protocol enforces on-chain logic only:
-- It issues ASAMI tokens
-- Collects and distributes fees
-- Records DOC payments and collaborations
+Asami’s design does not eliminate abuse entirely, but it discourages low-effort engagement and rewards sincerity. Campaign managers and projects are empowered to maintain quality through both code and judgment.
 
-It **does not validate repost quality or enforce influence measurement**. These decisions happen off-chain within each Campaign Manager's systems. However, all financial transactions are transparent and publicly viewable on Rootstock.
+#### Algorithmic Safeguards
 
-Even if a Collaborator is banned by a Campaign Manager, any previously earned DOC or ASAMI remains in their wallet and cannot be revoked.
+* **Baseline scoring**: Advocates are pre-screened through an influence algorithm that filters out inactive or non-genuine accounts. Only those above a minimum score threshold can see and participate in campaigns.
+* **Engagement ratios**: Influence scoring penalizes accounts with high impressions but little real engagement, discouraging artificial visibility or bot-driven metrics.
+* **Verified signals**: The algorithm rewards verified followers and interactions with high-visibility posts. This makes it harder to inflate one’s score through fake accounts or superficial metrics.
+* **Manual scoring inputs**: The Campaign Manager may supplement scoring with offline influence indicators (e.g., event organizing, community leadership), allowing for more nuanced and context-aware evaluation.
 
-### 8.5 Trust Through Competition
+#### Platform Constraints
 
-Campaign Managers have no privileged status in the Asami protocol. Anyone may create their own Campaign Manager, define their rules, build their own community, and serve Advertisers.
+* **Score gating is mandatory**: Only accounts above a minimum influence score — as determined by the Campaign Manager — may participate in campaigns. This restriction is enforced globally and is not currently configurable by advertisers.
+* **Budget and duration are one-way mutable**: A campaign’s budget and duration can be extended after deployment, but never shortened or reduced. Campaigns cannot be ended early, nor can funds be withdrawn once committed.
+* **Off-chain campaign details**: Other campaign parameters (such as message content, language or category restrictions) are not stored on-chain. They are managed by the Campaign Manager and may be modified, within reason, for clarity, quality, or moderation purposes.
 
-If stakeholders lose trust in a particular Campaign Manager, they can:
-- Withdraw from that manager’s campaigns
-- Create or fund an alternative manager with clearer standards
-- Support Campaign Managers with different scoring philosophies or regions
+#### Social and Structural Checks
 
-The Asami ecosystem is self-regulating. Transparency, performance, and open alternatives are the mechanisms that keep abuse in check—not central enforcement or bureaucracy.
+* **Advertiser discretion**: Projects may blocklist or whitelist specific Advocates after they engage with a campaign. Over time, this lets advertisers refine who can interact with their future campaigns.
+* **Public incentives**: All rewards and reposts are public, encouraging moral responsibility. When an Advocate accepts payment, they acknowledge their role in amplifying the message — unlike traditional influencer marketing where compensation is often hidden.
+
+### 8.4 Responsibility and Disclosure
+
+Asami encourages responsibility and ethical behavior by making reposts and rewards public. When an Advocate republishes a campaign post, their public profile clearly displays:
+
+* The content they chose to amplify.
+* The fact that a reward was (or will be) received for doing so.
+* The exact amount and type of that reward (DOC and ASAMI).
+
+This level of disclosure is important for trust and accountability. Unlike “stealth” influencer marketing or undisclosed endorsements, participation in Asami campaigns is **transparent by design**. Projects and Advocates both benefit from a system where visibility and compensation are openly linked.
+
+This structure has a secondary effect: by accepting a public reward, Advocates **implicitly take some responsibility** for what they help promote. The reward is not just a thank-you — it’s a signal that the Advocate made a considered choice to associate with a project. This sets Asami apart from platforms that allow anonymous or hidden promotions with no accountability.
+
+Advocates are encouraged to only promote what they truly believe in. While the reward is modest, the act of accepting it signals trust and intent, not blind endorsement — a distinction that strengthens the credibility of the entire ecosystem.
+
+---
+
+**9. Competitive Landscape**
+
+Web3 projects have a wide variety of tools at their disposal to reach new users, increase visibility, and incentivize participation. From airdrops to quests to viral social campaigns, the ecosystem for growth is rich and varied — and for good reason. Different goals require different tactics.
+
+Asami is not a replacement for these tools. It does not attempt to onboard users through gameplay, or reward one-time interactions. Instead, it focuses on a specific but often overlooked aspect of Web3 adoption: **advocacy**. People who learn, believe, and share — not for money, but because they want others to understand what they’ve discovered. These are the explainers, the popularizers, the recommenders. Their role in project discovery is essential, and Asami gives them a modest, transparent way to be appreciated and acknowledged for it.
+
+Importantly, Asami complements other growth tools. For example, a project might use Galxe or TaskOn to run incentivized campaigns that reward users for trying a product. At the same time, it can use Asami to reach real advocates who **share the campaign** with their audience, adding credibility and reach. This layered approach can amplify the effectiveness of traditional strategies while grounding them in authentic community support.
+
+Asami’s unique value lies in how it turns advocacy into a visible and traceable interaction — creating a public record of who is supporting what, and when, while keeping incentives humble and reputationally binding.
+
+### 9.1 Web3 Marketing Today
+
+Marketing in the Web3 space faces unique challenges. Traditional advertising channels often impose restrictions on crypto-related content, with some platforms outright banning or shadowbanning blockchain promotions. Even when permitted, ads for decentralized projects can appear untrustworthy or irrelevant to audiences unfamiliar with Web3 concepts.
+
+To work around this, many projects rely on **incentive-driven platforms** that reward users for specific actions: installing a wallet, trying out a dApp, joining a community, or completing a task. These strategies can generate large numbers of interactions and users in a short amount of time. However, they rarely result in **long-term retention** or **authentic interest**. Participants often complete tasks to earn rewards and leave shortly afterward, inflating metrics without building lasting communities.
+
+Meanwhile, most of the actual growth seen in foundational Web3 projects — from Bitcoin to open-source infrastructure — has been driven not by advertising, but by early **advocates**: individuals who took the time to explain, recommend, and promote what they believed in. These Advocates shaped discourse, answered questions, and helped others take their first steps into Web3. Yet, historically, this labor of belief and communication has gone largely unrecognized.
+
+Web3 needs both kinds of effort: scalable user onboarding and long-term, credible community building. Asami focuses on the latter.
+
+### 9.2 Incentivized Actions vs. Genuine Advocacy
+
+Platforms like Galxe, TaskOn, and Zealy reward users for completing predefined actions — such as signing up, using a feature, or joining a community. These tools are useful for onboarding and can quickly boost engagement, but the resulting activity is often transactional and short-lived.
+
+Asami offers a complementary approach: it supports those who **already advocate** for projects — not because they were told to, but because they believe in the ideas. Rather than incentivizing a specific behavior, Asami publicly acknowledges and modestly rewards existing supporters who amplify campaigns through reposts.
+
+This distinction matters. Incentivized actions are effective at sparking participation; Asami focuses on **recognizing belief**. The two approaches can work together: for example, a project can launch a quest and use Asami to spread the word through trusted voices — giving the campaign both reach and credibility.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ---
 
@@ -485,7 +971,7 @@ While the most direct incentives exist for **Campaign Managers**, who are reward
 
 - **Advertisers** may find better value in Asami compared to traditional platforms, especially when promoting products in industries that are restricted or under-served by Web2 ad networks. Some Advertisers may act as intermediaries or agencies, facilitating campaign creation for others, earning a margin and collecting ASAMI tokens in the process.
 
-- **Collaborators** benefit from an expanding platform with more campaigns, better-paying opportunities, and more visibility. They may also collectively operate community-owned accounts, growing influence as a group and splitting rewards. They can use Asami as one of multiple revenue streams tied to their online presence.
+- **Advocates** benefit from an expanding platform with more campaigns, better-paying opportunities, and more visibility. They may also collectively operate community-owned accounts, growing influence as a group and splitting rewards. They can use Asami as one of multiple revenue streams tied to their online presence.
 
 These entrepreneurial possibilities make it so **any participant can effectively become a business unit** within Asami: attracting campaigns, onboarding collaborators, or even offering adjacent services like content creation or social media analytics.
 
@@ -508,97 +994,154 @@ Community growth efforts are also being supported by external partners like **Ro
 
 The current Campaign Manager is actively seeking traditional investment based on a clear business model, further professionalizing this critical role within the protocol. At the same time, the door remains open for additional Campaign Managers to emerge and contribute to growth in parallel or in competition.
 
-In sum, Asami’s growth is grassroots, incentive-aligned, and decentralized by design. Anyone can play a part, and those who do have tools to capture the value they help create.
-
 ---
 
 ## 10. Competitive Landscape
 
-The competitive landscape for Asami encompasses various platforms and initiatives that integrate blockchain technology with social media to enhance influencer marketing, content monetization, and community engagement. Below is an expanded overview of notable competitors and related projects:
+Asami operates in a space where multiple strategies for growth, influence, and marketing overlap. While its focus is on recognizing and rewarding Web3 advocacy through transparent, modest incentives, it may intersect with tools designed for advertising, onboarding, monetization, or influencer management.
 
-### Decentralized Influencer Marketing Platforms
+This section outlines the categories of platforms Asami is often compared to, and clarifies to what extent they represent competition, complement, or simply serve a different purpose. In many cases, Asami can be used in addition to these other methods — especially when a campaign requires both visibility and credibility among audiences familiar with Web3.
 
-Several blockchain-based platforms attempted to facilitate direct interactions between brands and influencers, aiming to eliminate intermediaries and increase transparency, like the now defunct D-creator, or 
-[Chirpley](https://chirpley.ai/vision-and-mission/), which is more focused in the micro-influencer journey.
 
-### Social Media Platforms with Monetization Features
+### 10.1 Decentralized Influencer Marketing Platforms
 
-Traditional social media platforms have integrated features that allow users to monetize their content, indirectly competing with Asami's model:
+Projects like **Chirpley** and the now-defunct **D-Cent** attempted to decentralize influencer marketing by connecting brands with social media users in a peer-to-peer way. Chirpley, in particular, focuses on enabling advertisers to select from a marketplace of pre-categorized micro-influencers who define their own target demographics and niches, such as beauty, gaming, or travel.
 
-- **Facebook and Instagram**: Both platforms offer shoppable posts and stories, enabling influencers and brands to tag products directly in their content, facilitating seamless e-commerce experiences.
+In contrast, **Asami emphasizes organic discovery**. Advertisers don’t select participants upfront — instead, campaigns are shown only to pre-scored Advocates, and anyone who reposts a campaign becomes visible to the advertiser. This allows projects to identify aligned advocates over time and selectively whitelist them in future campaigns. The approach balances **exploration and exploitation** — discovering new supporters while cultivating a trusted group.
 
-- **TikTok**: Known for its high engagement with younger audiences, TikTok provides opportunities for influencers to collaborate with brands through sponsored content and its Creator Marketplace.
+Chirpley prioritizes high-resolution audience targeting and broad industry support, while Asami focuses exclusively on Web3 and leverages its influence scoring algorithm to maintain a filtered, high-quality pool of potential Advocates. Targeting within Asami is done manually by Campaign Managers, based on public behavior and language use — not through self-reported interests.
 
-### Blockchain-Based Social Media Networks
+Campaigns in Chirpley are executed through defined tasks, while Asami prioritizes advocacy, visibility, and long-term community growth. In joint strategies, a project might use Chirpley to execute a specific set of influencer engagements, while using Asami to **identify and reward the Advocates who genuinely believe in the mission**.
 
-Some platforms combine social media functionalities with blockchain to offer decentralized content sharing and monetization:
+Finally, the **ASAMI token is not used as a payment method**, but as an equity-like reward for early participants. It has a fixed supply of 21 million and is only distributed through protocol activity during the issuance phase. Payments to Advocates are done in stablecoins (DOC), ensuring stability for projects and clarity for recipients.
 
-- **Steemit**: A blockchain-based blogging and social media website where users earn cryptocurrency (STEEM) for publishing and curating content. This model incentivizes content creation and community engagement through token rewards.
+### 10.2 Social Media Platforms with Monetization Features
 
-- **BitClout (now DeSo)**: An open-source blockchain-based social media platform where users can buy and sell "creator coins" tied to individuals' reputations. It aims to decentralize social media and provide new monetization avenues for content creators.
+Traditional platforms like **Facebook**, **Instagram**, **X (formerly Twitter)**, and **TikTok** have built-in monetization tools, allowing creators to earn revenue through sponsored content, ad revenue sharing, or direct support from followers. These platforms dominate attention and offer scalable opportunities for creators aiming to turn their audience into a full-time income stream.
 
-### Platforms Selling Reposts to Advertisers
+Asami operates differently. It does not aim to provide primary monetization for creators. Instead, it targets those who act as **advocates and educators** — individuals who share meaningful content about Web3 projects out of interest, belief, or a desire to spread awareness. These users are rewarded modestly in DOC for reposting campaigns that align with their values. The goal is not to generate a livelihood, but to offer acknowledgment and token-based participation in growing communities.
 
-While not always blockchain-based, certain platforms specialize in facilitating the sale of social media reposts and engagements to advertisers:
+Advocates using Asami may still rely on mainstream monetization platforms to support their broader work, such as YouTube ad revenue or TikTok sponsorships. In this sense, **Asami complements other channels**, offering a lightweight and transparent layer of incentive for sharing content they already believe in.
 
-- **WeAre8**: A social media network that compensates users for watching ads and engaging with content. It shares a significant portion of its revenue with users, promoting a more equitable distribution of advertising profits.
+### 10.3 Blockchain-Based Social Media Networks
 
-### Projects Measuring Social Media Influence
+Several platforms blend blockchain infrastructure with social media to enable tokenized content monetization, censorship resistance, and community ownership. Here’s how they compare to Asami:
 
-Accurately assessing social media influence is crucial for effective marketing campaigns. Some projects that focus on this aspect are:
+* **Hive** (formerly a fork of Steem) is a decentralized blockchain social network where users earn HIVE or HBD tokens through content creation and curation via the “Proof-of-Brain” mechanism. Its core focus is on rewarding on-chain publishing and voting, not on issuing crypto rewards for reposting third-party content. Unlike Hive, Asami operates on **existing social networks** (like X), rewarding passionate advocates for amplifying Web3 campaigns with modest stablecoin (DOC) payouts and token rewards. It does **not** require users to migrate to another network or publish original content on-chain.
 
-- **FeiXiaoHao**: A blockchain data platform that analyzes social media metrics to provide users with insights into market sentiment, trending projects, and potential movements in the crypto space.
+* **DeSo** (formerly BitClout) allows users to trade creator coins tied to personal reputation; it emphasizes speculative behavior and creator-to-token speculation, rather than structured advocacy. Asami, in contrast, measures and rewards **practical social impact** via reposts and calculated influence.
 
-- **TweetBoost**: A study exploring the impact of social media on NFT valuation, highlighting the significant role of social media engagement in determining the value of digital assets.
+* **Lens Protocol**, **Farcaster**, and similar platforms enable decentralized identity and future potential for social content, but still lack the scale and campaign framework Asami has on mainstream platforms. Asami focuses on generating measurable impact on major social networks and could eventually extend to decentralized platforms when they reach sufficient scale.
 
-### Emerging Trends and Considerations
+By integrating with established social channels like X and using open influence scoring, Asami delivers **campaign-aligned advocacy rewards** without redefining social structures — unlike Hive or DeSo, which aim to rebuild entire social ecosystems on-chain.
 
-The integration of blockchain technology into social media and influencer marketing is driven by the desire for greater transparency, security, and user empowerment. Decentralized platforms aim to address issues like data privacy, fair compensation, and content authenticity. However, challenges such as regulatory uncertainty, technical complexity, and the need for widespread adoption remain.
 
-Asami distinguishes itself by offering a decentralized collaboration protocol that monetizes genuine social media influence, ensuring fair compensation and transparent interactions among advertisers, collaborators, and campaign managers. By leveraging blockchain technology, Asami aims to address common challenges in influencer marketing, such as fraud, lack of transparency, and inefficiencies in campaign management. 
+### 10.4 Platforms Selling Reposts to Advertisers
 
----
+Platforms like **WeAre8**, **SocialBoost**, **InstaFollowers**, and similar services provide a marketplace for paid reposts, likes, and engagements—often prioritizing volume over quality.
 
-## 11. Why Use Asami
+* **WeAre8** compensates users for interacting with sponsored content, distributing ad revenue among participants. It focuses on scale and broad engagement, but does not vet for genuine interest or domain expertise.
+* Other services, such as **SocialBoost** and **InstaFollowers**, offer repost packages, follower growth, or engagement enhancement—generally without transparency, accountability, or regard for audience relevance.
 
-Asami offers a new way for Advertisers and Collaborators to connect in a more authentic, fair, and decentralized environment. Traditional social media platforms prioritize their own revenue through intrusive ad placements, offering limited transparency, and often limiting which industries can advertise. Asami takes a different approach by directly connecting Advertisers with people who want to amplify their message—on their own terms.
+**Asami differs fundamentally**:
 
-### 11.1 For Advertisers
+* Engagements are **not purchased en masse**—they are earned through the authentic reposting of campaigns by verified Advocates.
+* All reposts and rewards are **public and traceable** on-chain, making manipulative activity far less likely and easier to identify.
+* Each Advocate is score-gated and screened for actual influence—not just accepting payment for visibility.
 
-Advertisers use Asami because it allows them to:
+For advertisers, Asami offers **quality over quantity**—modest, targeted amplifications from people genuinely interested in Web3. It can serve as a **pre-screening layer** before using mass engagement tools—or as a **complementary layer** that adds credibility to broader marketing efforts.
 
-- **Reach real people, through real people**: Instead of relying on platform algorithms or faceless banner ads, Asami enables your content to be voluntarily reposted by individuals who believe in what you're offering. This creates genuine endorsement and social proof.
 
-- **Control brand safety**: With Asami, you choose the Campaign Manager and set your own rules for who can participate. You can use allowlists or blocklists to ensure your content only reaches audiences through Collaborators you trust.
+### 10.5 Projects Measuring Social Media Influence
 
-- **Advertise where others can't**: Many industries, such as crypto or politically sensitive causes, face censorship or platform limitations. Asami gives you a space to run campaigns that might otherwise be restricted.
-- **Get more value per dollar**: Boosting a post on X (formerly Twitter) might cost $100 to reach 24k–57k impressions, but those impressions often lack the endorsement of a trusted peer. Asami creates impressions through trusted voices, which tend to convert better and build long-term brand value.
+Platforms like **FeiXiaoHao** and research initiatives such as **TweetBoost** analyze social metrics to quantify influence, sentiment, or content virality. FeiXiaoHao provides comprehensive social data tracking in the crypto ecosystem — including mentions, engagement rates, and keyword sentiment — helping users and investors spot trends and market mood. TweetBoost examines how Twitter metrics like follower reach, retweets, and likes impact NFT valuation — finding that Twitter activity improves prediction models by about 6%.
 
-- **Use it alongside existing strategies**: Asami isn’t here to replace your current marketing playbook—it’s a powerful addition. You can combine traditional ad campaigns with Asami campaigns to get layered visibility and broader reach.
+These projects overlap with Asami in their interest in measuring influence, but differ in scope and intent. FeiXiaoHao and TweetBoost focus on **analytics and insight**, serving researchers, investors, and teams seeking broader signals. Their influence models are generalized tools for sentiment analysis, not campaign-specific scoring engines.
 
-- **Get transparency and cost control**: You set the budget, reward range, and campaign duration. Funds are only used when Collaborators repost and are registered by the Campaign Manager. Unused funds are returned.
+By contrast, **Asami’s scoring algorithm is purpose-built**: it evaluates advocates on X using metrics tied directly to reposts, impressions, engagement ratios, and periodic scoring. The outcome drives **active campaigns and transparent rewards** — not just data insight. While a project might use analytic tools for strategic planning, Asami lets them **turn influence measurements into real-world outreach**, identifying which voices can actually amplify their message through advocacy.
 
-### 11.2 For Collaborators
+### 10.6 Centralized Social Media Ad Networks
 
-Collaborators join Asami because it allows them to:
+Traditional ad networks—such as **Google Ads**, **Meta (Facebook/Instagram Ads)**, and **X’s promoted posts**—offer broad reach and sophisticated targeting tools. However, they also pose specific challenges for Web3 projects:
 
-- **Monetize their social influence**: Even if you're not a content creator in the traditional sense, you may have real influence over your followers. Asami lets you earn for amplifying messages that resonate with your values.
+* **Regulatory limitations and compliance burdens**: Many platforms impose strict restrictions on crypto-related ads. For example, Google and Meta require advertisers to meet licensing and country-level guidelines before allowing crypto promotions.
+* **Platform-level bans**: TikTok, in particular, has repeatedly prohibited crypto ads globally due to consumer protection concerns.
+* **High costs and limited trust signals**: As projects contend with distrust or ad fatigue, platforms like X have seen reduced quality in paid content, and campaigns are growing more expensive with little assurance of engagement.
 
-- **Maintain your independence**: You decide which campaigns you want to support. You don’t have to compromise your voice or reputation—there’s no obligation to participate in any campaign you don’t believe in.
-
-- **Get paid globally, in crypto**: Rewards are paid in DOC, a stablecoin pegged to the US dollar. Payouts go straight to your wallet and are usable from anywhere in the world—no intermediaries, no bank delays.
-
-- **Grow your profile**: Asami rewards not only big influencers, but also genuine micro-influencers. If your audience engages with you authentically, you’ll be recognized and paid accordingly.
-
-- **Participate in a meaningful system**: Every time you collaborate on a campaign, you earn ASAMI tokens. These tokens give you a share of the protocol’s revenue and a voice in how it evolves. You become more than a user—you become a stakeholder.
-
-- **Onboard easily**: The platform supports gasless claims and Web2 onboarding, so even if you’ve never used crypto before, you can join Asami and receive rewards smoothly.
-
-Asami is built for people—people with something to say, people with something to promote, and people who care about how messages are spread. Whether you're here to advertise or collaborate, Asami offers a better way to connect and grow.
+**Asami offers a complementary alternative**: rather than buying impressions, it facilitates **trusted amplification** through known-and-verified advocates. A repost from a credible advocate is more likely to be seen as genuine than a promoted post. This approach can improve **ad delivery**, **engagement rates**, and **brand trust**, especially during uncertain times. For Web3 projects, Asami provides a **last-mile trust layer** that traditional ads cannot replicate due to both technical and policy constraints.
 
 ---
 
-## 12. Contract Addresses and Links { .no-cols }
+## 11. Future Directions
+
+Asami remains a work in progress, guided by the evolving needs of Web3 projects and the growing community of advocates that support them. This section outlines areas of planned or ongoing development that aim to improve fairness, flexibility, and reach — while remaining true to Asami’s purpose: to reward genuine advocacy modestly and transparently.
+
+### 11.1 Influence Scoring Improvements
+
+Future versions of the scoring algorithm will refine how authority and audience are measured, especially on a per-action basis. Quote tweets, mentions, and post-specific engagement may soon be weighted independently. This will make it possible to reward advocates not only for their overall presence but also for the performance of individual reposts, replies, or mentions. Further techniques to detect reverse influence or manipulation are also under consideration.
+
+### 11.2 Expanded Advocate Activity Types
+
+Asami currently rewards reposts and quote tweets equally, but other content types — such as replies or mentions — may become eligible in the future. These will be considered for their reach, intent, and verifiability, and may be scored or gated differently based on campaign requirements.
+
+### 11.3 Support for Other Platforms
+
+While the current focus is on X (Twitter), Asami aims to integrate other platforms such as Nostr, LinkedIn, and Instagram. Additional targets include Farcaster, Threads, and Telegram — provided they allow public post visibility and permit reliable data collection. Asami will prioritize platforms aligned with Web3 ideals and open data access.
+
+### 11.4 Multi-currency Support (BTC & Lightning)
+
+Campaign funding via BTC and Lightning Network is under development. These payment methods will be converted transparently into DOC to maintain consistency in reward logic and fee attribution. Compared to Stripe, they will incur lower processing fees, but campaigns funded this way will not trigger ASAMI token issuance to participants.
+
+### 11.5 Advocacy Culture and Outreach
+
+Beyond technical improvements, Asami is committed to fostering a culture of advocacy. This includes educational initiatives to help people become better advocates, support for public discussions about scoring and fairness, and content explaining how to participate effectively. Asami will also invest in outreach and promotion to grow awareness and bring more people into the club — especially those who are already acting as organic amplifiers of Web3 ideas.
+
+---
+
+## 12. Legal Considerations
+
+Asami is a protocol and platform that facilitates the voluntary collaboration between advertisers and social media users ("advocates") in a transparent, decentralized environment. It is not a company, foundation, or legal entity. While software and infrastructure may be maintained by identifiable individuals or organizations, the protocol itself operates on immutable smart contracts and open governance through token issuance.
+
+### 12.1 No Investment Offering
+
+ASAMI tokens are not offered as an investment. They represent participation in the Asami.club protocol and are issued to contributors who support the ecosystem by either promoting content (advocates), managing campaigns (campaign managers), or providing funding (advertisers). The token has a fixed supply and is distributed according to predetermined rules encoded in a smart contract. There is no promise of profit, nor any entity guaranteeing appreciation in value.
+
+### 12.2 No Guarantees or Warranties
+
+Asami provides no service-level guarantees to any participant. The behavior of the protocol is defined entirely by its code, and all interactions with it are at the discretion and risk of the participants. There is no legal obligation for campaign managers to score fairly, respond to complaints, or issue refunds. Complaints must be resolved socially, reputationally, or by migrating to alternative infrastructure built on the protocol.
+
+### 12.3 Compliance and Local Laws
+
+Users are responsible for complying with their local regulations, including but not limited to:
+
+* Disclosing paid promotions when legally required.
+* Paying taxes on income received through campaigns.
+* Respecting platform terms of service when interacting with third-party sites like X (Twitter).
+
+Asami does not and cannot enforce these requirements but encourages responsible participation and compliance.
+
+### 12.4 Privacy and Data
+
+Asami itself does not collect user data beyond what is published on-chain. Campaign managers and other participants may collect or analyze public social media data to assess influence. All such data use must respect the terms and limitations of the platforms where the data originates (e.g. X’s API terms). Internal datasets used for scoring may not be shareable, even if the scoring algorithm is public. Campaign managers may store personal or pseudonymous data to improve services or maintain scoring history, but this data is deletable upon request. If you have questions or concerns about your data, do not hesitate to contact **[dpo@asami.club](mailto:dpo@asami.club)** for guidance.
+
+
+## 13. Final Notes
+
+Asami.club is a continuously evolving experiment in building a more transparent, modest, and community-oriented form of social media advocacy. It doesn't claim to solve every marketing or influencer problem, nor to replace the massive infrastructure of centralized ad networks. Instead, it offers an alternative — one that starts small, rewards real people, and encourages genuine participation in the growth of Web3 projects.
+
+The protocol is public. The smart contracts are permissionless. The club is open to all.
+
+If you're an advocate, try participating in a campaign.
+
+If you're an advertiser, try funding one.
+
+If you're a builder, try creating your own interface to the protocol.
+
+The system will become what we collectively make of it.
+
+---
+
+## Appending A: Contract Addresses and Links { .no-cols }
 
 **Asami Smart Contract** (Rootstock):  
   https://explorer.rootstock.io/address/0x3150e390bc96f1b4a05cf5183b8e7bdb68566954
@@ -614,7 +1157,7 @@ Asami is built for people—people with something to say, people with something 
 
 ---
 
-## 13. Contact and Support { .no-cols }
+## Appendix B: Contact and Support { .no-cols }
 Members are encouraged to ask questions or request help via public channels. We aim to keep all communication transparent and community-facing.
 
 **X (Twitter):**
@@ -628,7 +1171,8 @@ Members are encouraged to ask questions or request help via public channels. We 
 Please note that all reviews and scoring requests must follow the evidence-based process described in this whitepaper, which also contains an FAQ appendix.
 
 ---
-## Appendix A: FAQ and Known Issues { .no-cols }
+
+## Appendix C: FAQ and Known Issues { .no-cols }
 
 **Q: Why am I not getting any campaigns?**
 - Your influence score may be low, or you may be missing required categories. You can request a review.
