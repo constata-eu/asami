@@ -31,7 +31,7 @@ CMD /bin/bash -c "\
   && rsync -av --progress /host_workspace/ /work --exclude-from /host_workspace/.gitignore \
   && chown -R root:root /work \
   && mkdir -p /host_workspace/release \
-  && rm -rf /host_workspace/release/pwa/assets/index-*.js \
+  && rm -rf /host_workspace/release/pwa/dist/assets/index-*.js \
   && cd /work/pwa \
   && yarn cache clean \
   && yarn \

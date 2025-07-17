@@ -50,13 +50,9 @@ export const ContractsProvider = ({ children }) => {
     provider.on("disconnect", () => {
       setValues(null);
     });
-    const ethersProvider = isEmbedded ?
-      ? new ethers.Web3Provider(provider, "any")
-      : new ethers.BrowserProvider(provider);
+    const ethersProvider = new ethers.BrowserProvider(provider);
 
-    const signer = isEmbedded ? 
-      ? ethersProvider.getSigner()
-      : await ethersProvider.getSigner(0);
+    const signer = await ethersProvider.getSigner(0);
 
     await require_signer(expected_signer, signer.address, disconnect);
 
@@ -129,7 +125,7 @@ export const ContractsProvider = ({ children }) => {
       }
     } catch (e) {
       throw new HttpError("Unauthorized", 401, {
-        message: "Cannot log-in if you don't authorize the app.",
+        message: e.toString(),
       });
     }
   };
