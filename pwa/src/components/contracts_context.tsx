@@ -50,9 +50,14 @@ export const ContractsProvider = ({ children }) => {
     provider.on("disconnect", () => {
       setValues(null);
     });
-    const ethersProvider = new ethers.BrowserProvider(provider);
+    const ethersProvider = isEmbedded ?
+      ? new ethers.Web3Provider(provider, "any")
+      : new ethers.BrowserProvider(provider);
 
-    const signer = await ethersProvider.getSigner(0);
+    const signer = isEmbedded ? 
+      ? ethersProvider.getSigner()
+      : await ethersProvider.getSigner(0);
+
     await require_signer(expected_signer, signer.address, disconnect);
 
     const asamiAddress = config.contractAddress;

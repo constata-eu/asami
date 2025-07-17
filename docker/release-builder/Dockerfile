@@ -30,7 +30,8 @@ CMD /bin/bash -c "\
   rm -rf /work/* \
   && rsync -av --progress /host_workspace/ /work --exclude-from /host_workspace/.gitignore \
   && chown -R root:root /work \
-  && rm -rf /host_workspace/releases/pwa/assets/index-*.js
+  && mkdir -p /host_workspace/release \
+  && rm -rf /host_workspace/release/pwa/assets/index-*.js \
   && cd /work/pwa \
   && yarn cache clean \
   && yarn \
@@ -38,7 +39,6 @@ CMD /bin/bash -c "\
 	&& cp -r /work/pwa/dist /host_workspace/release/pwa \
   && cd /work/api && sqlx database reset -y \
   && cd /work/api && cargo build --release --bin migrator --bin api --bin worker \
-  && mkdir -p /host_workspace/release \
   && cp /work/target/release/{migrator,api,worker} /host_workspace/release \
   && chown -R $HOST_UID:$HOST_UID /host_workspace/release \
 "

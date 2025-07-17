@@ -113,7 +113,7 @@ const WalletConnectTrigger = () => {
         const code = await signLoginMessage(true);
         navigate(`/eip712_login?code=${code}`);
       } catch (e) {
-        notify(e.body.message, { type: "error" });
+        notify(e.toString(), { type: "error" });
       }
     }
     init();
