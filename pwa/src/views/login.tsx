@@ -113,7 +113,10 @@ const WalletConnectTrigger = () => {
         const code = await signLoginMessage(true);
         navigate(`/eip712_login?code=${code}`);
       } catch (e) {
-        notify(e.body.message, { type: "error", autoHideDuration: 6000 });
+        notify(`${window["XOConnect"]} - ${e.body.message}`, {
+          type: "error",
+          autoHideDuration: 10000,
+        });
       }
     }
     init();
