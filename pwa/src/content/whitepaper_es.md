@@ -1,681 +1,1126 @@
+
 # Whitepaper de Asami Club
 
-Este whitepaper describe el sistema tal como está concebido. Algunas funciones ya existen, otras están en desarrollo. { .lead }
+Este whitepaper describe el sistema y ecosistema según lo proyectado y fue revisado por última vez en julio de 2025.
 
 ---
 
-## 1. Resumen
+## 1. Panorama general
 
-Asami.club es un protocolo descentralizado que permite a cualquiera financiar o ganar dinero con la creación de tendencias en redes sociales. En el centro del sistema hay un mecanismo simple pero poderoso: un Anunciante reserva un presupuesto denominado en USD para amplificar un mensaje, y los Colaboradores ganan una parte de ese presupuesto al republicarlo en sus propias cuentas de X (anteriormente Twitter).
+En Web3, donde la apertura, la descentralización y la comunidad son valores fundamentales, difundir ideas mediante campañas mediáticas de arriba hacia abajo resulta costoso, suele generar desconfianza y, en última instancia, es ineficaz para la adopción sostenida de usuarios. Aunque la publicidad tradicional puede generar visibilidad a corto plazo, rara vez construye confianza o genera sentido de pertenencia. La mayoría del crecimiento significativo en este espacio ha venido de usuarios tempranos y divulgadores: personas que comparten lo que han descubierto por curiosidad, convicción o ganas de ayudar a otros.
 
-Este presupuesto se mantiene y paga en DOC (Dollar on Chain), una stablecoin respaldada por Bitcoin, lo que garantiza pagos confiables y no expuestos a la volatilidad del mercado cripto. DOC es la principal recompensa económica que reciben los Colaboradores: es cómo se les paga por su trabajo, de forma directa y en tiempo real.
+A estas personas, las llamamos **Divulgadores**. Actúan como curadores, intérpretes y amplificadores. Repostean, traducen y contextualizan proyectos emergentes. Aportan visibilidad, legitimidad y tracción inicial. Pero como sus contribuciones son informales y, a menudo, no remuneradas, suelen pasar desapercibidas. Muchos se alejan. Algunos son absorbidos por ecosistemas que ofrecen mayor reconocimiento. Otros simplemente se rinden.
 
-Junto con los pagos en DOC, todos los participantes también reciben tokens ASAMI. Estos tokens cumplen múltiples funciones: actúan como señal de alineación con el club, otorgan derechos de gobernanza sobre la tasa de comisión del protocolo, y permiten participar del reparto de ingresos generados por las comisiones. Este sistema dual de recompensas ofrece incentivos tanto inmediatos (DOC) como a largo plazo (ASAMI).
+No porque estuvieran equivocados — sino porque el ecosistema no les dio motivos para continuar.
 
-El protocolo está implementado como un contrato inteligente en Rootstock (RSK), una cadena lateral de Bitcoin que soporta contratos inteligentes compatibles con Ethereum. Rootstock fue elegido por su modelo de seguridad (minado combinado con Bitcoin), su historial de disponibilidad y su uso de Bitcoin como moneda nativa. Todas las recompensas y presupuestos de las campañas están en DOC, mientras que los tokens ASAMI se distribuyen en base a las comisiones retenidas.
+### Una Brecha Estructural
 
----
+Los proyectos Web3 sí se preocupan por la visibilidad, pero las herramientas disponibles son limitadas. La mayoría de los presupuestos de marketing terminan:
 
-## 2. Historia del proyecto, descubrimientos y estado actual
+* En plataformas que están **desalineadas con los valores de Web3**, o que directamente restringen el contenido relacionado con blockchain.
+* O en **esquemas de uso incentivado**, donde se paga a individuos por completar tareas, registrar cuentas o simular interacción — atrayendo con frecuencia usuarios que desaparecen en cuanto se acaban las recompensas.
 
-Asami.club comenzó como una idea experimental basada en las capacidades emergentes de las redes sociales descentralizadas y la infraestructura web3. En las primeras exploraciones, nos dimos cuenta de que, aunque las plataformas sociales siempre se han monetizado mediante publicidad, el trabajo real de difundir influencia —dar likes, republicar, comentar— casi nunca fue compensado de manera justa o directa.
+Lo que falta en estos enfoques es una forma de reconocer y apoyar la **divulgación genuina** — no el uso, no la interacción artificial, sino la expresión pública de interés y convicción.
 
-### 2.1 De Nostr a X
+Los proyectos de código abierto y descentralizados tienen éxito cuando encuentran y retienen a **divulgadores voluntarios**. Pero la mayoría no tiene una forma sistemática de identificarlos, agradecerles o motivarlos a seguir.
 
-Nuestro primer prototipo se construyó sobre Nostr, un protocolo de redes sociales descentralizado. Desarrollamos un contrato inteligente que aceptaba fondos de Anunciantes y permitía a cualquiera reclamar una porción de esos fondos publicando un mensaje verificable en Nostr. Estas reclamaciones se aseguraban mediante firmas criptográficas nativas del protocolo. Si bien el modelo era conceptualmente elegante y completamente descentralizado, presentaba dos problemas principales:
+### El Protocolo Asami
 
-- Las operaciones criptográficas eran costosas, lo que generaba altas comisiones en cadena.
-- La base de usuarios de Nostr en ese momento era demasiado pequeña para atraer interés significativo de los Anunciantes.
+**Asami.club es un protocolo descentralizado para reconocer y recompensar a divulgadores de Web3.** Ayuda a los Proyectos a:
 
-Entonces pivotamos hacia X (anteriormente Twitter), reconociendo que era necesario un puente entre los medios tradicionales y los descentralizados. Esto requirió un modelo híbrido donde las colaboraciones se verifican fuera de la cadena y son enviadas por un oráculo: específicamente, el Administrador de campañas.
+* Alcanzar personas reales que los apoyan públicamente,
+* Agradecerles de forma transparente,
+* Y construir una red duradera de voces alineadas.
 
-### 2.2 Evaluando las suposiciones del mercado
+Antes de participar en cualquier campaña, cada usuario es evaluado y clasificado por Asami mediante un **proceso periódico de medición de influencia**. Esta evaluación de base considera impresiones en tweets, patrones de interacción, proporción de seguidores verificados, idioma y afinidad con Web3. Solo quienes superan un umbral de calidad son admitidos en el grupo de Divulgadores elegibles.
 
-La idea central de Asami se basaba en dos suposiciones:
+Una vez curados dentro de este grupo, los Divulgadores pueden **descubrir campañas y sumarse voluntariamente** al repostear contenido en el que creen. Los Proyectos crean campañas seleccionando una publicación (usualmente un tweet) y asignando un presupuesto en DOC, una stablecoin respaldada por Bitcoin.
 
-- Que **los usuarios de redes sociales estarían dispuestos a que se les pague por republicar contenido**, y
-- Que **las marcas y proyectos verían valor en las republicaciones realizadas por personas reales**, especialmente en comparación con el engagement falso comprado por medios tradicionales.
+Cuando un Divulgador elegible hace repost, puede recibir:
 
-Confirmamos que existían ambos lados del mercado. Los Colaboradores se sumaron con entusiasmo y estaban dispuestos a republicar contenido a cambio de recompensas. Los Anunciantes, por su parte, valoraron la idea de una amplificación real y dirigida por pares. Sin embargo, surgieron desafíos al transformar ese potencial en un mercado funcional y eficiente.
+* Una modesta recompensa en DOC, como agradecimiento público.
+* Tokens ASAMI, que otorgan participación en ingresos del protocolo y derechos de gobernanza.
 
-Los pagos basados en cripto fueron una **súper herramienta del lado de los Colaboradores**: permitían recompensas instantáneas, sin fronteras y sin intermediarios. Pero también **limitaban la base de Anunciantes**, ya que muchas marcas todavía dependen de la infraestructura fiat tradicional. Asami necesitará integrar rampas fiat como Stripe para abordar completamente esta desalineación.
+Este pago **no es un incentivo para repostear**, sino una forma de **reconocer y valorar** la visibilidad que ya ofrecieron. También funciona como un **símbolo de responsabilidad**: al aceptar una recompensa pública por una acción pública, el Divulgador demuestra transparencia y apropiación moral del mensaje que amplificó.
 
-Y como en cualquier mercado, **el descubrimiento de precios** es clave. Confirmamos que había oferta y demanda, pero los dos lados tenían dificultades para coincidir en el precio justo. Muchos Colaboradores esperaban pagos altos (por ejemplo, USD 5 por republicación) sin importar el tamaño o nivel de interacción de su audiencia. Los Anunciantes, en cambio, descubrieron que las campañas no entregaban suficiente valor por dólar invertido. Las campañas empezaron a ofrecer recompensas más bajas, lo que alejó a los Colaboradores valiosos y dejó a aquellos que estaban sobrepagados, reduciendo aún más la efectividad de las campañas.
+A partir de ahí, **los Proyectos pueden comenzar a curar su propia comunidad de divulgadores**. Pueden observar quiénes participaron, mantener listas blancas y negras, y crear campañas totalmente abiertas, semirrestrictas o exclusivas para un grupo de confianza. Esto les permite equilibrar la **exploración** (encontrar nuevos posibles Divulgadores) con la **explotación** (colaborar con voces ya probadas). Algunos proyectos incluso pueden continuar la relación por fuera de Asami para colaboraciones más profundas, como creación de contenido o programas de embajadores.
 
-### 2.3 Fricción de puntuación e insuficiencia de Colaboradores
+### Beneficios para el Ecosistema
 
-Este espiral descendente reveló dos problemas clave:
+Asami es una posible solución al desafío de hacer crecer Web3 a través de la confianza, no del ruido. A diferencia de las plataformas que pagan por usar un producto o realizar tareas arbitrarias, Asami se enfoca en **reconocer la divulgación genuina y voluntaria**.
 
-1. **Algoritmos defectuosos de medición de influencia**, que resultaban en sobrepagos a cuentas de baja calidad, permitiendo abusos y reduciendo la satisfacción de los Anunciantes. Respondimos diseñando un nuevo algoritmo (descrito en este whitepaper) que introduce mediciones de autoridad más estrictas y en capas.
+Proporciona una estructura para:
 
-2. **Un número insuficiente de Colaboradores** que llevaba a rigidez en los precios. Un pequeño grupo de participantes podía dominar las recompensas de las campañas y desincentivar el crecimiento. Peor aún, algunos estaban desincentivados a invitar a otros, ya que eso diluía sus ganancias.
+* Motivar a los Divulgadores a seguir compartiendo lo que ya les importa.
+* Ayudar a los Proyectos a descubrir y valorar a estos primeros aliados.
+* Mantener la interacción pública, modesta y beneficiosa para ambas partes — sin comprometer la independencia ni la integridad.
 
-Para contrarrestar esto, introdujimos un mecanismo de recompensa dedicado a las referencias exitosas. Ahora, invitar a nuevos miembros valiosos está incentivado directamente y se reconoce dentro del puntaje de influencia.
+Como todas las interacciones están en cadena y la participación no requiere permisos, no hay contratos, acuerdos privados ni influencia oculta. Y dado que cada campaña ayuda a los Proyectos a identificar voces alineadas, el resultado no es solo visibilidad — es **formación de comunidad**.
 
-### 2.4 Lecciones sobre funciones y soluciones futuras
-
-Surgieron ideas adicionales para alinear mejor los incentivos y ayudar a que el mercado funcione:
-
-- **Retroalimentación de precios impulsada por Colaboradores**: los Colaboradores deberían poder sugerir su tarifa preferida al aceptar o rechazar una campaña. Estos datos podrían ayudar a los Anunciantes a fijar mejor los precios y ajustar expectativas.
-
-- **Listas de permitidos/bloqueados para Anunciantes**: los Anunciantes necesitan mejores herramientas para seleccionar quién puede participar en sus campañas. Estas listas les permitirán bloquear a Colaboradores poco efectivos o fuera de marca, y brindarán señales para identificar fatiga de influencia.
-
-### 2.5 Lo que aprendimos y lo que viene
-
-Tras un año completo de funcionamiento del protocolo en el mundo real, dos conclusiones son innegables:
-
-1. **Necesitamos más Colaboradores.** La plataforma solo funciona si los Anunciantes pueden acceder a una amplia variedad de personas reales que amplifiquen sus mensajes. El crecimiento orgánico no es suficiente: debemos atraer activamente nuevos Colaboradores. Esto probablemente requiera esfuerzos dedicados de marketing y publicidad paga.
-
-2. **Necesitamos un sistema de medición de influencia confiable.** Errores en el algoritmo de puntuación pueden desestabilizar toda la economía, recompensando a los actores equivocados y socavando la confianza de los Anunciantes. El algoritmo debe mantenerse cuidadosamente, estar abierto a revisiones y validarse de manera continua.
-
-Ambas responsabilidades —hacer crecer la base de Colaboradores y mantener la lógica de puntuación— recaen naturalmente en los **Administradores de campañas**, quienes están en el centro de la relación entre Anunciantes, Colaboradores y el protocolo. A día de hoy, solo hay un Administrador de campañas cumpliendo este rol, y está trabajando activamente en soluciones.
+Esto crea una **economía circular de reputación y apoyo**: los Proyectos financian campañas, los Divulgadores reciben reconocimiento, y ambas partes ayudan a que el ecosistema Web3 crezca en coherencia con sus valores.
 
 ---
 
-## 3. Roles del ecosistema y participantes
+## 2. Historia del Proyecto, Descubrimientos y Estado Actual
 
-Esta sección describe a los participantes clave en el ecosistema de Asami y los roles que desempeñan dentro del protocolo. Cada tipo de parte interesada —Anunciantes, Colaboradores, Administradores de campañas y Titulares de tokens— tiene una función específica, un conjunto de incentivos, derechos y responsabilidades. Comprender estos roles es esencial para entender cómo funciona el sistema Asami y cómo fluyen las decisiones, el valor y las recompensas a través de la red.
+En 2023, **Nostr** estaba reinventando las redes sociales como una plataforma descentralizada — construida sobre criptografía simple y participación sin permisos. Estaba siendo promovida por defensores apasionados, al igual que otros movimientos anteriores, como Bitcoin. Lo que distinguía a Nostr era que no era simplemente un protocolo neutral — apoyaba activamente a sus primeros usuarios mediante **señales sociales y micro-recompensas**, como likes y zaps.
 
-### 3.1 Anunciantes
+Esto dio origen a la idea original detrás de Asami: ¿y si combinamos esta cultura de **divulgación social** con **contratos inteligentes**, permitiendo que las personas sean recompensadas — no por usar algo, sino por amplificarlo? Si alguien decidía volver a publicar un mensaje en Nostr, un contrato inteligente podía verificar esa acción y enviarle automáticamente una recompensa. Sin intermediarios publicitarios centralizados, sin negociaciones — solo un agradecimiento sin necesidad de confianza.
 
-**Quiénes son:** Cualquier persona que quiera promocionar una publicación. Esto puede incluir individuos, proyectos, startups, agencias, marcas o fans que apoyan a otra persona.
+### 2.1 De Experimentos de Protocolo a Divulgación Práctica
 
-**Qué hacen:** Un Anunciante crea una “campaña” seleccionando una publicación (generalmente de X), definiendo un presupuesto total en DOC, estableciendo una duración y especificando cómo se distribuyen las recompensas entre los Colaboradores según sus puntajes de influencia.
+El primer prototipo de Asami implementó exactamente esta idea: un contrato inteligente que recibía fondos de un Proyecto y permitía que cualquier persona reclamara una recompensa por volver a publicar un mensaje en Nostr. Aunque técnicamente elegante y completamente descentralizado, surgieron dos limitaciones críticas:
+
+* Verificar criptográficamente las publicaciones en cadena resultaba **demasiado costoso para escalar**, especialmente para micropagos.
+* La **base de usuarios de Nostr era aún demasiado pequeña** para atraer interés significativo por parte de los Proyectos.
+
+Esto condujo a un giro: Asami se integró con **X (antes Twitter)**, adoptando un modelo híbrido. Las publicaciones ahora se verifican fuera de cadena por un tercero — el Administrador de Campañas — y luego se registran en cadena. Esto redujo los costos y permitió un mayor alcance, sin comprometer los valores del protocolo de transparencia y trazabilidad.
+
+### 2.2 Supuestos de Mercado y Lo que Aprendimos
+
+Asami se construyó sobre dos suposiciones clave:
+
+* Que **los usuarios de Web3 estarían dispuestos a volver a publicar contenido en el que creen**, si se sienten respetados y reconocidos.
+* Que **los Proyectos de Web3 preferirían visibilidad auténtica de verdaderos Divulgadores**, en lugar de métricas infladas o interacción falsa.
+
+Ambas se demostraron ciertas — pero la ejecución requería matices.
+
+Los Divulgadores se sumaron con entusiasmo, a menudo republicando sin esperar grandes pagos. Los Proyectos valoraron ver apoyo orgánico. Pero rápidamente quedó claro que **un sistema de recompensas justo y estable** requería:
+
+* Medición precisa de la influencia,
+* Expectativas saludables sobre precios,
+* Y mecanismos para que los Proyectos **construyan sus propias comunidades**, no solo alquilen atención.
+
+También se volvió evidente que el objetivo nunca fue “pagar para que la gente publique”. En cambio, la recompensa debía enmarcarse — y diseñarse — como un **agradecimiento**, entregado de forma pública, modesta, y solo después del acto de divulgación.
+
+### 2.3 Desafíos Iniciales y Soluciones
+
+Varias fricciones tempranas moldearon la evolución del protocolo:
+
+* **Puntajes poco confiables**: Los primeros modelos basados en la cantidad de seguidores eran fáciles de explotar. El algoritmo actual de medición de influencia usa impresiones recientes de tweets, ratios de interacción, menciones, proporciones entre seguidores verificados y seguidos, y datos opcionales ingresados manualmente. Los puntajes se actualizan periódicamente, de forma independiente a la participación en campañas. Esto crea un filtro base que asegura que solo cuentas auténticas y relevantes puedan participar en campañas.
+
+* **Crecimiento limitado de divulgadores**: Un número pequeño de Divulgadores tempranos concentraba la mayoría de las recompensas. Para alentar nuevas voces, Asami añadió **incentivos por referidos** y hace seguimiento de la participación a largo plazo.
+
+* **Fricciones en la creación de campañas**: Aunque los Divulgadores podían recibir cripto fácilmente, muchos Proyectos — especialmente aquellos con equipos de marketing nativos de Web2 — preferían usar tarjetas de crédito. Para apoyarlos, Asami integró **pagos con Stripe**, permitiendo financiar campañas sin usar cripto. (Se aplica una comisión del 20% para cubrir costos y slippage.)
+
+* **De alcance a relación**: Los Proyectos no solo querían impresiones — querían conexión. Las campañas comenzaron a funcionar como herramientas de descubrimiento: formas de encontrar posibles Divulgadores, observarlos en acción, y luego invitarlos a listas de permitidos para campañas futuras. Los Proyectos ahora equilibran **exploración** (medir interés) con **explotación** (trabajar con voces conocidas), y pueden contactar a Divulgadores confiables fuera de la plataforma si lo desean.
+
+### 2.4 Enfoque Exclusivo en Web3 y Visión a Largo Plazo
+
+Originalmente, Asami dejaba abierta la posibilidad de un uso más amplio. Pero con el tiempo quedó claro que **los Proyectos Web3 están mejor alineados** con los valores del protocolo: transparencia, descentralización y crecimiento basado en comunidad.
+
+Asami ahora se enfoca exclusivamente en el ecosistema Web3. Su misión es ayudar a los Proyectos a:
+
+* Llegar a Divulgadores alineados,
+* Reconocerlos de manera justa,
+* Y hacer crecer sus comunidades de forma sostenible.
+
+A mediados de 2025, el sistema está en funcionamiento y plenamente operativo. Las campañas corren a diario. El sistema de puntajes está activo. Los Divulgadores se registran con X o correo electrónico, y vinculan sus billeteras cuando están listos. El onboarding con Stripe funciona. Los retiros sin gas están disponibles. El protocolo es de código abierto, evoluciona continuamente, y da la bienvenida a nuevos Administradores de Campaña e integraciones.
+
+Para reforzar el tono de **agradecimiento en lugar de compensación**, Asami adoptó al **maní** como su mascota — un recordatorio lúdico de que las recompensas pueden ser modestas, pero son sinceras. Lo que los Divulgadores aportan es visibilidad, no riqueza. Los tokens DOC y ASAMI que reciben son simplemente **un agradecimiento público**.
+
+Mirando hacia el futuro, Asami se enfocará en:
+
+* Avanzar el marco técnico y filosófico para medir la influencia genuina,
+* Expandirse a nuevas plataformas y tipos de interacción (por ejemplo, comentarios, likes, LinkedIn, Nostr mediante oráculos),
+* Y habilitar **puntajes por acción**, donde los Divulgadores puedan ser valorados por el alcance de un post o quote tweet específico, no solo por su cuenta general.
+* Soportar pagos con Bitcoin y Lightning Network (LN) para financiar campañas, con conversión automática a DOC y comisiones más bajas que las de tarjeta de crédito — ampliando la accesibilidad sin comprometer la integridad de las campañas.
+
+## 3. Roles del Ecosistema y Partes Interesadas
+
+El protocolo Asami reúne tres roles principales:
+
+* **Proyectos**, que desean aumentar su visibilidad y construir una red de seguidores confiables.
+* **Divulgadores**, que amplifican mensajes en los que creen y reciben reconocimiento público por hacerlo.
+* **Administradores de Campaña**, que operan la infraestructura y hacen cumplir reglas a nivel de protocolo como el registro de reposts y el cálculo de influencia.
+
+Cada participante cumple un rol específico en el sistema, con derechos, responsabilidades y expectativas claramente definidas.
+
+
+### 3.1 Proyectos
+
+**Quiénes son:** Cualquier persona o equipo que dirija una iniciativa Web3 — protocolos, dApps, DAOs, proyectos de herramientas, artistas, proveedores de infraestructura o movimientos impulsados por la comunidad — que quiera involucrar a personas reales para amplificar su mensaje.
+
+**Qué hacen:** Los Proyectos crean campañas seleccionando una publicación (usualmente en X), definiendo un presupuesto en DOC y eligiendo un Administrador de Campaña. Luego pueden establecer parámetros sobre cómo se distribuyen las recompensas y quién puede participar.
 
 **Derechos:**
-- Decidir cuánto pagar por unidad de influencia.
-- Establecer pagos mínimos y máximos para asegurar una distribución amplia del presupuesto.
-- Agregar más fondos o extender una campaña en cualquier momento.
-- Retirar los fondos no utilizados una vez finalizada la campaña.
-- Elegir un Administrador de campañas para cada campaña y cambiar libremente de uno a otro.
-- Decidir qué cuentas están permitidas o bloqueadas para participar en su campaña, utilizando listas de permitidos/rechazados con la ayuda del Administrador de campañas.
+
+* Definir el presupuesto, duración y estructura de pagos de la campaña.
+* Restringir o permitir la participación mediante listas blancas o negras.
+* Revisar participantes y crear una lista evolutiva de Divulgadores confiables.
+* Financiar campañas usando DOC, tarjeta de crédito (vía Stripe), o pronto, Bitcoin y LN.
+* Elegir y cambiar de Administrador de Campaña libremente.
+* Retirar fondos no utilizados una vez finalizada la campaña.
 
 **Obligaciones:**
-- Aceptar que una vez lanzada una campaña, no se puede cancelar.
-- Confiar en que el Administrador de campañas registrará de forma justa las republicaciones y aplicará el método de puntuación de influencia.
 
-**Notas adicionales:**
-Los Anunciantes no tienen garantizado que los Colaboradores republicarán su mensaje. Los Colaboradores eligen campañas voluntariamente, creando un sistema de autoselección en el que solo los usuarios alineados amplifican un mensaje.
+* Aceptar que las campañas, una vez activas, no se pueden revertir.
+* Confiar en que el Administrador de Campaña aplicará el registro de reposts y la puntuación de influencia de forma justa.
 
-### 3.2 Colaboradores
+**Notas:**
 
-**Quiénes son:** Usuarios de redes sociales con audiencias reales que eligen amplificar mensajes y ganar dinero por hacerlo.
+* Los Proyectos pueden crear campañas abiertas para descubrir nuevos Divulgadores (exploración), o exclusivas para comunidades previamente seleccionadas (explotación).
+* Los reposts son voluntarios — los Proyectos no pueden obligar a nadie a amplificar su contenido.
+* Todos los pagos son públicos y trazables en la cadena.
 
-**Qué hacen:** Los Colaboradores exploran la lista de campañas activas para las que son elegibles y deciden qué mensajes desean republicar. Cuando republican la publicación de una campaña, su acción es registrada por el Administrador de campañas y reciben un pago en DOC.
+
+### 3.2 Divulgadores
+
+**Quiénes son:** Usuarios de redes sociales — principalmente en X — que tienen una audiencia genuina y eligen amplificar responsablemente proyectos Web3.
+
+Los Divulgadores no tienen que ser celebridades, fundadores ni personas influyentes del sector. Cada voz auténtica importa. Algunos Divulgadores pueden estar recién comenzando, compartiendo nuevos proyectos con amigos, compañeros de trabajo o una audiencia pequeña pero real. Eso está bien. La divulgación no se trata de hacer ruido, sino de estar alineado con lo que se comparte.
+
+**Qué hacen:** Los Divulgadores exploran campañas disponibles (tras superar el puntaje base de Asami) y eligen qué contenidos repostear. Si su repost cumple con los requisitos de la campaña, reciben un pago modesto en DOC y tokens ASAMI.
+
+**Qué define a un verdadero Divulgador:**
+Asami define a un Divulgador como alguien que:
+
+* Posee y hace crecer una **audiencia genuina** en X.
+* **Comparte contenido Web3 de forma responsable**, expresando interés o conocimiento real.
+* **No repostean a ciegas** ni solamente para obtener recompensas.
+* Brindan **visibilidad real** a los proyectos que amplifican.
+
+Esto significa que hacer reposts no es suficiente: se espera que los Divulgadores muestren interés, comprensión y relevancia.
+
 
 **Derechos:**
-- Elegir qué campañas republicar. Nadie está obligado a participar.
-- Recibir pagos en DOC por republicaciones exitosas, según su nivel de influencia y las reglas de pago de la campaña.
-- Recibir tokens ASAMI como parte del reparto de ingresos del protocolo.
-- Solicitar una revisión de su puntaje de influencia o asignación de categoría (por ejemplo, idioma), siguiendo un proceso definido.
+
+* Elegir qué campañas repostear — la participación siempre es voluntaria.
+* Ser recompensado (en DOC y ASAMI) si su repost es válido y tiene impacto.
+* Solicitar una revisión de su puntaje de influencia o de sus etiquetas asignadas (por ejemplo, idioma o región).
+* Usar retiros sin gas para reclamar sus recompensas.
 
 **Obligaciones:**
-- Mantener las republicaciones por un período mínimo. Eliminaciones prematuras pueden afectar su elegibilidad futura.
-- Operar una cuenta legítima en X con actividad genuina. Las cuentas que solo republican sin publicaciones originales, o muestran señales de interacción artificial, pueden ser excluidas.
 
-**Limitaciones y detalles importantes:**
-- Las colaboraciones se registran por orden de llegada. Una vez que una campaña se queda sin fondos, no se realizan más pagos.
-- Si una republicación es válida pero no tiene fondos, puede marcarse como “no pagada” y aún así ganar tokens ASAMI, o ser elegible para recompensas futuras si se agregan fondos más adelante.
-- Los Colaboradores pueden ser filtrados de ciertas campañas debido a puntajes bajos, categorías faltantes u otros factores establecidos por los Anunciantes o el Administrador de campañas.
+* Mantener los reposts durante un período mínimo.
+* Operar una cuenta legítima en X con actividad orgánica.
+* Evitar repostear todas las campañas sin contexto o criterio.
+* Aceptar que su puntaje puede cambiar con el tiempo, y que no todos los cambios generarán pagos.
 
-**Disputas sobre puntajes de influencia:**
-Si un Colaborador cree que su puntaje de influencia es incorrecto, debe:
-- Leer la sección de Medición de Influencia de este whitepaper.
-- Identificar la parte exacta del algoritmo que considera mal aplicada.
-- Comparar su puntaje con el de cuentas similares.
-- Proporcionar evidencia (por ejemplo, métricas de interacción, resultados de encuestas, estadísticas de referidos).
+**Sobre el puntaje e impacto:**
 
-Quejas vagas como “mi puntaje es muy bajo” serán redirigidas a este proceso. No se iniciará ninguna revisión sin una solicitud clara basada en evidencia.
+El sistema de puntaje de influencia de Asami es imperfecto por diseño. Todavía estamos descubriendo cómo medir mejor la influencia real. Si estás comenzando tu camino como Divulgador y tu puntaje es bajo, no te desanimes. Sigue aprendiendo, opinando y compartiendo tus ideas online. Los quote tweets, las opiniones honestas, las críticas constructivas y la participación auténtica cuentan. Evita el contenido generado por IA o los trucos — suelen reducir el alcance real y restan valor a largo plazo.
+
+Algunas personas pueden intentar mejorar su puntaje como una forma de reconocimiento — y eso está bien. Pero si el puntaje se vuelve una obsesión o se ve como una fuente de ingresos, probablemente llegue la decepción. Las recompensas en Asami no están garantizadas ni fueron diseñadas para sostener un ingreso económico.
+
+Sabemos que nuestro algoritmo tal vez no reconozca del todo tu valor. Si eso sucede, no significa que no tengas influencia — tal vez aún no contamos con las herramientas adecuadas para medir el tipo de influencia que tú aportas. Con el tiempo, a medida que tu audiencia y nuestras herramientas mejoren, esperamos que tu puntaje refleje tu esfuerzo.
+
+**Reclamos y revisiones:**
+Los Divulgadores pueden solicitar una revisión de su puntaje, pero deben:
+
+* Referenciar partes específicas de los criterios de puntuación.
+* Comparar su actividad con la de otros perfiles similares.
+* Proveer enlaces o métricas de respaldo (por ejemplo, estadísticas de engagement, referidos).
+* Incluir el enlace a su perfil público de Asami.
+
+Quejas generales como “mi puntaje es muy bajo” sin evidencia pueden ser ignoradas.
+
 
 ### 3.3 Administradores de campañas
 
-**Quiénes son:** Operadores que gestionan campañas, calculan la influencia, registran republicaciones y, opcionalmente, brindan servicios adicionales a las otras partes.
+**Quiénes son:** Operadores independientes que ejecutan el software del protocolo Asami, procesan los reposts, calculan la influencia, gestionan etiquetas de usuario y aplican las reglas de las campañas.
 
-**Qué hacen:** El Administrador de campañas es el actor principal que conecta a Anunciantes y Colaboradores. Registra las republicaciones, ejecuta el algoritmo de puntuación de influencia, aplica las reglas y gestiona los pagos (incluidos los retiros sin gas).
+**Qué hacen:**
 
-**Derechos:**
-- Implementar y modificar sus propios algoritmos de medición de influencia.
-- Determinar qué Colaboradores son elegibles para cada campaña.
-- Registrar las republicaciones enviadas por Colaboradores elegibles y asignar recompensas en DOC de acuerdo con la estructura de pagos basada en influencia.
-- Mantener listas de permitidos/rechazados de usuarios, asignar categorías (por ejemplo, idioma o región) y validar la interacción.
-- Establecer una tarifa opcional por su servicio, además de la tarifa del protocolo.
-- Ofrecer servicios adicionales (por ejemplo, redacción de contenido, estrategia) a Anunciantes y Colaboradores.
-
-**Obligaciones:**
-- Actuar dentro de los límites de las reglas de cada campaña del Anunciante.
-- Utilizar métodos de medición de influencia claros, reproducibles, y divulgar su lógica.
-- Responder a las consultas de los Colaboradores, especialmente en cuestiones relacionadas con puntajes o elegibilidad.
-
-**Limitaciones:**
-- Una vez que una colaboración es registrada y los fondos pagados, la acción es definitiva. No pueden recuperarse recompensas, incluso si luego se detecta un abuso.
-- Los Administradores de campañas no tienen control sobre el contrato inteligente de Asami.
-- Si sus decisiones se consideran injustas o poco claras, pueden perder la confianza de Anunciantes y Colaboradores, lo que puede dar lugar a que surjan otros Administradores de campañas alternativos.
-
-### 3.4 Titulares de tokens
-
-**Quiénes son:** Cualquier persona que posea tokens ASAMI. Esto incluye a todos los Colaboradores, Anunciantes y Administradores de campañas que hayan ganado tokens.
-
-**Qué hacen:** Los titulares de tokens ASAMI participan en la dirección a largo plazo del protocolo al recibir ingresos y votar sobre la tasa de comisión.
+* Detectan y registran los reposts.
+* Calculan la influencia usando su propia lógica.
+* Manejan los retiros sin gas y la atención al usuario.
+* Administran listas de acceso y bloqueo en nombre de los Proyectos.
+* Opcionalmente ofrecen servicios como estrategia de contenido o análisis.
 
 **Derechos:**
-- Recibir una parte proporcional de las comisiones retenidas por el protocolo.
-- Votar sobre cambios en la tasa de comisión del protocolo usando un sistema de promedio ponderado.
-- Mantener, transferir o vender libremente sus tokens.
+
+* Definir y actualizar su propia lógica de puntuación de influencia.
+* Decidir qué Divulgadores son elegibles para participar en campañas.
+* Mantener rankings públicos, etiquetas y etiquetas de engagement.
+* Establecer sus propios honorarios (adicionales a las tarifas del protocolo, si lo desean).
 
 **Obligaciones:**
-- Ninguna impuesta por el protocolo, pero se espera una votación responsable y alineación con el valor a largo plazo.
 
-**Notas adicionales:**
-- Los titulares de tokens no tienen influencia directa sobre las campañas ni sobre los roles.
-- El único poder de gobernanza disponible actualmente es la capacidad de votar sobre la tasa de comisión del protocolo. Consulta la sección de Tokenomics para más detalles sobre cómo funciona la emisión y gobernanza de ASAMI.
+* Usar lógica clara y reproducible.
+* Responder a consultas bien formuladas de los usuarios.
+* Operar con transparencia — toda lógica de campaña debe estar abierta a auditoría.
+* Respetar las reglas de campaña definidas por cada Proyecto.
+
+**Límites:**
+
+* No pueden revertir pagos una vez realizados.
+* No pueden modificar la lógica del contrato inteligente.
+* Pueden ser reemplazados en cualquier momento — Proyectos y Divulgadores pueden elegir otros administradores.
+
+Asami no otorga ningún privilegio especial a los Administradores de campañas. Su autoridad proviene de la calidad de su servicio y su capacidad para generar confianza. Si no actúan con transparencia, o si su sistema de puntuación es irrazonable, cualquiera puede lanzar administradores alternativos en cualquier momento.
+
+### 3.4 Titulares del Token
+
+**Quiénes son:** Cualquier persona que posea tokens ASAMI — incluidos Divulgadores, Proyectos y Administradores de campañas que hayan recibido tokens por participar en campañas o mediante compra directa.
+
+**Qué hacen:** Los titulares de tokens ASAMI se benefician de una alineación a largo plazo con el protocolo. Reciben una parte de las tarifas cobradas y participan en la gobernanza a nivel de protocolo.
+
+**Derechos:**
+
+* Recibir una parte proporcional de las tarifas en DOC retenidas por el protocolo.
+* Votar sobre la tasa de tarifa del protocolo mediante un mecanismo de promedio ponderado.
+* Poseer, transferir o vender tokens ASAMI libremente.
+
+**Obligaciones:**
+
+* Ninguna impuesta por el protocolo. Sin embargo, se espera gobernanza responsable de quienes se preocupan por el futuro de Asami.
+
+**Notas:**
+
+* Poseer tokens ASAMI no otorga poder sobre decisiones de campañas ni sobre el sistema de puntuación.
+* Los titulares de tokens **no controlan** a los Administradores de campañas ni influyen en los resultados individuales de campañas.
+* El único mecanismo de gobernanza compartido actualmente en funcionamiento es la posibilidad de votar sobre la **tasa de tarifa** a nivel del protocolo, que afecta la distribución de ingresos y la emisión de tokens.
+
+> En la práctica, esto significa que los titulares de tokens ayudan a equilibrar dos objetivos:
+>
+> * Tarifas más altas aumentan la cantidad de DOC distribuido a los titulares, pero también inflan la oferta de tokens y pueden reducir la participación en campañas.
+> * Tarifas más bajas hacen crecer el ecosistema y reducen la inflación, pero disminuyen los retornos a corto plazo.
+
+La gobernanza es por lo tanto mínima, orientada a incentivos y transparente. Tener tokens es una forma de **participar en el futuro del club**, no una herramienta para controlar a los demás.
 
 ---
 
-## 4. Medición de influencia
+## 4. Medición de Influencia
 
-La influencia dentro de Asami se calcula usando un modelo estructurado que la define como el producto del **tamaño de audiencia** y la **autoridad**. Este modelo asegura equidad y escalabilidad, al mismo tiempo que ofrece a los Administradores de campañas flexibilidad para adaptar los métodos de puntuación.
+En Asami, la influencia determina si un Divulgador puede participar en campañas y cuánto será recompensado. Pero a diferencia del conteo de seguidores o los perfiles verificados, Asami trata la influencia como un modelo funcional — **una estimación dinámica basada en datos** que busca reflejar tanto el alcance como la credibilidad.
 
-### 4.1 Tamaño de audiencia
+El sistema no pretende medir la “influencia real” de forma perfecta. En cambio, utiliza los datos públicos disponibles para hacer la mejor aproximación posible en un momento determinado — y mejora con el tiempo. Las puntuaciones de influencia se recalculan de forma **periódica** (actualmente cada 20 días), independientemente de la actividad en campañas. Esto asegura equidad y evita manipulaciones rápidas o artificiales.
 
-El tamaño de audiencia es una medida cuantitativa de cuántas personas realmente ven las publicaciones de un usuario. Inicialmente, se utilizaban los conteos de seguidores, pero el sistema actual se basa en la cantidad de impresiones de tweets en los últimos 45 días. Esto brinda una visión más precisa y en tiempo real del alcance real.
+La influencia de cada Divulgador se define por la combinación de:
 
-Esta medición es pesimista: no se asume ninguna audiencia a menos que pueda demostrarse mediante impresiones. Las impresiones aún pueden ser manipuladas, por lo que el sistema verifica la correlación estadística entre impresiones e interacciones (me gusta, comentarios, republicaciones). Las cuentas con proporciones anormales o signos de manipulación pueden tener su tamaño de audiencia ajustado a cero.
+* **Tamaño de audiencia** — cuántas personas probablemente ven sus publicaciones
+* **Autoridad** — cuán significativa o creíble es su voz
+
+Estas dos puntuaciones se **multiplican** para producir una Puntuación de Influencia final, que determina tanto la elegibilidad como el tamaño de la recompensa en las campañas. La **última y próxima fecha de puntuación** de cada usuario se muestra en su perfil público de Asami.
+
+
+### 4.1 Tamaño de Audiencia
+
+El Tamaño de Audiencia mide cuántas personas probablemente ven el contenido de un usuario en X — no basado en seguidores, sino en impresiones reales de sus tweets.
+
+Para calcular el Tamaño de Audiencia, Asami:
+
+* Recoge **todas las publicaciones y respuestas públicas** de los últimos 30 días
+* Calcula el **promedio de impresiones** de esas publicaciones
+* Calcula la **mediana de impresiones** del mismo conjunto
+* Luego **promedia esos dos valores** para producir un Tamaño de Audiencia final
+
+Este método híbrido reduce el efecto de valores atípicos (como un tweet viral aislado), al tiempo que recompensa la actividad constante. Al incluir **respuestas**, el sistema captura tanto los estilos de publicación de perfil como los conversacionales — pero con algunas salvedades.
+
+> 📝 **Nota sobre las respuestas:** Las respuestas tienden a recibir menos impresiones que las publicaciones originales. Así que los Divulgadores que se apoyan fuertemente en respuestas pueden mostrar un Tamaño de Audiencia más bajo, incluso si están activos. Este comportamiento podría ajustarse en futuras versiones del algoritmo. Sin embargo, si las respuestas de un usuario generan buena interacción, su **puntuación de autoridad** probablemente lo reflejará — por lo tanto, el compromiso reflexivo sigue siendo recompensado.
+
+El Tamaño de Audiencia siempre se calcula de forma pesimista — si no se puede demostrar visibilidad real a través de métricas públicas, no se asume ninguna audiencia.
 
 ### 4.2 Autoridad
 
-La autoridad refleja cuánta influencia real tiene un usuario sobre su audiencia, independientemente del tamaño. Una audiencia pequeña pero altamente leal puede ser más valiosa que una grande e indiferente. El concepto de autoridad es sutil y complejo, y Asami lo aborda mediante un sistema de múltiples criterios. Cada uno de los siguientes criterios contribuye a un porcentaje de autoridad, que va del 0% al 100%. Si no se puede probar autoridad, el puntaje es cero.
+La Autoridad mide **cuánto peso tiene tu voz ante tu audiencia**. No basta con ser visto — el sistema también busca señales de que las personas prestan atención, interactúan y posiblemente confían en lo que compartes.
 
-Un Administrador de campañas puede aplicar estas métricas de forma automática, subjetiva o mediante revisión manual. Estos son los factores que contribuyen a la puntuación de autoridad y su propósito:
+La Autoridad se calcula mediante una evaluación en capas de varias señales públicas. Si no se detecta compromiso significativo, la Autoridad se establece en 0%, y el usuario queda inhabilitado para recibir recompensas de campaña — sin importar su Tamaño de Audiencia.
 
-#### Interacción recibida en X
-Este es el requisito fundamental. Si las publicaciones de una cuenta no generan interacción de usuarios reales, probablemente no tenga influencia real.
-- **Nula**: Sugiere que las publicaciones son ignoradas o la audiencia es falsa. Resultado: 0% de autoridad, se omiten los demás criterios.
-- **Media**: Muestra interacción regular. Suma 25%.
-- **Alta**: Indica fuerte interés en la cuenta. Suma 50%.
+Cada uno de los criterios a continuación suma o modifica la puntuación. El resultado es un porcentaje entre 0% y 100%, que se multiplica por el Tamaño de Audiencia para producir la Puntuación de Influencia final.
 
-#### Encuestas directas a la audiencia
-El usuario puede publicar una encuesta anónima preguntando a sus seguidores cuánto confían en sus recomendaciones. Esto ofrece una percepción sobre cómo lo ve su audiencia.
-- **Ninguna**: Sin datos útiles. Suma 0%.
-- **Media**: Indica confianza moderada. Suma 10%.
-- **Alta**: Demuestra seguidores leales. Suma 20%.
-- **Inversa**: La mayoría responde que haría lo contrario de lo que recomienda el usuario. Esto **divide por la mitad** el puntaje de “Interacción recibida en X”.
+#### Interacción Recibida en X
 
-> Ejemplo de encuesta:  
-> _“Si recomiendo algo, ¿qué sueles hacer? a) Lo sigo ciegamente, b) Lo considero, c) Lo ignoro, d) Hago lo contrario.”_
+Este es el **criterio central**. Si las publicaciones de un usuario consistentemente no reciben interacción significativa de otros, no se considera que tenga influencia.
 
-#### Interacción fuera de X
-Algunos individuos son influyentes en otros contextos: tienen podcasts, escriben libros, lideran comunidades, etc. Este criterio considera la reputación fuera de la plataforma.
-- **Nula**: Suma 0%.
-- **Media**: Presencia pública verificada. Suma 5%.
-- **Alta**: Figura reconocida y respetada. Suma 10%.
+Asami evalúa:
 
-#### Estado de la cuenta en X
-El estado operativo de la cuenta afecta su credibilidad.
-- **Suspendida/Shadowbanned**: Autoridad se ajusta a 0% y se omiten los demás criterios.
-- **Normal**: Sin cambios.
-- **Mejorada**: Cuenta verificada, premium o de confianza. Suma 10%.
+* La proporción de **me gusta, respuestas, comentarios, citas y retweets** respecto a las impresiones
+* Si el usuario es **mencionado por otros**, especialmente en **publicaciones destacadas**
+* Su **estado de verificación** (por ejemplo, X Premium, insignia heredada)
+* La cantidad de **seguidores verificados**, en relación con el total de seguidores
 
-#### Autoridad por referidos
-Usuarios que invitan con éxito a otros a unirse a Asami demuestran influencia, especialmente si esos referidos son de calidad.
-- **Referidos válidos desde cuentas activas**: Suma 10%.
+Un número alto de impresiones con poca o nula interacción resultará en **baja autoridad**, y por tanto, una baja Puntuación de Influencia.
 
-#### Comportamiento de tenencia de tokens
-Dado que los Anunciantes y Administradores de campañas reciben pagos en ASAMI, pueden preferir recompensar a quienes están alineados con el éxito del club.
-- **Mantener tokens ASAMI en vez de venderlos**: Suma 10%.
+Niveles de puntuación:
 
-### 4.3 Cálculo del puntaje de autoridad
+* **Nulo**: Las publicaciones son ignoradas o la interacción es artificial → 0%
+* **Promedio**: Interacción constante y orgánica → +25%
+* **Alto**: Fuerte compromiso, interés público → +50%
 
-El porcentaje final de autoridad se calcula de la siguiente forma:
-- Comienza con la **Interacción en X**. Si es Nula, el puntaje total es 0%.
-- Si es Media o Alta, se suma el valor base (25% o 50%), luego se aplica:
-  - **Encuestas a la audiencia**: Suma 0%, 10%, 20%, o divide el puntaje en caso de respuesta Inversa.
-  - **Interacción fuera de X**: Suma 0%, 5% o 10%.
-  - **Estado en X**: Suma 0% o 10%, excepto si está suspendida, en cuyo caso el puntaje es 0%.
-  - **Referidos**: Suma 10% si cumple criterios.
-  - **Tenencia de tokens**: Suma 10% si corresponde.
+#### Encuestas Directas a la Audiencia
 
-El puntaje de autoridad se multiplica luego por el tamaño de audiencia para calcular el **Nivel de influencia**, que se usa en la distribución de recompensas.
+Los Divulgadores pueden realizar encuestas anónimas para preguntar a sus seguidores cuánto confían en sus recomendaciones. Estas encuestas brindan información sobre la autoridad percibida.
 
-Este sistema en capas busca ser justo, transparente y resistente a manipulaciones, a la vez que permite evolucionar conforme surjan nuevas señales relevantes.
+Ejemplo de pregunta:
+
+> *“Si recomiendo un proyecto, ¿tú normalmente: (a) Lo sigues sin pensar, (b) Lo consideras, (c) Lo ignoras, (d) Haces lo contrario?”*
+
+Niveles de puntuación:
+
+* **Nulo**: Sin encuestas recientes → +0%
+* **Promedio**: Respuestas mixtas, algo de confianza → +10%
+* **Alto**: Consenso positivo claro → +20%
+* **Reverso**: La mayoría dice que haría lo contrario → reduce a la mitad la puntuación de Interacción
+
+#### Interacción Fuera de X
+
+Algunas personas tienen influencia significativa en otros entornos (por ejemplo, podcasts, conferencias, encuentros, DAOs). Este criterio considera la **reputación fuera de la plataforma**.
+
+Niveles de puntuación:
+
+* **Nulo**: Sin presencia notable fuera de X → +0%
+* **Promedio**: Activo en comunidades relacionadas → +5%
+* **Alto**: Voz reconocida en círculos Web3 → +10%
+
+La evidencia puede ser enviada manualmente durante una revisión.
+#### Estado en X
+
+El estado funcional de una cuenta importa.
+
+Reglas de puntuación:
+
+* **Suspendida, restringida o shadowbanned**: Autoridad = 0%
+* **Cuenta operativa normal**: Sin cambio
+* **Verificada / Premium**: +10%
+
+#### Autoridad por Referencias
+
+Los Divulgadores que refieren a otros a Asami y los ayudan a tener éxito demuestran influencia.
+
+Regla de puntuación:
+
+* **Referencias exitosas de cuentas activas** → +10%
+
+#### Comportamiento de Tenencia de Tokens
+
+Los Divulgadores que **mantienen tokens ASAMI** en lugar de venderlos inmediatamente demuestran alineación con el proyecto y su éxito a largo plazo.
+
+Regla de puntuación:
+
+* **Tener tokens durante el período de evaluación** → +10%
+
+#### Cálculo Final
+
+Para calcular la Autoridad:
+
+1. Comenzar con la base de **Interacción Recibida en X**
+
+   * Si es 0%, se omiten todos los demás factores.
+2. Sumar (o modificar) el resto:
+
+   * Encuestas a la Audiencia
+   * Presencia fuera de X
+   * Estado de la Cuenta en X
+   * Referencias
+   * Tenencia de Tokens
+
+Autoridad máxima posible: **100%**
+Mínima: **0%** (sin interacción o con señales de inelegibilidad)
+
+> 🎯 **Nota:** El sistema está diseñado para recompensar comportamientos que generan confianza real — no métricas de vanidad. Comprar likes, repostear sin criterio o generar interacciones superficiales no mejorará tu puntuación. La autoridad se gana lento y se pierde rápido.
+
+### 4.3 Puntuación Final de Influencia
+
+Una vez que se calculan el **Tamaño de Audiencia** y la **Autoridad** de un Divulgador, se **multiplican** para producir su **Puntuación de Influencia** final.
+
+Esta puntuación se usa para:
+
+* Determinar si puede participar en campañas
+* Asignar recompensas en DOC y tokens ASAMI
+* Ranquear a los Divulgadores en los rankings públicos
+
+La Puntuación de Influencia se actualiza **periódicamente** (actualmente cada 20 días), de forma independiente a las campañas. Esto asegura que todos los participantes sean evaluados con base en su comportamiento reciente y que nuevos Divulgadores puedan calificar sin tener que esperar campañas específicas.
+
+Este modelo recompensa tanto el alcance como la confianza. Una gran audiencia sin interacción genera una puntuación débil. Una voz creíble sin audiencia también. Los Divulgadores más efectivos son los que son **vistos y respetados** — y, idealmente, **consistentes en el tiempo**.
+
+
+### 4.4 Una Nota sobre Transparencia y Límites
+
+Asami no pretende medir la influencia perfectamente. La influencia es contextual, evoluciona y es difícil de cuantificar — especialmente cuando los datos son incompletos o la actividad es sutil.
+
+Algunos Divulgadores pueden sentirse subestimados, especialmente si su valor radica en redes silenciosas, interacciones privadas o influencia fuera de la plataforma que Asami aún no puede detectar.
+
+Si eres uno de ellos:
+
+* Puedes solicitar una revisión de tu puntuación siguiendo el proceso público estándar.
+* Pero no tomes tu puntuación actual como un juicio sobre tu valor, potencial o integridad.
+
+> **Tu camino y el nuestro pueden encontrarse en el destino.**
+> Si sigues construyendo una audiencia orgánica, participando con criterio y divulgando con sinceridad — y mientras seguimos mejorando nuestro algoritmo para detectar mejor la influencia genuina — es muy probable que eventualmente nos alineemos.
+
+No intentamos capturar todos los tipos de influencia — solo aquellos que podemos medir con confianza, de forma justa y reproducible. A medida que nuestras herramientas mejoren, esperamos poder reconocer a más Divulgadores en más contextos.
+
+Hasta entonces, recuerda: la puntuación de Asami es solo eso, una puntuación. Tu voz es tuya.
 
 ---
 
-## 5. Tokenomics y distribución de ASAMI
+## 5. Tokenómica y Distribución de ASAMI
 
-El token ASAMI es el activo nativo del protocolo Asami.club. Tiene un suministro máximo fijo de **21 millones de tokens**, similar al de Bitcoin, y está diseñado para distribuir la propiedad de los ingresos y el crecimiento del protocolo.
+El **token ASAMI** es el activo nativo del protocolo Asami.club. Fue diseñado para proporcionar **equidad y participación en el crecimiento** a quienes hacen crecer el club: **Divulgadores**, **Administradores de Campaña** y **Proyectos**.
 
-### 5.1 Reparto de ingresos e incentivos
+A diferencia de plataformas que dependen de financiación anticipada o ventas de tokens, Asami solo emite tokens cuando hay **uso real** del protocolo. El token ASAMI alinea los incentivos en torno a la participación sostenida y la divulgación responsable — no la especulación.
 
-Cada vez que un Colaborador recibe un pago en DOC por republicar una campaña, el protocolo **retiene un 10%** de ese pago como comisión. Estas comisiones, recolectadas en DOC, se acumulan y se distribuyen cada 15 días entre todos los titulares de tokens ASAMI. El monto que recibe cada titular es proporcional a la cantidad de tokens que posee.
+Todos los datos y estadísticas relacionados con el token están disponibles públicamente en [asami.club/#/Token](https://asami.club/#/Token).
 
-> 📥 Por ejemplo, si tienes el 1% de todos los tokens ASAMI, recibirás el 1% del fondo de ingresos recolectado en ese período.
 
-Esto hace que mantener tokens ASAMI sea atractivo como forma de **ingreso pasivo**, ya que otorga acceso a los ingresos futuros generados por campañas en curso.
+### 5.1 Participación en Ingresos e Incentivos
 
-> 💡 Mantener ASAMI es como tener una participación en una economía publicitaria descentralizada. Cuantas más campañas se ejecuten a través del protocolo, más grande será el fondo de ingresos.
+El protocolo Asami redistribuye sus ingresos a las personas que lo hacen crecer — no solo mediante la emisión de tokens, sino también a través de un sistema de **participación en ingresos** vinculado a la tenencia de tokens.
 
-Esta estructura incentiva a todos los participantes a hacer crecer la plataforma:
-- **Los Anunciantes** financian campañas y reciben tokens ASAMI como parte del pago de cada campaña.
-- **Los Colaboradores** ganan ASAMI además de sus recompensas en DOC.
-- **Los Administradores de campañas** reciben la mayor proporción de tokens ASAMI cuando registran colaboraciones activamente.
+Cada ciclo de 15 días, el **pool de comisiones del protocolo** — recaudado de todas las colaboraciones pagas — se distribuye entre los tenedores de ASAMI elegibles. Esto crea un incentivo para **mantener tokens** y **participar a largo plazo**, en lugar de especular o revender.
 
-### 5.2 Gobernanza mediante votación de comisión
+#### Reglas de Elegibilidad
 
-Los titulares de ASAMI también pueden votar sobre la tasa de comisión del protocolo.
+Para recibir tu parte del pool de ingresos, debes:
 
-El sistema de votación utiliza un **modelo de promedio ponderado**: cada titular de tokens propone un porcentaje que considera adecuado como comisión (por ejemplo, 5%, 15%, 30%). El valor final se calcula promediando todos los votos, ponderados por la cantidad de tokens que posee cada votante.
+* ✅ **Tener al menos 4,000 tokens ASAMI**
+* ✅ **No mover tus tokens durante el ciclo de 15 días en curso**
+* ✅ **Haber reclamado tus tokens a una wallet personal (no un contrato)**
 
-> 🗳️ Por ejemplo, si un usuario con 10.000 tokens vota por un 5% y otro con 1.000 tokens vota por un 100%, el resultado reflejará el promedio ponderado, no la mediana.
+Los ciclos de tokens están atados a los **períodos definidos por el contrato inteligente**, no a ventanas móviles. El rango exacto de fechas de cada ciclo está visible en la [página de estadísticas del token](https://asami.club/#/Token).
 
-Este diseño de “tira y afloja” genera dinámicas equilibradas:
-- **Comisiones más altas** generan más reparto de ingresos, pero también mayor inflación de tokens.
-- **Comisiones más bajas** reducen las ganancias de los titulares, pero pueden atraer más Anunciantes y Colaboradores.
+> ⛔ **Importante:**
+>
+> * Si **mueves tus tokens** (los transfieres, vendes, stakeas o envías de cualquier forma) durante un período, **pierdes elegibilidad** para las recompensas de ese ciclo.
+> * Si no has **reclamado tus tokens**, no cuentan. Solo los saldos reclamados son elegibles.
+> * Los tokens ASAMI **en contratos** — incluyendo pools de liquidez — **no** reciben ingresos a menos que su código lo habilite explícitamente.
 
-Esta herramienta de gobernanza permite a los titulares de tokens influir en la economía a largo plazo del protocolo, equilibrando sus propios incentivos.
+#### ¿Qué pasa con las partes no reclamadas?
 
-### 5.3 Modelo de emisión y equidad
+Cuando una persona es elegible pero **no reclama** su parte durante la ventana de reclamos, su porción no usada **vuelve al pool de comisiones** y se acumula como **recompensa para el siguiente ciclo**.
 
-El protocolo tiene como objetivo emitir **100.000 tokens ASAMI cada 15 días**, pero esta cantidad se ajusta dinámicamente según:
-- Las comisiones en DOC recolectadas durante el período anterior.
-- El total de tokens ASAMI emitidos hasta la fecha.
+Esto genera:
 
-Los tokens se emiten cada vez que se paga una recompensa de campaña. La comisión retenida por el protocolo (10% del pago en DOC) se convierte en tokens ASAMI usando la tasa de emisión vigente. Estos tokens se reparten entre los participantes de la siguiente manera:
-- **40% para el Administrador de campañas**
-- **30% para el Colaborador**
-- **30% para el Anunciante**
+* **Simplicidad** — sin reclamos tardíos ni obligaciones pendientes
+* **Equidad** — las recompensas van a participantes activos
+* **Componibilidad** — contratos externos pueden implementar estrategias para distribuir recompensas, pero esto es optativo y fuera del alcance del protocolo
 
-> 🧮 **Ejemplo:**  
-> Una campaña paga 20 DOC a un Colaborador. El protocolo retiene 2 DOC (10%).  
-> Si la tasa de emisión es de 1000 ASAMI por DOC, se emiten 2000 ASAMI:  
-> - 800 para el Administrador de campañas  
-> - 600 para el Colaborador  
-> - 600 para el Anunciante
+Este sistema asegura que los participantes tempranos y comprometidos reciban **ingresos pasivos** proporcionales a su contribución, mientras mantiene la emisión de ASAMI alineada con el uso real del protocolo.
 
-No hubo **premine**, ni se hizo ninguna **asignación especial** a personas internas. El único gran poseedor de tokens (“ballena”) es el actual Administrador de campañas, que obtuvo aproximadamente el 40% de los tokens emitidos simplemente por ser el único que ha registrado todas las colaboraciones hasta la fecha.
+### 5.2 Gobernanza a través del Voto de Comisión
 
-Este sistema de emisión, transparente y justo, garantiza que:
-- La participación sea recompensada de forma proporcional.
-- La distribución de tokens refleje la actividad real en la plataforma.
-- Los incentivos se mantengan alineados para lograr una sostenibilidad a largo plazo.
+Los tenedores del token ASAMI participan en **un único mecanismo de gobernanza**: definir el porcentaje de comisión del protocolo que determina cuánto del presupuesto de cada campaña se destina al pool de emisión de tokens.
 
-Combinando reparto de ingresos, poder de voto y una emisión equitativa, los tokens ASAMI funcionan tanto como un activo generador de rendimiento como una herramienta de gobernanza descentralizada.
+Esta tasa influye directamente en:
+
+* Cuántos tokens ASAMI se emitirán en ciclos futuros
+* El valor relativo de ser Divulgador o Administrador de Campaña
+* La sustentabilidad del sistema de recompensas del protocolo
+
+En lugar de gestionar campañas, listas blancas o funciones operativas, los tenedores de tokens moldean el **comportamiento a largo plazo de la plataforma** mediante esta única palanca.
+
+> 🗳 **Un Token, Un Voto**
+> El voto se pondera según el saldo de ASAMI en cada dirección al momento del snapshot. La tasa final es el promedio ponderado de todos los votos.
+
+#### Ejemplo:
+
+Si la comisión actual del protocolo es 20%, y la comunidad considera que la emisión de tokens es demasiado agresiva, los grandes tenedores pueden votar por una comisión más baja — por ejemplo, 15%. Si la mayoría de los votos apoyan este cambio, el siguiente ciclo ajustará la comisión en consecuencia.
+
+Este diseño asegura que:
+
+* La plataforma siga siendo flexible, pero no caótica
+* Los tenedores de tokens expresen preferencias sin microgestión
+* Los cambios ocurran de forma incremental, con amortiguación incorporada
+
+La gobernanza está implementada **on-chain** en el contrato inteligente del protocolo y puede auditarse [aquí](https://github.com/constata-eu/asami/blob/38651663a124c714d2e599661f9abf3976e5f628/contract/contracts/AsamiCore.sol#L711).
+
+### 5.3 Modelo de Emisión y Equidad
+
+La emisión del token de Asami está diseñada para ser **proporcional, transparente y justa**. Los tokens solo se emiten cuando alguien **financia una campaña** y otra persona **colabora con ella**, anclando así el valor de ASAMI en una acción real de divulgación.
+
+No hay asignaciones para fundadores, inversores ni insiders. Cada token emitido proviene del uso real de la plataforma.
+
+#### Cómo Funciona
+
+Cada 15 días, el protocolo evalúa:
+
+* Cuántos DOC fueron recolectados en comisiones de colaboraciones registradas
+* Si la tasa de emisión debe aumentar o disminuir
+* Un máximo de **100,000 ASAMI** por período (meta, no garantía)
+
+Si las campañas bajan, se emiten menos tokens. Si la actividad aumenta, la emisión puede subir — pero **nunca supera el tope**. Esto hace que ASAMI sea una **moneda basada en trabajo**, no en especulación.
+
+#### Distribución de Tokens por Colaboración
+
+Cada colaboración activa una **emisión de ASAMI basada en comisión**. Estos se distribuyen de la siguiente manera:
+
+* 🥜 **40%** para el **Administrador de Campaña** que registró la campaña
+* 🥜 **30%** para el **Divulgador** que hizo el repost
+* 🥜 **30%** para el **Proyecto** (Anunciante) que financió la campaña
+
+Este modelo refuerza una dinámica saludable:
+
+* Los Administradores de Campaña tienen incentivo para atraer buenas campañas y mantener la calidad
+* Los Divulgadores son recompensados por su alcance genuino
+* Los Proyectos obtienen equidad a largo plazo al financiar el ecosistema desde temprano
+
+> ❗ **Nota:** Los Proyectos solo reciben ASAMI cuando financian campañas **on-chain en Rootstock** usando DOC. Las campañas financiadas con **Stripe** o futuros medios como **Bitcoin/Lightning** **no** generan ASAMI para los anunciantes — aunque los Divulgadores y Administradores sí reciben su parte.
+
+#### Ejemplo: Ganar 1,000 ASAMI
+
+Si una campaña resulta en la emisión de 1,000 ASAMI:
+
+* 400 van al Administrador de Campaña
+* 300 van al Divulgador
+* 300 van al Proyecto (si financió con DOC en Rootstock)
+
+No importa tu rol: ganas en proporción a tu contribución. No hay necesidad de hacer staking, bloquear tokens ni especular — solo participar.
+
+El único gran tenedor de tokens hoy es el Administrador de Campaña actual, quien ha registrado todas las campañas hasta la fecha y ha recibido \~40% de los ASAMI emitidos, según las reglas del protocolo.
+
+### 5.4 Reclamar y Mantener Tokens
+
+Los tokens ASAMI **no se envían automáticamente**. Para ser tenedor del token, cada participante debe tomar el **paso deliberado** de reclamarlos.
+
+Este diseño refleja la filosofía de Asami: **la propiedad debe ser intencional** y la participación siempre debe ser voluntaria.
+
+#### Cómo Reclamar tus Tokens
+
+Si ganaste ASAMI por participar en una campaña — ya sea como **Divulgador**, **Administrador de Campaña** o **Proyecto** — puedes reclamarlos en cualquier momento.
+
+Para hacerlo:
+
+* Conecta una **wallet compatible con Rootstock**
+* Visita tu perfil público o la página del Token
+* Reclama tus tokens acumulados a tu dirección de wallet
+
+También puedes elegir **no reclamarlos de inmediato** — pero los tokens **no reclamados no participan en ingresos**.
+
+#### Mantener Tokens
+
+Una vez reclamados, tus tokens deben **permanecer intactos** durante todo un ciclo de 15 días para calificar para la distribución de ingresos.
+
+Esto significa:
+
+* No transferencias, swaps ni movimientos durante el ciclo
+* Los tokens deben estar en una wallet personal (no en pools de liquidez ni contratos)
+* Debes mantener al menos **4,000 ASAMI** para calificar
+
+Si mueves tus tokens — incluso por un instante — pierdes tu parte de ese ciclo.
+
+El modelo de reclamar y mantener de Asami ata los incentivos directamente al compromiso. Asegura que solo los participantes activos e intencionales moldeen el futuro del club — y que los primeros en apoyar sean **recompensados de forma modesta y justa** con el tiempo.
 
 ---
+## 6. Arquitectura Técnica
 
-## 6. Arquitectura técnica
+El protocolo Asami está implementado como un smart contract de código abierto desplegado en la blockchain **Rootstock**. Rootstock es una sidechain de Bitcoin que ofrece compatibilidad total con la EVM, permitiendo a los desarrolladores usar herramientas familiares de Ethereum mientras aprovechan el modelo de seguridad de Bitcoin.
 
-El protocolo Asami está implementado como un contrato inteligente de código abierto desplegado en la blockchain de **Rootstock**. Rootstock es una cadena lateral de Bitcoin con compatibilidad total con la EVM, lo que permite a los desarrolladores usar herramientas familiares de Ethereum mientras aprovechan el modelo de seguridad de Bitcoin.
-
-### 6.1 ¿Por qué Rootstock?
+### 6.1 Por qué Rootstock
 
 Rootstock fue elegida porque ofrece:
 
-- **Minería combinada con Bitcoin**, lo que refuerza su seguridad.
-- **Compatibilidad con la EVM**, que permite un despliegue rápido de contratos inteligentes.
-- **Estabilidad y confiabilidad**, con producción de bloques constante y sin interrupciones conocidas.
-- **Entorno nativo en Bitcoin**, alineado con los objetivos de descentralización de Asami.
+* **Merged mining con Bitcoin**, lo que incrementa su seguridad.
+* **Compatibilidad con la EVM**, permitiendo un despliegue ágil de contratos inteligentes.
+* **Alta disponibilidad**, sin historial de caídas y con producción de bloques constante.
+* **Entorno nativo de Bitcoin**, que está alineado con los objetivos de descentralización de Asami.
 
-Rootstock usa **RBTC** como moneda nativa para el gas y es una red probada con comisiones bajas y operación estable, lo que la convierte en una base sólida para Asami.
+Rootstock utiliza **RBTC** como su moneda de gas nativa y es una red con tarifas bajas y operación estable, ideal como base para Asami.
 
-### 6.2 Transacciones y pagos de campañas
+### 6.2 Por qué Dollar on Chain (DOC)
 
-Los presupuestos de campaña están denominados en **DOC (Dollar on Chain)**, una stablecoin nativa de Rootstock emitida por Money on Chain. DOC es:
+Los presupuestos de campaña se expresan en **DOC (Dollar on Chain)**, una stablecoin nativa de Rootstock emitida por Money on Chain. DOC es:
 
-- Sobrecolateralizada con Bitcoin
-- Ampliamente utilizada en el ecosistema de Rootstock
-- Indexada 1:1 con el dólar estadounidense
+* Sobrecolateralizada con Bitcoin
+* Ampliamente utilizada en el ecosistema Rootstock
+* Indexada 1:1 al dólar estadounidense
 
-Los Colaboradores son pagados en DOC, lo que les brinda un mecanismo de pago predecible y confiable, sin exposición a la volatilidad del mercado cripto.
+Los Divulgadores reciben pagos en DOC. Esto ofrece un mecanismo de recompensa predecible y estable, inmune a la volatilidad del mercado cripto.
 
-> Si un Colaborador republica un mensaje de campaña y es elegible, recibe un pago en DOC desde el presupuesto de la campaña. El protocolo retiene automáticamente el 10% de ese pago como comisión.
+> Si un Divulgador republica el mensaje de una campaña y es elegible, recibe un pago en DOC del presupuesto de campaña. El protocolo retiene automáticamente un 10% de este pago como comisión.
 
-### 6.3 Dirección del contrato inteligente y transparencia
+### 6.3 Dirección del Smart Contract y Transparencia
 
-El contrato inteligente que impulsa el protocolo es públicamente verificable y puede consultarse en:  
-[Asami Contract on Rootstock Explorer](https://explorer.rootstock.io/address/0x3150e390bc96f1b4a05cf5183b8e7bdb68566954)
+El smart contract que impulsa el protocolo es públicamente verificable y puede consultarse en:
+[Contrato de Asami en Rootstock Explorer](https://explorer.rootstock.io/address/0x3150e390bc96f1b4a05cf5183b8e7bdb68566954)
 
-El primer Administrador de campañas opera actualmente desde:  
-[Campaign Manager Wallet](https://explorer.rootstock.io/address/0x3e79325b61d941e7996f0a1aad4f66a703e24faa)
+El primer Administrador de Campaña actualmente opera desde:
+[Wallet del Administrador de Campaña](https://explorer.rootstock.io/address/0x3e79325b61d941e7996f0a1aad4f66a703e24faa)
 
 Todas las interacciones con el protocolo —creación de campañas, registro de colaboraciones y distribución de recompensas— son visibles y trazables en la cadena.
 
-### 6.4 Software del Administrador de campañas
+### 6.4 Software del Administrador de Campaña
 
-Los Administradores de campañas interactúan con el protocolo utilizando software desarrollado en **Rust**, usando el framework web **Rocket**. Esta aplicación gestiona:
+Los Administradores de Campaña interactúan con el protocolo mediante un software desarrollado en **Rust**, usando el framework web **Rocket**. Esta aplicación gestiona:
 
-- Detección de colaboraciones
-- Puntuación de influencia
-- Registro de republicaciones
-- Puente entre billeteras Web2 y Web3
-- Solicitudes de retiro sin gas (gasless claims)
+* Detección de colaboraciones
+* Cálculo de influencia
+* Registro de reposts
+* Puenteo entre wallets Web2 y Web3
+* Solicitudes de retiro sin gas
 
-El código completo es de código abierto y está disponible en:  
+El código completo es open source y se mantiene en:
 [https://github.com/constata-eu/asami](https://github.com/constata-eu/asami)
 
-Esta arquitectura asegura:
+Esta arquitectura garantiza:
 
-- **Modularidad**: otros Administradores de campañas pueden desplegar su propia versión.
-- **Transparencia**: el comportamiento y la puntuación pueden ser revisados de forma independiente.
-- **Extensibilidad**: nuevas funciones como segmentación por categorías, seguimiento de referidos y encuestas fuera de la cadena son fáciles de implementar.
+* Modularidad: otros Administradores pueden desplegar su propia versión
+* Transparencia: el comportamiento y la lógica de puntuación pueden ser auditados
+* Extensibilidad: permite agregar funciones como categorización, referidos y encuestas off-chain
 
-### 6.5 Retiros sin gas y onboarding de usuarios
+### 6.5 Retiros sin Gas y Onboarding
 
-Para facilitar la incorporación de usuarios nuevos en Rootstock, el Administrador de campañas ofrece una funcionalidad de **retiro sin gas**. Los Colaboradores:
+Para facilitar el onboarding de usuarios nuevos en Rootstock, el Administrador de Campaña ofrece un sistema de **retiros sin gas**. Los Divulgadores:
 
-- Aprueban una deducción de 1 DOC como comisión
-- Reciben su pago en DOC y una pequeña cantidad de RBTC para cubrir costos de gas futuros
-- Tienen sus recompensas reclamadas en su nombre por el Administrador de campañas
+* Aprueban una deducción de 1 DOC como comisión
+* Tienen sus recompensas reclamadas por el Administrador en su nombre
+* Reciben su pago en DOC junto con una pequeña cantidad de RBTC para cubrir futuros costos de gas
 
-Este mecanismo simplifica el onboarding para personas sin experiencia previa en cripto, y actúa como un tipo de faucet de RBTC, manteniendo la propiedad total de las recompensas.
+Este mecanismo facilita la entrada de usuarios no cripto y actúa como un faucet de RBTC, manteniendo la propiedad total sobre las recompensas.
 
-### 6.6 Integración con pasarelas de pago (futuro)
+### 6.6 Integración con Pasarelas de Pago
 
-Para mejorar la experiencia de los Anunciantes, los Administradores de campañas podrán integrar rampas fiat como **Stripe** para:
+Para mejorar la experiencia de los Anunciantes, los Administradores pueden integrar onramps fiat como **Stripe** para:
 
-- Aceptar pagos con tarjeta o transferencia bancaria
-- Convertir automáticamente los fondos en DOC
-- Financiar campañas directamente desde plataformas Web2
+* Aceptar pagos con tarjeta o transferencia bancaria
+* Convertir automáticamente fondos a DOC
+* Financiar campañas directamente desde plataformas Web2
+* Aplicar una comisión del 20% para cubrir costos y desincentivar la dependencia off-chain
+* Las campañas financiadas con Stripe **no emiten tokens ASAMI**
 
-Esto reducirá aún más la barrera de entrada para nuevos Anunciantes.
-
-En resumen, la arquitectura técnica de Asami equilibra descentralización, transparencia y facilidad de uso —impulsada por el entorno seguro y estable de Rootstock, y construida para incorporar a la próxima generación de creadores de tendencias y anunciantes al mundo Web3.
+Esto reduce aún más las barreras de entrada para nuevos anunciantes.
 
 ---
+
 
 ## 7. Gobernanza
 
-Asami opera bajo un modelo de gobernanza descentralizado y pragmático. No existen **contratos legales** ni obligaciones fuera de la cadena entre los miembros de la plataforma. Todas las relaciones entre los participantes —Anunciantes, Colaboradores, Administradores de campañas y Titulares de tokens— están gobernadas por la lógica y las restricciones del contrato inteligente de Asami y la discreción práctica de cada parte. La participación es completamente voluntaria y bajo la modalidad “tal como es”.
+Asami no está gobernado por una empresa, una DAO ni un contrato social. Está gobernado por lo que es **aplicable mediante software** y lo que es **elegido voluntariamente por los participantes**.
 
-### 7.1 Los roles se definen por la acción, no por obligación
+No existen obligaciones entre participantes más allá de lo que está codificado en el smart contract. El protocolo no tiene autoridad integrada, ni comités, ni procesos de toma de decisiones en nombre de otros. Todos los roles son opcionales, y toda conducta está limitada por el código y los incentivos.
 
-- **Los Anunciantes** financian campañas, pero no están obligados a incluir a ningún Colaborador específico.
-- **Los Colaboradores** eligen en qué campañas participar y pueden rechazar cualquiera sin dar explicaciones.
-- **Los Administradores de campañas** actúan a su propia discreción y no están legalmente obligados a actuar en nombre de ninguna parte, más allá del comportamiento que haga cumplir el contrato inteligente.
-- **Los Titulares de tokens** pueden participar en la gobernanza, pero no tienen derecho a beneficios directos por parte de los demás participantes.
+Este enfoque minimalista evita la complejidad, política y ambigüedad que suelen surgir en sistemas con estructuras de gobernanza múltiples. En su lugar, adopta la transparencia, la modularidad y la alineación económica. Si alguien quiere que algo funcione diferente, debe:
 
-### 7.2 El modelo “tal como es” y sus consecuencias
+* Escribir el software que lo haga,
+* Convencer a otros de usarlo,
+* O bifurcar el protocolo y ofrecer una alternativa.
 
-Debido a que todas las interacciones son sin permisos y están gobernadas por código:
+El modelo de gobernanza de Asami es intencionalmente limitado. Su objetivo es fomentar la **colaboración abierta sin expectativas** y **mantener el poder y la responsabilidad localizados** en el rol que los ejerce.
 
-- No existen **acuerdos de nivel de servicio** entre las partes.
-- **Los Anunciantes** no tienen garantía de que un Colaborador participará en su campaña, ni de que el Administrador de campañas actuará de una manera específica más allá de registrar colaboraciones válidas y distribuir recompensas.
-- **Los Administradores de campañas** no tienen la obligación legal de reembolsar a los Anunciantes o volver a puntuar a los Colaboradores. Una vez que los fondos son asignados a una campaña, el Administrador de campañas los gestiona de forma autónoma y no es responsable ante los Anunciantes siempre que el proceso siga las reglas del contrato inteligente.
-- **Los Colaboradores** no tienen garantizada la participación, visibilidad o pago, a menos que su republicación sea registrada con éxito y esté financiada en una campaña activa. Aun así, el pago no puede ser recuperado en ninguna circunstancia.
-- Cualquier **Anunciante** puede excluir a cualquier Colaborador de sus campañas sin dar explicaciones.
-- Cualquier **Colaborador** puede rechazar cualquier campaña o abandonar la plataforma en cualquier momento.
+### 7.1 Participación Voluntaria y Límites de Rol
 
-### 7.3 Responsabilidad a través de la competencia
+Cada participante en Asami.club elige su rol libremente y no asume obligaciones más allá de lo que está expresado en el smart contract o en la interfaz pública. Estos roles — **Anunciante**, **Divulgador**, **Administrador de Campaña** y **Titular de Tokens** — son **independientes**, **reemplazables** y **no jerárquicos**.
 
-Si cualquier parte (Anunciante, Colaborador o Titular de tokens) está insatisfecha con el accionar de un Administrador de campañas:
+No hay gobernanza interpersonal, ni equipo central, ni obligación de soporte entre roles. Esta sección detalla lo que cada rol puede esperar y lo que **no** le corresponde exigir.
 
-- Puede dejar de utilizar los servicios de ese Administrador.
-- Puede **apoyar o financiar** la creación de otro Administrador de campañas que siga reglas distintas o aplique un algoritmo de puntuación más justo.
+#### Anunciantes
 
-El sistema se autorregula mediante elección y transparencia, no mediante coerción o apelaciones. El Administrador de campañas actual no tiene acceso ni privilegios especiales en el protocolo. Cualquier nuevo participante que construya herramientas compatibles puede convertirse en Administrador de campañas y competir por campañas y atención de los Colaboradores.
+* Pueden crear campañas para recompensar visibilidad y reclutar divulgadores.
+* Pueden decidir si usar listas blancas, listas negras o mantener campañas abiertas a todos los Divulgadores elegibles.
+* Son responsables de seleccionar un **Administrador de Campaña** para registrar su campaña en la cadena.
+* Al usar el sitio web por defecto (asami.club), están eligiendo al **Administrador de Campaña por defecto** que actualmente opera la plataforma.
+* No pueden exigir puntuaciones personalizadas, explicaciones, ni cambios en las decisiones del administrador.
+* No tienen derecho a reembolsos, incluso si la campaña recibe pocos o ningún repost.
+* Los anunciantes que financian campañas con métodos off-chain (ej. Stripe, LN) podrían no recibir tokens ASAMI.
 
-### 7.4 Votación de parámetros basada en tokens
+#### Divulgadores
 
-La única función de gobernanza compartida a nivel de protocolo es la posibilidad de votar sobre la **comisión del protocolo Asami**. Esta comisión está actualmente fijada en el 10% y puede ajustarse mediante un sistema de votación por promedio ponderado:
+* Pueden elegir republicar campañas que coincidan con sus intereses y valores.
+* Su influencia es evaluada mediante un algoritmo público y recalculada periódicamente.
+* **No tienen garantizada** su participación, pago o visibilidad en ninguna campaña.
+* Si consideran que fueron mal categorizados o subestimados, pueden presentar un reporte detallado a través del robot de Asami — pero el Administrador de Campaña tiene la última palabra.
+* Son libres de dejar de participar o explorar otras plataformas en cualquier momento.
 
-- Los Titulares de tokens proponen un porcentaje preferido (0–100%) como su voto.
-- El valor final se calcula ponderando cada voto según la cantidad de tokens ASAMI que posea cada votante.
+#### Administradores de Campaña
 
-> 📊 Ejemplo: Un usuario con 5.000 ASAMI vota por una comisión del 10%. Otro usuario con 500 ASAMI vota por una del 50%. El resultado se acercará más al 10%, basado en el promedio ponderado.
+* No forman parte del smart contract. Son **entidades off-chain** que cumplen funciones operativas:
 
-Este mecanismo de votación alinea los incentivos:
+  * Puntuar a los Divulgadores
+  * Registrar campañas y colaboraciones
+  * Gestionar frontends y brindar soporte
+* **Cualquier persona o grupo** con capacidades técnicas puede convertirse en Administrador de Campaña y ejecutar su propio frontend sobre el smart contract.
+* Actualmente hay **solo un Administrador de Campaña** operando en asami.club. Su operación está subsidiada, ya que los costos de infraestructura superan lo recaudado en comisiones.
+* Los Administradores de Campaña **no están obligados** a explicar decisiones de puntuación ni ofrecer soporte. Tienen plena discreción sobre cómo operar su instancia.
 
-- Subir la comisión puede aumentar los ingresos compartidos, pero también causa inflación de tokens y puede desalentar la participación de Colaboradores.
-- Bajar la comisión reduce los ingresos compartidos pero puede mejorar el crecimiento de la plataforma y la atracción de campañas.
+#### Titulares de Tokens
 
-La simplicidad del protocolo es su fortaleza: incentivos claros, gobernanza mínima y control descentralizado mediante cooperación voluntaria.
+* Votan sobre la tasa de comisión del protocolo, que regula la emisión de nuevos tokens ASAMI.
+* No tienen autoridad sobre campañas, puntuaciones ni operaciones de la plataforma.
+* Su única influencia es sobre el **balance económico** del protocolo mediante votación.
+
+
+### 7.2 El Modelo “Tal Como Es” y Sus Consecuencias
+
+No existen acuerdos de nivel de servicio entre las partes. El protocolo existe tal como está, y los participantes aceptan operar dentro de sus límites. Los roles de Anunciante, Divulgador y Administrador de Campaña tienen limitaciones claras:
+
+#### Anunciantes
+
+* No tienen derecho a soporte por parte de los Administradores de Campaña.
+* No tienen derecho a reembolsos ni explicaciones si una campaña no recibe reposts.
+* Pueden ser rechazados a discreción del Administrador de Campaña.
+* No tienen derecho a emisión de tokens cuando financian campañas con Stripe u otros métodos fuera de Rootstock.
+
+#### Divulgadores
+
+* No tienen derecho a participar en campañas específicas.
+* No tienen derecho a explicaciones ni ajustes sobre su puntuación.
+* No tienen derecho a compensación a menos que hayan participado exitosamente en una campaña según lo definido por el smart contract.
+* Pueden abandonar la plataforma en cualquier momento.
+
+#### Administradores de Campaña
+
+* No tienen obligación de reembolsar a anunciantes ni volver a puntuar divulgadores.
+* No están obligados a responder quejas.
+* Pueden cambiar los criterios y estructura de puntuación según lo consideren.
+* Pueden dejar de operar en cualquier momento.
+
+### 7.3 Resolución de Quejas
+
+Asami.club minimiza las obligaciones y mantiene las interacciones transparentes. Como no hay garantías off-chain ni compromisos personales, la mayoría de las quejas no pueden resolverse formalmente. Sin embargo, reportes bien argumentados pueden ayudar a mejorar el sistema con el tiempo.
+
+Si crees que algo está mal — por ejemplo, una puntuación incorrecta, una campaña inadecuada o visibilidad injusta — puedes presentar un reporte para revisión pública. Para ser considerado:
+
+* El reporte debe incluir **evidencia comparativa específica** con enlaces públicos (por ejemplo, perfiles de X, páginas de perfil en Asami, tweets o estadísticas).
+* Reclamaciones vagas, emocionales o puramente subjetivas no serán atendidas.
+* El enfoque debe ser la equidad relativa: “Esta cuenta recibió recompensa por X, mientras que la mía no, a pesar de Y”.
+
+Los Administradores de Campaña **pueden** considerar estos reportes, pero **no están obligados** a responder, explicar o aplicar cambios. El algoritmo de puntuación se actualiza periódicamente, y los aportes constructivos pueden influir en futuras versiones — pero no se harán ajustes retroactivos.
+
+Si cualquier participante — Anunciante, Divulgador o Titular de Tokens — no está conforme con cómo opera un Administrador de Campaña:
+
+* Puede dejar de utilizar sus servicios.
+* Puede apoyar o financiar la creación de un **Administrador de Campaña alternativo** que aplique otras reglas, haga una curaduría diferente o utilice otro modelo de puntuación.
+
+El sistema **se autorregula mediante la elección y la transparencia**, no mediante la coerción ni la apelación. El Administrador de Campaña actual **no tiene acceso especial ni privilegios** en el smart contract. Cualquiera con conocimientos técnicos puede registrar campañas y colaboraciones, o construir su propio frontend para servir a otros usuarios y preferencias.
+
+
+### 7.4 Votación de la Tasa de Comisión
+
+Asami no tiene gobernanza de propósito general. Los Titulares de Tokens no deciden quién participa, cómo se asignan las puntuaciones ni qué Divulgadores o Proyectos son admitidos.
+
+Sin embargo, sí votan sobre **un parámetro clave**: la **tasa de comisión del protocolo**. Este es el porcentaje que se cobra a los anunciantes cuando financian una campaña, y determina cuántos tokens ASAMI se emiten como resultado de esas comisiones. Una tasa más alta implica mayor emisión de tokens y una mayor reserva a distribuir.
+
+#### Cómo Funciona la Votación
+
+* Cada 15 días comienza un nuevo “ciclo de contrato”.
+* Durante cada ciclo, los Titulares de Tokens pueden indicar su tasa preferida votando directamente on-chain.
+* El sistema calcula un **promedio ponderado** de todos los votos según el saldo de tokens de cada votante.
+* Al final del ciclo, se fija la tasa seleccionada y se aplica al período siguiente.
+
+Ejemplo:
+
+* Si la mayoría vota por una tasa del 20%, pero una ballena con el 60% del suministro vota por 10%, la tasa resultante se acercará al 10%, pero seguirá reflejando el promedio ponderado.
+
+Los titulares pueden ver la tasa actual, los votos anteriores y los ciclos futuros en: [https://asami.club/#/Token](https://asami.club/#/Token)
+
+Este es el **único mecanismo de gobernanza en Asami**, y está diseñado para:
+
+* Permitir a los titulares de tokens influir indirectamente en la emisión y en los incentivos.
+* Evitar propuestas abiertas, interpretaciones subjetivas o presiones sociales.
+* Mantener una gobernanza mínima, mecánica y predecible.
 
 ---
 
-## 8. Seguridad y prevención de abusos
+## 8. Comunicación, Transparencia y Seguridad
 
-El protocolo Asami está implementado como un contrato inteligente. Por sí solo, no puede ser abusado, salvo que se descubra un error de software o una vulnerabilidad en su código. Este contrato aplica reglas de forma determinista, gestiona y distribuye fondos, y ejecuta la lógica de emisión de ASAMI, retención de comisiones en DOC y registro en la cadena. Es neutral y agnóstico respecto a la calidad de las campañas o de los actores involucrados.
+Asami fue diseñado para ser abierto por defecto — no solo a nivel del protocolo on-chain, sino también en cómo interactúa con Divulgadores, Proyectos y Administradores de Campaña. Cada aspecto del sistema está pensado para fomentar la visibilidad, la rendición de cuentas y el debate público.
 
-Por otro lado, los **Administradores de campañas** operan los sistemas que evalúan la elegibilidad, miden los niveles de influencia, registran las republicaciones y distribuyen los fondos de las campañas. Estos sistemas son mucho más susceptibles a manipulaciones y abusos, ya que deben confiar en señales fuera de la cadena y datos provenientes de plataformas como X (Twitter). Dado que los Administradores de campañas deciden cómo se distribuyen los presupuestos entre los Colaboradores, actores maliciosos que simulan ser genuinos pueden intentar **engañar o manipular estos sistemas** para recibir fondos sin aportar valor a los Anunciantes.
+La transparencia genera confianza. Pero la apertura también puede habilitar abuso, confusión o situaciones límite. Por eso Asami equilibra su transparencia con una capa modesta pero cuidadosa de medidas de seguridad, filtros de calidad y pautas de soporte — todas pensadas para proteger el ecosistema sin socavar su naturaleza permissionless.
 
-Como los Administradores de campañas buscan mantenerse abiertos a la mayor cantidad de Colaboradores posible —fomentando el crecimiento y la participación—, suelen apoyarse en sistemas automatizados para incorporar y evaluar miembros. Esta escalabilidad necesaria también introduce **superficies de ataque** que hacen esencial la detección robusta de abusos.
+En esta sección, explicamos cómo se comunica Asami, cómo se puede verificar su información y cómo se previene la manipulación o el mal uso — manteniendo siempre el espíritu del club: colaboración pública y voluntaria.
 
-### 8.1 Tipos de abuso
+### 8.1 Diseño Orientado a lo Público
 
-Las formas más comunes y anticipadas de abuso que enfrentan los sistemas de los Administradores de campañas incluyen:
+Asami.club comunica abiertamente por diseño. En lugar de depender de chats privados o foros cerrados, el club mantiene su presencia y la mayoría de sus discusiones en espacios públicos — especialmente en X (antes Twitter). Esto promueve la responsabilidad, reduce la ambigüedad y ayuda a nuevos usuarios a entender el sistema observándolo en acción.
 
-- **Inflación artificial de impresiones**: Posibles Colaboradores pueden intentar aumentar su visibilidad mediante bots o tráfico comprado. Si las impresiones no son consistentes con métricas de interacción como respuestas o me gusta, el Administrador puede asignar un valor de audiencia igual a cero.
+Las solicitudes de soporte se gestionan por canales definidos, y solo para problemas técnicos específicos. Los grupos públicos de soporte en Telegram existen para casos como:
 
-- **Republicaciones sin esfuerzo o a ciegas**: Algunas cuentas republican todas las campañas sin contexto ni interacción genuina. Estas cuentas diluyen el valor de las campañas y son excluidas o despriorizadas.
+* El sitio web no funciona como se espera.
+* No puedes vincular tu cuenta de X, correo electrónico o wallet.
+* Registraste una campaña o hiciste repost, pero no aparece o no fue pagado después de un tiempo razonable.
+* Intentaste crear una campaña que nunca se mostró.
 
-- **Interacción generada por IA o scripts**: Los Administradores de campañas detectan e ignoran comentarios repetitivos e inconsecuentes (“GM”, “🔥”, etc.) generados por scripts o inteligencia artificial. No se consideran indicadores de influencia real.
+Todas las demás consultas deben hacerse primero al [Robot de Asami](https://robot.asami.club), que puede ayudar a los divulgadores a explorar datos públicos, entender su puntuación de influencia y preparar un reporte adecuado. Los comentarios generales o feedback deben hacerse de forma pública, mencionando la cuenta oficial del club (por ejemplo, `@asami_club_es`) en X.
 
-- **Influencia inversa**: Cuentas que rutinariamente provocan sentimientos negativos o reacciones adversas pueden ser marcadas mediante encuestas y análisis de sentimiento. Su influencia se ajusta en consecuencia.
+Los canales de soporte no son centros de ayuda generales, ni espacios para debatir puntuaciones de influencia o solicitar acceso a campañas. Los moderadores pueden ignorar o eliminar mensajes que no respeten las reglas fijadas en los mensajes anclados.
 
-- **Influencia fuera de X no capturada por métricas**: Algunas personas influyentes pueden no tener métricas fuertes en X, pero ejercer influencia a través de otros medios (charlas públicas, podcasts, etc.). Estos casos requieren revisión manual de evidencia.
+Este enfoque público es intencional. Refleja los valores de Web3 — donde los participantes toman iniciativa, exploran datos abiertos y se relacionan con contratos y código, no con autoridades centralizadas.
 
-- **Manipulación de referidos / ataques Sybil**: Algunos usuarios pueden intentar ganar autoridad por referidos incorporando cuentas falsas o de baja calidad bajo su control. Los referidos deben ser genuinos y activos para ser contados.
+### 8.2 Transparencia por Diseño
 
-### 8.2 El rol del Administrador de campañas en la prevención
+Asami.club se basa en el principio de verificabilidad. Si bien no todos los datos individuales pueden hacerse públicos debido a restricciones de plataformas —como los términos de la API de X—, el sistema está diseñado para asegurar que todas las decisiones estructurales, la lógica central y los resultados derivados sean transparentes y estén abiertos al escrutinio.
 
-Cada Administrador de campañas implementa su propio algoritmo para puntuar, detectar abusos y determinar la elegibilidad para colaborar. Sus sistemas típicamente incluyen:
+Componentes clave disponibles para inspección pública:
 
-- **Puntuación pesimista de audiencia**: No se asigna audiencia a menos que las impresiones estén respaldadas por datos de interacción consistentes.
-- **Cálculo de autoridad con múltiples señales**: Interacciones, encuestas, referidos y comportamiento de tenencia de tokens contribuyen al puntaje del Colaborador.
-- **Filtrado de elegibilidad**: Solo se aceptan colaboraciones que cumplan con los requisitos de calidad, audiencia y tiempo del Administrador.
-- **Etiquetado y bloqueo**: Actores sospechosos de abuso pueden ser despriorizados o excluidos de campañas futuras.
+* **Metadatos de campaña**: quién creó la campaña, qué Divulgadores participaron, qué recompensas se prometieron y pagaron, y cuántas impresiones se lograron.
+* **Perfiles de Divulgadores**: accesibles públicamente en Asami, muestran su puntuación de influencia, historial de campañas y ganancias.
+* **Datos de tokens e ingresos**: total de tokens ASAMI emitidos, saldos del fondo de comisiones, eventos de distribución y estadísticas históricas en [asami.club/#/Token](https://asami.club/#/Token).
+* **Registros de colaboraciones**: incluyendo la campaña, el repost, el pago y la fecha — todo verificable y almacenado on-chain.
 
-Dado que los Administradores de campañas no están obligados a aceptar a todos los participantes y deben mantener la confianza de los Anunciantes, están facultados para utilizar tanto **lógica automatizada** como **revisión manual**. Sus decisiones no están forzadas por el contrato inteligente, sino que se sostienen por la discreción, la confianza y la competencia. En última instancia, un Administrador que permita abusos perderá la confianza de los Anunciantes.
+El **algoritmo de puntuación de influencia es completamente open source y versionado**, para que cualquiera pueda entender cómo se calculan los puntajes y cómo evoluciona el sistema. Aunque los datos en bruto usados en el scoring —como impresiones y métricas de engagement de X— no pueden compartirse por los términos de la plataforma, la metodología y los resultados son auditables dentro de esos límites.
 
-### 8.3 Derechos y responsabilidades de los Colaboradores
+El rendimiento de las campañas, la emisión de tokens y las contribuciones de los participantes son verificables a través de interfaces públicas o inspección on-chain. No hay backend privado ni privilegiado; todos los usuarios, proyectos y terceros interactúan con los mismos datos transparentes.
 
-Los Colaboradores que no estén de acuerdo con su puntaje de influencia o asignación de categoría pueden:
+Este diseño promueve la responsabilidad sin depender de la confianza en actores específicos.
 
-- Solicitar una revisión con evidencia específica.
-- Comparar su puntaje con el de otros usuarios mediante el tablero público.
-- Aportar evidencia externa (por ejemplo, audiencia de un podcast, éxito con referidos).
+### 8.3 Prevención de Abuso y Mal Uso
 
-Sin embargo, deben entender que:
+Asami incluye múltiples capas de protección para reducir la manipulación, el spam y el comportamiento abusivo — especialmente en torno a la puntuación de influencia, participación en campañas y distribución de recompensas.
 
-- Los puntajes de influencia son **relativos** y no representan **derechos garantizados**.
-- Los Administradores de campañas no están obligados a mantener ni explicar sus decisiones más allá de lo declarado en este whitepaper.
-- La participación en campañas queda a discreción del Administrador de campañas.
-- Una vez ganadas, las recompensas (en DOC o ASAMI) **no pueden ser recuperadas**.
+El diseño de Asami no elimina completamente el abuso, pero desalienta la participación de baja calidad y recompensa la sinceridad. Los administradores de campaña y proyectos tienen la capacidad de mantener la calidad tanto con código como con criterio.
 
-### 8.4 Transparencia del protocolo y límites
+#### Salvaguardas Algorítmicas
 
-El protocolo Asami solo aplica lógica en la cadena:
+* **Puntuación base**: Los Divulgadores se filtran con un algoritmo de influencia que descarta cuentas inactivas o no genuinas. Solo quienes superan el umbral mínimo pueden ver y participar en campañas.
+* **Ratios de engagement**: El algoritmo penaliza cuentas con muchas impresiones pero poco engagement real, desincentivando visibilidad artificial o métricas impulsadas por bots.
+* **Señales verificadas**: El algoritmo recompensa seguidores verificados e interacciones con publicaciones de alta visibilidad. Esto dificulta inflar la puntuación con cuentas falsas o métricas superficiales.
+* **Entradas manuales**: El Administrador de Campaña puede complementar la puntuación con indicadores de influencia offline (por ejemplo, organización de eventos, liderazgo comunitario), lo que permite una evaluación más matizada y contextual.
 
-- Emite tokens ASAMI
-- Recolecta y distribuye comisiones
-- Registra pagos en DOC y colaboraciones
+#### Restricciones de Plataforma
 
-No **valida la calidad de las republicaciones ni aplica la medición de influencia**. Estas decisiones suceden fuera de la cadena, en los sistemas de cada Administrador de campañas. Sin embargo, todas las transacciones financieras son transparentes y pueden consultarse públicamente en Rootstock.
+* **Filtrado por puntuación obligatorio**: Solo cuentas por encima de cierto umbral —definido por el Administrador de Campaña— pueden participar en campañas. Esta restricción se aplica de forma global y no es configurable por los anunciantes.
+* **Presupuesto y duración son unilaterales**: El presupuesto y la duración de una campaña pueden ampliarse después de su creación, pero nunca reducirse. Las campañas no pueden finalizarse anticipadamente, ni retirarse fondos una vez comprometidos.
+* **Detalles off-chain**: Otros parámetros de campaña (como contenido del mensaje, idioma o categoría) no se almacenan on-chain. Son gestionados por el Administrador de Campaña y pueden modificarse —con criterio— por motivos de claridad, calidad o moderación.
 
-Incluso si un Colaborador es bloqueado por un Administrador de campañas, cualquier DOC o ASAMI que haya ganado permanecerá en su billetera y **no puede ser revocado**.
+#### Controles Sociales y Estructurales
 
-### 8.5 Confianza mediante la competencia
+* **Criterio del anunciante**: Los Proyectos pueden incluir en listas negras o blancas a Divulgadores después de su participación. Con el tiempo, esto les permite refinar quién puede interactuar con sus campañas futuras.
+* **Incentivos públicos**: Todas las recompensas y reposts son públicos, promoviendo responsabilidad moral. Cuando un Divulgador acepta un pago, reconoce públicamente su rol en amplificar el mensaje — a diferencia del marketing de influencers tradicional, donde la compensación suele ser oculta.
 
-Los Administradores de campañas no tienen un estatus privilegiado dentro del protocolo Asami. Cualquiera puede crear su propio Administrador de campañas, definir sus reglas, construir su comunidad y atender a Anunciantes.
+### 8.4 Responsabilidad y Transparencia
 
-Si los participantes pierden la confianza en un Administrador, pueden:
+Asami promueve la responsabilidad y el comportamiento ético haciendo visibles los reposts y las recompensas. Cuando un Divulgador republica un post de campaña, su perfil público muestra claramente:
 
-- Retirarse de sus campañas
-- Crear o financiar un nuevo Administrador con estándares más claros
-- Apoyar Administradores de campañas con filosofías de puntuación o regiones distintas
+* El contenido que eligió amplificar.
+* El hecho de que recibió (o recibirá) una recompensa por hacerlo.
+* El monto exacto y tipo de recompensa (DOC y ASAMI).
 
-El ecosistema de Asami se autorregula. La transparencia, el rendimiento y las alternativas abiertas son los mecanismos que mantienen el abuso bajo control —no la imposición centralizada ni la burocracia.
+Este nivel de transparencia es clave para generar confianza. A diferencia de las promociones encubiertas o patrocinios no revelados, la participación en campañas de Asami es **transparente por diseño**. Tanto Proyectos como Divulgadores se benefician de un sistema donde la visibilidad y la compensación están abiertamente vinculadas.
 
----
+Este diseño tiene un efecto adicional: al aceptar una recompensa pública, el Divulgador **asume implícitamente cierta responsabilidad** por lo que ayudó a promocionar. La recompensa no es solo un agradecimiento — es una señal de que el Divulgador tomó una decisión consciente de asociarse con un proyecto. Esto diferencia a Asami de otras plataformas que permiten promociones anónimas o sin consecuencias.
 
-## 9. Crecimiento de la comunidad
-
-El éxito a largo plazo de Asami.club depende del crecimiento sostenido de su comunidad. Cada rol dentro del sistema —Administrador de campañas, Colaborador, Anunciante y Titular de tokens— se beneficia cuando la red crece, se lanzan más campañas y más usuarios participan.
-
-Si bien los incentivos más directos existen para los **Administradores de campañas**, que son recompensados por cada colaboración registrada y ganan la mayor proporción de tokens ASAMI, los demás participantes también tienen razones para contribuir al crecimiento del ecosistema:
-
-- **Los Anunciantes** pueden encontrar mejor valor en Asami comparado con plataformas tradicionales, especialmente al promocionar productos en industrias restringidas o poco atendidas por redes publicitarias Web2. Algunos Anunciantes pueden actuar como intermediarios o agencias, facilitando la creación de campañas para otros, obteniendo un margen y acumulando tokens ASAMI en el proceso.
-
-- **Los Colaboradores** se benefician de una plataforma en expansión con más campañas, mejores oportunidades de pago y mayor visibilidad. También pueden operar cuentas comunitarias de forma colectiva, haciendo crecer su influencia como grupo y dividiendo las recompensas. Asami puede formar parte de múltiples flujos de ingresos vinculados a su presencia online.
-
-Estas posibilidades emprendedoras hacen que **cualquier participante pueda convertirse en una unidad de negocio** dentro de Asami: atrayendo campañas, incorporando Colaboradores o incluso ofreciendo servicios adicionales como creación de contenido o análisis de redes sociales.
-
-### 9.1 Incentivos y el problema del polizón
-
-Como en muchos sistemas descentralizados, Asami enfrenta el desafío clásico de hacer crecer un recurso compartido y abierto: **quienes promueven o financian su crecimiento crean valor que beneficia a todos los participantes**, incluidos aquellos que no contribuyen.
-
-Este “problema del polizón” es una limitación común en las redes abiertas. Sin embargo, Asami introduce una solución elegante y parcial:
-
-- Al comprar y mantener **tokens ASAMI**, cualquier actor que invierte en el crecimiento de la comunidad también adquiere un derecho proporcional sobre los ingresos futuros del protocolo.
-- Si sus esfuerzos tienen éxito y se procesan más campañas y colaboraciones, el valor de sus tokens aumenta tanto por apreciación del precio como por reparto de ingresos en DOC.
-
-Esto significa que **promover Asami no es un acto de caridad, sino una inversión**. Los participantes que construyen audiencias, atraen campañas o suman nuevos Colaboradores, a menudo verán un retorno sobre su esfuerzo si también mantienen tokens.
-
-De esta manera, Asami combina la construcción comunitaria altruista con incentivos financieros, creando un ecosistema donde el crecimiento es de interés para todos, sin exigir que todos contribuyan por igual. Esto garantiza flexibilidad, al mismo tiempo que traza un camino hacia la sostenibilidad.
-
-### 9.2 Infraestructura de apoyo
-
-Los esfuerzos de crecimiento de la comunidad también cuentan con el apoyo de aliados externos como **Rootstock Labs** y **Rootstock Collective**, quienes han contribuido con infraestructura, apoyo promocional y financiamiento.
-
-El actual Administrador de campañas está activamente buscando inversión tradicional basada en un modelo de negocio claro, profesionalizando aún más este rol crítico dentro del protocolo. Al mismo tiempo, sigue abierta la posibilidad de que surjan nuevos Administradores de campañas que contribuyan al crecimiento en paralelo o en competencia.
-
-En resumen, el crecimiento de Asami es de base comunitaria, está alineado con incentivos, y es descentralizado por diseño. Cualquiera puede participar, y quienes lo hagan tienen herramientas para capturar el valor que ayudan a crear.
+Se anima a los Divulgadores a promover únicamente lo que realmente apoyan. Aunque la recompensa sea modesta, el acto de aceptarla transmite confianza e intención — no una aprobación ciega — una distinción que fortalece la credibilidad de todo el ecosistema.
 
 ---
 
-## 10. Panorama competitivo
+**9. Market-fit y panorama competitivo**
 
-El panorama competitivo de Asami abarca diversas plataformas e iniciativas que integran tecnología blockchain con redes sociales para mejorar el marketing de influencia, la monetización de contenido y la participación comunitaria. A continuación se presenta una visión ampliada de los principales competidores y proyectos relacionados:
+Los proyectos Web3 cuentan con una amplia variedad de herramientas para llegar a nuevos usuarios, aumentar su visibilidad e incentivar la participación. Desde airdrops hasta quests o campañas sociales virales, el ecosistema de crecimiento es rico y variado — y con razón. Cada objetivo requiere tácticas distintas.
 
-### Plataformas descentralizadas de marketing de influencia
+Asami no busca reemplazar estas herramientas. No intenta incorporar usuarios mediante dinámicas de juego, ni recompensar interacciones puntuales. En cambio, se enfoca en un aspecto específico pero frecuentemente ignorado de la adopción Web3: la **divulgación**. Personas que aprenden, creen y comparten — no por dinero, sino porque quieren que otros comprendan lo que han descubierto. Son quienes explican, popularizan y recomiendan. Su rol en el descubrimiento de proyectos es esencial, y Asami les ofrece una forma modesta y transparente de ser apreciados y reconocidos por ello.
 
-Varias plataformas basadas en blockchain han intentado facilitar interacciones directas entre marcas e influencers, buscando eliminar intermediarios y aumentar la transparencia. Algunos ejemplos incluyen:
+Asami opera en un espacio donde se superponen múltiples estrategias de crecimiento, influencia y marketing. Si bien su enfoque está en reconocer y recompensar la divulgación Web3 mediante incentivos transparentes y modestos, puede cruzarse con herramientas orientadas a la publicidad, onboarding, monetización o gestión de influencers. Por ejemplo, un proyecto puede usar Galxe o TaskOn para ejecutar campañas incentivadas que premian a los usuarios por probar un producto. Al mismo tiempo, puede usar Asami para llegar a verdaderos divulgadores que **comparten la campaña** con su audiencia, añadiendo credibilidad y alcance. Este enfoque por capas puede amplificar la efectividad de estrategias tradicionales, anclándolas en apoyo comunitario auténtico.
 
-- **D-creator** (ahora inactiva)
-- [**Chirpley**](https://chirpley.ai/vision-and-mission/), centrada en el ecosistema de microinfluencers.
+El valor único de Asami está en convertir la divulgación en una interacción visible y rastreable — creando un registro público de quién apoya qué, y cuándo, manteniendo los incentivos modestos y vinculados a la reputación.
 
-### Redes sociales con funciones de monetización
+Esta sección describe las categorías de plataformas con las que Asami suele ser comparado y aclara en qué medida representan competencia, complemento o simplemente cumplen otro propósito. En muchos casos, Asami puede usarse junto con estos otros métodos — especialmente cuando una campaña requiere tanto visibilidad como credibilidad entre audiencias familiarizadas con Web3.
 
-Las plataformas sociales tradicionales han integrado funciones que permiten a los usuarios monetizar su contenido, compitiendo indirectamente con el modelo de Asami:
+### 9.1 El marketing Web3 hoy
 
-- **Facebook e Instagram**: Ofrecen publicaciones y stories comprables, permitiendo a influencers y marcas etiquetar productos directamente en el contenido, facilitando experiencias de comercio electrónico.
+El marketing en el espacio Web3 enfrenta desafíos únicos. Los canales de publicidad tradicionales a menudo imponen restricciones al contenido relacionado con cripto, y algunas plataformas directamente prohíben o limitan la visibilidad de promociones blockchain. Incluso cuando están permitidos, los anuncios de proyectos descentralizados pueden parecer poco confiables o irrelevantes para audiencias que no están familiarizadas con los conceptos de Web3.
 
-- **TikTok**: Conocido por su alto nivel de interacción con audiencias jóvenes, TikTok permite colaboraciones entre influencers y marcas mediante contenido patrocinado y su Creator Marketplace.
+Para sortear estos obstáculos, muchos proyectos dependen de **plataformas basadas en incentivos** que recompensan a los usuarios por acciones específicas: instalar una wallet, probar una dApp, unirse a una comunidad o completar una tarea. Estas estrategias pueden generar grandes volúmenes de interacciones y usuarios en poco tiempo. Sin embargo, rara vez resultan en **retención a largo plazo** o **interés auténtico**. Los participantes suelen completar las tareas para obtener una recompensa y marcharse poco después, inflando métricas sin construir comunidades duraderas.
 
-### Redes sociales basadas en blockchain
+Mientras tanto, gran parte del crecimiento real que han experimentado los proyectos Web3 fundamentales —desde Bitcoin hasta infraestructura open-source— no ha sido producto de la publicidad, sino de los primeros **divulgadores**: individuos que se tomaron el tiempo de explicar, recomendar y promover lo que creían importante. Esas personas moldearon el discurso, respondieron preguntas y ayudaron a otros a dar sus primeros pasos en Web3. Sin embargo, históricamente, ese trabajo de convicción y comunicación ha pasado mayormente desapercibido.
 
-Algunas plataformas combinan funciones sociales con blockchain para ofrecer compartición de contenido y monetización descentralizada:
+Web3 necesita ambos tipos de esfuerzo: incorporación escalable de usuarios y construcción de comunidad creíble a largo plazo. Asami se enfoca en lo segundo.
 
-- **Steemit**: Una red social y plataforma de blogging basada en blockchain donde los usuarios ganan criptomonedas (STEEM) por publicar y curar contenido. Su modelo incentiva la creación y participación mediante recompensas en tokens.
+### 9.2 Acciones incentivadas vs. divulgación genuina
 
-- **BitClout (ahora DeSo)**: Una red social de código abierto basada en blockchain en la que los usuarios pueden comprar y vender “monedas de creador” vinculadas a la reputación de individuos. Busca descentralizar las redes sociales y ofrecer nuevas vías de monetización a creadores de contenido.
+Plataformas como **Galxe**, **TaskOn** y **Zealy** recompensan a los usuarios por completar acciones predefinidas — como registrarse, usar una función o unirse a una comunidad. Estas herramientas son útiles para el onboarding y pueden aumentar rápidamente el engagement, pero la actividad resultante suele ser transaccional y de corta duración.
 
-### Plataformas que venden republicaciones a Anunciantes
+**Asami ofrece un enfoque complementario**: apoya a quienes ya están hablando bien de un proyecto — no porque se les pidió, sino porque creen en su propuesta. En lugar de incentivar un comportamiento específico, Asami **reconoce públicamente y recompensa modestamente a los simpatizantes reales** que amplifican campañas mediante reposts.
 
-Aunque no siempre se basan en blockchain, existen plataformas especializadas en facilitar la compra de republicaciones y otras formas de interacción social:
+Esta diferencia importa. Las acciones incentivadas son efectivas para generar participación inicial; Asami se enfoca en **reconocer la convicción**. Ambos enfoques pueden coexistir: por ejemplo, un proyecto puede lanzar una quest en Galxe y usar Asami para difundirla a través de voces confiables — dando a la campaña tanto alcance como credibilidad.
 
-- **WeAre8**: Una red social que paga a los usuarios por ver anuncios y participar con contenido. Comparte una porción significativa de los ingresos con los usuarios, promoviendo una distribución más equitativa del valor publicitario.
+### 9.3 Plataformas descentralizadas de marketing con influencers
 
-### Proyectos que miden la influencia en redes sociales
+Proyectos como **Chirpley** y el extinto **D-Cent** buscaron descentralizar el marketing con influencers conectando directamente marcas con usuarios de redes sociales. Chirpley, en particular, permite a los anunciantes elegir entre un mercado de microinfluencers categorizados por intereses como belleza, gaming o viajes.
 
-Evaluar la influencia en redes sociales es crucial para campañas de marketing efectivas. Algunos proyectos enfocados en este aspecto son:
+**Asami adopta un enfoque diferente**, centrado en la **descubierta orgánica**. Los anunciantes no seleccionan a los participantes por adelantado. En cambio, las campañas se muestran solo a Divulgadores preseleccionados mediante puntuación de influencia, y cualquiera que haga repost se vuelve visible para el anunciante. Esto permite a los proyectos **identificar a los simpatizantes alineados con el tiempo** y crear listas blancas selectivas para campañas futuras. El modelo equilibra **exploración y explotación** — descubriendo nuevas voces mientras se cultiva un grupo confiable.
 
-- **FeiXiaoHao**: Plataforma de datos sobre blockchain que analiza métricas sociales para ofrecer a los usuarios información sobre el sentimiento del mercado, proyectos en tendencia y posibles movimientos en el ecosistema cripto.
+Chirpley prioriza la segmentación detallada y el soporte a múltiples industrias. Asami se enfoca exclusivamente en Web3, aplicando su propio algoritmo de influencia para mantener un conjunto filtrado de Divulgadores de calidad. La segmentación en Asami es manual, realizada por el Campaign Manager según el comportamiento público y el uso del lenguaje — no por intereses autodeclarados.
 
-- **TweetBoost**: Estudio que analiza el impacto de las redes sociales en la valoración de NFTs, subrayando el papel determinante de la interacción social en el valor de los activos digitales.
+Mientras que Chirpley ejecuta campañas basadas en tareas definidas, Asami prioriza la **visibilidad, la divulgación genuina y el crecimiento comunitario a largo plazo**. En una estrategia combinada, un proyecto podría usar Chirpley para activar influencers contratados y Asami para **reconocer y recompensar a quienes realmente creen en su misión**.
 
-### Tendencias emergentes y consideraciones
+Por último, cabe destacar que el token **ASAMI no se utiliza como método de pago**, sino como una recompensa tipo equity para quienes ayudan a hacer crecer el club. Tiene un suministro fijo de 21 millones y solo se emite cuando hay actividad real en el protocolo. Los pagos a Divulgadores se realizan en **DOC**, una stablecoin, lo que aporta estabilidad para los proyectos y claridad para los participantes.
 
-La integración de blockchain en redes sociales y marketing de influencia responde al deseo de mayor transparencia, seguridad y empoderamiento del usuario. Las plataformas descentralizadas buscan abordar problemas como la privacidad de los datos, la compensación justa y la autenticidad del contenido. Sin embargo, aún persisten desafíos como la incertidumbre regulatoria, la complejidad técnica y la necesidad de adopción masiva.
+### 9.4 Plataformas sociales con funciones de monetización
 
-Asami se distingue ofreciendo un protocolo de colaboración descentralizado que monetiza la influencia genuina en redes sociales, asegurando una compensación justa e interacciones transparentes entre Anunciantes, Colaboradores y Administradores de campañas. Al aprovechar la tecnología blockchain, Asami apunta a resolver problemas comunes del marketing de influencia como el fraude, la falta de transparencia y la ineficiencia en la gestión de campañas.
+Redes como **Facebook**, **Instagram**, **X (antes Twitter)** y **TikTok** ofrecen herramientas de monetización integradas, que permiten a los creadores generar ingresos mediante contenido patrocinado, reparto de ingresos publicitarios o apoyo directo de sus seguidores. Estas plataformas dominan la atención global y ofrecen vías escalables para quienes quieren vivir de su audiencia.
+
+**Asami tiene otro objetivo.** No busca convertirse en la fuente principal de ingresos para creadores de contenido. En cambio, apunta a aquellas personas que actúan como **divulgadores y educadores**: individuos que comparten contenido significativo sobre proyectos Web3 por interés genuino, convicción personal o deseo de educar a otros.
+
+Estos Divulgadores reciben pagos modestos en **DOC** al repostear campañas que resuenan con sus valores. El objetivo no es generar un sueldo, sino ofrecer **reconocimiento y una participación simbólica** en las comunidades que ayudan a crecer.
+
+Los usuarios de Asami pueden seguir utilizando plataformas tradicionales para monetizar su trabajo (como YouTube, TikTok o Twitch). En este sentido, **Asami complementa esos canales**, agregando una capa transparente y ligera de incentivos para contenido que ya estaban dispuestos a compartir por convicción.
+
+
+### 9.5 Redes sociales basadas en blockchain
+
+Existen plataformas que combinan infraestructura blockchain con redes sociales para ofrecer monetización tokenizada, resistencia a la censura y propiedad comunitaria. Veamos cómo se comparan con Asami:
+
+* **Hive** (anteriormente una bifurcación de Steem) es una red social descentralizada donde los usuarios ganan tokens HIVE o HBD publicando contenido y votando, gracias al mecanismo de “Proof-of-Brain”. Su foco está en la publicación on-chain, no en recompensar la amplificación de contenido ajeno. **Asami**, en cambio, opera sobre **redes sociales ya existentes** (como X), y recompensa con **pagos en DOC y tokens ASAMI** a los usuarios que amplifican campañas Web3 genuinamente. No requiere migrarse ni publicar contenido original en una blockchain.
+
+* **DeSo** (antes BitClout) permite especular sobre la reputación de personas mediante “creator coins”. Su enfoque es **especulativo**, mientras que **Asami mide y recompensa el impacto social práctico** mediante reposts y un algoritmo transparente de influencia.
+
+* **Lens Protocol**, **Farcaster** y similares ofrecen identidad descentralizada y potencial futuro para el contenido social. Sin embargo, aún carecen de escala y de herramientas de campañas estructuradas como las que Asami ya aplica en plataformas mainstream. **Asami se enfoca en generar impacto medible en redes sociales ampliamente utilizadas**, sin descartar expandirse a redes descentralizadas cuando estas alcancen mayor adopción.
+
+**Conclusión**: Asami no intenta reinventar la red social, como hacen Hive o DeSo. En su lugar, se integra con canales existentes y recompensa acciones verificables que impulsan campañas Web3 — con transparencia, trazabilidad y sin fricción.
+
+### 9.6 Plataformas que venden reposts a anunciantes
+
+Servicios como **WeAre8**, **SocialBoost**, **InstaFollowers** y similares permiten a los anunciantes **comprar reposts, likes y engagement**, generalmente priorizando volumen sobre autenticidad.
+
+* **WeAre8** reparte ingresos publicitarios entre usuarios que ven o interactúan con contenido patrocinado. Aunque se presenta como una alternativa ética, no filtra por **interés genuino** ni por experiencia en el tema.
+* Otras plataformas como **SocialBoost** o **InstaFollowers** venden paquetes de reposts o seguidores sin criterios de calidad, sin transparencia y sin verificar la relevancia del público.
+
+**Asami es lo opuesto a estos enfoques**:
+
+* Las interacciones **no se compran por paquete**. Solo los Divulgadores que han pasado el filtro de influencia y reputación pueden participar.
+* Todos los reposts y recompensas están **registrados públicamente en blockchain**, lo que **dificulta el fraude y facilita la auditoría**.
+* Cada Divulgador es **filtrado por score**, con base en visibilidad real y autoridad social — no simplemente dispuesto a cobrar por postear.
+
+Para los anunciantes, **Asami ofrece calidad en lugar de cantidad**: amplificaciones modestas, pero auténticas, desde perfiles genuinamente interesados en el ecosistema Web3. Además, puede actuar como **una capa previa** para identificar voceros confiables antes de lanzar una campaña masiva, o como **una capa complementaria** que añade credibilidad a una estrategia de mayor escala.
+
+
+### 9.7 Proyectos que miden la influencia en redes sociales
+
+Plataformas como **FeiXiaoHao** y proyectos de análisis como **TweetBoost** buscan cuantificar la influencia, el sentimiento y la viralidad de contenido en redes sociales. Por ejemplo:
+
+* **FeiXiaoHao** monitorea menciones, tasas de engagement y sentimiento de palabras clave en el ecosistema cripto, ayudando a detectar tendencias y cambios en el ánimo del mercado.
+* **TweetBoost** investiga cómo métricas de Twitter —seguidores, retuits, likes— afectan el valor percibido de NFTs, y ha demostrado que incorporar estos datos mejora predicciones de mercado en hasta un 6%.
+
+Estos proyectos comparten con Asami el interés por la **medición de influencia**, pero su objetivo es distinto. FeiXiaoHao y TweetBoost se centran en ofrecer **insights analíticos generales** para traders, investigadores o equipos de marketing. Su enfoque es pasivo: observar, analizar y reportar.
+
+**Asami, en cambio, convierte esa medición en acción.** Su algoritmo evalúa Divulgadores en X, con métricas específicas como impresiones, reposts y ratios de engagement. El resultado no es un informe, sino la **activación directa de campañas**, con pagos transparentes en DOC y distribución de tokens ASAMI. Mientras que un proyecto puede usar herramientas como TweetBoost para planear, Asami le permite **ejecutar** —identificando y recompensando a quienes realmente amplifican su mensaje.
+
+### 9.8 Redes de anuncios centralizadas en redes sociales
+
+Canales tradicionales como **Google Ads**, **Meta Ads (Facebook/Instagram)** o los **posts promocionados de X** ofrecen alcance masivo y herramientas avanzadas de segmentación. Pero para proyectos Web3 presentan obstáculos concretos:
+
+* **Limitaciones regulatorias**: Muchas plataformas restringen o prohíben la publicidad cripto, exigiendo licencias, verificaciones por país o cumplimiento normativo difícil de cumplir.
+* **Baneos globales**: TikTok, por ejemplo, ha prohibido reiteradamente los anuncios de criptomonedas por riesgos de protección al consumidor.
+* **Costos elevados y poca credibilidad**: La saturación de contenido pago ha disminuido su efectividad. Promocionar un post en X puede costar más de \$100 USD por 25k–50k impresiones, sin garantía de engagement ni confianza del público.
+
+**Asami es una alternativa complementaria**, no un reemplazo. En lugar de pagar por impresiones genéricas, permite que proyectos Web3 consigan **amplificación genuina** por parte de Divulgadores verificados —usuarios que ya tienen influencia y deciden compartir el contenido por afinidad, no por consigna.
+
+Esto genera:
+
+* **Mejor engagement**, al venir de voces creíbles.
+* **Mayor confianza**, al ser visible quién apoya qué.
+* **Transparencia en pagos y resultados**, al estar todo registrado on-chain.
+
+Para campañas en Web3, Asami actúa como una **capa de credibilidad** que los ads tradicionales no pueden ofrecer —especialmente en contextos donde la confianza y la transparencia son clave.
+
+
+## 10. Direcciones futuras
+
+Asami sigue siendo un proyecto en evolución, guiado por las necesidades cambiantes de los proyectos Web3 y la comunidad creciente de divulgadores que los apoyan. Esta sección describe áreas de desarrollo planificadas o en curso, orientadas a mejorar la equidad, la flexibilidad y el alcance, sin perder de vista el propósito central de Asami: recompensar la defensa genuina de manera modesta y transparente.
+
+### 10.1 Mejoras en la puntuación de influencia
+
+Las futuras versiones del algoritmo de puntuación refinarán cómo se mide la autoridad y la audiencia, especialmente **por acción individual**. Los tweets citados, las menciones y el engagement específico de cada publicación podrían ponderarse de forma independiente. Esto permitirá recompensar a los divulgadores no solo por su presencia general, sino también por el rendimiento de cada repost, respuesta o mención. También se están considerando técnicas para detectar **influencia inversa** o intentos de manipulación.
+
+### 10.2 Nuevos tipos de actividad elegibles
+
+Actualmente, Asami recompensa reposts y tweets citados por igual, pero otros formatos —como **respuestas** o **menciones**— podrían volverse elegibles en el futuro. Estos se evaluarán según su alcance, intención y verificabilidad, y podrían tener puntuaciones o criterios de acceso distintos, según los requerimientos de cada campaña.
+
+### 10.3 Soporte para otras plataformas
+
+Aunque el enfoque actual está en **X (Twitter)**, Asami planea integrar otras plataformas como **Nostr**, **LinkedIn** e **Instagram**. También se consideran objetivos como **Farcaster**, **Threads** y **Telegram**, siempre que permitan visibilidad pública de publicaciones y recopilación fiable de datos. Asami priorizará plataformas alineadas con los ideales Web3 y el acceso abierto a la información.
+
+### 10.4 Soporte multicripto (BTC y Lightning)
+
+Se encuentra en desarrollo el financiamiento de campañas mediante **BTC** y la **Lightning Network**. Estos métodos de pago se convertirán automáticamente a **DOC** para mantener consistencia en la lógica de recompensas y el cálculo de comisiones. Tendrán comisiones de procesamiento más bajas que Stripe, pero las campañas financiadas de esta forma **no generarán tokens ASAMI** para los participantes.
+
+### 10.5 Cultura de divulgación y alcance
+
+Más allá de las mejoras técnicas, Asami tiene el compromiso de fomentar una cultura de la divulgación. Esto incluye iniciativas educativas para ayudar a las personas a ser mejores divulgadores, apoyo a debates públicos sobre puntuación y equidad, y contenido explicativo sobre cómo participar de forma efectiva. Asami también invertirá en difusión y promoción para aumentar el conocimiento del proyecto y atraer más miembros al club — especialmente aquellos que ya están amplificando ideas Web3 de forma orgánica.
 
 ---
 
-## 11. Por qué usar Asami
+## 11. Consideraciones legales
 
-Asami ofrece una nueva forma para que Anunciantes y Colaboradores se conecten en un entorno más auténtico, justo y descentralizado. Las plataformas sociales tradicionales priorizan sus propios ingresos mediante anuncios intrusivos, ofrecen escasa transparencia y a menudo limitan qué industrias pueden publicitar. Asami propone un enfoque diferente: conectar directamente a los Anunciantes con personas dispuestas a amplificar su mensaje —en sus propios términos.
+Asami es un protocolo y una plataforma que facilita la colaboración voluntaria entre anunciantes y usuarios de redes sociales (los llamados **divulgadores**) en un entorno transparente y descentralizado. No es una empresa, fundación ni entidad legal. Aunque el software y la infraestructura puedan ser mantenidos por personas u organizaciones identificables, el protocolo en sí opera mediante contratos inteligentes inmutables y gobernanza abierta a través de la emisión de tokens.
 
-### 11.1 Para Anunciantes
+### 11.1 No es una oferta de inversión
 
-Los Anunciantes eligen Asami porque les permite:
+Los tokens **ASAMI** no se ofrecen como una inversión. Representan participación en el protocolo Asami.club y se emiten a los contribuyentes que apoyan el ecosistema ya sea promoviendo contenido (divulgadores), gestionando campañas (administradores de campaña) o aportando fondos (anunciantes). El token tiene una oferta fija y se distribuye según reglas predeterminadas codificadas en un contrato inteligente. No hay ninguna promesa de ganancia ni entidad que garantice su apreciación en valor.
 
-- **Alcanzar personas reales, a través de personas reales**: En lugar de depender de algoritmos de plataforma o anuncios impersonales, Asami permite que tu contenido sea republicado voluntariamente por individuos que creen en lo que ofreces. Esto genera aval genuino y prueba social.
+### 11.2 Sin garantías ni compromisos
 
-- **Controlar la seguridad de marca**: Con Asami, tú eliges al Administrador de campañas y defines tus propias reglas sobre quién puede participar. Puedes usar listas blancas o negras para asegurarte de que tu contenido llegue solo a audiencias confiables.
+Asami no proporciona garantías de servicio a ningún participante. El comportamiento del protocolo está definido completamente por su código, y todas las interacciones son bajo la discreción y riesgo de los participantes. No existe obligación legal para que los administradores de campaña puntúen de forma justa, respondan a reclamos o emitan reembolsos. Las quejas deben resolverse socialmente, por reputación, o migrando a una infraestructura alternativa construida sobre el mismo protocolo.
 
-- **Anunciar donde otros no pueden**: Muchas industrias, como la cripto o causas políticamente sensibles, enfrentan censura o restricciones en plataformas tradicionales. Asami te brinda un espacio para ejecutar campañas que de otro modo estarían limitadas.
+### 11.3 Cumplimiento normativo y leyes locales
 
-- **Obtener más valor por dólar**: Hacer “boost” de una publicación en X (anteriormente Twitter) puede costar USD 100 para alcanzar entre 24.000 y 57.000 impresiones, pero esas impresiones carecen del respaldo de una voz confiable. Asami genera impresiones mediante voces creíbles, que tienden a convertir mejor y generar valor de marca duradero.
+Los usuarios son responsables de cumplir con las leyes y normativas locales que les correspondan, incluyendo pero no limitándose a:
 
-- **Complementar tus estrategias existentes**: Asami no busca reemplazar tu estrategia de marketing actual —es una adición poderosa. Puedes combinar campañas publicitarias tradicionales con campañas en Asami para obtener visibilidad por capas y mayor alcance.
+* Divulgar promociones pagadas cuando sea legalmente requerido.
+* Pagar impuestos sobre ingresos obtenidos a través de campañas.
+* Respetar los términos de uso de las plataformas al interactuar con servicios de terceros como **X (Twitter)**.
 
-- **Tener transparencia y control de costos**: Tú defines el presupuesto, los rangos de recompensa y la duración de la campaña. Los fondos solo se usan cuando los Colaboradores republican y son registrados por el Administrador de campañas. Los fondos no usados se te devuelven.
+Asami no puede ni intenta hacer cumplir estos requisitos, pero **fomenta una participación responsable y conforme a la ley**.
 
-### 11.2 Para Colaboradores
+### 11.4 Privacidad y datos
 
-Los Colaboradores se unen a Asami porque les permite:
+Asami no recolecta datos personales más allá de lo que se publica en la cadena. Sin embargo, los administradores de campaña y otros participantes pueden recolectar o analizar datos públicos de redes sociales para evaluar la influencia. El uso de estos datos debe respetar los términos y limitaciones de las plataformas de origen (por ejemplo, los términos de API de X). Los conjuntos de datos internos utilizados para el puntaje pueden no ser compartibles, aunque el algoritmo sí sea público.
 
-- **Monetizar su influencia social**: Aunque no seas un creador de contenido tradicional, puedes tener verdadera influencia sobre tus seguidores. Asami te permite ganar dinero por amplificar mensajes que se alinean con tus valores.
+Los administradores de campaña pueden almacenar datos personales o seudónimos para mejorar sus servicios o mantener historial de puntuaciones. Estos datos pueden ser **eliminados a pedido**. Si tienes preguntas o preocupaciones sobre tu información, puedes escribir a **[dpo@asami.club](mailto:dpo@asami.club)** para recibir asistencia.
 
-- **Mantener tu independencia**: Tú eliges qué campañas apoyar. No necesitas comprometer tu voz ni tu reputación —no hay obligación de participar en campañas con las que no estés de acuerdo.
 
-- **Recibir pagos globalmente, en cripto**: Las recompensas se pagan en DOC, una stablecoin indexada al dólar. Los pagos van directo a tu billetera y son utilizables desde cualquier parte del mundo —sin intermediarios ni demoras bancarias.
-
-- **Hacer crecer tu perfil**: Asami recompensa no solo a los grandes influencers, sino también a los microinfluencers genuinos. Si tu audiencia interactúa contigo de forma auténtica, serás reconocido y compensado.
-
-- **Participar en un sistema con propósito**: Cada vez que colaboras en una campaña, ganas tokens ASAMI. Estos tokens te dan una participación en los ingresos del protocolo y voz en su evolución. Dejas de ser solo un usuario: te conviertes en parte interesada.
-
-- **Incorporarte fácilmente**: La plataforma ofrece retiros sin gas y entrada desde Web2, así que incluso si nunca usaste cripto antes, puedes unirte a Asami y recibir tus recompensas sin fricciones.
-
-Asami está pensado para personas —personas con algo para decir, algo que promover y que se preocupan por cómo se propagan los mensajes. Ya sea que estés aquí para anunciar o colaborar, Asami te ofrece una mejor manera de conectar y crecer.
+Claro, aquí tienes la traducción al español neutro, manteniendo el formato Markdown intacto:
 
 ---
 
-## 12. Direccionse de contrato y enlaces { .no-cols }
+## 12. Notas Finales
 
-**Contrato inteligente de Asami** (Rootstock):  
-  https://explorer.rootstock.io/address/0x3150e390bc96f1b4a05cf5183b8e7bdb68566954
+Asami.club es un experimento en evolución constante para construir una forma de divulgación en redes sociales más transparente, modesta y orientada a la comunidad. No pretende resolver todos los problemas del marketing o de los influencers, ni reemplazar la enorme infraestructura de las redes de anuncios centralizadas. En cambio, ofrece una alternativa: una que comienza de forma modesta, recompensa a personas reales y fomenta la participación genuina en el crecimiento de proyectos Web3.
 
-**Dirección actual del Administrador de campañas**:  
-  https://explorer.rootstock.io/address/0x3e79325b61d941e7996f0a1aad4f66a703e24faa
+El protocolo es público. Los contratos inteligentes son sin permisos. El club está abierto para todos.
 
-**Información sobre la stablecoin DOC (Money on Chain)**:  
-  https://moneyonchain.com/
+Si eres divulgador, prueba participar en una campaña.
 
-**Código abierto del software del Administrador de campañas**:  
-  https://github.com/constata-eu/asami
+Si eres anunciante, prueba financiar una.
+
+Si eres desarrollador, intenta crear tu propia interfaz al protocolo.
+
+El sistema se convertirá en lo que colectivamente hagamos de él.
 
 ---
 
-## 13. Contacto y soporte { .no-cols }
+## Apéndice A: Direcciones de Contrato y Enlaces { .no-cols }
 
-Se alienta a los miembros a hacer preguntas o solicitar ayuda a través de canales públicos. Nuestro objetivo es mantener toda la comunicación transparente y orientada a la comunidad.
+**Contrato inteligente de Asami** (Rootstock):
+[https://explorer.rootstock.io/address/0x3150e390bc96f1b4a05cf5183b8e7bdb68566954](https://explorer.rootstock.io/address/0x3150e390bc96f1b4a05cf5183b8e7bdb68566954)
+
+**Dirección del Administrador de Campañas actual**:
+[https://explorer.rootstock.io/address/0x3e79325b61d941e7996f0a1aad4f66a703e24faa](https://explorer.rootstock.io/address/0x3e79325b61d941e7996f0a1aad4f66a703e24faa)
+
+**Información del stablecoin DOC (Money on Chain)**:
+[https://moneyonchain.com/](https://moneyonchain.com/)
+
+**Software open source del Administrador de Campañas**:
+[https://github.com/constata-eu/asami](https://github.com/constata-eu/asami)
+
+---
+
+## Apéndice B: Contacto y Soporte { .no-cols }
+
+Se invita a los miembros a hacer preguntas o pedir ayuda a través de canales públicos. Buscamos mantener toda la comunicación transparente y orientada a la comunidad.
 
 **X (Twitter):**
-- En inglés: [@asami_club](https://twitter.com/asami_club)
-- En español: [@asami_club_es](https://twitter.com/asami_club_es)
+
+* Inglés: [@asami\_club](https://twitter.com/asami_club)
+* Español: [@asami\_club\_es](https://twitter.com/asami_club_es)
 
 **Telegram:**
-- Grupo en inglés: `@asami_club`
-- Grupo en español: `@asami_club_es`
 
-Ten en cuenta que todas las solicitudes de revisión de puntajes deben seguir el proceso basado en evidencia descrito en este whitepaper, que también contiene un apéndice con preguntas frecuentes.
+* Grupo en inglés: `@asami_club`
+* Grupo en español: `@asami_club_es`
+
+Ten en cuenta que todas las solicitudes de revisión y puntuación deben seguir el proceso basado en evidencia descrito en este whitepaper, el cual también contiene un apéndice de preguntas frecuentes.
 
 ---
 
-## Apéndice A: Preguntas frecuentes y problemas conocidos { .no-cols }
+## Apéndice C: Preguntas Frecuentes y Problemas Conocidos { .no-cols }
 
-**P: ¿Por qué no estoy recibiendo campañas?**  
-- Es posible que tu puntaje de influencia sea bajo o que falten categorías requeridas. Puedes solicitar una revisión.
+**P: ¿Por qué no me aparecen campañas?**
 
-**P: ¿Por qué mi puntaje parece demasiado bajo?**  
-- Lee la sección de Medición de influencia y sigue el proceso de resolución de disputas explicado en la Sección 3.2.
+* Puede que tu puntuación de influencia sea baja o que no tengas las categorías requeridas. Puedes solicitar una revisión.
 
-**P: Antes recibía más pagos que ahora. ¿Por qué?**  
-- Puede deberse a presupuestos más bajos por parte de los Anunciantes, cambios en tu puntaje o categoría, o menor actividad en la plataforma / mayor competencia.
+**P: ¿Por qué mi puntuación parece demasiado baja?**
 
-**P: Fui bloqueado o excluido por el Administrador de campañas. ¿Puedo seguir participando?**  
-- Sí. Asami es una plataforma sin permisos. Puedes colaborar con otro Administrador de campañas o seguir usando tus tokens ASAMI con normalidad.
+* Lee la sección de Medición de Influencia y sigue el proceso de resolución de disputas descrito en la Sección 3.2.
 
-**Problema conocido:**  
-Algunas colaboraciones pueden registrarse después de que una campaña se quede sin fondos. La plataforma las mostrará como “fallidas”, pero podrían compensarse posteriormente si se agregan fondos.
+**P: Antes ganaba más que ahora. ¿Por qué?**
+
+* Puede deberse a presupuestos más bajos por parte de anunciantes, cambios en tu puntuación o categoría, menor actividad en la plataforma o mayor competencia.
+
+**P: Fui excluido o bloqueado por el Administrador de Campañas. ¿Aún puedo participar?**
+
+* Sí. Asami es sin permisos. Puedes trabajar con otro administrador de campañas o usar tus tokens ASAMI normalmente.
+
+**Problema conocido:** Algunas colaboraciones pueden registrarse después de que una campaña se quede sin fondos. La plataforma las mostrará como "fallidas", pero podrían ser compensadas más adelante si se agregan fondos.
+

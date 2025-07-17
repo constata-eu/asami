@@ -6,6 +6,7 @@ import { useSafeSetState } from "react-admin";
 import { createContext, useContext } from "react";
 import { HttpError } from "react-admin";
 import { Settings } from "../settings";
+import { Client, XOConnectProvider } from "xo-connect";
 
 const ContractsContext = createContext(null);
 
@@ -30,16 +31,17 @@ export const ContractsProvider = ({ children }) => {
     }
 
     const config = await (await fetch(`${Settings.apiDomain}/config`)).json();
-    
-    const connectToWalletConnect = (): Promise<any> =>
-      new Promise(async (resolve, reject) => {
-        rLogin.setupHandlers(resolve, reject)
-        const provider = rLogin.userProviders[rLogin.userProviders.length - 1];
-        rLogin.coreRef.current.state.selectedProviderUserOption = {provider: provider };
-        rLogin.coreRef.current.preConnectChecklist(provider);
-      });
 
-    const { provider, disconnect } = isEmbedded ? await connectToWalletConnect() : await rLogin.connect();
+    const connectEmbedded = () => {
+      return {
+        provider: new XOConnectProvider(),
+        disconnect: async () => {},
+      };
+    };
+
+    const { provider, disconnect } = isEmbedded
+      ? connectEmbedded()
+      : await rLogin.connect();
 
     provider.on("accountsChanged", async () => {
       await disconnect;

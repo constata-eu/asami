@@ -90,15 +90,15 @@
         "reward": "Reward DOC",
         "fee": "Fee DOC",
         "status": "Status",
-        "advertiserId": "Advertiser member",
-        "memberId": "Collaborator member",
+        "advertiserId": "Advertiser",
+        "memberId": "Advocate",
         "disputeReason": "Additional details",
         "collabTriggerUniqueId": "Trigger on X",
         "idEq": "by ID",
         "campaignIdEq": "by campaign",
         "handleIdEq": "by account",
-        "advertiserIdEq": "by advertiser member",
-        "memberIdEq": "by collaborator member",
+        "advertiserIdEq": "by advertiser",
+        "memberIdEq": "by advocate",
         "collabTriggerUniqueIdLike": "by trigger on X",
         "statusEq": "status is",
         "statusNe": "status is not",
@@ -110,7 +110,7 @@
         "totalActiveMembers": "Active Members",
         "totalSignups": "Total Signups",
         "advertisers": "Advertisers",
-        "totalActiveHandles": "Active Handles",
+        "totalActiveHandles": "Active Advocates",
         "currentlyActive": "Currently active",
         "joinedRecently": "Less than 30 days old",
         "recentCampaigns": "Less than 30 days old",
@@ -134,9 +134,9 @@
           "button": "Explore Members"
         },
         "active_handles": {
-          "title": "HANDLES",
+          "title": "ADVOCATES",
           "subtitle": "with at least one collab",
-          "button": "Explore Handles"
+          "button": "Explore Advocates"
         },
         "campaigns": {
           "title": "CAMPAIGNS",
@@ -197,7 +197,7 @@
   },
   "campaign_list": {
     "title": "Your campaigns",
-    "text": "Club members will be reposting your content until the budget is fully spent. Unspent amounts will be returned after campaign ends.",
+    "text": "Advocates will be reposting your content until the budget is fully spent. Unspent amounts will be returned after campaign ends.",
     "see_post": "See Post",
     "kind": "Campaign Kind",
     "post": "Post",
@@ -223,7 +223,7 @@
   },
   "community": {
     "title": "Your community.",
-    "description": "These members helped amplify your campaigns! Pick your favorites to invite them to exclusive ones — or flag those you’d rather not work with again.",
+    "description": "These advocates helped amplify your campaigns! Pick your favorites to invite them to exclusive ones — or flag those you’d rather not work with again.",
     "rating_success": "Rating saved."
   },
   "collab_list": {
@@ -247,25 +247,13 @@
       }
     }
   },
-  "campaign_request": {
-    "title": "Suggest a campaign",
-    "text": "Got a campaign idea for X? Share it with us! If approved, we'll launch it, and you'll earn Asami tokens for each repost.",
-    "send_suggestion": "Send Suggestion",
-    "post_url_label": "The X post link",
-    "cancel": "Cancel",
-    "success": "Your suggestion has been received!",
-    "errors": {
-      "not_a_post_url": "The link you provided does not appear to be an X post.",
-      "invalid_url": "The link must point to a post, and start with https://..."
-    }
-  },
   "make_campaign": {
     "with_stripe": {
       "title": "Use Stripe",
       "text": "You can fund your campaign using a credit or debit card. A portion of your budget will go to payment processing fees, and you won’t receive Asami tokens — but collaborators will still be paid in DOC, just like with on-chain campaigns.",
       "create_button": "Launch Campaign",
       "form_title": "What to know before you launch.",
-      "service_summary": "Campaigns paid via Stripe include a 20% fee for processing and budget management. The rest is converted to DOC and fully used to fund your campaign and reward collaborators. You may want to consider funding directly in DOC to avoid this fee. Campaigns run until the full budget is spent, with collaborators paid based on their influence to help you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small $50 budget to see how Asami works for your goals.",
+      "service_summary": "Campaigns paid via Stripe include a 20% fee for processing and budget management. The rest is converted to DOC and fully used to fund your campaign and reward advocates. You may want to consider funding directly in DOC to avoid this fee. Campaigns run until the full budget is spent, with advocates paid based on their influence to help you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small $50 budget to see how Asami works for your goals.",
       "done": {
         "title": "One Last Step",
         "text": "We’ve received your campaign details. All that’s left is to complete the payment. Once we receive it, your campaign may take up to 24 hours to go live.",
@@ -290,7 +278,7 @@
         "see_in_explorer": "See transaction in block explorer"
       }
     },
-    "pay_members": "Pay club members to repost any X post.",
+    "pay_members": "Get advocates to repost any X post.",
     "start_campaign": "Start Campaign",
     "close": "Close",
     "i_changed_my_mind": "I changed my mind",
@@ -318,14 +306,14 @@
       "start_campaign": "Start Campaign",
       "price_per_point": "DOC per influence point.",
       "price_per_point_help": "Sets how much to reward for reach. Each point estimates one person getting your message. 0.01 means you pay 10 DOC for approximately 1,000 people meaningfully reached.",
-      "max_individual_reward": "Max per collaborator",
+      "max_individual_reward": "Max per advocate",
       "max_individual_reward_help": "No one earns more than this total, no matter their reach.",
-      "min_individual_reward": "Min per collaborator",
-      "min_individual_reward_help": "Useful to support smaller collaborators with guaranteed pay.",
-      "topics": "Who can collaborate?",
+      "min_individual_reward": "Min per advocate",
+      "min_individual_reward_help": "Useful to support smaller advocates with guaranteed pay.",
+      "topics": "Who can participate?",
       "topics_help": "Leave this blank to allow everyone.",
       "thumbs_up_only": "Thumbs up only",
-      "thumbs_up_only_help": "Only visible to collaborators you have approved."
+      "thumbs_up_only_help": "Only visible to advocates you have approved."
     },
     "tx_waiter": {
       "approving_title": "Approve budget spend",
@@ -361,10 +349,10 @@
     }
   },
   "title_card": {
-    "title": "Pick, Share, Earn.",
-    "collaborate": "You're all set to collaborate! Just remember — your audience is paying attention, so be a bit selective. Reposting content that doesn’t align with you can wear out your followers and weaken your influence. Plus, staying true to your voice shows you're sharing responsibly.",
-    "verify_handles": "Let’s link your X account so we can estimate your influence. Once you're verified, you can start earning from reposts!",
-    "wait_for_campaigns": "No campaigns available right now — check back soon, new opportunities pop up all the time, specially on fridays!"
+    "title": "Pick, Share, Advocate.",
+    "collaborate": "You're ready to go! Remember, people listen to you for a reason. Share what resonates, skip what doesn’t — your influence comes from being thoughtful.",
+    "verify_handles": "Time to link your account — we’ll take a quick look at your presence, and then you’ll start seeing campaigns from projects that need your help.",
+    "wait_for_campaigns": "No active campaigns at the moment. Fridays are busy, so swing by then — or just pop back in later!"
   },
   "handle_settings": {
     "title": "Handle",
@@ -379,12 +367,12 @@
     "x": {
       "will_do_it_later": "I'll do this later",
       "grant_permissions_and_make_posts": {
-        "summary": "Connect your X account to get your personalized influence reading. It’s fun, and lets you join campaigns on X to earn crypto for reposting.",
+        "summary": "Link your X account to get your influence score — it’s quick, insightful, and helps you take part in Web3 advocacy.",
+        "you_will_earn_rewards": "You’ll see campaigns to amplify. Share what fits, skip what doesn’t — and get a little DOC and ASAMI tokens as a thank-you.",
         "get_started": "Get Started",
         "dialog_title": "Get Your Personalized influence Reading",
         "we_will_check_your_activity": "We’ll check your X activity to measure your audience and influence based on interactions.",
         "we_will_post_a_poll": "We’ll post a poll on your behalf so your audience can rate your influence, you can opt-out by deleting it right away, but it may affect your score.",
-        "you_will_earn_rewards": "After that, you’ll see campaigns you can repost to start earning rewards.",
         "you_can_revoke": "You can revoke permissions anytime on X, and reset your influence.",
         "help_text": "Need help? Ask our <a href=\"https://bot.asami.club\" target=\"_blank\" rel=\"noopener\">chatbot</a> or join our <a href=\"https://t.me/asami_club\" target=\"_blank\" rel=\"noopener\">Telegram group</a>.",
         "lets_go": "Let's go"
@@ -432,7 +420,7 @@
   "balance_card": {
     "account_id_label": "Account ID",
     "unclaimed": {
-      "title": "You're earning, but not withdrawing",
+      "title": "Thank you!",
       "doc_label": "Locked DOC rewards",
       "asami_label": "Locked ASAMI tokens",
       "not_requested": "You're using a managed account — no wallet needed for now. When you’re ready, connect your RSK wallet to take full control. Your funds will move to a smart contract only you can access. Just keep your wallet safe — lost wallets mean lost funds.",
@@ -440,7 +428,7 @@
       "pending": "Hang tight — your wallet is being linked. You’ll be able to manage and withdraw your rewards as soon as it’s ready."
     },
     "claimed": {
-      "title": "Rewards",
+      "title": "Thank you!",
       "doc_label": "DOC in wallet",
       "asami_label": "ASAMI in wallet",
       "added": "%{symbol} added to your wallet.",
@@ -483,17 +471,16 @@
   },
   "your_post_here": {
     "lead": "Fund • Boost • Grow",
-    "title": "Boost your posts with word-of-mouth energy.",
-    "message": "Boost your engagement with word-of-mouth energy. Asami adds real reposts to your ad strategy — campaigns can be funded with crypto or credit card.",
-    "one": "Asami puts your Web3 project in front of real people who choose to repost you on X — building reach now and community over time.",
+    "title": "Boost your posts with Advocates.",
+    "one": "Your project reaches real, vetted advocates who help you grow by reposting — and get a little reward money as thank-you.",
     "two": "Pay with DOC — or with a Credit Card if you must.",
     "button": "Start a campaign"
   },
   "join_now": {
-    "lead": "Pick • Share • Earn",
+    "lead": "Pick • Share • Advocate",
     "title": "Get your personalized influence reading.",
-    "one": "Asami reveals your reach — and rewards you for using it.",
-    "two": "Pick Web3 campaigns worth amplifying, repost them on X, and earn DOC stablecoin and ASAMI tokens. You’ll only need a wallet to cash out.",
+    "one": "Get a fun, unique read on your X presence — and see if you’ve got advocate potential.",
+    "two": "Pick Web3 projects you believe deserve your help, repost their campaigns on X, and earn a little DOC and ASAMI as a thank-you.",
     "button": "Join the club — It's free"
   },
   "login_form": {
@@ -670,9 +657,9 @@
     "robot_url": "bot.asami.club"
   },
   "landing": {
-    "title": "A Club for WEB3 Trends.",
-    "asami_invites": "Asami connects projects with real people who amplify their message through meaningful social sharing.",
-    "boost": "Advertisers grow through genuine reach. Collaborators add value by choosing what to amplify and getting rewarded for their influence.",
+    "title": "A Club for WEB3 Projects and Advocates.",
+    "asami_invites": "Asami connects projects with real people who believe in them.",
+    "boost": "Advocates help them grow by sharing — and get a small token of appreciation that matches their influence.",
     "together": "We’re still so early. Let’s bring the next billion people into Web3 — together."
   },
   "about_token": {

@@ -56,7 +56,8 @@
     "rollup": "^4.12.1",
     "rollup-plugin-polyfill-node": "^0.12.0",
     "safe-buffer": "^5.2.1",
-    "vite-plugin-svgr": "^4.2.0"
+    "vite-plugin-svgr": "^4.2.0",
+    "xo-connect": "^2.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.5.7",

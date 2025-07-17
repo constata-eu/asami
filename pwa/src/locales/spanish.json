@@ -90,15 +90,15 @@
         "reward": "Recompensa",
         "fee": "Comisión",
         "status": "Estado",
-        "advertiserId": "Miembro Anunciante",
-        "memberId": "Miembro colaborador",
+        "advertiserId": "Anunciante",
+        "memberId": "Divulgador",
         "disputeReason": "Detalle adicional",
         "collabTriggerUniqueId": "Disparador en X",
         "idEq": "por ID",
         "campaignIdEq": "por campaña",
         "handleIdEq": "por cuenta",
-        "advertiserIdEq": "por miembro anunciante",
-        "memberIdEq": "por miembro colaborador",
+        "advertiserIdEq": "por anunciante",
+        "memberIdEq": "por divulgador",
         "collabTriggerUniqueIdLike": "por disparador",
         "statusEq": "estado es",
         "statusNe": "estado no es",
@@ -134,9 +134,9 @@
           "button": "Explorar Miembros"
         },
         "active_handles": {
-          "title": "COLABORADORES",
+          "title": "DIVULGADORES",
           "subtitle": "con al menos una colaboración",
-          "button": "Explorar colaboradores"
+          "button": "Explorar divulgadores"
         },
         "campaigns": {
           "title": "CAMPAÑAS",
@@ -197,7 +197,7 @@
   },
   "campaign_list": {
     "title": "Tus Campañas",
-    "text": "Los miembros del club amplificarán tu contenido hasta que el presupuesto se acabe. Si sobran fondos se devolverán luego de la fecha de fin de campaña.",
+    "text": "Los divulgadores amplificarán tu contenido hasta que el presupuesto se acabe. Si sobran fondos se devolverán luego de la fecha de fin de campaña.",
     "see_post": "Ver Post",
     "kind": "Tipo",
     "post": "Post",
@@ -223,7 +223,7 @@
   },
   "community": {
     "title": "Tu comunidad",
-    "description": "¡Estos miembros ayudaron a amplificar tus campañas! Elige a tus favoritos para invitarlos a campañas exclusivas — o marca a quienes prefieras no volver a incluir.",
+    "description": "¡Estos divulgadores ayudaron a amplificar tus campañas! Elige a tus favoritos para invitarlos a campañas exclusivas — o marca a quienes prefieras no volver a incluir.",
     "rating_success": "Calificación guardada"
   },
   "collab_list": {
@@ -247,25 +247,13 @@
       }
     }
   },
-  "campaign_request": {
-    "title": "Sugiere una campaña",
-    "text": "¿Tienes una idea de campaña para X? ¡Compártela con nosotros! Si es aprobada, la lanzaremos y ganarás tokens de Asami por cada repost.",
-    "send_suggestion": "Enviar sugerencia",
-    "post_url_label": "El enlace del post de X",
-    "cancel": "Cancelar",
-    "success": "¡Tu sugerencia ha sido recibida!",
-    "errors": {
-      "not_a_post_url": "El enlace que proporcionaste no parece ser un post de X.",
-      "invalid_url": "El enlace debe apuntar a un post y comenzar con https://..."
-    }
-  },
   "make_campaign": {
     "with_stripe": {
       "title": "Usar Stripe",
-      "text": "Puedes pagar tu campaña con tarjeta de crédito o débito. Una parte del presupuesto se usará para cubrir comisiones por el procesamiento del pago, y no recibirás tokens Asami — pero los colaboradores igual serán pagados en DOC, igual que en las campañas on-chain.",
+      "text": "Puedes pagar tu campaña con tarjeta de crédito o débito. Una parte del presupuesto se usará para cubrir comisiones por el procesamiento del pago, y no recibirás tokens Asami — pero los divulgadores igual serán pagados en DOC, igual que en las campañas on-chain.",
       "create_button": "Pagar con Stripe",
       "form_title": "Lo que debes saber antes de lanzar",
-      "service_summary": "Tu campaña se activará en cuanto la envíes. Es posible que tu wallet te pida autorización para usar DOC antes de continuar. Las campañas duran 15 días, y cualquier DOC no utilizado se devolverá automáticamente a tu wallet al finalizar.<br/>Los colaboradores reciben pagos en DOC según su nivel de influencia, lo que te ayuda a llegar a las audiencias más relevantes.<br/><strong>Importante: no hay reembolsos — incluso si no estás satisfecho con los resultados.</strong> Te recomendamos empezar con un presupuesto pequeño de 50 DOC para ver cómo funciona Asami según tus objetivos.",
+      "service_summary": "Tu campaña se activará en cuanto la envíes. Es posible que tu wallet te pida autorización para usar DOC antes de continuar. Las campañas duran 15 días, y cualquier DOC no utilizado se devolverá automáticamente a tu wallet al finalizar.<br/>Los divulgadores reciben pagos en DOC según su nivel de influencia, lo que te ayuda a llegar a las audiencias más relevantes.<br/><strong>Importante: no hay reembolsos — incluso si no estás satisfecho con los resultados.</strong> Te recomendamos empezar con un presupuesto pequeño de 50 DOC para ver cómo funciona Asami según tus objetivos.",
       "done": {
         "title": "Solo falto un paso",
         "text": "Hemos recibido los detalles de tu campaña. Solo falta completar el pago. Una vez recibido, la campaña puede tardar hasta 24 horas en activarse.",
@@ -290,7 +278,7 @@
         "see_in_explorer": "Ver transacción en el explorador de bloques"
       }
     },
-    "pay_members": "Paga a los miembros del club para repostear cualquier post de X.",
+    "pay_members": "Haz que los divulgadores amplifiquen cualquier post de X.",
     "start_campaign": "Iniciar campaña",
     "close": "Cerrar",
     "i_changed_my_mind": "Cambié de idea",
@@ -318,14 +306,14 @@
       "start_campaign": "Iniciar campaña",
       "price_per_point": "DOC por punto de influencia.",
       "price_per_point_help": "Define cuánto deseas pagar por el alcance. Cada punto estima una persona que recibe tu mensaje. 0.01 significa que pagas 10 DOC por aproximadamente 1.000 personas alcanzadas.",
-      "max_individual_reward": "Máximo por colaborador",
+      "max_individual_reward": "Máximo por divulgador",
       "max_individual_reward_help": "Nadie recibirá más que este total, sin importar su alcance.",
-      "min_individual_reward": "Mínimo por colaborador",
-      "min_individual_reward_help": "Útil para apoyar a colaboradores con poco alcance con un pago garantizado.",
-      "topics": "¿Quiénes pueden colaborar?",
+      "min_individual_reward": "Mínimo por divulgador",
+      "min_individual_reward_help": "Útil para apoyar a divulgadores con poco alcance con un pago garantizado.",
+      "topics": "¿Quiénes pueden participar?",
       "topics_help": "Déjalo en blanco si todos pueden participar.",
       "thumbs_up_only": "Solo aprobados",
-      "thumbs_up_only_help": "Solo lo verán colaboradores que hayas aprobado."
+      "thumbs_up_only_help": "Solo lo verán divulgadores que hayas aprobado."
     },
     "tx_waiter": {
       "approving_title": "Aprobación del gasto del presupuesto",
@@ -361,10 +349,10 @@
     }
   },
   "title_card": {
-    "title": "Elige, Comparte, Gana.",
-    "collaborate": "¡Todo listo para colaborar! Solo recuerda: tu audiencia está atenta, así que conviene tener selectividad. Repostear contenido que no va contigo puede cansar a tus seguidores y debilitar tu influencia. Además, mantener tu estilo muestra que compartes con responsabilidad.",
-    "verify_handles": "Vamos a vincular tu cuenta de X para poder estimar tu influencia. Una vez verificada, podrás empezar a ganar con tus reposts.",
-    "wait_for_campaigns": "Por ahora no hay campañas disponibles — vuelve pronto, ¡suelen aparecer nuevas oportunidades todo el tiempo, especialmente los viernes!"
+    "title": "Elige, Comparte, Divulga.",
+    "collaborate": "¡Todo listo para empezar! Recuerda: la gente te escucha por algo. Comparte lo que resuene contigo, salta lo que no — tu influencia viene de ser auténtico.",
+    "verify_handles": "Es hora de vincular tu cuenta — vamos a echar un vistazo rápido a tu presencia, y después empezarás a ver campañas de proyectos que necesitan tu ayuda.",
+    "wait_for_campaigns": "No hay campañas activas por ahora. Los viernes suele haber movimiento, así que pásate entonces — o vuelve más tarde 😉"
   },
   "handle_settings": {
     "title": "Usuario",
@@ -379,12 +367,12 @@
     "x": {
       "will_do_it_later": "Lo haré luego",
       "grant_permissions_and_make_posts": {
-        "summary": "Conecta tu cuenta de X para obtener tu lectura personalizada de influencia. Es divertido y te permite unirte a campañas en X para ganar cripto por hacer reposts.",
+        "summary": "Vincula tu cuenta de X para obtener tu puntuación de influencia — es rápido, revelador y te permite participar en campañas de divulgación Web3.",
+        "you_will_earn_rewards": "Verás campañas para amplificar. Comparte lo que encaje contigo, salte de lo que no — y recibe un poco de DOC y tokens ASAMI como agradecimiento.",
         "get_started": "Empezar",
         "dialog_title": "Obtén tu lectura personalizada de influencia",
         "we_will_check_your_activity": "Vamos a revisar tu actividad en X para medir tu audiencia e influencia según tus interacciones.",
         "we_will_post_a_poll": "Publicaremos una encuesta en tu nombre para que tu audiencia pueda valorar tu influencia. Puedes eliminarla si no quieres participar, pero eso podría afectar tu puntaje.",
-        "you_will_earn_rewards": "Después de eso, vas a ver campañas que puedes repostear para empezar a ganar recompensas.",
         "you_can_revoke": "Puedes revocar los permisos en cualquier momento desde X y reiniciar tu influencia.",
         "help_text": "¿Necesitas ayuda? Pregunta a nuestro <a href=\"https://robot.asami.club\" target=\"_blank\" rel=\"noopener\">chatbot</a> o únete a nuestro <a href=\"https://t.me/asami_club\" target=\"_blank\" rel=\"noopener\">grupo de Telegram</a>.",
         "lets_go": "Hagámoslo ahora"
@@ -432,7 +420,7 @@
   "balance_card": {
     "account_id_label": "ID de la Cuenta",
     "unclaimed": {
-      "title": "Acumulas, pero no retiras.",
+      "title": "Gracias!",
       "doc_label": "Recompensas en DOC bloqueadas",
       "asami_label": "Tokens ASAMI bloqueados",
       "not_requested": "Estás usando una cuenta administrada — por ahora no necesitas una wallet. Cuando estés listo, conecta tu wallet de RSK para tomar el control total. Tus fondos se moverán a un contrato inteligente al que solo tú tendrás acceso. Solo recuerda mantener tu wallet segura — si la pierdes, también perderás tus fondos.",
@@ -440,7 +428,7 @@
       "pending": "Espera un momento — estamos vinculando tu wallet. En cuanto esté lista, podrás gestionar y retirar tus recompensas."
     },
     "claimed": {
-      "title": "Recompensas",
+      "title": "Gracias!",
       "doc_label": "DOC en billetera",
       "asami_label": "ASAMI en billetera",
       "added": "%{symbol} agregado a tu billetera.",
@@ -483,17 +471,16 @@
   },
   "your_post_here": {
     "lead": "Fondea • Impulsa • Crece",
-    "title": "Impulsa tu publicación de persona a persona.",
-    "message": "Aumenta tu alcance con energía de boca en boca. Asami suma reposts reales a tu estrategia — puedes financiar campañas con cripto o tarjeta de crédito.",
-    "one": "Asami pone tu proyecto Web3 frente a personas reales que eligen repostearte en X — generando alcance ahora y comunidad a futuro.",
+    "title": "Impulsa tus publicaciones con divulgadores.",
+    "one": "Tu proyecto llega a divulgadores reales y verificados que te ayudan a crecer con reposts — y reciben una pequeña recompensa como agradecimiento.",
     "two": "Paga con DOC — o con tarjeta de crédito si no hay otra.",
-    "button": "Lanza una campaña"
+    "button": "Iniciar una campaña"
   },
   "join_now": {
     "lead": "Elige • Comparte • Gana",
     "title": "Obtén tu lectura de influencia única.",
-    "one": "Asami revela tu alcance — y te recompensa por usarlo.",
-    "two": "Elige campañas Web3 que valga la pena amplificar, repostealas en X y gana DOC (USD) y tokens ASAMI. No necesitarás una wallet hasta el momento de retirar tus recompensas.",
+    "one": "Descubre tu impacto en X con una lectura divertida y única — ¿tienes potencial para divulgar?",
+    "two": "Elige proyectos Web3 que creas que merecen tu ayuda, repostea sus campañas en X y gana un poco de DOC y ASAMI como agradecimiento.",
     "button": "Únete al club — Es gratis"
   },
   "login_form": {
@@ -670,10 +657,10 @@
     "robot_url": "robot.asami.club"
   },
   "landing": {
-    "title": "Un club para tendencias WEB3.",
-    "asami_invites": "Asami conecta proyectos con personas reales que amplifican su mensaje compartiéndolo de forma auténtica y significativa.",
-    "boost": "Los anunciantes crecen gracias a un alcance genuino. Los colaboradores aportan valor eligiendo qué amplificar y reciben recompensas por su influencia.",
-    "together": "Todavía es muy temprano. Llevemos a los próximos mil millones de personas al mundo Web3 — juntos."
+    "title": "Un club para proyectos y divulgadores WEB3.",
+    "asami_invites": "Asami conecta proyectos con personas reales que creen en ellos.",
+    "boost": "Los divulgadores ayudan a que crezcan compartiendo — y reciben un pequeño agradecimiento acorde a su alcance.",
+    "together": "Todavía es muy temprano. Traigamos mil millones de personas al mundo Web3 — juntos."
   },
   "about_token": {
     "title": "Obtén $ASAMI",

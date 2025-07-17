@@ -27,6 +27,7 @@ import {
   useNotify,
   CoreAdminContext,
   I18nContext,
+  Notification,
 } from "react-admin";
 
 import { useNavigate } from "react-router-dom";
@@ -86,6 +87,7 @@ const Login = () => {
           i18nProvider={i18nProvider}
           dataProvider={pubDataProvider}
         >
+          <Notification />
           {isEmbedded ? <WalletConnectTrigger /> : <LoginSelector />}
         </CoreAdminContext>
         <AsamiLogo width="250px" height="auto" />
@@ -99,6 +101,7 @@ const WalletConnectTrigger = () => {
   const navigate = useNavigate();
   const t = useTranslate();
   const triggered = useRef(false);
+  const notify = useNotify();
 
   useEffect(() => {
     async function init() {
@@ -106,8 +109,12 @@ const WalletConnectTrigger = () => {
         return;
       }
       triggered.current = true;
-      const code = await signLoginMessage(true);
-      navigate(`/eip712_login?code=${code}`);
+      try {
+        const code = await signLoginMessage(true);
+        navigate(`/eip712_login?code=${code}`);
+      } catch (e) {
+        notify(e.body.message, { type: "error" });
+      }
     }
     init();
   }, []);
