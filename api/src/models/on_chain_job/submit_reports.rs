@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use super::*;
 
 impl OnChainJob {
@@ -12,7 +14,12 @@ impl OnChainJob {
 
         let now = self.state.on_chain.get_timestamp().await?;
 
+        let mut seen = HashSet::new();
+
         for c in &campaigns {
+            let account = c.decoded_advertiser_addr()?;
+            let briefing_hash = c.decoded_briefing_hash();
+
             // To reduce race conditions on recently extended campaigns, that result in failed
             // transactions, we double check here that this campaign's on-chain
             // state is invalid.
@@ -26,6 +33,14 @@ impl OnChainJob {
             }
             let _ = self.info("adding_campaign", (&c, &on_chain)).await;
 
+            // Campaigns could be duplicated if the same user attempts
+            // to publish the same campaign twice.
+            // This should be prevented elsewhere though.
+            // But in any case, it should not be duplicated in the params.
+            if seen.contains(&(account, briefing_hash)) {
+                continue;
+            }
+
             self.state
                 .on_chain_job_campaign()
                 .insert(InsertOnChainJobCampaign {
@@ -36,10 +51,16 @@ impl OnChainJob {
                 .await?;
 
             params.push(on_chain::SubmitReportsParam {
-                account: c.decoded_advertiser_addr()?,
-                briefing_hash: c.decoded_briefing_hash(),
+                account,
+                briefing_hash,
                 report_hash: c.build_report_hash().await?,
             });
+
+            seen.insert((account, briefing_hash));
+
+            if params.len() == 20 {
+                break;
+            }
         }
 
         if params.is_empty() {

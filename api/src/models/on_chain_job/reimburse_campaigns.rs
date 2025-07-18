@@ -12,7 +12,12 @@ impl OnChainJob {
 
         let mut params = vec![];
 
+        let mut seen = HashSet::new();
+
         for c in &campaigns {
+            let addr = c.decoded_advertiser_addr()?;
+            let briefing_hash = c.decoded_briefing_hash();
+
             // To reduce race conditions on campaigns reimbursed by users themselves,
             // we double check here to make sure it still needs reimbursement.
             // This race condition would just revert the TX.
@@ -29,10 +34,21 @@ impl OnChainJob {
                 .save()
                 .await?;
 
-            params.push(on_chain::ReimburseCampaignsParam {
-                addr: c.decoded_advertiser_addr()?,
-                briefing_hash: c.decoded_briefing_hash(),
-            });
+            // Campaigns could be duplicated if the same user attempts
+            // to publish the same campaign twice.
+            // This should be prevented elsewhere though.
+            // But in any case, it should not be duplicated in the params.
+            if seen.contains(&(addr, briefing_hash)) {
+                continue;
+            }
+
+            params.push(on_chain::ReimburseCampaignsParam { addr, briefing_hash });
+
+            seen.insert((addr, briefing_hash));
+
+            if params.len() == 20 {
+                break;
+            }
         }
 
         if params.is_empty() {

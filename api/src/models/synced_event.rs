@@ -194,16 +194,16 @@ impl SyncedEventHub {
             .await?;
 
         let mut account_ids = HashSet::new();
-        let mut campaign_ids = vec![];
+        let mut campaign_ids = HashSet::new();
 
         for (e, meta) in &events {
             let Some(synced_event) = self.save_unprocessed_event(meta, &e).await? else {
                 continue;
             };
 
-            let Some(campaign) =
-                self.state.campaign().select().briefing_hash_eq(e.campaign_id().encode_hex()).optional().await?
-            else {
+            let campaigns = self.state.campaign().select().briefing_hash_eq(e.campaign_id().encode_hex()).all().await?;
+
+            if campaigns.is_empty() {
                 synced_event
                     .info(
                         "sync_campaign_event",
@@ -214,7 +214,7 @@ impl SyncedEventHub {
                     )
                     .await?;
                 continue;
-            };
+            }
 
             let onchain = self
                 .state
@@ -230,18 +230,20 @@ impl SyncedEventHub {
                 Some(onchain.report_hash.encode_hex())
             };
 
-            campaign_ids.push(*campaign.id());
-            account_ids.insert(campaign.account_id().clone());
+            for campaign in campaigns {
+                campaign_ids.insert(*campaign.id());
+                account_ids.insert(campaign.account_id().clone());
 
-            campaign
-                .update()
-                .budget(onchain.budget.encode_hex())
-                .valid_until(Some(models::i_to_utc(onchain.valid_until)))
-                .report_hash(report_hash)
-                .status(CampaignStatus::Published)
-                .save()
-                .await
-                .context(format!("Syncing event {}", synced_event.id()))?;
+                campaign
+                    .update()
+                    .budget(onchain.budget.encode_hex())
+                    .valid_until(Some(models::i_to_utc(onchain.valid_until)))
+                    .report_hash(report_hash.clone())
+                    .status(CampaignStatus::Published)
+                    .save()
+                    .await
+                    .context(format!("Syncing event {}", synced_event.id()))?;
+            }
         }
 
         self.state.campaign().hydrate_report_columns_for(campaign_ids.into_iter()).await?;

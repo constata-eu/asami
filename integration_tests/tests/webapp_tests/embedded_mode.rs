@@ -323,7 +323,8 @@ async fn can_continue_connecting_to_x_elsewhere() {
         h.web().navigate(&format!("/s/{code}")).await;
         TestApp::try_until(10, 10, "redirect to X login", || async {
             h.web().driver.current_url().await.unwrap().to_string().starts_with("https://x.com/i/flow/login")
-        }).await;
+        })
+        .await;
     })
     .await;
 }
