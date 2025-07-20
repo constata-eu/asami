@@ -128,15 +128,7 @@ impl HandleScoringHub {
         match self.create(item).await {
             Ok(scoring) => {
                 self.state.info("score_pending", "ingested_about_to_apply", scoring.id()).await;
-                match scoring.apply().await {
-                    Ok(_) => {
-                        self.state.info("score_pending", "apply_was_ok",()).await;
-                    },
-                    Err(e) => {
-                        self.state.fail("score_pending", "error_applying", format!("{:?}", e)).await;
-                        return Err(e);
-                    }
-                };
+                scoring.apply().await?;
             }
             Err(e) => {
                 self.state.fail("score_pending", "creating_scoring", format!("handle:{id} {e:?}")).await;
@@ -283,7 +275,6 @@ impl HandleScoringHub {
 
 impl HandleScoring {
     pub async fn apply(self) -> AsamiResult<Self> {
-        self.state.info("score_pending", "starting_apply",()).await;
         let handle = self.handle().await?;
 
         let Some(me) = self.me_payload()?.and_then(|x| x.into_data()) else {
@@ -291,14 +282,12 @@ impl HandleScoring {
             self.state.info("score_pending", "me_payload_missing", ()).await;
             return self.discard_or_apply_empty().await;
         };
-        self.state.info("score_pending", "me_was_ok",()).await;
 
         let Some(tweets) = self.tweets_payload()?.and_then(|x| x.into_data()) else {
             let _ = self.fail("tweets_missing", ()).await;
             self.state.info("score_pending", "tweets_missing", ()).await;
             return self.discard_or_apply_empty().await;
         };
-        self.state.info("score_pending", "tweets_was_ok",()).await;
 
         let mentions = match self.mentions_payload()? {
             None => vec![],
@@ -311,7 +300,6 @@ impl HandleScoring {
                 payload.into_data().unwrap_or(vec![])
             }
         };
-        self.state.info("score_pending", "mentions_was_ok",()).await;
 
         let reposts = match self.reposts_payload()? {
             None => vec![],
@@ -323,22 +311,17 @@ impl HandleScoring {
                 payload.into_data().unwrap_or(vec![])
             }
         };
-        self.state.info("score_pending", "reposts_was_ok",()).await;
 
         let Some(poll_score) = Self::get_poll_score(&self.poll_payload()?) else {
             let _ = self.fail("poll_score_missing", ()).await;
             self.state.info("score_pending", "poll_score_is_missing", ()).await;
             return self.discard_or_apply_empty().await;
         };
-        self.state.info("score_pending", "score_was_ok",()).await;
 
-        self.state.info("score_pending", "referenced",()).await;
         let referenced = Self::get_referenced_tweets(&reposts);
 
-        self.state.info("score_pending", "ghost",()).await;
         let ghost_account = Self::is_ghost_account(&tweets);
 
-        self.state.info("score_pending", "fatigue",()).await;
         let repost_fatigue = Self::is_repost_fatigue(&tweets, &referenced);
 
         let (indeterminate_audience, followed) = Self::is_indeterminate_audience_or_followed(&me);
@@ -362,7 +345,6 @@ impl HandleScoring {
         };
 
         let operational_status_score = Self::get_operational_status_score(&me);
-
         let (audience_size, impression_count) = Self::get_audience_and_impression_count(&tweets);
 
         // These two are not implemented yet, so they're false unless overriden.
@@ -378,10 +360,8 @@ impl HandleScoring {
             holder_score,
         );
 
-        self.state.info("score_pending", "score",()).await;
         let score = i32_to_hex(handle.audience_size_override().unwrap_or(audience_size) * authority / 100);
 
-        self.state.info("score_pending", "save_handle_status",()).await;
         let h = handle
             .update()
             .current_scoring_id(Some(*self.id()))
@@ -393,7 +373,6 @@ impl HandleScoring {
             .await?
             .attrs;
 
-        self.state.info("score_pending", "save_scoring_status",()).await;
         Ok(self
             .update()
             .status(HandleScoringStatus::Applied)
@@ -509,6 +488,10 @@ impl HandleScoring {
 
         if repost_count == 0 {
             return false;
+        }
+
+        if good_post_count == 0 {
+            return true;
         }
 
         // Reposts can't be more than 1 and 1/2 the good posts.
