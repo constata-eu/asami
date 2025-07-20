@@ -89,12 +89,12 @@ async fn main() {
     }];
 
     every![settings.x.crawl_cooldown_minutes * 60 * 1000, |s| {
+        run!("setup_pending", s, { s.handle().setup_pending().await });
+        run!("score_pending", s, { s.handle().score_pending().await });
         run!("sync_x_collabs", s, { s.campaign().sync_x_collabs().await });
         run!("announce_campaigns", s, {
             s.campaign_announcement().send_pending_announcements().await
         });
-        run!("setup_pending", s, { s.handle().setup_pending().await });
-        run!("score_pending", s, { s.handle().score_pending().await });
     }];
 
     every![1000, |s| {

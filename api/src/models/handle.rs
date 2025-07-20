@@ -349,7 +349,7 @@ impl HandleHub {
 
         self.state.info("score_pending", "start_scoring_handles", ()).await;
         for handle in pending.clone() {
-            self.state.info("score_pending", "starting_hadle", &handle).await;
+            self.state.info("score_pending", "starting_handle", &handle).await;
 
             handle.state.handle_scoring().create_and_apply(handle).await?;
             self.state.info("score_pending", "scored_handle", ()).await;
