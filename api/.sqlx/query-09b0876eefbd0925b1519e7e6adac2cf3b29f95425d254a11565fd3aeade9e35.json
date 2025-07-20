@@ -1,0 +1,53 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM one_time_tokens WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR value = $4::varchar) AND (NOT $5::boolean OR lookup_key = $6::varchar) AND (NOT $7::boolean OR used = $8::boolean) AND (NOT $9::boolean OR user_id = $10::int4) AND (NOT $11::boolean OR expires_at = $12::timestamptz) AND (NOT $13::boolean OR expires_at > $14::timestamptz) AND (NOT $15::boolean OR sent_at = $16::timestamptz) AND ($17::boolean IS NULL OR (($17::boolean AND sent_at IS NOT NULL) OR (NOT $17::boolean AND sent_at IS NULL))) AND (NOT $18::boolean OR email = $19::text) AND ($20::boolean IS NULL OR (($20::boolean AND email IS NOT NULL) OR (NOT $20::boolean AND email IS NULL))) AND (NOT $21::boolean OR lang = $22::language)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Text",
+        "Bool",
+        "Bool",
+        {
+          "Custom": {
+            "name": "language",
+            "kind": {
+              "Enum": [
+                "en",
+                "es"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "09b0876eefbd0925b1519e7e6adac2cf3b29f95425d254a11565fd3aeade9e35"
+}
