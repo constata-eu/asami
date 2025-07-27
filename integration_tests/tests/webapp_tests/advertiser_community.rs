@@ -36,6 +36,7 @@ async fn builds_and_curates_advertiser_community() {
             .open_and_fill_doc_campaign_form(
                 "https://x.com/asami_club_es/status/1925491997223043127",
                 "200",
+                "15",
                 false, // Everyone
                 false,
             )
@@ -44,6 +45,7 @@ async fn builds_and_curates_advertiser_community() {
             .open_and_fill_doc_campaign_form(
                 "https://x.com/jack/status/1925607683454869946",
                 "200",
+                "15",
                 true, // Only thumbs up
                 false,
             )

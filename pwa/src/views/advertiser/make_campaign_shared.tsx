@@ -6,7 +6,6 @@ import {
 } from "react-admin";
 
 import { Alert, Box, Button, Typography } from "@mui/material";
-import { toBeHex, zeroPadValue, parseEther } from "ethers";
 import { Head2, Head3, light } from "../../components/theme";
 import { validateCampaignLink } from "../../lib/campaign";
 import Paper from "@mui/material/Paper";
@@ -17,6 +16,7 @@ import { Stack } from "@mui/material";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import { parseNumber } from "../../components/custom_fields";
 
 export const CampaignForm = ({
   helpTitle,
@@ -26,31 +26,18 @@ export const CampaignForm = ({
   onSubmit,
   handleClose,
   minAmount,
+  askDuration,
 }) => {
   const translate = useTranslate();
   const defaultValues = {
     pricePerPoint: "0.01",
     maxIndividualReward: "5",
     minIndividualReward: "0.1",
-  };
-  const parseNumber = (value, min_allowed, too_low_msg, nan_message) => {
-    try {
-      const parsed = parseEther(value);
-      if (parsed < parseEther(min_allowed)) {
-        return {
-          error: translate(`make_campaign.errors.${too_low_message}`),
-        };
-      }
-      return { ok: BigInt(zeroPadValue(toBeHex(parsed), 32)) };
-    } catch {
-      return { error: translate(`make_campaign.errors.${nan_message}`) };
-    }
+    durationDays: 15,
   };
 
   const validate = (values) => {
-    let input = {
-      duration: 15,
-    };
+    let input = {};
 
     const error = validateCampaignLink(values.contentUrl);
     if (error) {
@@ -71,6 +58,26 @@ export const CampaignForm = ({
       return { budget: budget.error };
     }
     input.budget = budget.ok;
+
+    if (askDuration) {
+      try {
+        const parsed = parseInt(values.durationDays);
+        if (parsed < 2) {
+          return {
+            durationDays: translate(
+              "make_campaign.errors.duration_days_too_low",
+            ),
+          };
+        }
+        input.durationDays = parsed;
+      } catch {
+        return {
+          durationDays: translate(
+            "make_campaign.errors.duration_days_not_a_number",
+          ),
+        };
+      }
+    }
 
     const ppp = parseNumber(
       values.pricePerPoint,
@@ -126,7 +133,7 @@ export const CampaignForm = ({
               source="contentUrl"
               label={translate("make_campaign.form_step.content_url")}
               helperText={
-                <Box
+                <span
                   dangerouslySetInnerHTML={{
                     __html: translate(
                       "make_campaign.form_step.content_url_help",
@@ -135,16 +142,32 @@ export const CampaignForm = ({
                 />
               }
             />
-            <TextInput
-              fullWidth
-              required={true}
-              size="small"
-              variant="filled"
-              source="budget"
-              label={translate(amountLabel)}
-              helperText={amountHelp ? translate(amountHelp) : false}
-              sx={{ mb: "0.5em" }}
-            />
+            <Stack flexWrap="wrap" direction="row" gap="1em" mb="0.5em">
+              <TextInput
+                fullWidth
+                required={true}
+                size="small"
+                variant="filled"
+                source="budget"
+                label={translate(amountLabel)}
+                helperText={amountHelp ? translate(amountHelp) : false}
+                sx={{ flex: "1 1 200px" }}
+              />
+              {askDuration && (
+                <TextInput
+                  fullWidth
+                  required={true}
+                  size="small"
+                  variant="filled"
+                  source="durationDays"
+                  helperText={translate(
+                    "make_campaign.form_step.duration_days_help",
+                  )}
+                  sx={{ flex: "1 1 200px" }}
+                  label={translate("make_campaign.form_step.duration_days")}
+                />
+              )}
+            </Stack>
 
             <TextInput
               fullWidth
@@ -356,6 +379,7 @@ export const Failure = ({ msg, info, handleClose }) => {
         sx={{ mt: "1em" }}
         fullWidth
         onClick={handleClose}
+        id="campaign-failure-close"
         color="inverted"
         variant="outlined"
       >

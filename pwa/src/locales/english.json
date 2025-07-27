@@ -203,6 +203,7 @@
     "post": "Post",
     "budget": "Budget",
     "status": "Current status",
+    "pay_with_doc": "Pay with DOC",
     "statuses": {
       "publishing": "Publishing soon.",
       "running": "Has %{budget} DOC. Runs until: %{validUntil}.",
@@ -270,8 +271,11 @@
       "doc_funded": "You don't have any DOC in your wallet yet. To get started, you can mint it using RBTC or swap for it using supported protocols.",
       "get_doc": "Get DOC now",
       "form_title": "What to know before you launch.",
-      "service_summary": "Your campaign will go live as soon as it’s submitted. Your wallet may ask for DOC spending authorization before it can proceed. Campaigns run for 15 days, and any unused DOC will be automatically returned to your wallet at the end.<br/> Collaborators are paid in DOC based on their influence level, which helps you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small 30 DOC budget to see how Asami works for your goals.",
+      "service_summary": "Your campaign will go live as soon as it’s submitted. Your wallet may ask for DOC spending authorization before it can proceed.<br/> Collaborators are paid in DOC based on their influence level, which helps you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small 30 DOC budget to see how Asami works for your goals.",
       "get_doc_link": "https://moneyonchain.com/blog/i-want-my-doc/",
+      "continue": "Continue",
+      "continue_title": "Finalize your DOC Payment",
+      "continue_warning": "<strong>Please ensure you do not pay twice</strong>. If your wallet indicates that you have already made the payment, just wait for us to receive your payment notification from the blockchain—there’s no need to pay again. If the campaign publishing process was interrupted, for example, due to insufficient funds or wallet errors, it’s safe to try paying again. Always verify with your wallet: if it shows that you have paid, then your payment is confirmed.",
       "done": {
         "title": "Campaign created",
         "text": "Your campaign has been created. It may take a few minutes to show up in your dashboard.",
@@ -287,6 +291,8 @@
     "errors": {
       "budget_too_low": "Budget is too low, must be at least 1 DOC",
       "budget_not_a_number": "Budget must be a number",
+      "duration_days_too_low": "Duration too short, must be at least 1 day",
+      "duration_days_not_a_number": "Duration must be a number of days",
       "price_per_point_not_a_number": "Price per impression is not a number",
       "price_per_point_too_low": "Price per impression is too low",
       "max_too_low": "Maximum individual reward is too low",
@@ -299,8 +305,10 @@
     "form_step": {
       "content_url": "X post link to boost",
       "content_url_help": "Paste the link here. Find it on the “Share Post” menu on X. <a target='_blank' href='https://help.x.com/en/using-x/post-and-moment-url'>Need help?</a>",
-      "budget": "Total campaign budget in DOC (USD)",
-      "budget_help": "Minimum is 1 DOC, but we usually recommend 30–250 DOC.",
+      "budget": "Total budget in DOC (USD)",
+      "budget_help": "Minimum is 1, we recommend 30–250 DOC.",
+      "duration_days": "Duration, in days",
+      "duration_days_help": "Unused budget will be refunded to your wallet.",
       "managed_amount": "USD to spend",
       "managed_amount_help": "Minimum is $10, but we usually recommend $50–$300.",
       "start_campaign": "Start Campaign",

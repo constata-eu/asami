@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use juniper::{FieldResult, GraphQLInputObject};
+use juniper::GraphQLInputObject;
 use twitter_v2::query::TweetField;
 
 /* Campaigns are created locally, then paid in the smart contract.
@@ -705,7 +705,7 @@ pub struct CreateCampaignFromLinkInput {
 }
 
 impl CreateCampaignFromLinkInput {
-    pub async fn process(self, app: &App, account: &Account) -> FieldResult<Campaign> {
+    pub async fn process(self, app: &App, account: &Account) -> AsamiResult<Campaign> {
         let topics = app.topic().select().id_in(&self.topic_ids).all().await?;
 
         let advertiser_addr = if self.managed_unit_amount.is_some() {
@@ -717,11 +717,17 @@ impl CreateCampaignFromLinkInput {
         let briefing = Self::validate_x_link_and_get_briefing(&self.link)?;
 
         let Ok(briefing_hash) = models::hasher::u256digest(briefing.as_bytes()) else {
-            return Err(Error::precondition("conversion_from_briefing_hash_to_u256_should_never_fail").into());
+            return Err(Error::precondition(
+                "conversion_from_briefing_hash_to_u256_should_never_fail",
+            ));
         };
 
         let briefing_json =
             serde_json::to_string(&briefing).map_err(|_| Error::precondition("briefing_is_always_json_encodeable"))?;
+
+        if app.campaign().select().briefing_hash_eq(briefing_hash.encode_hex()).count().await? > 0 {
+            return Err(Error::validation("link", "campaign_already_exists"));
+        }
 
         let mut campaign = app
             .campaign()
@@ -785,7 +791,7 @@ impl CreateCampaignFromLinkInput {
     }
 }
 
-fn parse_u256(fieldname: &str, value: &str) -> FieldResult<U256> {
+fn parse_u256(fieldname: &str, value: &str) -> AsamiResult<U256> {
     use ethers::abi::AbiDecode;
-    Ok(U256::decode_hex(value).map_err(|_e| Error::validation(fieldname, "invalid_hex_encoded_u256_value"))?)
+    U256::decode_hex(value).map_err(|_e| Error::validation(fieldname, "invalid_hex_encoded_u256_value"))
 }

@@ -1,8 +1,13 @@
-import { formatEther, formatUnits } from "ethers";
+import {
+  formatEther,
+  formatUnits,
+  toBeHex,
+  zeroPadValue,
+  parseEther,
+} from "ethers";
 import { FunctionField, useRecordContext, useTranslate } from "react-admin";
 import React from "react";
-import { Button, Box, Typography, IconButton, Tooltip } from "@mui/material";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { Button, Box, Typography, Tooltip } from "@mui/material";
 
 export const AmountField = ({ source, label, currency }) => {
   const record = useRecordContext();
@@ -80,4 +85,18 @@ export const AddressField: React.FC<AddressFieldProps> = ({ source }) => {
       </Tooltip>
     </Box>
   );
+};
+
+export const parseNumber = (value, min_allowed, too_low_msg, nan_message) => {
+  try {
+    const parsed = parseEther(value);
+    if (parsed < parseEther(min_allowed)) {
+      return {
+        error: translate(`make_campaign.errors.${too_low_message}`),
+      };
+    }
+    return { ok: BigInt(zeroPadValue(toBeHex(parsed), 32)) };
+  } catch {
+    return { error: translate(`make_campaign.errors.${nan_message}`) };
+  }
 };

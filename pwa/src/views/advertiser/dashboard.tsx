@@ -28,7 +28,10 @@ import { contentId } from "../../lib/campaign";
 import { Datagrid, TextField, FunctionField } from "react-admin";
 import { useListController, useTranslate } from "react-admin";
 import { getAuthKeys } from "../../lib/auth_provider";
-import { MakeCampaignWithDocCard } from "./make_campaign_card";
+import {
+  ContinueCampaignButton,
+  MakeCampaignWithDocCard,
+} from "./make_campaign_card";
 import { MakeCampaignStripe } from "./make_campaign_stripe";
 import BalanceCard from "../balance_card";
 import { ResponsiveAppBar } from "../responsive_app_bar";
@@ -60,7 +63,6 @@ const Dashboard = () => {
     disableSyncWithLocation: true,
     filter: {
       accountIdEq: getAuthKeys().session.accountId,
-      statusNe: "DRAFT",
     },
     sort: { field: "createdAt", order: "DESC" },
     perPage: 20,
@@ -121,7 +123,7 @@ const Dashboard = () => {
         </Box>
       </Stack>
 
-      <CampaignList listContext={listContext} />
+      <CampaignList listContext={listContext} account={data} />
       <Community />
     </Box>
   );
@@ -144,7 +146,7 @@ const AdvertiserHelpCard = () => {
   );
 };
 
-const CampaignList = ({ listContext }) => {
+const CampaignList = ({ listContext, account }) => {
   const t = useTranslate();
 
   if (listContext.total < 1) {
@@ -186,6 +188,20 @@ const CampaignList = ({ listContext }) => {
               render={(r) => (
                 <>
                   {r.privateFields.status == "PUBLISHED" && <ShowButton />}
+                  {!r.privateFields.managedByAdmin &&
+                    r.privateFields.status == "DRAFT" && (
+                      <FunctionField
+                        source="id"
+                        render={(r) => (
+                          <ContinueCampaignButton
+                            account={account}
+                            campaign={r}
+                            onCreate={() => listContext.refetch()}
+                            id={`btn-resume-doc-payment-for-${r.id}`}
+                          />
+                        )}
+                      />
+                    )}
                   {r.privateFields.status == "AWAITING_PAYMENT" && (
                     <FunctionField
                       source="stripeSessionUrl"
