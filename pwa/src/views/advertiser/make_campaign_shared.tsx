@@ -297,12 +297,13 @@ export const Done = ({
   primaryText,
   primaryLink,
   handleClose,
+  alertId,
 }) => {
   const translate = useTranslate();
 
   return (
     <Alert
-      id="campaign-done"
+      id={alertId}
       sx={{
         color: light,
         backgroundColor: (theme) => theme.palette.primary.main,

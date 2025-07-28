@@ -276,6 +276,36 @@
       "continue": "Continue",
       "continue_title": "Finalize your DOC Payment",
       "continue_warning": "<strong>Please ensure you do not pay twice</strong>. If your wallet indicates that you have already made the payment, just wait for us to receive your payment notification from the blockchain—there’s no need to pay again. If the campaign publishing process was interrupted, for example, due to insufficient funds or wallet errors, it’s safe to try paying again. Always verify with your wallet: if it shows that you have paid, then your payment is confirmed.",
+      "extend": {
+        "title": "Extend your campaign duration",
+        "description": "Your campaign will stop accepting new collaborations when the current deadline passes. Extend it by adding more days so people still have time to join and earn rewards. You can only extend a campaign — not shorten it.",
+        "field_label": "How many days do you want to extend?",
+        "field_help": "For example, if you enter 10, the campaign will run 10 more days starting today.",
+        "button": "Extend",
+        "errors": {
+          "too_low": "You have to extend at least one day.",
+          "shorter_than_original": "The campaign already lasts longer than the days you entered."
+        },
+        "waiter_title": "Extending your campaign…",
+        "waiter_text": "Go to your wallet and approve the campaign extension.",
+        "done_title": "Campaign extended.",
+        "done_text": "Your campaign’s due date was extended. It may take a few moments for the new date to appear while the transaction settles on-chain. Once the new deadline is reached, any unused funds will be reimbursed automatically. To reward more collaborations and show appreciation to your advocates, you can also top up the campaign budget.",
+        "see_in_explorer": "See transaction in block explorer"
+      },
+      "top_up": {
+        "title": "Add funds to your campaign.",
+        "description": "If your campaign runs out of budget, advocates won’t receive any appreciation — even if they repost.",
+        "field_label": "How many DOC do you want to add?",
+        "field_help": "Participation rules stay the same — you’re just increasing the budget.",
+        "button": "Add Funds",
+        "approval_waiter_title": "Approve the spend to fund your campaign.",
+        "approval_waiter_text": "Continue in your wallet to approve this DOC spend from Asami.",
+        "waiter_title": "Adding funds…",
+        "waiter_text": "Continue in your wallet to add the funds to the campaign.",
+        "done_title": "Funds added.",
+        "done_text": "Your campaign now has more funds to reward advocacy. It may take a few moments to appear while the transaction settles on-chain.",
+        "see_in_explorer": "View transaction in block explorer"
+      },
       "done": {
         "title": "Campaign created",
         "text": "Your campaign has been created. It may take a few minutes to show up in your dashboard.",
@@ -336,6 +366,7 @@
       "action_rejected": "It looks like you cancelled the campaign creation in your wallet, try again if you're still interested.",
       "wrong_signer": "Did you change your wallet account? You are using Asami with %{expected} but your wallet is using %{actual}. Switch your wallet connected account to %{expected} and try again.",
       "unexpected_error": "An unexpected error ocurred, contact us on X and forward the error information.",
+      "campaign_already_exists": "A campaign has already been created for that X post. If this is your campaign, you can extend its duration and increase the budget instead.",
       "copy_info": "Copy error details",
       "info_copied": "Error details copied to your clipboard",
       "title": "Campaign creation cancelled"

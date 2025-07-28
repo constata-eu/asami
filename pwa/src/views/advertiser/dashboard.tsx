@@ -30,7 +30,9 @@ import { useListController, useTranslate } from "react-admin";
 import { getAuthKeys } from "../../lib/auth_provider";
 import {
   ContinueCampaignButton,
+  ExtendCampaignButton,
   MakeCampaignWithDocCard,
+  TopUpCampaignButton,
 } from "./make_campaign_card";
 import { MakeCampaignStripe } from "./make_campaign_stripe";
 import BalanceCard from "../balance_card";
@@ -186,8 +188,23 @@ const CampaignList = ({ listContext, account }) => {
             <TextField source="id" />
             <FunctionField
               render={(r) => (
-                <>
+                <Stack>
                   {r.privateFields.status == "PUBLISHED" && <ShowButton />}
+                  {!r.privateFields.managedByAdmin &&
+                    r.privateFields.status == "PUBLISHED" && (
+                      <ExtendCampaignButton
+                        account={account}
+                        onSuccess={() => listContext.refetch()}
+                      />
+                    )}
+                  {!r.privateFields.managedByAdmin &&
+                    r.privateFields.status == "PUBLISHED" &&
+                    new Date(r.validUntil) > new Date() && (
+                      <TopUpCampaignButton
+                        account={account}
+                        onSuccess={() => listContext.refetch()}
+                      />
+                    )}
                   {!r.privateFields.managedByAdmin &&
                     r.privateFields.status == "DRAFT" && (
                       <FunctionField
@@ -217,7 +234,7 @@ const CampaignList = ({ listContext, account }) => {
                       )}
                     />
                   )}
-                </>
+                </Stack>
               )}
             />
           </Datagrid>

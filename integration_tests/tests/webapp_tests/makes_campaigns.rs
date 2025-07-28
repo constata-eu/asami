@@ -108,8 +108,27 @@ async fn can_resume_doc_campaign_creation() {
 #[serial_test::file_serial]
 async fn cannot_duplicate_campaigns() {
     TestHelper::with_web(|h| async move {
-        // A campaign is created by some advertiser.
-        // Creating it again results in an error.
+        let advertiser = h.advertiser().await;
+        let campaign = advertiser.make_campaign_one(u("100"), 20, &[]).await;
+
+        advertiser.login_to_web_with_wallet().await;
+
+        h.web().click("#button-cancel-grant-permission-and-make-post").await;
+        h.web().click("#menu-my-campaigns").await;
+
+        h.web().click("#open-start-campaign-dialog").await;
+        h.web()
+            .fill_in(
+                "input[name='contentUrl']",
+                &format!(
+                    "https://x.com/asami_club/status/{}?s=20",
+                    campaign.content_id().unwrap()
+                ),
+            )
+            .await;
+        h.web().fill_in("input[name='budget']", "20").await;
+        h.web().click("#submit-start-campaign-form").await;
+        h.web().wait_for("#campaign-failure-close").await;
     })
     .await;
 }
@@ -118,11 +137,42 @@ async fn cannot_duplicate_campaigns() {
 #[serial_test::file_serial]
 async fn offers_extending_campaigns() {
     TestHelper::with_web(|h| async move {
-        // On 'my campaigns', duration has a '+' icon to extend the campaign if it was created using doc.
+        let advertiser = h.advertiser().await;
+        let campaign = advertiser.make_campaign_one(u("100"), 15, &[]).await;
 
-        // Clicking it opens up a dialog to enter how many days to extend it.
+        advertiser.login_to_web_with_wallet().await;
+        h.web().click("#button-cancel-grant-permission-and-make-post").await;
+        h.web().click("#menu-my-campaigns").await;
 
-        // Icon is not shown for campaigns created with stripe.
+        h.a().start_mining().await;
+        h.web().click("#open-extend-campaign-dialog-1").await;
+        h.web().delete_input("input[name='durationDays']", 3).await;
+        h.web().fill_in("input[name='durationDays']", "10").await;
+        h.web().click("#submit-extend-campaign-form").await;
+        h.web()
+            .wait_for_text(
+                ".ra-input-durationDays p.Mui-error",
+                "The campaign already lasts longer.*",
+            )
+            .await;
+        h.web().delete_input("input[name='durationDays']", 3).await;
+        h.web().fill_in("input[name='durationDays']", "20").await;
+        h.web().click("#submit-extend-campaign-form").await;
+
+        h.web().wait_for("#extension-waiter").await;
+        h.web().confirm_wallet_action().await;
+        h.web().wait_until_gone("#extension-waiter").await;
+        h.web().wait_for("#campaign-extended").await;
+
+        let old_validity = campaign.attrs.valid_until.unwrap();
+
+        h.a()
+            .sync_events_until("Campaign should be extended", || async {
+                campaign.reloaded().await.unwrap().attrs.valid_until.unwrap() > old_validity
+            })
+            .await;
+
+        h.a().stop_mining().await;
     })
     .await;
 }
@@ -131,9 +181,45 @@ async fn offers_extending_campaigns() {
 #[serial_test::file_serial]
 async fn offers_top_up_of_campaigns() {
     TestHelper::with_web(|h| async move {
-        // On 'my campaigns', budget has a '+' icon to extend the campaign.
-        // This icon is also on the public campaigns page for logged in users that have a wallet.
-        // Clicking it opens up a dialog to enter a top-up amount.
+        let advertiser = h.advertiser_with_params(u("5000"), u("200")).await;
+        let campaign = advertiser.make_campaign_one(u("100"), 15, &[]).await;
+
+        advertiser.login_to_web_with_wallet().await;
+        h.web().click("#button-cancel-grant-permission-and-make-post").await;
+        h.web().click("#menu-my-campaigns").await;
+
+        h.a().start_mining().await;
+        h.web().click("#open-top-up-campaign-dialog-1").await;
+        // Way over the current DOC approval, to force an approval flow.
+        h.web().fill_in("input[name='budget']", "1000").await;
+        h.web().click("#submit-top-up-campaign-form").await;
+
+        h.web().wait_for("#top-up-approval-waiter").await;
+        h.web().confirm_wallet_action().await;
+        h.web().wait_until_gone("#top-up-approval-waiter").await;
+
+        h.web().wait_for("#top-up-waiter").await;
+        h.web().confirm_wallet_action().await;
+        h.web().wait_until_gone("#top-up-waiter").await;
+
+        h.web().wait_for("#campaign-topped-up").await;
+
+        let old_budget = campaign.attrs.budget.clone();
+
+        h.a()
+            .sync_events_until("Campaign should be extended", || async {
+                campaign.reloaded().await.unwrap().attrs.budget > old_budget
+            })
+            .await;
+
+        h.a().stop_mining().await;
+        h.web().click("#campaign-done-close").await;
+
+        h.web().wait_for_text(".column-totalBudget span", "1100.0").await;
+
+        h.web().wait_for("#open-top-up-campaign-dialog-1").await;
+        campaign.update().valid_until(Some(Utc::now() - chrono::Duration::days(1))).save().await.unwrap();
+        h.web().wait_until_gone("#open-top-up-campaign-dialog-1").await;
     })
     .await;
 }

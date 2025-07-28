@@ -276,6 +276,36 @@
       "continue": "Continuar",
       "continue_title": "Finaliza tu pago en DOC",
       "continue_warning": "Por favor, asegúrate de no pagar dos veces. Si tu wallet indica que ya has realizado el pago, solo espera a que recibamos la notificación de tu pago desde la blockchain—no es necesario que pagues de nuevo. Si el proceso de publicación de la campaña se interrumpió, por ejemplo, debido a fondos insuficientes o errores en la wallet, es seguro intentar pagar de nuevo. Siempre verifica con tu wallet: si muestra que has pagado, entonces tu pago está confirmado.",
+      "extend": {
+        "title": "Extiende la duración de tu campaña",
+        "description": "Tu campaña dejará de aceptar nuevas colaboraciones cuando llegue la fecha límite. Extiéndela sumando más días para que más personas tengan tiempo de unirse y ganar recompensas. Recuerda: solo puedes extenderla, no acortarla.",
+        "field_label": "Cuantos días quieres extender?",
+        "field_help": "Por ejemplo, si pones 10, serán 10 días a partir de hoy.",
+        "button": "Extender",
+        "errors": {
+          "too_low": "Extiende al menos por un día.",
+          "shorter_than_original": "La campaña ya tiene una duración superior a los días que pusiste."
+        },
+        "waiter_title": "Extendiendo tu campaña…",
+        "waiter_text": "Continúa en tu wallet para aprobar la extensión de la campaña",
+        "done_title": "Campaña extendida.",
+        "done_text": "La fecha de finalización de tu campaña se extendió. Puede tardar unos momentos en reflejarse mientras la transacción se confirma en la cadena. Una vez que se alcance la nueva fecha límite, los fondos no utilizados se reembolsarán automáticamente. Si quieres recompensar más colaboraciones y agradecer a tus divulgadores, también puedes recargar el presupuesto de la campaña.",
+        "see_in_explorer": "Ver transacción en el explorador de bloques"
+      },
+      "top_up": {
+        "title": "Agrega fondos a tu campaña.",
+        "description": "Si se termina el presupuesto, los divulgadores no reciben recompensa, aunque hagan repost.",
+        "field_label": "¿Cuántos DOC quieres agregar?",
+        "field_help": "Las reglas de participación serán las mismas, solo se aumenta el presupuesto.",
+        "button": "Agregar fondos",
+        "approval_waiter_title": "Aprueba el gasto para agregar fondos a tu campaña.",
+        "approval_waiter_text": "Abre tu wallet para aprobar este gasto de DOC desde Asami.",
+        "waiter_title": "Agregando fondos…",
+        "waiter_text": "Finaliza la operación en tu wallet para agregar los fondos.",
+        "done_title": "Fondos agregados.",
+        "done_text": "Ahora tu campaña tiene más fondos para agradecer por la divulgación. Esto puede tardar unos momentos en reflejarse mientras la transacción se confirma en la cadena.",
+        "see_in_explorer": "Ver transacción en el explorador de bloques"
+      },
       "done": {
         "title": "Campaña creada",
         "text": "Tu campaña ha sido creada. Puede tardar unos minutos en aparecer en tu panel de control.",
@@ -336,6 +366,7 @@
       "action_rejected": "Parece que cancelaste la creación de la campaña en tu cartera, intenta de nuevo si todavía estás interesado.",
       "wrong_signer": "¿Cambiaste tu cuenta de cartera? Estás usando Asami con %{expected} pero tu cartera está usando %{actual}. Cambia la cuenta conectada de tu cartera a %{expected} e intenta de nuevo.",
       "unexpected_error": "Ocurrió un error inesperado, contáctanos en X y reenvía la información del error.",
+      "campaign_already_exists": "Ese post de X ya es una campaña. Si es tu propia campaña, puedes agregarle presupuesto y extenderla.",
       "copy_info": "Copiar detalles del error",
       "info_copied": "Detalles del error copiados al portapapeles",
       "title": "Creación de campaña cancelada"

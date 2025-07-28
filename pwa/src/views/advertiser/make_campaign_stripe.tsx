@@ -107,6 +107,7 @@ const MakeCampaignStripeDialog = ({ onCreate }) => {
         )}
         {step == "DONE" && (
           <Done
+            alertId="campaign-done"
             title={"make_campaign.with_stripe.done.title"}
             leadText={"make_campaign.with_stripe.done.text"}
             primaryLink={campaign?.privateFields.stripeSessionUrl}

@@ -95,22 +95,26 @@ impl TestUser {
         self
     }
 
-    pub async fn advertiser(mut self) -> Self {
-        let amount = u("2000000");
+    pub async fn advertiser(self) -> Self {
+        self.advertiser_helper(u("2000000"), u("2000000")).await
+    }
 
+    pub async fn advertiser_helper(mut self, amount: U256, allowance: U256) -> Self {
         self.submit_claim_account_request().await;
 
         self.test_app.send_doc_to(self.address(), amount).await;
 
         self.setup_trusted_admin("Setting up main advertiser").await;
 
-        self.test_app
-            .send_tx(
-                "Approving spending for setting up as advertiser",
-                "46296",
-                self.doc_contract().approve(self.test_app.asami_contract().address(), amount),
-            )
-            .await;
+        if allowance > u("0") {
+            self.test_app
+                .send_tx(
+                    "Approving spending for setting up as advertiser",
+                    "46296",
+                    self.doc_contract().approve(self.test_app.asami_contract().address(), allowance),
+                )
+                .await;
+        }
 
         self.test_app
             .wait_for_job(
