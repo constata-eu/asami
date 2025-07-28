@@ -90,6 +90,10 @@ impl TestHelper {
         self.user().await.signed_up().await.advertiser().await
     }
 
+    pub async fn advertiser_with_params(&self, amount: U256, allowance: U256) -> TestUser {
+        self.user().await.signed_up().await.advertiser_helper(amount, allowance).await
+    }
+
     pub async fn collaborator(&self, score: i32) -> TestUser {
         self.user().await.signed_up().await.rand_unverified().await.active(score).await
     }

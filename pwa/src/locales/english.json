@@ -203,6 +203,7 @@
     "post": "Post",
     "budget": "Budget",
     "status": "Current status",
+    "pay_with_doc": "Pay with DOC",
     "statuses": {
       "publishing": "Publishing soon.",
       "running": "Has %{budget} DOC. Runs until: %{validUntil}.",
@@ -270,8 +271,41 @@
       "doc_funded": "You don't have any DOC in your wallet yet. To get started, you can mint it using RBTC or swap for it using supported protocols.",
       "get_doc": "Get DOC now",
       "form_title": "What to know before you launch.",
-      "service_summary": "Your campaign will go live as soon as it’s submitted. Your wallet may ask for DOC spending authorization before it can proceed. Campaigns run for 15 days, and any unused DOC will be automatically returned to your wallet at the end.<br/> Collaborators are paid in DOC based on their influence level, which helps you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small 30 DOC budget to see how Asami works for your goals.",
+      "service_summary": "Your campaign will go live as soon as it’s submitted. Your wallet may ask for DOC spending authorization before it can proceed.<br/> Collaborators are paid in DOC based on their influence level, which helps you reach the most relevant audiences. <br/> <strong>Please note: there are no refunds — even if you're not satisfied with the results</strong>. We recommend starting with a small 30 DOC budget to see how Asami works for your goals.",
       "get_doc_link": "https://moneyonchain.com/blog/i-want-my-doc/",
+      "continue": "Continue",
+      "continue_title": "Finalize your DOC Payment",
+      "continue_warning": "<strong>Please ensure you do not pay twice</strong>. If your wallet indicates that you have already made the payment, just wait for us to receive your payment notification from the blockchain—there’s no need to pay again. If the campaign publishing process was interrupted, for example, due to insufficient funds or wallet errors, it’s safe to try paying again. Always verify with your wallet: if it shows that you have paid, then your payment is confirmed.",
+      "extend": {
+        "title": "Extend your campaign duration",
+        "description": "Your campaign will stop accepting new collaborations when the current deadline passes. Extend it by adding more days so people still have time to join and earn rewards. You can only extend a campaign — not shorten it.",
+        "field_label": "How many days do you want to extend?",
+        "field_help": "For example, if you enter 10, the campaign will run 10 more days starting today.",
+        "button": "Extend",
+        "errors": {
+          "too_low": "You have to extend at least one day.",
+          "shorter_than_original": "The campaign already lasts longer than the days you entered."
+        },
+        "waiter_title": "Extending your campaign…",
+        "waiter_text": "Go to your wallet and approve the campaign extension.",
+        "done_title": "Campaign extended.",
+        "done_text": "Your campaign’s due date was extended. It may take a few moments for the new date to appear while the transaction settles on-chain. Once the new deadline is reached, any unused funds will be reimbursed automatically. To reward more collaborations and show appreciation to your advocates, you can also top up the campaign budget.",
+        "see_in_explorer": "See transaction in block explorer"
+      },
+      "top_up": {
+        "title": "Add funds to your campaign.",
+        "description": "If your campaign runs out of budget, advocates won’t receive any appreciation — even if they repost.",
+        "field_label": "How many DOC do you want to add?",
+        "field_help": "Participation rules stay the same — you’re just increasing the budget.",
+        "button": "Add Funds",
+        "approval_waiter_title": "Approve the spend to fund your campaign.",
+        "approval_waiter_text": "Continue in your wallet to approve this DOC spend from Asami.",
+        "waiter_title": "Adding funds…",
+        "waiter_text": "Continue in your wallet to add the funds to the campaign.",
+        "done_title": "Funds added.",
+        "done_text": "Your campaign now has more funds to reward advocacy. It may take a few moments to appear while the transaction settles on-chain.",
+        "see_in_explorer": "View transaction in block explorer"
+      },
       "done": {
         "title": "Campaign created",
         "text": "Your campaign has been created. It may take a few minutes to show up in your dashboard.",
@@ -287,6 +321,8 @@
     "errors": {
       "budget_too_low": "Budget is too low, must be at least 1 DOC",
       "budget_not_a_number": "Budget must be a number",
+      "duration_days_too_low": "Duration too short, must be at least 1 day",
+      "duration_days_not_a_number": "Duration must be a number of days",
       "price_per_point_not_a_number": "Price per impression is not a number",
       "price_per_point_too_low": "Price per impression is too low",
       "max_too_low": "Maximum individual reward is too low",
@@ -299,8 +335,10 @@
     "form_step": {
       "content_url": "X post link to boost",
       "content_url_help": "Paste the link here. Find it on the “Share Post” menu on X. <a target='_blank' href='https://help.x.com/en/using-x/post-and-moment-url'>Need help?</a>",
-      "budget": "Total campaign budget in DOC (USD)",
-      "budget_help": "Minimum is 1 DOC, but we usually recommend 30–250 DOC.",
+      "budget": "Total budget in DOC (USD)",
+      "budget_help": "Minimum is 1, we recommend 30–250 DOC.",
+      "duration_days": "Duration, in days",
+      "duration_days_help": "Unused budget will be refunded to your wallet.",
       "managed_amount": "USD to spend",
       "managed_amount_help": "Minimum is $10, but we usually recommend $50–$300.",
       "start_campaign": "Start Campaign",
@@ -328,6 +366,7 @@
       "action_rejected": "It looks like you cancelled the campaign creation in your wallet, try again if you're still interested.",
       "wrong_signer": "Did you change your wallet account? You are using Asami with %{expected} but your wallet is using %{actual}. Switch your wallet connected account to %{expected} and try again.",
       "unexpected_error": "An unexpected error ocurred, contact us on X and forward the error information.",
+      "campaign_already_exists": "A campaign has already been created for that X post. If this is your campaign, you can extend its duration and increase the budget instead.",
       "copy_info": "Copy error details",
       "info_copied": "Error details copied to your clipboard",
       "title": "Campaign creation cancelled"
@@ -457,13 +496,10 @@
     "contact_us": "Contact us"
   },
   "public_card_header": {
-    "title": "Pays up to $%{amount} in DOC"
+    "title": "By %{author} · Thanks you up to $%{amount} + ASAMI"
   },
   "public_x_campaign": {
-    "main_button": "Repost to earn"
-  },
-  "public_ig_campaign": {
-    "main_button": "Post to earn"
+    "main_button": "Repost it"
   },
   "out_of_campaigns": {
     "title": "We're all out of campaigns.",

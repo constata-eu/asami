@@ -6,6 +6,226 @@ use super::*;
 
 #[tokio::test(flavor = "multi_thread")]
 #[serial_test::file_serial]
+async fn creates_campaign_with_doc() {
+    TestHelper::with_web(|h| async move {
+        let d = h.web();
+        let advertiser = h.advertiser().await;
+        advertiser.login_to_web_with_wallet().await;
+
+        h.web().click("#button-cancel-grant-permission-and-make-post").await;
+        h.web().click("#menu-my-campaigns").await;
+
+        h.a().start_mining().await;
+        d.open_and_fill_doc_campaign_form(
+            "https://x.com/asami_club/status/1716421161867710954?s=20",
+            "20",
+            "5",
+            false,
+            false,
+        )
+        .await;
+
+        d.wait_for("#campaign-list").await;
+        d.wait_for_text("#campaign-list td.column-status", "Submitted On-Chain").await;
+
+        h.a()
+            .sync_events_until("Campaign is published", || async {
+                h.a().app.campaign().select().status_eq(CampaignStatus::Published).count().await.unwrap() > 0
+            })
+            .await;
+        h.a().stop_mining().await;
+
+        d.wait_for_text("#campaign-list td.column-totalBudget", "20.0").await;
+
+        h.a()
+            .sync_events_until("Campaign is published", || async {
+                h.a().app.campaign().select().status_eq(CampaignStatus::Published).count().await.unwrap() == 1
+            })
+            .await;
+    })
+    .await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial_test::file_serial]
+async fn can_resume_doc_campaign_creation() {
+    TestHelper::with_web(|h| async move {
+        let d = h.web();
+        let advertiser = h.advertiser().await;
+        advertiser.login_to_web_with_wallet().await;
+
+        h.web().click("#button-cancel-grant-permission-and-make-post").await;
+        h.web().click("#menu-my-campaigns").await;
+
+        h.web().click("#open-start-campaign-dialog").await;
+        h.web()
+            .fill_in(
+                "input[name='contentUrl']",
+                "https://x.com/asami_club/status/1716421161867710954?s=20",
+            )
+            .await;
+        h.web().fill_in("input[name='budget']", "20").await;
+        h.web().click("#submit-start-campaign-form").await;
+
+        h.web().wait_for("#creation-waiter").await;
+
+        h.web().go_to_extension_notification().await;
+        h.web().click("button[data-testid=confirm-footer-cancel-button]").await;
+        h.web().go_to_app_window().await;
+
+        h.web().click("#campaign-failure-close").await;
+
+        h.a().start_mining().await;
+        h.web().click("#open-continue-creating-campaign-dialog-1").await;
+
+        h.web().fill_in("input[name='budget']", "20").await;
+
+        h.web().click("#submit-start-campaign-form").await;
+        h.web().confirm_wallet_action().await;
+
+        d.wait_for("#campaign-list").await;
+        d.wait_for_text("#campaign-list td.column-status", "Submitted On-Chain").await;
+
+        h.a()
+            .sync_events_until("Campaign is published", || async {
+                h.a().app.campaign().select().status_eq(CampaignStatus::Published).count().await.unwrap() > 0
+            })
+            .await;
+
+        d.wait_for_text("#campaign-list td.column-totalBudget", "20.0").await;
+
+        h.a()
+            .sync_events_until("Campaign is published", || async {
+                h.a().app.campaign().select().status_eq(CampaignStatus::Published).count().await.unwrap() == 1
+            })
+            .await;
+        h.a().stop_mining().await;
+    })
+    .await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial_test::file_serial]
+async fn cannot_duplicate_campaigns() {
+    TestHelper::with_web(|h| async move {
+        let advertiser = h.advertiser().await;
+        let campaign = advertiser.make_campaign_one(u("100"), 20, &[]).await;
+
+        advertiser.login_to_web_with_wallet().await;
+
+        h.web().click("#button-cancel-grant-permission-and-make-post").await;
+        h.web().click("#menu-my-campaigns").await;
+
+        h.web().click("#open-start-campaign-dialog").await;
+        h.web()
+            .fill_in(
+                "input[name='contentUrl']",
+                &format!(
+                    "https://x.com/asami_club/status/{}?s=20",
+                    campaign.content_id().unwrap()
+                ),
+            )
+            .await;
+        h.web().fill_in("input[name='budget']", "20").await;
+        h.web().click("#submit-start-campaign-form").await;
+        h.web().wait_for("#campaign-failure-close").await;
+    })
+    .await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial_test::file_serial]
+async fn offers_extending_campaigns() {
+    TestHelper::with_web(|h| async move {
+        let advertiser = h.advertiser().await;
+        let campaign = advertiser.make_campaign_one(u("100"), 15, &[]).await;
+
+        advertiser.login_to_web_with_wallet().await;
+        h.web().click("#button-cancel-grant-permission-and-make-post").await;
+        h.web().click("#menu-my-campaigns").await;
+
+        h.a().start_mining().await;
+        h.web().click("#open-extend-campaign-dialog-1").await;
+        h.web().delete_input("input[name='durationDays']", 3).await;
+        h.web().fill_in("input[name='durationDays']", "10").await;
+        h.web().click("#submit-extend-campaign-form").await;
+        h.web()
+            .wait_for_text(
+                ".ra-input-durationDays p.Mui-error",
+                "The campaign already lasts longer.*",
+            )
+            .await;
+        h.web().delete_input("input[name='durationDays']", 3).await;
+        h.web().fill_in("input[name='durationDays']", "20").await;
+        h.web().click("#submit-extend-campaign-form").await;
+
+        h.web().wait_for("#extension-waiter").await;
+        h.web().confirm_wallet_action().await;
+        h.web().wait_until_gone("#extension-waiter").await;
+        h.web().wait_for("#campaign-extended").await;
+
+        let old_validity = campaign.attrs.valid_until.unwrap();
+
+        h.a()
+            .sync_events_until("Campaign should be extended", || async {
+                campaign.reloaded().await.unwrap().attrs.valid_until.unwrap() > old_validity
+            })
+            .await;
+
+        h.a().stop_mining().await;
+    })
+    .await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial_test::file_serial]
+async fn offers_top_up_of_campaigns() {
+    TestHelper::with_web(|h| async move {
+        let advertiser = h.advertiser_with_params(u("5000"), u("200")).await;
+        let campaign = advertiser.make_campaign_one(u("100"), 15, &[]).await;
+
+        advertiser.login_to_web_with_wallet().await;
+        h.web().click("#button-cancel-grant-permission-and-make-post").await;
+        h.web().click("#menu-my-campaigns").await;
+
+        h.a().start_mining().await;
+        h.web().click("#open-top-up-campaign-dialog-1").await;
+        // Way over the current DOC approval, to force an approval flow.
+        h.web().fill_in("input[name='budget']", "1000").await;
+        h.web().click("#submit-top-up-campaign-form").await;
+
+        h.web().wait_for("#top-up-approval-waiter").await;
+        h.web().confirm_wallet_action().await;
+        h.web().wait_until_gone("#top-up-approval-waiter").await;
+
+        h.web().wait_for("#top-up-waiter").await;
+        h.web().confirm_wallet_action().await;
+        h.web().wait_until_gone("#top-up-waiter").await;
+
+        h.web().wait_for("#campaign-topped-up").await;
+
+        let old_budget = campaign.attrs.budget.clone();
+
+        h.a()
+            .sync_events_until("Campaign should be extended", || async {
+                campaign.reloaded().await.unwrap().attrs.budget > old_budget
+            })
+            .await;
+
+        h.a().stop_mining().await;
+        h.web().click("#campaign-done-close").await;
+
+        h.web().wait_for_text(".column-totalBudget span", "1100.0").await;
+
+        h.web().wait_for("#open-top-up-campaign-dialog-1").await;
+        campaign.update().valid_until(Some(Utc::now() - chrono::Duration::days(1))).save().await.unwrap();
+        h.web().wait_until_gone("#open-top-up-campaign-dialog-1").await;
+    })
+    .await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+#[serial_test::file_serial]
 async fn creates_campaign_using_stripe() {
     TestHelper::with_web(|h| async move {
         let advertiser = h.user().await.signed_up().await;
@@ -235,80 +455,6 @@ pub fn send_test_stripe_event_sync(
 use models::CampaignStatus;
 
 use super::*;
-browser_test! { makes_campaign (mut d)
-    d.test_app().start_mining().await;
-
-    d.goto("http://127.0.0.1:5173").await;
-    d.click("#button-login-as-member").await;
-    d.click("#wallet-login-button").await;
-    d.link_wallet_and_sign_login().await;
-    d.wait_for("#member-dashboard").await;
-    d.click("#button-pay-to-amplify").await;
-    d.wait_for("#advertiser-dashboard").await;
-    d.wait_for("#advertiser-claim-account-pending").await;
-
-    d.test_app().wait_for_job(
-        "Claiming account",
-        models::OnChainJobKind::PromoteSubAccounts,
-        models::OnChainJobStatus::Settled
-    ).await;
-
-    d.wait_for("#advertiser-claim-account-done").await;
-
-    d.wait_for("#open-start-campaign-dialog").await;
-    d.click("#open-start-campaign-dialog").await;
-    wait_here();
-    d.fill_in("#contentUrl", "https://x.com/asami_club/status/1716421161867710954?s=20").await;
-    d.fill_in("#budget", "20").await;
-
-    d.click("#submit-start-campaign-form").await;
-    d.wait_for("#approval-waiter").await;
-
-    try_until(10, 200, "No other window opened", || async {
-        d.driver.windows().await.unwrap().len() == 2
-    }).await;
-    let mut handles = d.driver.windows().await.unwrap();
-    d.driver.switch_to_window(handles[1].clone()).await.expect("to switch window zero");
-
-    d.wait_for(".token-allowance-container").await;
-
-    d.fill_in("#custom-spending-cap", "500").await;
-    d.click("button[data-testid=page-container-footer-next]").await;
-    d.wait_for(".review-spending-cap").await;
-    d.click("button[data-testid=page-container-footer-next]").await;
-    d.driver.switch_to_window(handles[0].clone()).await.unwrap();
-
-    d.wait_until_gone("#approval-waiter").await;
-    d.wait_for("#creation-waiter").await;
-
-    try_until(10, 200, "No other window opened", || async {
-        d.driver.windows().await.unwrap().len() == 2
-    }).await;
-    handles = d.driver.windows().await.unwrap();
-    d.driver.switch_to_window(handles[1].clone()).await.expect("to switch window zero");
-    d.click("button[data-testid=page-container-footer-next]").await;
-
-    d.driver.switch_to_window(handles[0].clone()).await.unwrap();
-    d.wait_for("#campaign-done").await;
-    d.click("#campaign-done-close").await;
-
-    d.wait_for("#campaign-list").await;
-    d.wait_for_text("#campaign-list td.column-status", "Publishing soon").await;
-
-    d.test_app().sync_events_until("Campaign is published", || async {
-        d.app().campaign().select().status_eq(CampaignStatus::Published)
-            .count().await.unwrap() > 0
-    }).await;
-
-    d.wait_for_text("#campaign-list td.column-status", "Has 20.0 DOC").await;
-
-    d.test_app().sync_events_until("Campaign is published", || async {
-        d.app().campaign().select().status_eq(CampaignStatus::Published)
-            .count().await.unwrap() == 1
-    }).await;
-
-    d.test_app().stop_mining().await;
-}
 
 browser_test! { advertiser_always_needs_a_wallet (mut d)
     d.signup_with_one_time_token().await;

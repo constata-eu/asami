@@ -1,6 +1,7 @@
 use std::time::Duration;
-
 use api::models::SeriesName;
+use futures::FutureExt;
+use std::panic::AssertUnwindSafe;
 
 #[tokio::main(worker_threads = 10)]
 async fn main() {
@@ -23,7 +24,23 @@ async fn main() {
     macro_rules! run {
         ($name:literal, $app:ident, {$($blk:tt)*}) => (
             println!("Running: {}", $name);
-            if let Err(err) = { $($blk)* } {
+
+            let result = AssertUnwindSafe(async { $($blk)* }).catch_unwind().await;
+            let maybe_err = match result {
+                Ok(Err(e))  => Some(format!("{e:?}")),
+                Err(payload) => {
+                    Some(if let Some(s) = payload.downcast_ref::<&str>() {
+                        s.to_string()
+                    } else if let Some(s) = payload.downcast_ref::<String>() {
+                        s.to_string()
+                    } else {
+                        format!("Panic with non-string payload: {:?}", payload)
+                    })
+                },
+                _ => None
+            };
+
+            if let Some(err) = maybe_err {
                 let _ = $app.send_mail(
                     &$app.settings.internal_alerts_email,
                     &format!("Error in {}", $name),

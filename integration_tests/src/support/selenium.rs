@@ -198,6 +198,22 @@ impl Selenium {
         }
     }
 
+    pub async fn delete_input(&self, selector: &str, backspace_count: usize) {
+        let elem = self
+            .driver
+            .query(By::Css(selector))
+            .first()
+            .await
+            .unwrap_or_else(|_| panic!("{selector} not found"));
+        elem.wait_until().enabled().await.unwrap_or_else(|_| panic!("{selector} was not enabled"));
+
+        for _ in 0..backspace_count {
+            elem.send_keys(Key::Backspace.to_string())
+                .await
+                .unwrap_or_else(|_| panic!("Error sending backspace to {selector}"));
+        }
+    }
+
     pub async fn goto(&self, url: &str) {
         self.driver.goto(url).await.unwrap_or_else(|_| panic!("Could not visit {url}"));
     }
@@ -379,12 +395,15 @@ impl Selenium {
         &self,
         url: &str,
         budget: &str,
+        duration_days: &str,
         thumbs_up_only: bool,
         needs_approval: bool,
     ) {
         self.click("#open-start-campaign-dialog").await;
         self.fill_in("input[name='contentUrl']", url).await;
         self.fill_in("input[name='budget']", budget).await;
+        self.delete_input("input[name='durationDays']", 3).await;
+        self.fill_in("input[name='durationDays']", duration_days).await;
         if thumbs_up_only {
             self.click(".ra-input-thumbsUpOnly").await;
         }

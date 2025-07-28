@@ -203,6 +203,7 @@
     "post": "Post",
     "budget": "Presupuesto",
     "status": "Estado actual",
+    "pay_with_doc": "Pagar con DOC",
     "statuses": {
       "publishing": "Publicando pronto.",
       "running": "Tiene %{budget} DOC. Sigue hasta: %{validUntil}.",
@@ -270,8 +271,41 @@
       "doc_funded": "Aún no tienes DOC en tu wallet. Para comenzar, puedes mintearlo con RBTC o hacer un swap usando protocolos compatibles.",
       "get_doc": "Conseguir DOC ahora",
       "form_title": "Lo que debes saber antes de lanzar",
-      "service_summary": "Tu campaña se activará en cuanto la envíes. Es posible que tu wallet te pida autorización para usar DOC antes de continuar. Las campañas duran 15 días, y cualquier DOC no utilizado se devolverá automáticamente a tu wallet al finalizar.<br/>Los colaboradores reciben pagos en DOC según su nivel de influencia, lo que te ayuda a llegar a las audiencias más relevantes.<br/><strong>Importante: no hay reembolsos — incluso si no estás satisfecho con los resultados.</strong>. Recomendamos comenzar con un presupuesto pequeño de 30 DOC para ver cómo funciona Asami según tus objetivos.",
+      "service_summary": "Tu campaña se activará en cuanto la envíes. Es posible que tu wallet te pida autorización para usar DOC antes de continuar.<br/>Los colaboradores reciben pagos en DOC según su nivel de influencia, lo que te ayuda a llegar a las audiencias más relevantes.<br/><strong>Importante: no hay reembolsos — incluso si no estás satisfecho con los resultados.</strong>. Recomendamos comenzar con un presupuesto pequeño de 30 DOC para ver cómo funciona Asami según tus objetivos.",
       "get_doc_link": "https://moneyonchain.com/es/blog/quiero-mi-doc/",
+      "continue": "Continuar",
+      "continue_title": "Finaliza tu pago en DOC",
+      "continue_warning": "Por favor, asegúrate de no pagar dos veces. Si tu wallet indica que ya has realizado el pago, solo espera a que recibamos la notificación de tu pago desde la blockchain—no es necesario que pagues de nuevo. Si el proceso de publicación de la campaña se interrumpió, por ejemplo, debido a fondos insuficientes o errores en la wallet, es seguro intentar pagar de nuevo. Siempre verifica con tu wallet: si muestra que has pagado, entonces tu pago está confirmado.",
+      "extend": {
+        "title": "Extiende la duración de tu campaña",
+        "description": "Tu campaña dejará de aceptar nuevas colaboraciones cuando llegue la fecha límite. Extiéndela sumando más días para que más personas tengan tiempo de unirse y ganar recompensas. Recuerda: solo puedes extenderla, no acortarla.",
+        "field_label": "Cuantos días quieres extender?",
+        "field_help": "Por ejemplo, si pones 10, serán 10 días a partir de hoy.",
+        "button": "Extender",
+        "errors": {
+          "too_low": "Extiende al menos por un día.",
+          "shorter_than_original": "La campaña ya tiene una duración superior a los días que pusiste."
+        },
+        "waiter_title": "Extendiendo tu campaña…",
+        "waiter_text": "Continúa en tu wallet para aprobar la extensión de la campaña",
+        "done_title": "Campaña extendida.",
+        "done_text": "La fecha de finalización de tu campaña se extendió. Puede tardar unos momentos en reflejarse mientras la transacción se confirma en la cadena. Una vez que se alcance la nueva fecha límite, los fondos no utilizados se reembolsarán automáticamente. Si quieres recompensar más colaboraciones y agradecer a tus divulgadores, también puedes recargar el presupuesto de la campaña.",
+        "see_in_explorer": "Ver transacción en el explorador de bloques"
+      },
+      "top_up": {
+        "title": "Agrega fondos a tu campaña.",
+        "description": "Si se termina el presupuesto, los divulgadores no reciben recompensa, aunque hagan repost.",
+        "field_label": "¿Cuántos DOC quieres agregar?",
+        "field_help": "Las reglas de participación serán las mismas, solo se aumenta el presupuesto.",
+        "button": "Agregar fondos",
+        "approval_waiter_title": "Aprueba el gasto para agregar fondos a tu campaña.",
+        "approval_waiter_text": "Abre tu wallet para aprobar este gasto de DOC desde Asami.",
+        "waiter_title": "Agregando fondos…",
+        "waiter_text": "Finaliza la operación en tu wallet para agregar los fondos.",
+        "done_title": "Fondos agregados.",
+        "done_text": "Ahora tu campaña tiene más fondos para agradecer por la divulgación. Esto puede tardar unos momentos en reflejarse mientras la transacción se confirma en la cadena.",
+        "see_in_explorer": "Ver transacción en el explorador de bloques"
+      },
       "done": {
         "title": "Campaña creada",
         "text": "Tu campaña ha sido creada. Puede tardar unos minutos en aparecer en tu panel de control.",
@@ -287,6 +321,8 @@
     "errors": {
       "budget_too_low": "El presupuesto es demasiado bajo, debe ser al menos 1 DOC",
       "budget_not_a_number": "El presupuesto debe ser un número",
+      "duration_days_too_low": "Duración muy corta, debe ser al menos un día",
+      "duration_days_not_a_number": "Duración debe ser un número de días",
       "price_per_point_not_a_number": "El precio por impresión no es un número",
       "price_per_point_too_low": "El precio por impresión es muy bajo",
       "max_too_low": "La recompensa máxima es muy baja",
@@ -299,10 +335,12 @@
     "form_step": {
       "content_url": "Enlace al post de X que deseas promocionar",
       "content_url_help": "Pega el enlace aquí. Lo encontrarás en el menú “Compartir” de X. <a target='_blank' href='https://help.x.com/es/using-x/post-and-moment-url'>¿Necesitas ayuda?</a>",
-      "budget": "Presupuesto total de la campaña en DOC)",
-      "budget_help": "Minimum is 1 DOC, but we usually recommend 30–250 DOC.",
+      "budget": "Presupuesto total en DOC)",
+      "budget_help": "Mínimo 1 DOC, sugerimos entre 30–250 DOC.",
+      "duration_days": "Duración, en días.",
+      "duration_days_help": "El presupuesto que sobre se devolverá a tu wallet.",
       "managed_amount": "USD a gastar",
-      "managed_amount_help": "Minimum is $10, but we usually recommend $50–$300.",
+      "managed_amount_help": "Mínimo $10, sugerimos $50–$300.",
       "start_campaign": "Iniciar campaña",
       "price_per_point": "DOC por punto de influencia.",
       "price_per_point_help": "Define cuánto deseas pagar por el alcance. Cada punto estima una persona que recibe tu mensaje. 0.01 significa que pagas 10 DOC por aproximadamente 1.000 personas alcanzadas.",
@@ -328,6 +366,7 @@
       "action_rejected": "Parece que cancelaste la creación de la campaña en tu cartera, intenta de nuevo si todavía estás interesado.",
       "wrong_signer": "¿Cambiaste tu cuenta de cartera? Estás usando Asami con %{expected} pero tu cartera está usando %{actual}. Cambia la cuenta conectada de tu cartera a %{expected} e intenta de nuevo.",
       "unexpected_error": "Ocurrió un error inesperado, contáctanos en X y reenvía la información del error.",
+      "campaign_already_exists": "Ese post de X ya es una campaña. Si es tu propia campaña, puedes agregarle presupuesto y extenderla.",
       "copy_info": "Copiar detalles del error",
       "info_copied": "Detalles del error copiados al portapapeles",
       "title": "Creación de campaña cancelada"
@@ -457,13 +496,10 @@
     "contact_us": "Contáctanos"
   },
   "public_card_header": {
-    "title": "Paga hasta US$%{amount} en DOC"
+    "title": "Por %{author} · Agradece con hasta $%{amount} DOC + ASAMI"
   },
   "public_x_campaign": {
-    "main_button": "Cobra por Repost"
-  },
-  "public_ig_campaign": {
-    "main_button": "Cobra por Post"
+    "main_button": "Dale Repost"
   },
   "out_of_campaigns": {
     "title": "Nos quedamos sin campañas.",

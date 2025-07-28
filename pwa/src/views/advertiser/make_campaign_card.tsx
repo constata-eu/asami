@@ -1,4 +1,13 @@
-import { useSafeSetState, useDataProvider, useTranslate } from "react-admin";
+import {
+  Form,
+  RecordContextProvider,
+  SaveButton,
+  TextInput,
+  useDataProvider,
+  useRecordContext,
+  useTranslate,
+} from "react-admin";
+import { useState } from "react";
 
 import {
   LinearProgress,
@@ -12,8 +21,9 @@ import { Dialog } from "@mui/material";
 import { formatAddress } from "../../lib/formatters";
 import { toBeHex, parseEther } from "ethers";
 import { DeckCard } from "../layout";
+import { parseNumber } from "../../components/custom_fields";
 import { useContracts } from "../../components/contracts_context";
-import { Head2 } from "../../components/theme";
+import { Head2, Head3 } from "../../components/theme";
 import { useNotify } from "react-admin";
 import LaunchIcon from "@mui/icons-material/Launch";
 import { Stack } from "@mui/material";
@@ -21,6 +31,8 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import ClaimAccountButton from "../claim_account";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import { CampaignForm, Banned, Done, Failure } from "./make_campaign_shared";
+import MoreTimeIcon from "@mui/icons-material/MoreTime";
+import AddIcon from "@mui/icons-material/Add";
 
 export const MakeCampaignWithDocCard = ({ account, onCreate }) => {
   const t = useTranslate();
@@ -41,7 +53,7 @@ export const MakeCampaignWithDocCard = ({ account, onCreate }) => {
         {status == "CLAIMING" && <ClaimInProgress />}
         {status == "BANNED" && <Banned />}
         {status == "CLAIMED" && (
-          <MakeCampaignWithDocDialog account={account} onCreate={onCreate} />
+          <CampaignFormOrGetDoc account={account} onCreate={onCreate} />
         )}
       </CardContent>
     </Card>
@@ -75,80 +87,12 @@ const ClaimInProgress = () => {
   );
 };
 
-const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
+const CampaignFormOrGetDoc = ({ account, onCreate }) => {
   const translate = useTranslate();
-  const [open, setOpen] = useSafeSetState(false);
-  const [step, setStep] = useSafeSetState("FORM");
-  const [approvalTx, setApprovalTx] = useSafeSetState();
-  const [creationTx, setCreationTx] = useSafeSetState();
-  const [failure, setFailure] = useSafeSetState();
-  const { contracts } = useContracts();
-  const dataProvider = useDataProvider();
-
-  const handleClose = () => {
-    setOpen(false);
-    setApprovalTx(null);
-    setCreationTx(null);
-    setFailure(null);
-    setStep("FORM");
-  };
-
-  const onSubmit = async (values) => {
-    setOpen(false);
-    try {
-      const { doc, asami, asamiAddress, signer } = await contracts(
-        account.addr,
-      );
-
-      setStep("APPROVING");
-      setOpen(true);
-      const input = values.makeCampaignInput;
-
-      const campaign = await dataProvider.create("CreateCampaignFromLink", {
-        data: {
-          input: {
-            link: input.link,
-            pricePerPoint: toBeHex(input.pricePerPoint, 32),
-            maxIndividualReward: toBeHex(input.maxIndividualReward, 32),
-            minIndividualReward: toBeHex(input.minIndividualReward, 32),
-            topicIds: input.topicIds,
-            thumbsUpOnly: input.thumbsUpOnly,
-          },
-        },
-      });
-
-      const allowance = await doc.allowance(signer, asamiAddress);
-      if (allowance < input.budget) {
-        const approval = await doc.approve(asamiAddress, input.budget, signer);
-        setApprovalTx(approval);
-        await approval.wait();
-      }
-
-      setStep("CREATING");
-
-      let time = new Date().getTime() + input.duration * 24 * 60 * 60 * 1000;
-
-      const creation = await asami.makeCampaigns([
-        {
-          budget: input.budget,
-          briefingHash: campaign.data.briefingHash,
-          validUntil: BigInt(Math.floor(time / 1000)),
-        },
-      ]);
-
-      setCreationTx(creation);
-      await creation.wait();
-      setStep("DONE");
-      await dataProvider.update("Campaign", { id: campaign.data.id, data: {} });
-      onCreate();
-    } catch (e) {
-      setFailure(e);
-      setOpen(true);
-      setStep("ERROR");
-    }
-  };
-
+  const [open, setOpen] = useState(false);
   const hasDoc = BigInt(account.docBalance) >= parseEther("1");
+
+  const onClose = () => setOpen(false);
 
   return (
     <>
@@ -156,16 +100,24 @@ const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
         {translate("make_campaign.with_doc.create_text")}
       </Typography>
       {hasDoc ? (
-        <Button
-          fullWidth
-          variant="contained"
-          size="large"
-          id="open-start-campaign-dialog"
-          onClick={() => setOpen(true)}
-        >
-          <CampaignIcon sx={{ mr: "5px" }} />
-          {translate("make_campaign.with_doc.create_button")}
-        </Button>
+        <>
+          <Button
+            fullWidth
+            variant="contained"
+            size="large"
+            id="open-start-campaign-dialog"
+            onClick={() => setOpen(true)}
+          >
+            <CampaignIcon sx={{ mr: "5px" }} />
+            {translate("make_campaign.with_doc.create_button")}
+          </Button>
+          <MakeCampaignWithDocDialog
+            open={open}
+            setOpen={setOpen}
+            account={account}
+            onCreate={onCreate}
+          />
+        </>
       ) : (
         <>
           <Typography my="1em">
@@ -181,13 +133,136 @@ const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
           </Button>
         </>
       )}
-      <Dialog
-        id="start-campaign-with-doc-dialog"
-        open={open}
-        maxWidth="md"
+    </>
+  );
+};
+
+export const ContinueCampaignButton = ({ account, onCreate, campaign }) => {
+  const translate = useTranslate();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button
         fullWidth
+        variant="contained"
+        size="small"
+        id={`open-continue-creating-campaign-dialog-${campaign.id}`}
+        onClick={() => setOpen(true)}
       >
-        {step == "FORM" && (
+        <CampaignIcon sx={{ mr: "5px" }} />
+        {translate("make_campaign.with_doc.continue")}
+      </Button>
+      <MakeCampaignWithDocDialog
+        open={open}
+        setOpen={setOpen}
+        account={account}
+        onCreate={onCreate}
+        continueCampaign={campaign}
+      />
+    </>
+  );
+};
+
+const MakeCampaignWithDocDialog = ({
+  open,
+  setOpen,
+  account,
+  onCreate,
+  continueCampaign = null,
+}) => {
+  const translate = useTranslate();
+  const [step, setStep] = useState("FORM");
+  const [approvalTx, setApprovalTx] = useState();
+  const [creationTx, setCreationTx] = useState();
+  const [failure, setFailure] = useState();
+  const { contracts } = useContracts();
+  const dataProvider = useDataProvider();
+
+  const handleClose = () => {
+    setOpen(false);
+    setApprovalTx(null);
+    setCreationTx(null);
+    setFailure(null);
+    setStep("FORM");
+  };
+
+  const onSubmit = async (values) => {
+    try {
+      setOpen(false);
+      const { doc, asami, asamiAddress, signer } = await contracts(
+        account.addr,
+      );
+
+      setStep("APPROVING");
+      setOpen(true);
+      const input = values.makeCampaignInput;
+
+      const campaign =
+        continueCampaign ||
+        (
+          await dataProvider.create("CreateCampaignFromLink", {
+            data: {
+              input: {
+                link: input.link,
+                pricePerPoint: toBeHex(input.pricePerPoint, 32),
+                maxIndividualReward: toBeHex(input.maxIndividualReward, 32),
+                minIndividualReward: toBeHex(input.minIndividualReward, 32),
+                topicIds: input.topicIds,
+                thumbsUpOnly: input.thumbsUpOnly,
+              },
+            },
+          })
+        ).data;
+
+      const allowance = await doc.allowance(signer, asamiAddress);
+      if (allowance < input.budget) {
+        const approval = await doc.approve(asamiAddress, input.budget, signer);
+        setApprovalTx(approval);
+        await approval.wait();
+      }
+
+      setStep("CREATING");
+
+      const time =
+        new Date().getTime() + input.durationDays * 24 * 60 * 60 * 1000;
+
+      const creation = await asami.makeCampaigns([
+        {
+          budget: input.budget,
+          briefingHash: campaign.briefingHash,
+          validUntil: BigInt(Math.floor(time / 1000)),
+        },
+      ]);
+
+      setCreationTx(creation);
+      await creation.wait();
+      setStep("DONE");
+      await dataProvider.update("Campaign", { id: campaign.id, data: {} });
+      onCreate();
+    } catch (e) {
+      setFailure(e);
+      setOpen(true);
+      setStep("ERROR");
+    }
+  };
+
+  return (
+    <Dialog
+      id="start-campaign-with-doc-dialog"
+      open={open}
+      maxWidth="md"
+      fullWidth
+    >
+      {step == "FORM" &&
+        (continueCampaign ? (
+          <ContinueCampaignForm
+            campaign={continueCampaign}
+            minAmount="1"
+            onSubmit={onSubmit}
+            handleClose={handleClose}
+          />
+        ) : (
           <CampaignForm
             helpTitle="make_campaign.with_doc.form_title"
             helpText="make_campaign.with_doc.service_summary"
@@ -196,40 +271,130 @@ const MakeCampaignWithDocDialog = ({ account, onCreate }) => {
             minAmount="1"
             onSubmit={onSubmit}
             handleClose={handleClose}
+            askDuration={true}
           />
-        )}
-        {step == "APPROVING" && (
-          <TxWaiter
-            title="make_campaign.tx_waiter.approving_title"
-            text="make_campaign.tx_waiter.approving_text"
-            tx={approvalTx}
-            id="approval-waiter"
-          />
-        )}
-        {step == "CREATING" && (
-          <TxWaiter
-            title="make_campaign.tx_waiter.creating_title"
-            text="make_campaign.tx_waiter.creating_text"
-            tx={creationTx}
-            id="creation-waiter"
-          />
-        )}
-        {step == "DONE" && (
-          <Done
-            title={"make_campaign.with_doc.done.title"}
-            leadText={"make_campaign.with_doc.done.text"}
-            primaryLink={`https://explorer.rootstock.io/tx/${creationTx?.hash}`}
-            primaryText={translate(
-              "make_campaign.with_doc.done.see_in_explorer",
-            )}
-            handleClose={handleClose}
-          />
-        )}
-        {step == "ERROR" && (
-          <OnChainFailure failure={failure} handleClose={handleClose} />
-        )}
-      </Dialog>
-    </>
+        ))}
+      {step == "APPROVING" && (
+        <TxWaiter
+          title="make_campaign.tx_waiter.approving_title"
+          text="make_campaign.tx_waiter.approving_text"
+          tx={approvalTx}
+          id="approval-waiter"
+        />
+      )}
+      {step == "CREATING" && (
+        <TxWaiter
+          title="make_campaign.tx_waiter.creating_title"
+          text="make_campaign.tx_waiter.creating_text"
+          tx={creationTx}
+          id="creation-waiter"
+        />
+      )}
+      {step == "DONE" && (
+        <Done
+          alertId="campaign-done"
+          title={"make_campaign.with_doc.done.title"}
+          leadText={"make_campaign.with_doc.done.text"}
+          primaryLink={`https://explorer.rootstock.io/tx/${creationTx?.hash}`}
+          primaryText={translate("make_campaign.with_doc.done.see_in_explorer")}
+          handleClose={handleClose}
+        />
+      )}
+      {step == "ERROR" && (
+        <OnChainFailure failure={failure} handleClose={handleClose} />
+      )}
+    </Dialog>
+  );
+};
+
+export const ContinueCampaignForm = ({
+  campaign,
+  onSubmit,
+  minAmount,
+  handleClose,
+}) => {
+  const translate = useTranslate();
+
+  const validate = (values) => {
+    let input = {};
+
+    const budget = parseNumber(
+      values.budget,
+      minAmount,
+      "budget_too_low",
+      "budget_not_a_number",
+    );
+    if (budget.error) {
+      return { budget: budget.error };
+    }
+    input.budget = budget.ok;
+
+    try {
+      const parsed = parseInt(values.durationDays);
+      if (parsed < 2) {
+        return {
+          durationDays: translate("make_campaign.errors.duration_days_too_low"),
+        };
+      }
+      input.durationDays = parsed;
+    } catch {
+      return {
+        durationDays: translate(
+          "make_campaign.errors.duration_days_not_a_number",
+        ),
+      };
+    }
+    values.makeCampaignInput = input;
+  };
+
+  return (
+    <Box p="1em" id="campaign-form">
+      <RecordContextProvider value={{ budget: null, durationDays: 15 }}>
+        <Form sanitizeEmptyValues validate={validate} onSubmit={onSubmit}>
+          <Stack gap="0.5em">
+            <Head3 sx={{ color: "primary.main", mb: "0.5em" }}>
+              {translate("make_campaign.with_doc.continue_title")}
+            </Head3>
+            <Typography
+              mb="1em"
+              dangerouslySetInnerHTML={{
+                __html: translate("make_campaign.with_doc.continue_warning"),
+              }}
+            />
+            <TextInput
+              fullWidth
+              required={true}
+              size="small"
+              variant="filled"
+              source="budget"
+              label={translate("make_campaign.form_step.budget")}
+              helperText={translate("make_campaign.form_step.budget_help")}
+            />
+            <TextInput
+              fullWidth
+              required={true}
+              size="small"
+              variant="filled"
+              source="durationDays"
+              helperText={translate(
+                "make_campaign.form_step.duration_days_help",
+              )}
+              label={translate("make_campaign.form_step.duration_days")}
+            />
+            <SaveButton
+              fullWidth
+              id="submit-start-campaign-form"
+              size="large"
+              label={translate("make_campaign.form_step.start_campaign")}
+              icon={<CampaignIcon />}
+            />
+            <Button fullWidth color="secondary" onClick={handleClose}>
+              {translate("make_campaign.i_changed_my_mind")}
+            </Button>
+          </Stack>
+        </Form>
+      </RecordContextProvider>
+    </Box>
   );
 };
 
@@ -263,13 +428,19 @@ const TxWaiter = ({ title, text, tx, id }) => {
 };
 
 const OnChainFailure = ({ failure, handleClose }) => {
-  const notify = useNotify();
   const translate = useTranslate();
 
   let msg;
   let info;
 
-  if (failure == "Modal closed by user" || failure.code == "ACTION_REJECTED") {
+  const graphql = failure?.body?.graphQLErrors?.[0]?.extensions?.error?.message;
+
+  if (graphql) {
+    msg = translate(`make_campaign.failure_step.${graphql}`);
+  } else if (
+    failure == "Modal closed by user" ||
+    failure.code == "ACTION_REJECTED"
+  ) {
     msg = translate("make_campaign.failure_step.action_rejected");
   } else if (failure.code == "WRONG_SIGNER") {
     msg = translate("make_campaign.failure_step.wrong_signer", {
@@ -284,4 +455,323 @@ const OnChainFailure = ({ failure, handleClose }) => {
   }
 
   return <Failure msg={msg} info={info} handleClose={handleClose} />;
+};
+
+export const ExtendCampaignButton = ({ account, onSuccess }) => {
+  const record = useRecordContext();
+  const translate = useTranslate();
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState("FORM");
+  const [extendTx, setExtendTx] = useState();
+  const [failure, setFailure] = useState();
+  const { contracts } = useContracts();
+
+  const handleClose = () => {
+    setOpen(false);
+    setExtendTx(null);
+    setFailure(null);
+    setStep("FORM");
+  };
+
+  const onSubmit = async (values) => {
+    try {
+      setOpen(false);
+      const { asami } = await contracts(account.addr);
+
+      setStep("EXTENDING");
+      setOpen(true);
+
+      const extend = await asami.extendCampaigns([
+        {
+          briefingHash: record.briefingHash,
+          validUntil: BigInt(Math.floor(values.validUntil / 1000)),
+        },
+      ]);
+
+      setExtendTx(extend);
+      await extend.wait();
+      setStep("DONE");
+      onSuccess();
+    } catch (e) {
+      setFailure(e);
+      setOpen(true);
+      setStep("ERROR");
+    }
+  };
+
+  const validate = (values) => {
+    try {
+      const parsed = parseInt(values.durationDays);
+
+      if (parsed < 1) {
+        return {
+          durationDays: translate(
+            "make_campaign.with_doc.extend.errors.too_low",
+          ),
+        };
+      }
+
+      const validUntil = new Date().getTime() + parsed * 24 * 60 * 60 * 1000;
+
+      if (validUntil < new Date(record?.validUntil).getTime()) {
+        return {
+          durationDays: translate(
+            "make_campaign.with_doc.extend.errors.shorter_than_original",
+          ),
+        };
+      }
+
+      values.validUntil = validUntil;
+    } catch {
+      return {
+        durationDays: translate("make_campaign.with_doc.extend.errors.too_low"),
+      };
+    }
+  };
+
+  return (
+    <>
+      <Button
+        fullWidth
+        size="small"
+        id={`open-extend-campaign-dialog-${record.id}`}
+        onClick={() => setOpen(true)}
+        startIcon={<MoreTimeIcon sx={{ fontSize: "1.3em" }} />}
+      >
+        {translate("make_campaign.with_doc.extend.button")}
+      </Button>
+      <Dialog id="extend-campaign-dialog" open={open} maxWidth="md" fullWidth>
+        {step == "FORM" && (
+          <Box p="1em" id="extend-campaign-form">
+            <RecordContextProvider value={{ budget: null, durationDays: 15 }}>
+              <Form sanitizeEmptyValues validate={validate} onSubmit={onSubmit}>
+                <Stack gap="0.5em">
+                  <Head3 sx={{ color: "primary.main", mb: "0.5em" }}>
+                    {translate("make_campaign.with_doc.extend.title")}
+                  </Head3>
+                  <Typography
+                    mb="1em"
+                    dangerouslySetInnerHTML={{
+                      __html: translate(
+                        "make_campaign.with_doc.extend.description",
+                      ),
+                    }}
+                  />
+                  <TextInput
+                    fullWidth
+                    required={true}
+                    size="small"
+                    variant="filled"
+                    source="durationDays"
+                    helperText={translate(
+                      "make_campaign.with_doc.extend.field_help",
+                    )}
+                    label={translate(
+                      "make_campaign.with_doc.extend.field_label",
+                    )}
+                  />
+                  <SaveButton
+                    fullWidth
+                    id="submit-extend-campaign-form"
+                    size="large"
+                    label={translate("make_campaign.with_doc.extend.button")}
+                    icon={<CampaignIcon />}
+                  />
+                  <Button fullWidth color="secondary" onClick={handleClose}>
+                    {translate("make_campaign.i_changed_my_mind")}
+                  </Button>
+                </Stack>
+              </Form>
+            </RecordContextProvider>
+          </Box>
+        )}
+        {step == "EXTENDING" && (
+          <TxWaiter
+            title="make_campaign.with_doc.extend.waiter_title"
+            text="make_campaign.with_doc.extend.waiter_text"
+            tx={extendTx}
+            id="extension-waiter"
+          />
+        )}
+        {step == "DONE" && (
+          <Done
+            alertId="campaign-extended"
+            title={"make_campaign.with_doc.extend.done_title"}
+            leadText={"make_campaign.with_doc.extend.done_text"}
+            primaryLink={`https://explorer.rootstock.io/tx/${extendTx?.hash}`}
+            primaryText={translate(
+              "make_campaign.with_doc.extend.see_in_explorer",
+            )}
+            handleClose={handleClose}
+          />
+        )}
+        {step == "ERROR" && (
+          <OnChainFailure failure={failure} handleClose={handleClose} />
+        )}
+      </Dialog>
+    </>
+  );
+};
+
+export const TopUpCampaignButton = ({ account, onSuccess }) => {
+  const record = useRecordContext();
+  const translate = useTranslate();
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState("FORM");
+  const [approvalTx, setApprovalTx] = useState();
+  const [topUpTx, setTopUpTx] = useState();
+  const [failure, setFailure] = useState();
+  const { contracts } = useContracts();
+
+  const handleClose = () => {
+    setOpen(false);
+    setApprovalTx(null);
+    setTopUpTx(null);
+    setFailure(null);
+    setStep("FORM");
+  };
+
+  const onSubmit = async (values) => {
+    try {
+      setOpen(false);
+      const { doc, asami, asamiAddress, signer } = await contracts(
+        account.addr,
+      );
+
+      setStep("APPROVING");
+      setOpen(true);
+
+      debugger;
+      const allowance = await doc.allowance(signer, asamiAddress);
+      if (allowance < values.budget) {
+        const approval = await doc.approve(asamiAddress, values.budget, signer);
+        setApprovalTx(approval);
+        await approval.wait();
+      }
+
+      setStep("TOPPING_UP");
+
+      debugger;
+      const topUp = await asami.topUpCampaigns([
+        {
+          account: account.addr,
+          briefingHash: record.briefingHash,
+          budget: values.budget,
+        },
+      ]);
+
+      setTopUpTx(topUp);
+      await topUp.wait();
+      setStep("DONE");
+      onSuccess();
+    } catch (e) {
+      setFailure(e);
+      setOpen(true);
+      setStep("ERROR");
+    }
+  };
+
+  const validate = (values) => {
+    const budget = parseNumber(
+      values.budget,
+      "1",
+      "budget_too_low",
+      "budget_not_a_number",
+    );
+    if (budget.error) {
+      return { budget: budget.error };
+    }
+    values.budget = budget.ok;
+  };
+
+  return (
+    <>
+      <Button
+        fullWidth
+        size="small"
+        id={`open-top-up-campaign-dialog-${record.id}`}
+        onClick={() => setOpen(true)}
+        startIcon={<AddIcon sx={{ fontSize: "1.3em" }} />}
+      >
+        {translate("make_campaign.with_doc.top_up.button")}
+      </Button>
+      <Dialog id="top-up-campaign-dialog" open={open} maxWidth="md" fullWidth>
+        {step == "FORM" && (
+          <Box p="1em" id="extend-campaign-form">
+            <RecordContextProvider value={{ budget: null, durationDays: 15 }}>
+              <Form sanitizeEmptyValues validate={validate} onSubmit={onSubmit}>
+                <Stack gap="0.5em">
+                  <Head3 sx={{ color: "primary.main", mb: "0.5em" }}>
+                    {translate("make_campaign.with_doc.top_up.title")}
+                  </Head3>
+                  <Typography
+                    mb="1em"
+                    dangerouslySetInnerHTML={{
+                      __html: translate(
+                        "make_campaign.with_doc.top_up.description",
+                      ),
+                    }}
+                  />
+                  <TextInput
+                    fullWidth
+                    required={true}
+                    size="small"
+                    variant="filled"
+                    source="budget"
+                    helperText={translate(
+                      "make_campaign.with_doc.top_up.field_help",
+                    )}
+                    label={translate(
+                      "make_campaign.with_doc.top_up.field_label",
+                    )}
+                  />
+                  <SaveButton
+                    fullWidth
+                    id="submit-top-up-campaign-form"
+                    size="large"
+                    label={translate("make_campaign.with_doc.top_up.button")}
+                    icon={<AddIcon />}
+                  />
+                  <Button fullWidth color="secondary" onClick={handleClose}>
+                    {translate("make_campaign.i_changed_my_mind")}
+                  </Button>
+                </Stack>
+              </Form>
+            </RecordContextProvider>
+          </Box>
+        )}
+        {step == "APPROVING" && (
+          <TxWaiter
+            title="make_campaign.with_doc.top_up.approval_waiter_title"
+            text="make_campaign.with_doc.top_up.approval_waiter_text"
+            tx={approvalTx}
+            id="top-up-approval-waiter"
+          />
+        )}
+        {step == "TOPPING_UP" && (
+          <TxWaiter
+            title="make_campaign.with_doc.top_up.waiter_title"
+            text="make_campaign.with_doc.top_up.waiter_text"
+            tx={topUpTx}
+            id="top-up-waiter"
+          />
+        )}
+        {step == "DONE" && (
+          <Done
+            alertId="campaign-topped-up"
+            title={"make_campaign.with_doc.top_up.done_title"}
+            leadText={"make_campaign.with_doc.top_up.done_text"}
+            primaryLink={`https://explorer.rootstock.io/tx/${topUpTx?.hash}`}
+            primaryText={translate(
+              "make_campaign.with_doc.top_up.see_in_explorer",
+            )}
+            handleClose={handleClose}
+          />
+        )}
+        {step == "ERROR" && (
+          <OnChainFailure failure={failure} handleClose={handleClose} />
+        )}
+      </Dialog>
+    </>
+  );
 };

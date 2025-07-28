@@ -53,26 +53,9 @@ impl CampaignAnnouncement {
         for campaign in campaigns {
             let idx = usize::try_from(*campaign.id()).unwrap_or(0) % 20;
 
-            let text = texts[idx]
-                .replace(
-                    "{rate}",
-                    &format!(
-                        "{:.2}",
-                        wei_to_decimal_safe(campaign.price_per_point_u256() * wei("100"))?
-                    ),
-                )
-                .replace(
-                    "{min}",
-                    &format!("{:.2}", wei_to_decimal_safe(campaign.min_individual_reward_u256())?),
-                )
-                .replace(
-                    "{max}",
-                    &format!("{:.2}", wei_to_decimal_safe(campaign.max_individual_reward_u256())?),
-                );
-
             let post_result = twitter
                 .post_tweet()
-                .text(text)
+                .text(texts[idx].to_string())
                 .quote_tweet_id(NumericId::from_str(&campaign.content_id()?)?)
                 .send()
                 .await;
@@ -100,85 +83,85 @@ impl CampaignAnnouncement {
 }
 
 const CAMPAIGN_ALERTS_EN: [&str; 20] = [
-    "🚨 Campaign just dropped! Think your audience will love it? Take a moment, judge it, and decide if it deserves your repost. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "🚨 New campaign just dropped! Take a moment to check it out—do you think it’s worth sharing with your audience?\nJoin https://asami.club",
 
-    "🔥 A new campaign is live! Are you ready to turn it into a trend—or will you pass this time? The choice is yours. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "🔥 A fresh campaign is live! If the message resonates with you, amplify it. Your voice can make the difference.\nJoin https://asami.club",
 
-    "👀 New campaign alert! Does it speak to you? Is it something your followers would jump on? Take a sec to evaluate. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "👀 New campaign alert! Would your followers appreciate this project? Think it over before deciding to share.\nJoin https://asami.club",
 
-    "✨ Just in: a brand new campaign is up. Could this go viral with your push? You can RT now or check your dashboard to confirm eligibility. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "✨ Just in: a new campaign looking for visibility. Could your repost be what gets it seen?\nJoin https://asami.club",
 
-    "📣 Attention collaborators! A new campaign wants your signal boost. Think your followers would engage with it? You’re in control. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "📣 A project just launched a campaign. Take a sec to evaluate—would you want your friends to see this?\nJoin https://asami.club",
 
-    "🧃 New drop on deck! What’s your gut say—signal boost or skip? You can RT now and check your dashboard later. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "🧃 Something new is on the radar. Trust your taste—does this feel worthy of your support?\nJoin https://asami.club",
 
-    "💥 It’s go time! A fresh campaign has launched. Should this one catch fire, or stay quiet? You help decide. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "💥 New campaign out now. Look it over and ask yourself: does this deserve a boost?\nJoin https://asami.club",
 
-    "🌀 A new opportunity to make something trend has arrived. Is this campaign worth your influence? Feel it out. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "🌀 Time to filter! A campaign just dropped. Does it match your values? Think before reposting.\nJoin https://asami.club",
 
-    "🎯 Time to curate! A campaign just launched—would your audience care? Think before you boost. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "🎯 A fresh post is calling for advocates. Would this matter to your followers?\nJoin https://asami.club",
 
-    "📊 Trendwatch: a new campaign is live. Your repost could push it into the spotlight—or not. That’s up to you. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "📊 A new campaign is live. Could your signal help it break through the noise?\nJoin https://asami.club",
 
-    "👑 New campaign just entered the feed. Your voice gives it power—use it wisely. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "👑 Campaign in the feed! Your voice helps decide what’s seen. Would you vouch for this?\nJoin https://asami.club",
 
-    "🔍 Campaign check: Is this worth your stamp of approval? Your repost shapes what people see. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "🔍 Pause and assess: is this something worth bringing to your community?\nJoin https://asami.club",
 
-    "💫 A campaign just dropped, but will it rise? Only if you say so. Think it over, then act. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "💫 Just launched: a new campaign hoping to find its audience. Think it’s worth sharing?\nJoin https://asami.club",
 
-    "🎲 New campaign, new decision. You can check your dashboard to be sure, or post now if it fits your style. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "🎲 A campaign just went live. Does it align with your perspective? Your choice matters.\nJoin https://asami.club",
 
-    "🚀 Let’s go! A fresh campaign just hit the feed. If it clicks with you, give it that push. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "🚀 Let’s go! A new campaign is asking for visibility. Give it a look—does it earn your signal?\nJoin https://asami.club",
 
-    "🧠 Think fast! A new campaign wants attention. Will your followers care? You decide what’s worth promoting. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "🧠 Think fast—but not too fast. A new campaign is up. Trust your judgment before sharing.\nJoin https://asami.club",
 
-    "📬 You’ve got mail: a brand new campaign. Before you repost, ask yourself—would you click this? Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "📬 Campaign drop detected. Before boosting, ask yourself—does this reflect your values?\nJoin https://asami.club",
 
-    "🎉 Fresh campaign just launched! You don’t need to decide right now—just check it out and see if it fits your vibe. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "🎉 Fresh campaign just hit the feed. You don’t need to act immediately—just read and decide.\nJoin https://asami.club",
 
-    "💌 A new campaign is up. Is it your style? Would your audience care? Your repost is your recommendation. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "💌 A project is reaching out. Is its message something you’d proudly stand behind?\nJoin https://asami.club",
 
-    "📢 Here we go again! Another campaign joins the mix. You know the drill: scan, decide, share—if it feels right. Pays {rate} DOC per 100 points, between {min} - {max} DOC.\nJoin https://asami.club",
+    "📢 A campaign has launched. You help shape what matters—choose carefully.\nJoin https://asami.club",
 ];
 
 const CAMPAIGN_ALERTS_ES: [&str; 20] = [
-    "🚨 ¡Nueva campaña en juego! ¿La ves como tendencia? Si crees que tiene potencial, tu retuit puede hacer la diferencia. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "🚨 ¡Nueva campaña publicada! Tómate un momento para verla. ¿Crees que vale la pena compartirla con tu audiencia?\nÚnete en https://asami.club",
 
-    "👀 Una nueva campaña acaba de salir. ¿Tu comunidad le haría caso? Evalúa bien antes de amplificar. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "🔥 ¡Una nueva campaña está activa! Si el mensaje conecta contigo, dale difusión. Tu voz puede marcar la diferencia.\nÚnete en https://asami.club",
 
-    "🔥 Campaña recién salida del horno. ¿Le das luz verde o no va contigo? Puedes retuitear ahora y revisar si eres elegible después. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "👀 Alerta de campaña nueva. ¿Le interesaría esto a tu comunidad? Piensa bien antes de compartir.\nÚnete en https://asami.club",
 
-    "💫 ¡Atención! Hay nueva campaña en circulación. ¿Crees que tus seguidores conectarían con esto? Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "✨ Acaba de salir una campaña nueva. ¿Tu repost podría ayudarla a ser vista?\nÚnete en https://asami.club",
 
-    "🧠 ¿Te convence esta campaña? ¿Vale un retuit? Puedes mirar tu panel o actuar por intuición. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "📣 Un proyecto lanzó una campaña. ¿Te parece valiosa? ¿La compartirías con tus seguidores?\nÚnete en https://asami.club",
 
-    "📣 Nueva campaña disponible. Tú decides si esto merece circulación o no. Puedes revisar tu panel, o simplemente compartir. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "🧃 Hay algo nuevo en el radar. Confía en tu criterio: ¿vale la pena amplificar este mensaje?\nÚnete en https://asami.club",
 
-    "🎯 Nueva campaña en la línea. ¿La compartes o la dejas pasar? Recuerda que el pago depende de tu elegibilidad. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "💥 Nueva campaña disponible. Échale un vistazo y pregúntate: ¿merece un impulso de tu parte?\nÚnete en https://asami.club",
 
-    "💥 Campaña nueva. ¿Esto le interesa a tu audiencia? Puedes compartir ya o checar tu panel antes. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "🌀 ¡Hora de filtrar! Hay una campaña nueva. ¿Está alineada con lo que tú valoras?\nÚnete en https://asami.club",
 
-    "🌀 ¿Ves potencial en esta campaña? Evalúa antes de dar RT, o lánzate sin miedo y revisa después. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "🎯 Un nuevo mensaje busca divulgadores. ¿Crees que tu audiencia debería verlo?\nÚnete en https://asami.club",
 
-    "🧃 Nuevo contenido en camino. ¿Merece tu pulgar arriba? Solo tú puedes decidir si esto se vuelve tendencia. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "📊 Una campaña acaba de salir. ¿Tu señal podría ayudarla a destacarse?\nÚnete en https://asami.club",
 
-    "✨ Campaña disponible. ¿La empujas o pasas? Tu influencia tiene valor, así que elige bien. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "👑 Campaña nueva en circulación. Tu voz le da fuerza. ¿Te parece que vale la pena?\nÚnete en https://asami.club",
 
-    "📬 Te llegó una campaña. ¿Coincide con tu estilo o prefieres dejarla pasar? Mira tu panel si dudas. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "🔍 Haz una pausa y evalúa: ¿esto es algo que vale la pena compartir?\nÚnete en https://asami.club",
 
-    "👋 Hay campaña nueva. ¿La ves en tu feed? Puedes confirmar en el panel o hacer RT y ver después. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "💫 Acaba de lanzarse una nueva campaña. ¿Sientes que merece ser difundida?\nÚnete en https://asami.club",
 
-    "🎲 ¿Te la juegas con esta campaña? Puede que no esté activa para ti, pero igual puedes compartirla. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "🎲 Hay una campaña nueva. ¿Está en línea con tus valores? Tú decides si amplificarla o no.\nÚnete en https://asami.club",
 
-    "🔍 Oportunidad de campaña. Tu RT puede hacer que esto llegue lejos. O no. Tú mandas. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "🚀 ¡Vamos! Una campaña recién llegó al feed. Si te representa, dale ese empujón.\nÚnete en https://asami.club",
 
-    "🌱 Algo nuevo germina en Asami. ¿Es momento de regarlo con un retuit? Solo si crees que vale. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "🧠 Piensa rápido… pero no tanto. Una nueva campaña apareció. Confía en tu criterio antes de compartir.\nÚnete en https://asami.club",
 
-    "💌 Campaña recién salida. ¿Va con tu audiencia? Tu decisión define si esto despega. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "📬 Detectamos una campaña nueva. Antes de amplificarla, pregúntate: ¿esto refleja lo que tú valoras?\nÚnete en https://asami.club",
 
-    "📊 Una campaña más para evaluar. ¿La compartes o no? Revisa tu panel si quieres confirmar antes. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "🎉 Una nueva campaña está al aire. No tienes que decidir ya—solo mírala y elige si va contigo.\nÚnete en https://asami.club",
 
-    "🎉 ¡Tenemos campaña nueva! ¿Crees que puede destacar en tu timeline? Solo tú tienes esa palanca. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "💌 Un proyecto está alzando la voz. ¿Es un mensaje que compartirías con orgullo?\nÚnete en https://asami.club",
 
-    "👑 ¿Este contenido merece tu sello? Revisa tu panel si quieres asegurarte, o simplemente dale RT. Paga {rate} DOC por 100 puntos, entre {min} y {max} DOC.\nÚnete: https://asami.club",
+    "📢 Nueva campaña disponible. Tú ayudas a decidir qué merece ser visto. Elige con cuidado.\nÚnete en https://asami.club",
 ];

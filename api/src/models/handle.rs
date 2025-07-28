@@ -489,6 +489,20 @@ impl Handle {
             return Err(Error::validation("all", "collab_exists"));
         }
 
+        let user_collaborated = self
+            .state
+            .collab()
+            .select()
+            .handle_id_eq(self.id())
+            .campaign_id_eq(campaign.attrs.id)
+            .count()
+            .await?
+            > 0;
+
+        if user_collaborated {
+            return Err(Error::validation("all", "user_already_collaborated"));
+        }
+
         let Some(score) = self.score() else {
             return Err(Error::validation("all", "handle_is_not_scored"));
         };

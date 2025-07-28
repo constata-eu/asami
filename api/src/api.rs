@@ -359,12 +359,22 @@ impl Mutation {
         context: &Context,
         input: CreateCampaignFromLinkInput,
     ) -> FieldResult<Campaign> {
-        let campaign = input.process(&context.app, &context.account().await?).await?;
+        let campaign =
+            input.process(&context.app, &context.account().await?).await.map_err(|e| e.into_field_error())?;
         Ok(Campaign::db_to_graphql(context, campaign).await?)
     }
 
     pub async fn update_campaign(context: &Context, id: i32) -> FieldResult<Campaign> {
-        let campaign = context.account().await?.campaign_scope().id_eq(id).one().await?.mark_submitted().await?;
+        let campaign = context
+            .account()
+            .await?
+            .campaign_scope()
+            .id_eq(id)
+            .one()
+            .await?
+            .mark_submitted()
+            .await
+            .map_err(|e| e.into_field_error())?;
         Ok(Campaign::db_to_graphql(context, campaign).await?)
     }
 
@@ -376,14 +386,14 @@ impl Mutation {
         context: &Context,
         input: CreateClaimAccountRequestInput,
     ) -> FieldResult<Account> {
-        input.process(context).await
+        input.process(context).await.map_err(|e| e.into_field_error())
     }
 
     pub async fn create_campaign_preference(
         context: &Context,
         input: CreateCampaignPreferenceInput,
     ) -> FieldResult<CampaignPreference> {
-        input.process(context).await
+        input.process(context).await.map_err(|e| e.into_field_error())
     }
 
     pub async fn create_email_login_link(context: &Context, email: String) -> FieldResult<EmailLoginLink> {
@@ -392,18 +402,30 @@ impl Mutation {
                 .app
                 .one_time_token()
                 .create_for_email(email.to_lowercase(), context.lang, None)
-                .await?
+                .await
+                .map_err(|e| e.into_field_error())?
                 .attrs
                 .id,
         })
     }
 
     pub async fn create_one_time_token(context: &Context) -> FieldResult<models::OneTimeTokenAttrs> {
-        Ok(context.app.one_time_token().create_for_session_migration(context.user_id()?).await?.attrs)
+        Ok(context
+            .app
+            .one_time_token()
+            .create_for_session_migration(context.user_id()?)
+            .await
+            .map_err(|e| e.into_field_error())?
+            .attrs)
     }
 
     pub async fn create_account_merge(context: &Context) -> FieldResult<AccountMerge> {
-        let merge = context.app.account_merge().get_or_create(&context.account().await?).await?;
+        let merge = context
+            .app
+            .account_merge()
+            .get_or_create(&context.account().await?)
+            .await
+            .map_err(|e| e.into_field_error())?;
 
         Ok(AccountMerge::db_to_graphql(context, merge).await?)
     }
@@ -423,7 +445,8 @@ impl Mutation {
             .app
             .handle()
             .create_or_update_from_refresh_token(context.account_id()?, token, verifier)
-            .await?;
+            .await
+            .map_err(|e| e.into_field_error())?;
         Ok(Handle::db_to_graphql(context, handle).await?)
     }
 
@@ -440,7 +463,7 @@ impl Mutation {
         id: i32,
         data: EditCommunityMemberInput,
     ) -> FieldResult<CommunityMember> {
-        data.process(context, id).await
+        data.process(context, id).await.map_err(|e| e.into_field_error())
     }
 }
 
