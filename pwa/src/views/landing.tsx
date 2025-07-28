@@ -52,7 +52,7 @@ export default () => {
   }, []);
 
   if (isEmbedded) {
-    return <></>
+    return <></>;
   }
 
   if (!pubDataProvider) {
@@ -320,9 +320,10 @@ const PublicXCampaign = ({ loginAs, item }) => {
         }}
       ></Box>
       <Box p="0.5em 1em 1em 1em">
-        <Typography mb="0.5em" variant="h6">
+        <Typography mb="0.5em">
           {translate("public_card_header.title", {
-            amount: formatEther(item.budget),
+            author: item.advertiserName,
+            amount: formatEther(item.maxIndividualReward),
           })}
         </Typography>
 

@@ -496,13 +496,10 @@
     "contact_us": "Contáctanos"
   },
   "public_card_header": {
-    "title": "Paga hasta US$%{amount} en DOC"
+    "title": "Por %{author} · Agradece con hasta $%{amount} DOC + ASAMI"
   },
   "public_x_campaign": {
-    "main_button": "Cobra por Repost"
-  },
-  "public_ig_campaign": {
-    "main_button": "Cobra por Post"
+    "main_button": "Dale Repost"
   },
   "out_of_campaigns": {
     "title": "Nos quedamos sin campañas.",

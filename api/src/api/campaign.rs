@@ -18,6 +18,10 @@ pub struct Campaign {
     account_id: i32,
     #[graphql(description = "The total budget for this campaign to be collected by users.")]
     budget: String,
+    max_individual_reward: String,
+    min_individual_reward: String,
+    price_per_point: String,
+    advertiser_name: String,
     #[graphql(description = "If the campaign is published and ready to receive collaborations.")]
     is_published: bool,
     #[graphql(description = "Auxiliary data related to this campaign's briefing")]
@@ -175,6 +179,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
     }
     async fn db_to_graphql(context: &Context, d: models::Campaign) -> AsamiResult<Self> {
         let topic_ids = d.topic_ids().await?;
+        let advertiser_name = d.account().await?.attrs.name;
         let you_would_receive = match context.current_session {
             Some(_) => d.reward_for_account(&context.account().await?).await?.map(|x| x.encode_hex()),
             None => None,
@@ -199,6 +204,10 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
             id: d.attrs.id,
             account_id: hex_to_i32(&d.attrs.account_id)?,
             budget,
+            max_individual_reward: d.attrs.max_individual_reward,
+            min_individual_reward: d.attrs.min_individual_reward,
+            price_per_point: d.attrs.price_per_point,
+            advertiser_name,
             valid_until: d.attrs.valid_until,
             briefing_json: d.attrs.briefing_json,
             briefing_hash: d.attrs.briefing_hash,

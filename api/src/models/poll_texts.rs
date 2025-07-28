@@ -5,166 +5,166 @@ pub struct PollTexts {
 
 pub static POLL_TEXTS_ES: [PollTexts; 20] = [
     PollTexts {
-        text: "Me estoy uniendo a @asami_club_es. Van a medir mi influencia y voy a ganar por seleccionar anuncios y compartirlos.\n¿Confías en mi criterio?",
-        options: ["Sí, totalmente", "A veces", "Un Poco", "¿Qué criterio?"],
+        text: "Acabo de unirme a @asami_club_es — un club donde los proyectos Web3 agradecen a divulgadores con pequeñas recompensas por compartir lo que importa.\n¿Confiarías en mis elecciones?",
+        options: ["Claro que sí", "A veces", "No mucho", "¿Qué criterio?"],
     },
     PollTexts {
-        text: "Acabo de unirme a @asami_club_es, donde miden cuánta influencia tengo. Voy a ganar por moderar campañas y compartirlas contigo.\n¿Qué tan confiable crees que soy?",
-        options: ["Muy confiable", "Algo confiable", "Poco confiable", "Nada confiable"],
+        text: "Ahora en @asami_club_es. Voy a ayudar a amplificar ideas Web3 en las que creo — y los proyectos agradecen a quienes divulgamos con DOC y ASAMI.\n¿Confías en mi voz?",
+        options: ["Mucho", "Algo", "Poco", "Nada"],
     },
     PollTexts {
-        text: "¡Me sumé a @asami_club_es! Van a evaluar mi influencia y voy a ganar por elegir qué anuncios compartir.\n¿Confías en mis decisiones?",
-        options: ["Sí, claro", "A veces", "No tanto", "Ni de broma"],
+        text: "Me uní a @asami_club_es para descubrir y apoyar ideas Web3 que me inspiran. Espero convertirme en una voz reflexiva en el ecosistema.\n¿Me apoyarías?",
+        options: ["Sí, totalmente", "A veces", "Un poco", "No"],
     },
     PollTexts {
-        text: "En @asami_club_es evalúan la influencia de cada persona. Yo recién entré: voy a filtrar anuncios y compartirlos por una recompensa.\n¿Me darías tu voto de confianza?",
-        options: ["100% después leo", "Depende", "No mucho", "Para nada"],
+        text: "En @asami_club_es estoy empezando como divulgador Web3. Elijo qué amplificar — y si los proyectos lo valoran, lo agradecen.\n¿Darías tu voto por mí?",
+        options: ["Claro", "Depende", "No sé", "Ni loco"],
     },
     PollTexts {
-        text: "Me uno a @asami_club_es. Aquí se mide la autoridad para compartir contenido. Yo voy a cobrar por seleccionar y repostear anuncios.\n¿Crees que lo haré bien?",
-        options: ["Sin duda", "Puede ser", "Lo dudo", "No, para nada"],
+        text: "Me uní a @asami_club_es para explorar nuevas ideas Web3 y compartir lo que considero valioso. Algunos proyectos agradecen con recompensas modestas.\n¿Crees que soy bueno en eso?",
+        options: ["Sin duda", "Tal vez", "Lo dudo", "No"],
     },
     PollTexts {
-        text: "Estoy entrando a @asami_club_es: miden mi influencia y gano por elegir qué campañas compartir.\n¿Confías en mi criterio?",
-        options: ["Sí, totalmente", "Más o menos", "Mmm...", "¿Tú? 😂. NO."],
+        text: "Estoy empezando como divulgador en @asami_club_es. Voy a compartir publicaciones Web3 que valgan la pena — y tal vez reciba algo de aprecio por eso.\n¿Confías en mi criterio?",
+        options: ["Totalmente", "Más o menos", "Hmm... ¿quizás?", "¿Tú? 😂"],
     },
     PollTexts {
-        text: "Me uní a @asami_club_es. Van a medir mi nivel de influencia y voy a ganar por elegir campañas y compartirlas contigo.\n¿Confías en mi criterio?",
-        options: ["Sí, ciegamente", "Depende", "No mucho", "¿Cuál criterio?"],
+        text: "Me uní a @asami_club_es para conocer y apoyar proyectos Web3. Compartiré lo que me resuene — y quizá reciba algo a cambio.\n¿Confías en mí?",
+        options: ["A ciegas", "Depende", "Poco", "¿Influencia?"],
     },
     PollTexts {
-        text: "En @asami_club_es se mide la influencia social. Yo acabo de entrar: voy a moderar anuncios y compartir los que valgan la pena.\n¿Crees que tengo buen criterio?",
-        options: ["Sí, claro", "A veces sí", "No tanto", "¿Qué criterio?"],
+        text: "En @asami_club_es comienzo mi camino como divulgador Web3. Comparto campañas en las que creo, y algunos proyectos agradecen con recompensas.\n¿Tengo buen gusto?",
+        options: ["Sin duda", "A veces", "No mucho", "¿Qué gusto?"],
     },
     PollTexts {
-        text: "Estoy probando @asami_club_es. Miden tu influencia y te pagan por seleccionar anuncios útiles y compartirlos.\n¿Mi criterio es confiable?",
-        options: ["Sí", "Más o menos", "No tanto", "Cero confianza"],
+        text: "Probando @asami_club_es — un espacio para apoyar proyectos Web3 y recibir un pequeño agradecimiento a cambio.\n¿Confías en mi gusto?",
+        options: ["Sí", "Un poco", "No mucho", "Cero"],
     },
     PollTexts {
-        text: "Me estoy sumando a @asami_club_es, donde se gana por compartir campañas con buen criterio.\n¿Confías en mis elecciones?",
-        options: ["Sí, siempre", "A veces", "No mucho", "Para nada"],
+        text: "Me uno a @asami_club_es para amplificar proyectos Web3 que valgan la pena. Si valoran mi ayuda, podrían agradecerlo.\n¿Confías en mis elecciones?",
+        options: ["Siempre", "A veces", "No mucho", "Jamás"],
     },
     PollTexts {
-        text: "Estoy comenzando en @asami_club_es. Voy a filtrar campañas, compartirlas y ganar según mi influencia.\n¿Crees que lo haré bien?",
-        options: ["Seguro que sí", "Depende del día", "Lo dudo", "Ni de chiste"],
+        text: "Acabo de empezar en @asami_club_es. Ayudo a crecer proyectos Web3 con divulgación — y si lo hago bien, recibiré agradecimientos.\n¿Crees que lo haré bien?",
+        options: ["Seguro", "Depende del día", "Lo dudo", "Ni ahí"],
     },
     PollTexts {
-        text: "Probando @asami_club_es: gano por compartir campañas que selecciono yo. Evalúan mi influencia según tu voto.\n¿Estoy a la altura?",
-        options: ["Sí", "Más o menos", "No creo", "Claramente no"],
+        text: "Probando @asami_club_es — comparto ideas Web3 que me gustan, y si funcionan, recibo agradecimientos.\n¿Soy lo suficientemente bueno?",
+        options: ["Sí", "Más o menos", "Probablemente no", "Definitivamente no"],
     },
     PollTexts {
-        text: "Recién entré a @asami_club_es. Se mide mi influencia y gano por moderar campañas.\n¿Confías en lo que comparto?",
-        options: ["Claro que sí", "A veces", "No tanto", "Para nada"],
+        text: "Me uní a @asami_club_es. Compartiré campañas que me parezcan valiosas — y los proyectos podrían agradecérmelo.\n¿Confías en lo que comparto?",
+        options: ["Por supuesto", "A veces", "No mucho", "Para nada"],
     },
     PollTexts {
-        text: "Estoy en @asami_club_es, donde se gana por seleccionar y compartir anuncios. Mi influencia la mides tú.\n¿Me das crédito?",
-        options: ["Totalmente", "Con reservas", "No mucho", "Ninguno"],
+        text: "Ahora en @asami_club_es, donde apoyo proyectos con divulgación. Algunos muestran su aprecio con recompensas.\n¿Me darías crédito?",
+        options: ["Total", "Un poco", "Apenas", "Nada"],
     },
     PollTexts {
-        text: "Me acabo de unir a @asami_club_es. Gano por elegir buenas campañas y compartirlas.\n¿Crees que tengo buen criterio?",
-        options: ["Excelente", "Más o menos", "Pobre", "Nulo"],
+        text: "Acabo de unirme a @asami_club_es. Voy a amplificar contenido Web3 con sentido — y quizás reciba tokens como agradecimiento.\n¿Tengo buen criterio?",
+        options: ["Excelente", "Bastante bueno", "No muy bueno", "Cero"],
     },
     PollTexts {
-        text: "Me sumé a @asami_club_es. Voy a cobrar por curar campañas y compartir las que considere valiosas.\n¿Crees que tengo buen ojo?",
-        options: ["Sí, claro", "Depende", "No tanto", "Nada que ver"],
+        text: "Me uní a @asami_club_es para ayudar a destacar lo valioso en Web3. Los proyectos agradecen con propinas on-chain.\n¿Tengo buen ojo?",
+        options: ["Sin dudas", "A veces", "No mucho", "Ninguno"],
     },
     PollTexts {
-        text: "En @asami_club_es voy a ganar por tener buen criterio al compartir contenido.\n¿Tú crees que valoro bien lo que comparto?",
-        options: ["Sin duda", "A veces", "No mucho", "¿Valorar qué?"],
+        text: "En @asami_club_es quiero resaltar buenas ideas Web3. No importa tener seguidores — importa pensar con claridad.\n¿Sé valorar lo importante?",
+        options: ["Claro que sí", "A veces", "Apenas", "¿Qué es lo importante?"],
     },
     PollTexts {
-        text: "Entré a @asami_club_es. Si confías en mí, gano más por elegir buenos anuncios.\n¿Confías en mi filtro personal?",
-        options: ["Sí, 100%", "Depende", "No mucho", "¿Tienes filtro?"],
+        text: "Me uní a @asami_club_es para explorar la divulgación en Web3. Si ayudo bien a correr la voz, los proyectos podrían agradecerlo.\n¿Confías en mi criterio?",
+        options: ["100% sí", "Depende", "No mucho", "¿Tienes criterio?"],
     },
     PollTexts {
-        text: "Estoy participando en @asami_club_es. Van a medir si soy confiable para recomendar campañas.\n¿Crees que tengo buena selección?",
-        options: ["Eres buen@", "A veces", "No tanto", "Cero criterio"],
+        text: "Ahora en @asami_club_es. Quiero crecer como divulgador Web3 y destacar lo que de verdad importa.\n¿Crees que elijo bien?",
+        options: ["Eres genial", "A veces", "No tanto", "Eres un caos"],
     },
     PollTexts {
-        text: "Ahora soy parte de @asami_club_es. Me pagan por elegir y compartir campañas útiles.\n¿Tú confiarías en mis recomendaciones?",
-        options: ["Claro que sí", "A veces", "No mucho", "Para nada"],
+        text: "Ya soy parte de @asami_club_es — un club donde divulgas sobre Web3 y podrías recibir un agradecimiento si los proyectos valoran tu ayuda.\n¿Confiarías en mis recomendaciones?",
+        options: ["Totalmente", "A veces", "Poco", "Para nada"],
     },
 ];
 
 pub static POLL_TEXTS_EN: [PollTexts; 20] = [
     PollTexts {
-        text: "I just joined @asami_club. They’ll measure my influence and I’ll earn by picking and reposting ads.\nDo you trust my judgment?",
+        text: "I just joined @asami_club — a club where Web3 projects thank advocates with small rewards for sharing what matters.\nWould you trust my picks?",
         options: ["Absolutely", "Sometimes", "Not so much", "What judgment?"],
     },
     PollTexts {
-        text: "I’m joining @asami_club, where they measure how much influence I have. I’ll get paid to moderate and share campaigns with you.\nHow trustworthy do you think I am?",
+        text: "I’m now in @asami_club. I’ll help amplify Web3 ideas I believe in — and projects thank advocates like me with DOC and ASAMI.\nDo you trust my voice?",
         options: ["Very trustworthy", "Somewhat", "Not much", "Not at all"],
     },
     PollTexts {
-        text: "I’m now part of @asami_club! They’ll rate my influence and I’ll earn for sharing ads I choose.\nDo you trust what I pick?",
+        text: "Just joined @asami_club to discover and support Web3 ideas I believe in. Hoping to become a thoughtful voice in the space.\nWould you back me?",
         options: ["Yes, totally", "Sometimes", "A tiny bit", "Nope"],
     },
     PollTexts {
-        text: "At @asami_club, everyone’s influence gets rated. I just joined—I'll earn for curating and reposting campaigns.\nWould you vouch for me?",
+        text: "At @asami_club, I’m becoming a Web3 advocate. I choose what to amplify — and get rewarded if projects appreciate it.\nWould you vouch for me?",
         options: ["Sure", "Depends", "Can't say", "No way"],
     },
     PollTexts {
-        text: "I joined @asami_club. They rate how much authority I have when I share stuff. I’ll be paid to choose and repost ads.\nThink I’m good at that?",
+        text: "Joined @asami_club to explore new Web3 ideas and share what I find valuable. Projects say thanks with modest rewards.\nThink I’m good at that?",
         options: ["Definitely", "Maybe", "I doubt it", "Nope"],
     },
     PollTexts {
-        text: "I’m starting out on @asami_club: they’ll measure my influence, and I get paid to choose what campaigns to share.\nDo you trust my judgment?",
+        text: "Starting out as an advocate in @asami_club. I'll share thoughtful Web3 posts — and might get some appreciation from the projects.\nDo you trust my judgment?",
         options: ["Totally", "Kinda", "Hmm...maybe?", "You? 😂"],
     },
     PollTexts {
-        text: "I just joined @asami_club. They’ll measure my influence level, and I’ll earn for choosing and sharing campaigns with you.\nDo you trust me?",
+        text: "I just joined @asami_club to learn and support Web3 projects. I’ll share what resonates — and maybe earn some tokens in return.\nWould you trust me?",
         options: ["Blindly", "It depends", "Not much", "What influence?"],
     },
     PollTexts {
-        text: "In @asami_club, they measure social influence. I just joined: I’ll moderate ads and share the ones I think are worth it.\nThink I’ve got good taste?",
+        text: "In @asami_club, I’m starting my journey as a Web3 advocate. I pick campaigns I believe in, and some projects offer small rewards.\nThink I’ve got good taste?",
         options: ["For sure", "Sometimes", "Not really", "What taste?"],
     },
     PollTexts {
-        text: "Trying out @asami_club. They’ll track my influence and pay me for picking and sharing useful ads.\nIs my taste reliable?",
+        text: "Trying @asami_club — a space where you support Web3 projects and get a little appreciation in return.\nIs my taste reliable?",
         options: ["Yes", "Somewhat", "Not really", "No trust"],
     },
     PollTexts {
-        text: "I’m joining @asami_club, where you earn for sharing campaigns with good judgment.\nDo you trust my picks?",
+        text: "I’m joining @asami_club to amplify Web3 projects that deserve it. If they value my help, I might get a reward.\nDo you trust my picks?",
         options: ["Always", "Sometimes", "Not much", "Never"],
     },
     PollTexts {
-        text: "Just started on @asami_club. I’ll filter campaigns, share them, and get paid based on my influence.\nThink I’ll do a good job?",
+        text: "Just started at @asami_club. I’ll help grow Web3 projects through advocacy — and get rewarded if I do it well.\nThink I’ll do a good job?",
         options: ["For sure", "Depends on the day", "I doubt it", "Not a chance"],
     },
     PollTexts {
-        text: "Trying @asami_club: I get paid to share campaigns I pick. My influence depends on your vote.\nAm I good enough?",
+        text: "Trying @asami_club — sharing Web3 ideas I believe in, and earning some appreciation if they land.\nAm I good enough?",
         options: ["Yes", "Sort of", "Probably not", "Definitely not"],
     },
     PollTexts {
-        text: "Just joined @asami_club. They’re measuring my influence and I’ll earn for moderating campaigns.\nDo you trust what I share?",
+        text: "Just joined @asami_club. I’ll be sharing campaigns I respect — and projects might thank me for it.\nDo you trust what I share?",
         options: ["Of course", "Sometimes", "Not really", "Nope"],
     },
     PollTexts {
-        text: "I’m on @asami_club now, where I earn by picking and sharing ads. You rate my influence.\nWould you give me credit?",
+        text: "I’m now in @asami_club, where I support projects through advocacy. They show appreciation with rewards.\nWould you give me credit?",
         options: ["Absolutely", "Some credit", "Barely", "None"],
     },
     PollTexts {
-        text: "Just joined @asami_club. I’ll earn for choosing and sharing good campaigns.\nThink I’ve got solid judgment?",
+        text: "Just joined @asami_club! I’ll amplify meaningful Web3 content and may receive tokens as a thank-you.\nThink I’ve got solid judgment?",
         options: ["Excellent", "Pretty good", "Not great", "None at all"],
     },
     PollTexts {
-        text: "I joined @asami_club to earn by curating campaigns and reposting the best ones.\nDo you think I’ve got a good eye?",
+        text: "I joined @asami_club to help signal what’s worth seeing in Web3. Projects show appreciation with small on-chain tips.\nDo you think I’ve got a good eye?",
         options: ["Absolutely", "Sometimes", "Not really", "No taste at all"],
     },
     PollTexts {
-        text: "At @asami_club, I earn for showing good judgment when sharing content.\nDo you think I know what’s valuable?",
+        text: "In @asami_club I aim to highlight good Web3 ideas. It’s not about followers — it’s about being thoughtful.\nDo you think I know what’s valuable?",
         options: ["No doubt", "Sometimes", "Barely", "What’s valuable?"],
     },
     PollTexts {
-        text: "I joined @asami_club. If you trust me, I earn more by picking better ads.\nDo you trust my filter?",
+        text: "I joined @asami_club to explore advocacy in Web3. If I help spread the word well, projects may thank me with rewards.\nDo you trust my filter?",
         options: ["100% yes", "Depends", "Not really", "You have a filter?"],
     },
     PollTexts {
-        text: "I’m now in @asami_club. They’re measuring how reliable I am when recommending campaigns.\nThink I choose well?",
+        text: "I'm now in @asami_club. I want to grow as a Web3 advocate and highlight what really matters.\nThink I choose well?",
         options: ["You’re great", "Sometimes", "Not that well", "You’re a mess"],
     },
     PollTexts {
-        text: "Now part of @asami_club. I get paid to pick and share valuable campaigns.\nWould you trust my recommendations?",
+        text: "Now part of @asami_club — a club where you advocate for Web3 and might earn a thank-you when projects appreciate your help.\nWould you trust my recommendations?",
         options: ["Absolutely", "Sometimes", "Not much", "Not at all"],
     },
 ];

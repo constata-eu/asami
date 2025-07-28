@@ -496,13 +496,10 @@
     "contact_us": "Contact us"
   },
   "public_card_header": {
-    "title": "Pays up to $%{amount} in DOC"
+    "title": "By %{author} · Thanks you up to $%{amount} + ASAMI"
   },
   "public_x_campaign": {
-    "main_button": "Repost to earn"
-  },
-  "public_ig_campaign": {
-    "main_button": "Post to earn"
+    "main_button": "Repost it"
   },
   "out_of_campaigns": {
     "title": "We're all out of campaigns.",
