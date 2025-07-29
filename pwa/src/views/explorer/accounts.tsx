@@ -137,8 +137,8 @@ const AccountCardTable = () => {
     <>
       <RecordContextProvider value={showAccount.record}>
         <Head1 sx={{ color: "primary.main" }}>{showAccount.record.name}</Head1>
-        {(handle.status == "DISCONNECTED" ||
-          handle.status == "RECONNECTING") && (
+        {(handle?.status == "DISCONNECTED" ||
+          handle?.status == "RECONNECTING") && (
           <Alert
             id="account-disconnected"
             sx={{ mt: "1em" }}
