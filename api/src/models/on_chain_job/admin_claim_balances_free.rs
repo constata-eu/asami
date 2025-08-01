@@ -2,7 +2,7 @@ use super::*;
 
 impl OnChainJob {
     pub async fn admin_claim_balances_free_make_call(&self) -> anyhow::Result<Option<AsamiFunctionCall>> {
-        if self.state.on_chain.admin_rbtc_balance().await? < milli("5") {
+        if self.state.on_chain.admin_rbtc_balance().await? < milli("2") {
             return Ok(None);
         }
 

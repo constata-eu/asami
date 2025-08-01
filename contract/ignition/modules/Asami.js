@@ -8,10 +8,7 @@ module.exports = buildModule("LocalAsami", (m) => {
 
   const mockDoc = m.contract("MockDoc", []);
 
-  const asamiOld = m.contract("Asami", [
-    mockDoc,
-    "0x0000000000000000000000000000000000000000",
-  ]);
+  const asamiOld = m.contract("Asami", [mockDoc, adminAddress]);
 
   const asami = m.contract("AsamiCore", [mockDoc]);
 

@@ -141,7 +141,7 @@ impl OnChainJob {
                     .map(|x| x.message.clone())
                     .unwrap_or_else(String::new);
 
-                if maybe_funds.starts_with("insufficient funds") {
+                if maybe_funds.contains("funds") {
                     self.fail("rpc_error_waiting_more", format!("{e:?}")).await?;
                     self.update().status_line(Some(maybe_funds)).save().await?
                 } else {

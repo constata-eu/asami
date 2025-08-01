@@ -358,6 +358,31 @@ impl TestUser {
         duration: i64,
         topic_ids: &[i32],
     ) -> models::Campaign {
+        self.start_and_pay_campaign_with_params(
+            link,
+            budget,
+            duration,
+            topic_ids,
+            u("2000"),
+            u("200"),
+            milli("1"),
+            false,
+        )
+        .await
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub async fn start_and_pay_campaign_with_params(
+        &self,
+        link: &str,
+        budget: U256,
+        duration: i64,
+        topic_ids: &[i32],
+        max_individual_reward: U256,
+        min_individual_reward: U256,
+        price_per_point: U256,
+        thumbs_up_only: bool,
+    ) -> models::Campaign {
         use api::models::AbiEncode;
         use gql::create_campaign_from_link::*;
         let response: graphql_client::Response<ResponseData> = self
@@ -367,10 +392,10 @@ impl TestUser {
                         link: link.to_string(),
                         managed_unit_amount: None,
                         topic_ids: topic_ids.iter().map(|x| *x as i64).collect(),
-                        price_per_point: milli("1").encode_hex(),
-                        max_individual_reward: u("2000").encode_hex(),
-                        min_individual_reward: milli("200").encode_hex(),
-                        thumbs_up_only: false,
+                        price_per_point: price_per_point.encode_hex(),
+                        max_individual_reward: max_individual_reward.encode_hex(),
+                        min_individual_reward: min_individual_reward.encode_hex(),
+                        thumbs_up_only,
                     },
                 }),
                 vec![],
