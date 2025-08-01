@@ -69,7 +69,7 @@ const production = {
   rsk: {
     chainId: 30,
     rpcUrls: {
-      30: "https://public-node.rsk.co",
+      30: "https://go.getblock.io/0f78b6425f48428ba3246eecc55b0f10",
     },
     supportedChains: [
       {
@@ -80,7 +80,7 @@ const production = {
           symbol: "RBTC",
           decimals: 18,
         },
-        rpcUrls: ["https://public-node.rsk.co"],
+        rpcUrls: ["https://go.getblock.io/0f78b6425f48428ba3246eecc55b0f10"],
         blockExplorerUrls: ["https://explorer.rsk.co"],
         iconUrls: [
           "https://developers.rsk.co/assets/img/favicons/android-chrome-192x192.png",
