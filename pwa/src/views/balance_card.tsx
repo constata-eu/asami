@@ -293,8 +293,17 @@ const ClaimButton = ({ account }) => {
   const { contracts } = useContracts();
 
   const onClick = async () => {
-    const { asami } = await contracts(account.addr);
-    await asami.claimBalances();
+    alert(`Account addr:${account.addr}`);
+    try {
+      const { asami } = await contracts(account.addr);
+      await asami.claimBalances();
+    } catch (e) {
+      notify(`${window["XOConnect"]} - ${e.body.message}`, {
+        type: "error",
+        autoHideDuration: 10000,
+      });
+      return;
+    }
     notify("balance_card.claimed.claim_success", { type: "success" });
   };
 
