@@ -33,6 +33,7 @@ import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import { CampaignForm, Banned, Done, Failure } from "./make_campaign_shared";
 import MoreTimeIcon from "@mui/icons-material/MoreTime";
 import AddIcon from "@mui/icons-material/Add";
+import { useEmbedded } from "../../components/embedded_context";
 
 export const MakeCampaignWithDocCard = ({ account, onCreate }) => {
   const t = useTranslate();
@@ -178,6 +179,7 @@ const MakeCampaignWithDocDialog = ({
   const [failure, setFailure] = useState();
   const { contracts } = useContracts();
   const dataProvider = useDataProvider();
+  const isEmbedded = useEmbedded();
 
   const handleClose = () => {
     setOpen(false);
@@ -192,6 +194,7 @@ const MakeCampaignWithDocDialog = ({
       setOpen(false);
       const { doc, asami, asamiAddress, signer } = await contracts(
         account.addr,
+        isEmbedded,
       );
 
       setStep("APPROVING");
@@ -465,6 +468,7 @@ export const ExtendCampaignButton = ({ account, onSuccess }) => {
   const [extendTx, setExtendTx] = useState();
   const [failure, setFailure] = useState();
   const { contracts } = useContracts();
+  const isEmbedded = useEmbedded();
 
   const handleClose = () => {
     setOpen(false);
@@ -476,7 +480,7 @@ export const ExtendCampaignButton = ({ account, onSuccess }) => {
   const onSubmit = async (values) => {
     try {
       setOpen(false);
-      const { asami } = await contracts(account.addr);
+      const { asami } = await contracts(account.addr, isEmbedded);
 
       setStep("EXTENDING");
       setOpen(true);
@@ -622,6 +626,7 @@ export const TopUpCampaignButton = ({ account, onSuccess }) => {
   const [topUpTx, setTopUpTx] = useState();
   const [failure, setFailure] = useState();
   const { contracts } = useContracts();
+  const isEmbedded = useEmbedded();
 
   const handleClose = () => {
     setOpen(false);
@@ -636,6 +641,7 @@ export const TopUpCampaignButton = ({ account, onSuccess }) => {
       setOpen(false);
       const { doc, asami, asamiAddress, signer } = await contracts(
         account.addr,
+        isEmbedded,
       );
 
       setStep("APPROVING");

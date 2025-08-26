@@ -96,6 +96,7 @@ const production = {
 
 const all = {
   "http://192.168.1.118:5173": production,
+  "https://8453.asami.club": production,
   "http://127.0.0.1:5173": development,
   "http://127.0.0.1:4173": development,
   "http://localhost:5173": development,

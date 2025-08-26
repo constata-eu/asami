@@ -24,6 +24,7 @@ import WalletIcon from "@mui/icons-material/Wallet";
 import NorthEastIcon from "@mui/icons-material/NorthEast";
 import { AttributeTable } from "../components/attribute_table";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
+import { useEmbedded } from "../components/embedded_context";
 
 const BalanceCard = () => {
   const { data, isLoading } = useGetOne(
@@ -240,10 +241,12 @@ const Done = ({ account }) => {
 const AddToWallet = ({ symbol, account }) => {
   const notify = useNotify();
   const { contracts } = useContracts();
+  const isEmbedded = useEmbedded();
 
   const addToken = async () => {
     const { provider, docAddress, asamiAddress } = await contracts(
       account.addr,
+      isEmbedded,
     );
     const address = symbol == "DOC" ? docAddress : asamiAddress;
 
@@ -291,17 +294,15 @@ const ClaimButton = ({ account }) => {
   const translate = useTranslate();
   const notify = useNotify();
   const { contracts } = useContracts();
+  const isEmbedded = useEmbedded();
 
   const onClick = async () => {
-    alert(`Account addr:${account.addr}`);
     try {
-      const { asami } = await contracts(account.addr);
+      const { asami } = await contracts(account.addr, isEmbedded);
       await asami.claimBalances();
     } catch (e) {
-      notify(`${window["XOConnect"]} - ${e.body.message}`, {
-        type: "error",
-        autoHideDuration: 10000,
-      });
+      alert("Error caught");
+      alert(JSON.stringify(e.stack));
       return;
     }
     notify("balance_card.claimed.claim_success", { type: "success" });

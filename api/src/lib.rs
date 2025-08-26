@@ -59,6 +59,7 @@ pub fn custom_server(app: App, fig: figment::Figment) -> rocket::Rocket<rocket::
             "http://127.0.0.1:5173",
             "http://localhost:5173",
             "http://192.168.1.118:5173",
+            "https://8453.asami.club",
             "https://asami.club",
         ],
         &["file://.*", "content://.*"],
