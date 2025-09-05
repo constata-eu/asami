@@ -1,7 +1,7 @@
-use std::time::Duration;
 use api::models::SeriesName;
 use futures::FutureExt;
 use std::panic::AssertUnwindSafe;
+use std::time::Duration;
 
 #[tokio::main(worker_threads = 10)]
 async fn main() {
@@ -41,11 +41,13 @@ async fn main() {
             };
 
             if let Some(err) = maybe_err {
+                /*
                 let _ = $app.send_mail(
                     &$app.settings.internal_alerts_email,
                     &format!("Error in {}", $name),
                     &format!("{:?}", &err)
                 ).await;
+                */
                 $app.fail("worker", $name, &err.to_string()).await;
                 println!("Error in {}: {:?}", $name, err);
             }
@@ -99,7 +101,7 @@ async fn main() {
         run!("Force holder hydrations", s, { s.holder().force_hydrate().await });
     }];
 
-    every![10000, |s| {
+    every![20000, |s| {
         run!("Attempt account on-chain hydrate", s, {
             s.account().hydrate_on_chain_values_just_in_case().await
         });
