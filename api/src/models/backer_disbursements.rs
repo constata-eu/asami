@@ -300,7 +300,7 @@ impl BackerPayoutHub {
                     pending_tx.await?;
                 }
             };
-            tokio::time::sleep(tokio::time::Duration::from_secs(
+            tokio::time::sleep(tokio::time::Duration::from_millis(
                 self.state.settings.rsk.blockchain_sync_cooldown,
             ))
             .await;
