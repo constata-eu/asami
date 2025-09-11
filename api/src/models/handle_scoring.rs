@@ -620,7 +620,11 @@ impl HandleScoring {
         };
 
         // The user can delete the poll, we're fine with it, so not-found should not discard the scoring.
-        if payload.errors().map(|v| v.iter().any(|e| e.title == "Not Found Error")).unwrap_or(false) {
+        if payload
+            .errors()
+            .map(|v| v.iter().any(|e| e.title == "Not Found Error" || e.title == "Disallowed Resource"))
+            .unwrap_or(false)
+        {
             return Some(PollScore::None);
         }
 
