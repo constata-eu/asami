@@ -69,7 +69,7 @@ const production = {
   rsk: {
     chainId: 30,
     rpcUrls: {
-      30: "https://go.getblock.io/0f78b6425f48428ba3246eecc55b0f10",
+      30: "https://public-node.rsk.co",
     },
     supportedChains: [
       {
