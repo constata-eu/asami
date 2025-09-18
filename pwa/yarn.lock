@@ -10100,10 +10100,10 @@ xhr@^2.0.4, xhr@^2.2.0, xhr@^2.3.3:
     parse-headers "^2.0.0"
     xtend "^4.0.0"
 
-xo-connect@^2.0.0:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/xo-connect/-/xo-connect-2.1.2.tgz#0750aa3c8a9f14b8415ab0f6c6ddd0040fa8086b"
-  integrity sha512-JXc/MzmA4EIFeGfd2Am+bWXBWrP05YX3wugZz1IQ9IVVQg7JJ99QJ/5YwhyKo46xkmszIuaNamOqLwuBWqnnBA==
+xo-connect@^2.1.3:
+  version "2.1.3"
+  resolved "https://registry.yarnpkg.com/xo-connect/-/xo-connect-2.1.3.tgz#b7e98a720e1320b8c714c3b48eec0cab8c5ed630"
+  integrity sha512-vWE7zyNnUabhgwNkZltEzHKHMd2sOe3HySgeYa8L85HxR6TKPnQJNyAGrnT+JKeGD6WIKLHxEHlxWciiz+vTDw==
   dependencies:
     typescript "4.9.4"
     web3 "^1.9.0"
