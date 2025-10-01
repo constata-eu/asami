@@ -9,6 +9,11 @@ pub use ethers::{
 };
 use url::Url;
 
+use async_trait::async_trait;
+use ethers::providers::{HttpClientError, JsonRpcClient};
+use serde::{de::DeserializeOwned, Serialize};
+use std::fmt::Debug;
+
 use super::*;
 
 abigen!(
@@ -76,7 +81,7 @@ abigen!(
     derives(serde::Deserialize, serde::Serialize),
 );
 
-pub type AsamiProvider = Provider<RetryClient<Http>>;
+pub type AsamiProvider = Provider<RetryClient<LoggingHttp>>;
 pub type AsamiMiddleware = SignerMiddleware<NonceManagerMiddleware<AsamiProvider>, LocalWallet>;
 pub type LegacyContract = LegacyContractCode<AsamiMiddleware>;
 pub type DocContract = IERC20<AsamiMiddleware>;
@@ -246,7 +251,7 @@ impl OnChain {
 
         let url = Url::parse(url).map_err(|_| Error::Init("Invalid rsk rpc_url in config".to_string()))?;
 
-        let http = Http::new_with_client(url, reqwest_client);
+        let http = LoggingHttp::new(url, reqwest_client);
 
         let retry_client = RetryClientBuilder::default()
             .timeout_retries(2)
@@ -257,5 +262,68 @@ impl OnChain {
         let provider = Provider::new(retry_client).interval(std::time::Duration::from_millis(interval));
 
         Ok(provider)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct LoggingHttp {
+    inner: Http,
+    client: reqwest::Client,
+    url: url::Url,
+}
+
+impl LoggingHttp {
+    pub fn new(url: url::Url, client: reqwest::Client) -> Self {
+        let inner = Http::new_with_client(url.clone(), client.clone());
+        Self { inner, client, url }
+    }
+}
+
+#[async_trait]
+impl JsonRpcClient for LoggingHttp {
+    type Error = HttpClientError;
+
+    async fn request<T, R>(&self, method: &str, params: T) -> Result<R, Self::Error>
+    where
+        T: Debug + Serialize + Send + Sync,
+        R: DeserializeOwned + Send,
+    {
+        let params_json = serde_json::to_value(&params).unwrap_or_else(|_| serde_json::Value::Null);
+        match self.inner.request::<T, R>(method, params).await {
+            Ok(res) => Ok(res),
+            Err(err) => {
+                // Log raw HTTP traffic for debugging
+                let body = serde_json::json!({
+                    "jsonrpc": "2.0",
+                    "method": method,
+                    "params": params_json,
+                    "id": 1,
+                });
+
+                match self.client.post(self.url.clone()).json(&body).send().await {
+                    Ok(resp) => {
+                        let status = resp.status();
+                        let headers = resp.headers().clone();
+                        let text = resp.text().await.unwrap_or_default();
+
+                        println!("--- RPC ERROR ---");
+                        println!("url: {}", self.url);
+                        println!("status: {}", status);
+                        println!("request_body: {}", body);
+                        println!("response_headers: {:#?}", headers);
+                        println!("response_body: {}", text);
+                        println!("serde_error: {err:?}");
+                    }
+                    Err(e) => {
+                        println!("--- RPC ERROR ---");
+                        println!("url: {}", self.url);
+                        println!("could not resend request for debug: {e:?}");
+                        println!("original error: {err:?}");
+                    }
+                }
+
+                Err(err)
+            }
+        }
     }
 }
