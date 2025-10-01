@@ -176,6 +176,7 @@ impl BackerHub {
         for backer in self.select().all().await? {
             let stake = contract.allocation_of(backer.decoded_address()?).call().await?;
             backer.store_today_stake(stake).await?;
+            tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
         }
 
         Ok(())

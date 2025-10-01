@@ -51,20 +51,21 @@ async fn main() {
                 $app.fail("worker", $name, &err.to_string()).await;
                 println!("Error in {}: {:?}", $name, err);
             }
+            tokio::time::sleep(Duration::from_millis(10000)).await;
         )
     }
 
     // The on chain jobs scheduler has its own internal cooldown and backoff.
     // We just make sure to wake it up once a second here so that it decides what to do.
-    every![20000, |s| {
+    every![120000, |s| {
         run!("On chain job scheduler", s, { s.on_chain_job().run_scheduler().await });
-        run!("Pay backer rewards", s, { s.backer_payout().pay_all().await });
     }];
     every![120000, |s| {
         run!("Sync on-chain events", s, {
             s.synced_event().sync_on_chain_events().await
         });
         run!("Store backer stakes", s, { s.backer().store_today_stakes().await });
+        run!("Pay backer rewards", s, { s.backer_payout().pay_all().await });
     }];
 
     every![1800000, |s| {
@@ -91,7 +92,7 @@ async fn main() {
         });
     }];
 
-    every![10000, |s| {
+    every![30000, |s| {
         run!("Force account hydrations", s, { s.account().force_hydrate().await });
         run!("Force handle hydrations", s, { s.handle().force_hydrate().await });
         run!("Force campaign hydrations", s, { s.campaign().force_hydrate().await });
@@ -101,7 +102,7 @@ async fn main() {
         run!("Force holder hydrations", s, { s.holder().force_hydrate().await });
     }];
 
-    every![20000, |s| {
+    every![240000, |s| {
         run!("Attempt account on-chain hydrate", s, {
             s.account().hydrate_on_chain_values_just_in_case().await
         });
