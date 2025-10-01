@@ -237,7 +237,10 @@ impl OnChain {
 
     pub fn make_asami_provider(url: &str, interval: u64) -> AsamiResult<AsamiProvider> {
         let reqwest_client = reqwest::Client::builder()
-            .timeout(Duration::from_secs(3))
+            .timeout(Duration::from_secs(40))
+            .pool_idle_timeout(Duration::from_secs(30))
+            .pool_max_idle_per_host(1)
+            .tcp_keepalive(Some(Duration::from_secs(60)))
             .build()
             .map_err(|_| Error::Init("Could not build reqwest client for on-chain".to_string()))?;
 
@@ -246,9 +249,9 @@ impl OnChain {
         let http = Http::new_with_client(url, reqwest_client);
 
         let retry_client = RetryClientBuilder::default()
-            .timeout_retries(3)
-            .rate_limit_retries(5)
-            .initial_backoff(Duration::from_millis(500)) // Initial backoff duration
+            .timeout_retries(2)
+            .rate_limit_retries(1)
+            .initial_backoff(Duration::from_millis(30000)) // Initial backoff duration
             .build(http, Box::new(HttpRateLimitRetryPolicy));
 
         let provider = Provider::new(retry_client).interval(std::time::Duration::from_millis(interval));
