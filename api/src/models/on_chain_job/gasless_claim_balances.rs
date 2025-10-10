@@ -10,18 +10,22 @@ impl OnChainJob {
         let rbtc_per_user = self.state.settings.rsk.gasless_rbtc_per_user;
         let doc_fee = self.state.settings.rsk.gasless_fee;
 
-        let accounts = self.state.account().select().status_eq(AccountStatus::Claimed).all().await?;
+        let accounts = self
+            .state
+            .account()
+            .select()
+            .status_eq(AccountStatus::Claimed)
+            .allows_gasless_eq(true)
+            .all()
+            .await?;
 
         let mut addresses = std::collections::HashSet::new();
 
         for a in accounts {
             let Some(found) = a.find_on_chain().await? else {
+                tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
                 continue;
             };
-
-            if !a.allows_gasless() {
-                continue;
-            }
 
             let (trusted_admin, max_gasless_doc_to_spend, min_gasless_rbtc_to_receive, _, unclaimed_doc_balance, _, _) =
                 found;

@@ -30,7 +30,7 @@ impl OnChainJob {
             let addr = h.decoded_address().context("When claiming fee pool")?;
 
             let balance = c.get_balance_before_recent_changes(addr).call().await?;
-            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
 
             let reward = balance * pool / supply;
 
@@ -45,7 +45,7 @@ impl OnChainJob {
             if c.last_fee_pool_share_cycles(addr).call().await? >= current_cycle {
                 continue;
             }
-            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            tokio::time::sleep(std::time::Duration::from_millis(5000)).await;
 
             // Accounts with less than 4000 asami tokens don't get their revenue sharing
             // paid by us. They can still claim it themselves.
