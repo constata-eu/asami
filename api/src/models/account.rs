@@ -179,7 +179,7 @@ impl AccountHub {
             };
 
             updater.save().await?;
-            tokio::time::sleep(std::time::Duration::from_millis(20000)).await;
+            tokio::time::sleep(std::time::Duration::from_millis(2000)).await;
         }
 
         Ok(())

@@ -133,10 +133,7 @@ impl BackerDisbursement {
         let usd_claimed = self.rif_claimed() * self.rif_usd_rate() + self.btc_claimed() * self.btc_usd_rate();
         let fees_produced = usd_claimed / Decimal::new(10, 0);
         let tokens_minted = fees_produced * self.asami_issuance_rate();
-        let for_advertiser = tokens_minted * Decimal::new(30, 0) / Decimal::new(100, 0);
-        let collective_bonus = Decimal::new(2, 0);
-
-        for_advertiser * collective_bonus
+        tokens_minted * Decimal::new(20, 0) / Decimal::new(100, 0)
     }
 }
 
