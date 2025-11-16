@@ -4,6 +4,10 @@ use super::*;
 
 impl OnChainJob {
     pub async fn submit_reports_make_call(&self) -> anyhow::Result<Option<AsamiFunctionCall>> {
+        /* nobody is using these reports so we don't need to spend on them */
+        return Ok(None);
+
+        /*
         let campaigns = self.state.campaign().needing_report().all().await?;
 
         if campaigns.is_empty() {
@@ -68,6 +72,7 @@ impl OnChainJob {
         }
 
         Ok(Some(self.state.on_chain.asami_contract.submit_reports(params)))
+        */
     }
 
     pub async fn submit_reports_on_state_change(self) -> anyhow::Result<Self> {

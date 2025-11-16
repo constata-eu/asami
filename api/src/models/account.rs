@@ -188,7 +188,13 @@ impl AccountHub {
     pub async fn hydrate_on_chain_values_just_in_case(&self) -> AsamiResult<()> {
         let now = Utc::now();
 
-        let items = self.select().last_on_chain_sync_lt(now - Duration::minutes(60)).limit(10).all().await?;
+        let items = self
+            .select()
+            .last_on_chain_sync_lt(now - Duration::minutes(60))
+            .order_by(AccountOrderBy::LastOnChainSync)
+            .limit(20)
+            .all()
+            .await?;
 
         if items.is_empty() {
             return Ok(());
