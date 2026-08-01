@@ -8,4 +8,4 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 pgrep -f "hardhat node" | xargs -r kill -9
 pgrep -f "integration_tests/target/debug/deps" | xargs -r kill -9
-RUST_BACKTRACE=1 cargo run --bin run-dev
+SQLX_OFFLINE=true RUST_BACKTRACE=1 cargo run --bin run-dev

@@ -27,7 +27,7 @@ cancel_url="http://127.0.0.1:5173/#/stripe-cancel"
 
 [default.recaptcha.v3]
 html_key="6LeEosgoAAAAAEvZM2fmutlMhYwFMtpFwo_3BIDX"
-secret_key="some_secret_key"
+secret_key="6LeEosgoAAAAAEmwBs9iLiRb_k-fJhlTq6OmOrjd"
 
 [default.rsk]
 chain_id=31337

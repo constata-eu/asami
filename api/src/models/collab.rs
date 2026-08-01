@@ -14,8 +14,8 @@ model! {
     member_id: String,
     #[sqlx_model_hints(varchar)]
     collab_trigger_unique_id: String,
-    #[sqlx_model_hints(int4, op_in)]
-    handle_id: i32,
+    #[sqlx_model_hints(int4, op_in, op_is_set)]
+    handle_id: Option<i32>,
     #[sqlx_model_hints(collab_status, op_ne)]
     status: CollabStatus,
     #[sqlx_model_hints(varchar)]
@@ -31,8 +31,8 @@ model! {
       registered("status = 'registered' AND campaign_id = $1", campaign_id: i32)
   },
   belongs_to {
-    Account(member_id),
     Campaign(campaign_id),
+    Account(member_id),
   }
 }
 
@@ -51,6 +51,7 @@ impl_loggable!(Collab);
 make_sql_enum![
     "collab_status",
     pub enum CollabStatus {
+        Pending,    // Participant list is gathered but reward has not been assigned yet.
         Registered, // The collab is registered and will be paid out.
         Cleared,    // The collab was paid correctly.
         Failed,     // The collab was registered but will not be paid.

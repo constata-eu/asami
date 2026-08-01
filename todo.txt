@@ -1,0 +1,39 @@
+# TODO:
+
+
+# Landing: 
+Fix the user list at the bottom remove the heading which is not needed.
+
+# Invite form:
+Account name should be labelled 'name'
+"Rootstock Joined At" should be "Rootstocker Since".
+
+The form should explain each field:
+* Alignment.
+* Trust
+* Contribution
+* Advocacy.
+* Judgement.
+
+Recommendation letter (explains why they are being invited?)
+
+
+# How does rating other members look like?
+
+
+# Login page.
+* Allow email login.
+* Make the apply for waitlist button noticeable.
+
+# Whitepaper:
+* Re read and fix the whitepaper in both languages.
+
+
+# Community:
+* Allow removing people from the user's community.
+
+
+# Campaigns:
+* Create a campaign and make sure it immediately pays up everyone.
+
+

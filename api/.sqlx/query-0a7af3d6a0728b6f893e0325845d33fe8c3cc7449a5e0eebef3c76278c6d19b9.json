@@ -1,0 +1,171 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \nname as \"name!: String\", \nemail as \"email!: String\", \nlink_1 as \"link_1!: String\", \nlink_2 as \"link_2!: String\", \nlink_3 as \"link_3!: Option < String >\", \nnote as \"note!: String\", \ninvitation_id as \"invitation_id!: Option < i32 >\", \nstatus as \"status!: WaitlistApplicationStatus\", \nreview_notes as \"review_notes!: Option < String >\", \ncreated_at as \"created_at!: UtcDateTime\", \nreviewed_at as \"reviewed_at!: Option < UtcDateTime >\" FROM waitlist_applications WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR name = $6::text) AND (NOT $7::boolean OR name LIKE $8::text) AND (NOT $9::boolean OR name ILIKE $10::text) AND (NOT $11::boolean OR email = $12::text) AND (NOT $13::boolean OR email LIKE $14::text) AND (NOT $15::boolean OR email ILIKE $16::text) AND (NOT $17::boolean OR link_1 = $18::text) AND (NOT $19::boolean OR link_2 = $20::text) AND (NOT $21::boolean OR link_3 = $22::text) AND (NOT $23::boolean OR note = $24::text) AND (NOT $25::boolean OR invitation_id = $26::int4) AND (NOT $27::boolean OR status = $28::waitlist_application_status) AND (NOT $29::boolean OR status = ANY(CAST($30 as waitlist_application_status[])) ) AND (NOT $31::boolean OR review_notes = $32::text) AND (NOT $33::boolean OR created_at = $34::timestamptz) AND (NOT $35::boolean OR reviewed_at = $36::timestamptz) AND ($37::boolean IS NULL OR (($37::boolean AND reviewed_at IS NOT NULL) OR (NOT $37::boolean AND reviewed_at IS NULL))) ORDER BY \n      (CASE ($38 = 'Id' AND NOT $39) WHEN true THEN id ELSE NULL END),\n      (CASE ($38 = 'Id' AND $39) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'Name' AND NOT $39) WHEN true THEN name ELSE NULL END),\n      (CASE ($38 = 'Name' AND $39) WHEN true THEN name ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'Email' AND NOT $39) WHEN true THEN email ELSE NULL END),\n      (CASE ($38 = 'Email' AND $39) WHEN true THEN email ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'Link1' AND NOT $39) WHEN true THEN link_1 ELSE NULL END),\n      (CASE ($38 = 'Link1' AND $39) WHEN true THEN link_1 ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'Link2' AND NOT $39) WHEN true THEN link_2 ELSE NULL END),\n      (CASE ($38 = 'Link2' AND $39) WHEN true THEN link_2 ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'Link3' AND NOT $39) WHEN true THEN link_3 ELSE NULL END),\n      (CASE ($38 = 'Link3' AND $39) WHEN true THEN link_3 ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'Note' AND NOT $39) WHEN true THEN note ELSE NULL END),\n      (CASE ($38 = 'Note' AND $39) WHEN true THEN note ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'InvitationId' AND NOT $39) WHEN true THEN invitation_id ELSE NULL END),\n      (CASE ($38 = 'InvitationId' AND $39) WHEN true THEN invitation_id ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'Status' AND NOT $39) WHEN true THEN status ELSE NULL END),\n      (CASE ($38 = 'Status' AND $39) WHEN true THEN status ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'ReviewNotes' AND NOT $39) WHEN true THEN review_notes ELSE NULL END),\n      (CASE ($38 = 'ReviewNotes' AND $39) WHEN true THEN review_notes ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'CreatedAt' AND NOT $39) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($38 = 'CreatedAt' AND $39) WHEN true THEN created_at ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'ReviewedAt' AND NOT $39) WHEN true THEN reviewed_at ELSE NULL END),\n      (CASE ($38 = 'ReviewedAt' AND $39) WHEN true THEN reviewed_at ELSE NULL END) DESC\n     LIMIT $40 OFFSET $41 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "email!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "link_1!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "link_2!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "link_3!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "note!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "invitation_id!: Option < i32 >",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "status!: WaitlistApplicationStatus",
+        "type_info": {
+          "Custom": {
+            "name": "waitlist_application_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "reviewed",
+                "accepted",
+                "rejected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "review_notes!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "reviewed_at!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Int4",
+        "Bool",
+        {
+          "Custom": {
+            "name": "waitlist_application_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "reviewed",
+                "accepted",
+                "rejected"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "waitlist_application_status[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "waitlist_application_status",
+                  "kind": {
+                    "Enum": [
+                      "pending",
+                      "reviewed",
+                      "accepted",
+                      "rejected"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Bool",
+        "Text",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "0a7af3d6a0728b6f893e0325845d33fe8c3cc7449a5e0eebef3c76278c6d19b9"
+}

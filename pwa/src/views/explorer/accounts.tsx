@@ -1,5 +1,10 @@
 import {
+  AutocompleteInput,
+  BooleanInput,
   Datagrid,
+  EditBase,
+  EditButton,
+  Form,
   List,
   useTranslate,
   TextField,
@@ -7,59 +12,76 @@ import {
   TextInput,
   DateField,
   NumberField,
+  NumberInput,
   useShowController,
   useListController,
   RecordContextProvider,
   ShowButton,
+  SimpleShowLayout,
   ListBase,
   ReferenceField,
+  ReferenceInput,
   ListView,
+  SaveButton,
+  SelectInput,
+  Toolbar,
+  SimpleForm,
+  useDataProvider,
+  useNotify,
+  useRefresh,
+  required,
+  minValue,
+  maxValue,
+  useRecordContext,
 } from "react-admin";
 import { viewPostUrl } from "../../lib/campaign";
 import { useParams, Link } from "react-router-dom";
 import { ExplorerLayout } from "../layout";
+import { ResponsiveAppBar } from "../responsive_app_bar";
 import {
   Alert,
   Box,
+  Button,
   Card,
   CardContent,
+  Stack,
   styled,
   Typography,
 } from "@mui/material";
 import { AddressField, AmountField } from "../../components/custom_fields";
-import XIcon from "@mui/icons-material/X";
 import BadgeIcon from "@mui/icons-material/Badge";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import Diversity1Icon from "@mui/icons-material/Diversity1";
 import ForumIcon from "@mui/icons-material/Forum";
-import CachedIcon from "@mui/icons-material/Cached";
-import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
-import SpeedIcon from "@mui/icons-material/Speed";
-import SmartToyIcon from "@mui/icons-material/SmartToy";
-import SentimentSatisfiedIcon from "@mui/icons-material/SentimentSatisfied";
-import SentimentVerySatisfiedIcon from "@mui/icons-material/SentimentVerySatisfied";
-import SentimentNeutralIcon from "@mui/icons-material/SentimentNeutral";
-import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
-import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import VerifiedIcon from "@mui/icons-material/Verified";
-import GroupAddIcon from "@mui/icons-material/GroupAdd";
-import DiamondIcon from "@mui/icons-material/Diamond";
-import StarHalfIcon from "@mui/icons-material/StarHalf";
-import StarIcon from "@mui/icons-material/Star";
 import GrassIcon from "@mui/icons-material/Grass";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
 
-import { red, Head1, Head2, Lead, BigText } from "../../components/theme";
+import { Head1, Head2, Lead, BigText } from "../../components/theme";
 import { AttributeTable } from "../../components/attribute_table";
+import { normalizeRootstockJoinedAt } from "../../lib/rootstock_joined_at";
+
+const acceptanceStatusChoices = [
+  { id: "ACTIVE", name: "Active" },
+  { id: "GUESTLIST", name: "Waitlist" },
+  { id: "INACTIVE", name: "Inactive" },
+];
 
 export const AccountList = () => {
   const t = useTranslate();
+  const storedSession = localStorage.getItem("session");
+  const session = storedSession ? JSON.parse(storedSession) : null;
 
   const filters = [
+    <TextInput source="nameLike" alwaysOn />,
     <TextInput source="idEq" alwaysOn />,
     <TextInput source="addrLike" alwaysOn />,
-    <TextInput source="nameLike" alwaysOn />,
+    <SelectInput
+      source="acceptanceStatusEq"
+      alwaysOn
+      choices={acceptanceStatusChoices}
+    />,
   ];
 
   return (
@@ -70,9 +92,10 @@ export const AccountList = () => {
       <List
         disableAuthentication
         filters={filters}
+        filterDefaultValues={{ acceptanceStatusEq: "ACTIVE" }}
         sort={{ field: "createdAt", order: "DESC" }}
       >
-        <Datagrid bulkActionButtons={false}>
+        <Datagrid bulkActionButtons={false} expand={<ExpandAccount />}>
           <Box source="name">
             <TextField
               source="name"
@@ -80,6 +103,19 @@ export const AccountList = () => {
             />
           </Box>
           <DateField source="createdAt" />
+          <FunctionField
+            source="acceptanceStatus"
+            label={t("explorer.accounts.acceptance_status")}
+            render={(record) =>
+              acceptanceStatusChoices.find(
+                (choice) => choice.id === record.acceptanceStatus,
+              )?.name ?? record.acceptanceStatus
+            }
+          />
+          <TextField
+            source="invitedByName"
+            label={t("explorer.accounts.invited_by")}
+          />
           <NumberField textAlign="right" source="totalCollabs" />
           <AmountField
             textAlign="right"
@@ -89,23 +125,22 @@ export const AccountList = () => {
           <NumberField textAlign="right" source="totalCampaigns" />
           <NumberField textAlign="right" source="totalCollabsReceived" />
           <AmountField textAlign="right" currency="" source="totalSpent" />
-          <AmountField
-            textAlign="right"
-            currency=""
-            source="unclaimedAsamiBalance"
-          />
-          <AmountField
-            textAlign="right"
-            currency=""
-            source="unclaimedDocBalance"
-          />
-          <AddressField source="addr" />
+          {session && <AddToCommunityButton />}
           <ShowButton textAlign="right" />
+          {session?.admin && <EditButton label={false} textAlign="right" />}
         </Datagrid>
       </List>
     </ExplorerLayout>
   );
 };
+
+const ExpandAccount = () => (
+  <SimpleShowLayout>
+    <AddressField source="addr" />
+    <AmountField textAlign="right" currency="" source="unclaimedAsamiBalance" />
+    <AmountField textAlign="right" currency="" source="unclaimedDocBalance" />
+  </SimpleShowLayout>
+);
 
 export const AccountShow = () => (
   <ExplorerLayout>
@@ -118,6 +153,8 @@ export const AccountShow = () => (
 const AccountCardTable = () => {
   let t = useTranslate();
   const { id } = useParams(); // id of the campaign from route
+  const storedSession = localStorage.getItem("session");
+  const session = storedSession ? JSON.parse(storedSession) : null;
 
   const showAccount = useShowController({ disableAuthentication: true });
 
@@ -131,12 +168,17 @@ const AccountCardTable = () => {
     return <></>;
   }
 
-  const handle = listHandles.data[0];
+  const handle = listHandles.data?.[0];
 
   return (
     <>
       <RecordContextProvider value={showAccount.record}>
         <Head1 sx={{ color: "primary.main" }}>{showAccount.record.name}</Head1>
+        {session?.admin && (
+          <Box mt="0.5em">
+            <EditButton resource="Account" record={showAccount.record} />
+          </Box>
+        )}
         {(handle?.status == "DISCONNECTED" ||
           handle?.status == "RECONNECTING") && (
           <Alert
@@ -148,16 +190,9 @@ const AccountCardTable = () => {
           </Alert>
         )}
         <HorizontalCardTable mt="2em">
-          {handle &&
-            (handle.currentScoringId ? (
-              <ScoringCardTable handle={handle} />
-            ) : (
-              <IconTextCard
-                title={`@${handle.username}`}
-                text="scoring_in_progress"
-                icon={XIcon}
-              />
-            ))}
+          {handle && (
+            <ReputationCardTable account={showAccount.record} handle={handle} />
+          )}
           {showAccount.record.totalCampaigns > 0 && (
             <FixedWidthCard elevation={10}>
               <CardContent>
@@ -181,6 +216,18 @@ const AccountCardTable = () => {
               <BadgeIcon sx={{ fontSize: 90, flexGrow: 1 }} />
               <AttributeTable>
                 <DateField source="createdAt" />
+                <FunctionField
+                  label={t("explorer.accounts.acceptance_status")}
+                  render={(record) =>
+                    acceptanceStatusChoices.find(
+                      (choice) => choice.id === record.acceptanceStatus,
+                    )?.name ?? record.acceptanceStatus
+                  }
+                />
+                <TextField
+                  source="invitedByName"
+                  label={t("explorer.accounts.invited_by")}
+                />
                 <AddressField source="addr" />
                 <AmountField
                   textAlign="right"
@@ -203,295 +250,326 @@ const AccountCardTable = () => {
   );
 };
 
-const ScoringCardTable = ({ handle }) => {
+export const AccountEdit = () => {
   const t = useTranslate();
+  const storedSession = localStorage.getItem("session");
+  const session = storedSession ? JSON.parse(storedSession) : null;
 
-  const showScoring = useShowController({
-    disableAuthentication: true,
-    resource: "HandleScoring",
-    id: handle.currentScoringId,
-  });
+  if (!session?.admin) {
+    return (
+      <Box id="asami-explorer">
+        <ExplorerLayout>
+          <Alert severity="error">{t("explorer.accounts.admin_only")}</Alert>
+        </ExplorerLayout>
+      </Box>
+    );
+  }
 
-  if (showScoring.isPending) {
+  return (
+    <Box id="asami-explorer">
+      <ResponsiveAppBar expandExplorer={true} />
+      <EditBase mutationMode="pessimistic">
+        <FunctionField
+          render={(r) => (
+            <Head1>
+              {t("explorer.accounts.review_member", { name: r.name })}
+            </Head1>
+          )}
+        />
+        <Card sx={{ mt: "1em" }}>
+          <SimpleForm
+            alignItems="stretch"
+            toolbar={
+              <Toolbar>
+                <SaveButton />
+              </Toolbar>
+            }
+          >
+            <Stack direction="row" gap="1em" flexWrap="wrap">
+              <SelectInput
+                sx={{ m: "0", flex: "1 1 260px" }}
+                source="acceptanceStatus"
+                choices={acceptanceStatusChoices}
+                label={t("explorer.accounts.acceptance_status")}
+              />
+              <ReferenceInput
+                sx={{ m: "0", flex: "2 1 360px" }}
+                source="invitedByAccountId"
+                reference="Account"
+                perPage={25}
+                filter={{ acceptanceStatusEq: "ACTIVE" }}
+                label={t("explorer.accounts.invited_by")}
+              >
+                <AutocompleteInput optionText="name" />
+              </ReferenceInput>
+            </Stack>
+            <Stack direction="row" gap="1em" flexWrap="wrap">
+              <NumberInput
+                sx={{ m: "0", flex: "1 1 260px" }}
+                source="invitesPerMonth"
+                label={t("explorer.accounts.invites_per_month")}
+              />
+              <NumberInput
+                sx={{ m: "0", flex: "1 1 260px" }}
+                source="availableInvites"
+                label={t("explorer.accounts.available_invites")}
+              />
+            </Stack>
+          </SimpleForm>
+        </Card>
+        <AccountCommunityMemberForm />
+      </EditBase>
+    </Box>
+  );
+};
+
+const scoreValueValidate = [required(), minValue(1), maxValue(10)];
+
+const AddToCommunityButton = () => {
+  const t = useTranslate();
+  const record = useRecordContext();
+  const dataProvider = useDataProvider();
+  const notify = useNotify();
+  const refresh = useRefresh();
+  const storedSession = localStorage.getItem("session");
+  const session = storedSession ? JSON.parse(storedSession) : null;
+
+  if (!session?.accountId || session.accountId == record?.id) {
+    return null;
+  }
+
+  const addMember = async () => {
+    try {
+      await dataProvider.create("CommunityMemberMembership", {
+        data: { memberId: record.id },
+      });
+      notify(t("community.member_added"), { type: "success" });
+      refresh();
+    } catch (error: any) {
+      notify(error?.message || t("community.member_add_failed"), {
+        type: "error",
+      });
+    }
+  };
+
+  return (
+    <Button
+      variant="text"
+      size="small"
+      onClick={addMember}
+      startIcon={<GroupAddIcon />}
+    >
+      {t("community.add_button")}
+    </Button>
+  );
+};
+
+const AccountCommunityMemberForm = () => {
+  const t = useTranslate();
+  const notify = useNotify();
+  const refresh = useRefresh();
+  const dataProvider = useDataProvider();
+  const { id } = useParams();
+  const showAccount = useShowController({ disableAuthentication: true, id });
+
+  if (showAccount.isPending || !showAccount.record) {
     return <></>;
   }
 
-  const scoring = showScoring.record;
+  const onSubmit = async (values) => {
+    try {
+      await dataProvider.create("CommunityMember", {
+        data: {
+          memberId: showAccount.record.id,
+          priority: !!values.priority,
+          alignment: Number(values.alignment),
+          trust: Number(values.trust),
+          contribution: Number(values.contribution),
+          advocacy: Number(values.advocacy),
+          judgment: Number(values.judgment),
+          rootstockJoinedAt: normalizeRootstockJoinedAt(values.rootstockJoinedAt),
+          comment: values.comment || null,
+        },
+      });
+      notify(t("explorer.accounts.score_created"), { type: "success" });
+      refresh();
+    } catch (error: any) {
+      notify(error?.message || t("explorer.accounts.score_failed"), {
+        type: "error",
+      });
+    }
+  };
+
+  return (
+    <Card sx={{ mt: "1em" }}>
+      <CardContent>
+        <Head2>{t("explorer.accounts.score_member")}</Head2>
+        <Lead>{t("explorer.accounts.score_member_description")}</Lead>
+        <Form
+          sanitizeEmptyValues
+          onSubmit={onSubmit}
+          defaultValues={{
+            priority: false,
+            alignment: 5,
+            trust: 5,
+            contribution: 5,
+            advocacy: 5,
+            judgment: 5,
+          }}
+        >
+          <BooleanInput
+            source="priority"
+            label={t("explorer.accounts.priority_override")}
+          />
+          <Stack direction="row" gap="1em" flexWrap="wrap">
+            <NumberInput
+              sx={{ m: "0", flex: "1 1 180px" }}
+              source="alignment"
+              validate={scoreValueValidate}
+            />
+            <NumberInput
+              sx={{ m: "0", flex: "1 1 180px" }}
+              source="trust"
+              validate={scoreValueValidate}
+            />
+            <NumberInput
+              sx={{ m: "0", flex: "1 1 180px" }}
+              source="contribution"
+              validate={scoreValueValidate}
+            />
+            <NumberInput
+              sx={{ m: "0", flex: "1 1 180px" }}
+              source="advocacy"
+              validate={scoreValueValidate}
+            />
+            <NumberInput
+              sx={{ m: "0", flex: "1 1 180px" }}
+              source="judgment"
+              validate={scoreValueValidate}
+            />
+          </Stack>
+          <Stack direction="row" gap="1em" flexWrap="wrap">
+            <TextInput
+              sx={{ m: "0", flex: "1 1 260px" }}
+              source="rootstockJoinedAt"
+              type="date"
+              validate={required()}
+              label={t("account_show.longevity_card_title")}
+            />
+            <TextInput
+              sx={{ m: "0", flex: "2 1 360px" }}
+              fullWidth
+              multiline
+              minRows={3}
+              source="comment"
+              label={t("explorer.accounts.score_comment")}
+            />
+          </Stack>
+          <Toolbar sx={{ px: 0 }}>
+            <SaveButton label={t("explorer.accounts.submit_score")} />
+          </Toolbar>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+};
+
+const ReputationCardTable = ({ account, handle }: any) => {
+  const t = useTranslate();
+  const scoreCardsReceived = account.scoresReceivedCount ?? 0;
+  const scoreCardsIssued = account.scoresIssuedCount ?? 0;
+  const formatted = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
+
+  const cards = [
+    {
+      title: "alignment_card_title",
+      icon: FavoriteIcon,
+      value: account.alignmentScore ?? account.baseAlignmentScore,
+    },
+    {
+      title: "trust_card_title",
+      icon: VerifiedIcon,
+      value: account.trustScore ?? account.baseTrustScore,
+    },
+    {
+      title: "contribution_card_title",
+      icon: ForumIcon,
+      value: account.contributionScore ?? account.baseContributionScore,
+    },
+    {
+      title: "advocacy_card_title",
+      icon: CampaignIcon,
+      value: account.advocacyScore ?? account.baseAdvocacyScore,
+    },
+    {
+      title: "judgment_card_title",
+      icon: Diversity1Icon,
+      value: account.judgmentScore ?? account.baseJudgmentScore,
+    },
+    {
+      title: "longevity_card_title",
+      icon: GrassIcon,
+      value:
+        formatted.format(account.rootstockLongevityScore) ??
+        formatted.format(account.rootstockSeniorityScore),
+    },
+  ];
 
   return (
     <>
-      <FixedWidthCard elevation={10}>
-        <CardContent>
-          <XIcon sx={{ fontSize: 30 }} />
-          <Box flexGrow="1" mt="1em">
-            <Typography
-              my="0.1em"
-              fontSize="1.1em"
-              fontFamily="'LeagueSpartanBold'"
-              lineHeight="1.1em"
-              letterSpacing="-0.05em"
-            >
-              {handle.username}
-            </Typography>
+      {cards.map(({ title, icon: Icon, value }) => (
+        <FixedWidthCard key={title}>
+          <CardContent>
+            <CardTitle>{t(`account_show.${title}`)}</CardTitle>
+            <Icon sx={{ fontSize: 82, margin: "26px" }} />
             <BigText sx={{ textAlign: "center" }}>
-              <Box id="score-value">{BigInt(handle.score)}</Box>
-              <Typography
-                fontSize="0.4em"
-                letterSpacing="0em"
-                marign="0"
-                padding="0"
-                fontWeight="100"
-                fontFamily="'LeagueSpartanLight'"
-                lineHeight="0.7em"
-                textTransform="uppercase"
-              >
-                {t("account_show.score")}
-              </Typography>
+              {value ?? t("account_show.not_scored_yet")}
             </BigText>
+          </CardContent>
+        </FixedWidthCard>
+      ))}
+      <FixedWidthCard>
+        <CardContent>
+          <CardTitle>{t("account_show.scores_title")}</CardTitle>
+          <BadgeIcon sx={{ fontSize: 82, margin: "26px" }} />
+          <Box sx={{ width: "100%" }}>
+            <AttributeTable
+              record={{
+                scoresReceived: scoreCardsReceived,
+                scoresIssued: scoreCardsIssued,
+                score: account.reputationScore,
+              }}
+            >
+              <NumberField
+                source="scoresReceived"
+                label={t("account_show.scores_received")}
+              />
+              <NumberField
+                source="scoresIssued"
+                label={t("account_show.scores_issued")}
+              />
+              <FunctionField
+                label={t("account_show.score")}
+                render={(record) =>
+                  record.score ?? t("account_show.not_scored_yet")
+                }
+              />
+            </AttributeTable>
           </Box>
-          <AttributeTable record={scoring}>
-            <NumberField source="audienceSize" />
-            <FunctionField
-              source="authority"
-              render={(h) => `${BigInt(h.authority)}%`}
-            />
-          </AttributeTable>
-          <AttributeTable record={handle}>
-            <NumberField source="totalCollabs" />
-            <AmountField
-              textAlign="right"
-              currency=""
-              source="totalCollabRewards"
-            />
-            <DateField source="lastScoring" emptyText="-" />
-          </AttributeTable>
         </CardContent>
       </FixedWidthCard>
-      <RecordContextProvider value={scoring}>
-        <OnlineEngagementCard scoring={scoring} />
-        <OfflineEngagementCard scoring={scoring} />
-        <AudiencePollCard scoring={scoring} />
-        <OperationalStatusCard scoring={scoring} />
-
-        {(scoring.referrerScore || scoring.referrerScoreOverride) && (
-          <IconTextCard
-            title="referrer_title"
-            text="referrer_text"
-            textParam={scoring.referrerScoreOverrideReason}
-            icon={GroupAddIcon}
-          />
-        )}
-
-        {(scoring.holderScore || scoring.holderScoreOverride) && (
-          <IconTextCard
-            title="holder_title"
-            text="holder_text"
-            textParam={scoring.holderScoreOverrideReason}
-            icon={DiamondIcon}
-          />
-        )}
-
-        {scoring.ghostAccount && (
-          <IconTextCard
-            color={red}
-            title="ghost_title"
-            text="ghost_text"
-            icon={SentimentNeutralIcon}
-          />
-        )}
-        {scoring.repostFatigue && (
-          <IconTextCard
-            color={red}
-            title="repost_fatigue_title"
-            text="repost_fatigue_text"
-            icon={SpeedIcon}
-          />
-        )}
-        {scoring.indeterminateAudience && (
-          <IconTextCard
-            color={red}
-            title="indeterminate_audience_title"
-            text="indeterminate_audience_text"
-            icon={SmartToyIcon}
-          />
-        )}
-        {scoring.followed && (
-          <IconTextCard
-            title="followed_title"
-            text="followed_text"
-            icon={Diversity1Icon}
-          />
-        )}
-        {scoring.liked && (
-          <IconTextCard
-            title="liked_title"
-            text="liked_text"
-            icon={FavoriteIcon}
-          />
-        )}
-        {scoring.replied && (
-          <IconTextCard
-            title="replied_title"
-            text="replied_text"
-            icon={ForumIcon}
-          />
-        )}
-        {scoring.reposted && (
-          <IconTextCard
-            title="reposted_title"
-            text="reposted_text"
-            icon={CachedIcon}
-          />
-        )}
-        {scoring.mentioned && (
-          <IconTextCard
-            title="mentioned_title"
-            text="mentioned_text"
-            icon={AlternateEmailIcon}
-          />
-        )}
-      </RecordContextProvider>
     </>
   );
 };
 
-const OnlineEngagementCard = ({ scoring }) => {
-  const score =
-    scoring.onlineEngagementOverride || scoring.onlineEngagementScore;
-
-  return (
-    <>
-      {score == "AVERAGE" && (
-        <IconTextCard
-          title="online_engagement.title"
-          text="online_engagement.average"
-          textParam={scoring.onlineEngagementOverrideReason}
-          icon={StarHalfIcon}
-        />
-      )}
-      {score == "HIGH" && (
-        <IconTextCard
-          title="online_engagement.title"
-          text="online_engagement.high"
-          textParam={scoring.onlineEngagementOverrideReason}
-          icon={StarIcon}
-        />
-      )}
-      {score == "NONE" && (
-        <IconTextCard
-          color={red}
-          title="online_engagement.title"
-          text="online_engagement.none"
-          textParam={scoring.onlineEngagementOverrideReason}
-          icon={SentimentVeryDissatisfiedIcon}
-        />
-      )}
-    </>
-  );
-};
-
-const OfflineEngagementCard = ({ scoring }) => {
-  return (
-    <>
-      {scoring.offlineEngagementScore == "AVERAGE" && (
-        <IconTextCard
-          title="offline_engagement_title"
-          text={scoring.offlineEngagementDescription || ""}
-          icon={GrassIcon}
-        />
-      )}
-      {scoring.offlineEngagementScore == "HIGH" && (
-        <IconTextCard
-          title="offline_engagement_title"
-          text={scoring.offlineEngagementDescription || ""}
-          icon={GrassIcon}
-        />
-      )}
-    </>
-  );
-};
-
-const AudiencePollCard = ({ scoring }) => {
-  const score = scoring.pollScoreOverride || scoring.pollScore;
-
-  return (
-    <>
-      {score == "HIGH" && (
-        <IconTextCard
-          title="audience_poll.title"
-          text="audience_poll.high"
-          textParam={scoring.pollOverrideReason}
-          icon={SentimentVerySatisfiedIcon}
-        />
-      )}
-      {score == "AVERAGE" && (
-        <IconTextCard
-          title="audience_poll.title"
-          text="audience_poll.average"
-          textParam={scoring.pollOverrideReason}
-          icon={SentimentSatisfiedIcon}
-        />
-      )}
-      {score == "REVERSE" && (
-        <IconTextCard
-          color={red}
-          title="audience_poll.title"
-          text="audience_poll.reverse"
-          textParam={scoring.pollOverrideReason}
-          icon={SentimentDissatisfiedIcon}
-        />
-      )}
-    </>
-  );
-};
-
-const OperationalStatusCard = ({ scoring }) => {
-  const score =
-    scoring.operationalStatusOverride || scoring.operationalStatusScore;
-
-  return (
-    <>
-      {(score == "BANNED" || score == "SHADOWBANNED") && (
-        <IconTextCard
-          color={red}
-          title="banned_title"
-          text="banned_text"
-          textParam={scoring.operationalStatusOverrideReason}
-          icon={VisibilityOffIcon}
-        />
-      )}
-      {score == "ENHANCED" && (
-        <IconTextCard
-          title="verified_title"
-          text="verified_text"
-          textParam={scoring.operationalStatusOverrideReason}
-          icon={VerifiedIcon}
-        />
-      )}
-    </>
-  );
-};
-
-const IconTextCard = ({ color, title, icon: Icon, text, textParam }) => {
-  const t = useTranslate();
-  return (
-    <FixedWidthCard color={color}>
-      <CardContent>
-        <CardTitle>{t(`account_show.${title}`, { _: title })}</CardTitle>
-        <Icon sx={{ fontSize: "100px", margin: "30px" }} />
-        <Box sx={{ flexGrow: "1" }} />
-        <Typography align="center" fontSize="0.9em" lineHeight="1.2em">
-          {t(`account_show.${text}`, { _: text, extra: textParam || "" })}
-        </Typography>
-      </CardContent>
-    </FixedWidthCard>
-  );
-};
-
-const FixedWidthCard = ({ id, color, children }) => {
+const FixedWidthCard = ({ id, color, children, ...props }: any) => {
   return (
     <Card
       id={id}
+      {...props}
       elevation={5}
       sx={{
         color: color,
@@ -506,7 +584,7 @@ const FixedWidthCard = ({ id, color, children }) => {
   );
 };
 
-const HorizontalCardTable = ({ children, ...props }) => (
+const HorizontalCardTable = ({ children, ...props }: any) => (
   <Box
     sx={{
       display: "flex",

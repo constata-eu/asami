@@ -1,0 +1,266 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE campaigns SET (id, \naccount_id, \nadvertiser_addr, \nstatus, \nbriefing_hash, \nbriefing_json, \nbudget, \nkind, \nmax_individual_reward, \nthumbs_up_only, \nvalid_until, \ncollabs_gathered_at, \nrewards_assigned_at, \nreport_hash, \ncreated_at, \nforce_hydrate, \ntotal_collabs, \ntotal_spent, \ntotal_budget, \nimpression_count, \nreply_count, \nrepost_count, \nlike_count, \nx_announcement_id_es, \nx_announcement_id_en) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE account_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE advertiser_addr END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE status END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE briefing_hash END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE briefing_json END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE budget END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE kind END), (CASE $18::boolean WHEN TRUE THEN $19 ELSE max_individual_reward END), (CASE $20::boolean WHEN TRUE THEN $21 ELSE thumbs_up_only END), (CASE $22::boolean WHEN TRUE THEN $23 ELSE valid_until END), (CASE $24::boolean WHEN TRUE THEN $25 ELSE collabs_gathered_at END), (CASE $26::boolean WHEN TRUE THEN $27 ELSE rewards_assigned_at END), (CASE $28::boolean WHEN TRUE THEN $29 ELSE report_hash END), (CASE $30::boolean WHEN TRUE THEN $31 ELSE created_at END), (CASE $32::boolean WHEN TRUE THEN $33 ELSE force_hydrate END), (CASE $34::boolean WHEN TRUE THEN $35 ELSE total_collabs END), (CASE $36::boolean WHEN TRUE THEN $37 ELSE total_spent END), (CASE $38::boolean WHEN TRUE THEN $39 ELSE total_budget END), (CASE $40::boolean WHEN TRUE THEN $41 ELSE impression_count END), (CASE $42::boolean WHEN TRUE THEN $43 ELSE reply_count END), (CASE $44::boolean WHEN TRUE THEN $45 ELSE repost_count END), (CASE $46::boolean WHEN TRUE THEN $47 ELSE like_count END), (CASE $48::boolean WHEN TRUE THEN $49 ELSE x_announcement_id_es END), (CASE $50::boolean WHEN TRUE THEN $51 ELSE x_announcement_id_en END)) WHERE id = $1 RETURNING id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nadvertiser_addr as \"advertiser_addr!: String\", \nstatus as \"status!: CampaignStatus\", \nbriefing_hash as \"briefing_hash!: String\", \nbriefing_json as \"briefing_json!: String\", \nbudget as \"budget!: String\", \nkind as \"kind!: CampaignKind\", \nmax_individual_reward as \"max_individual_reward!: String\", \nthumbs_up_only as \"thumbs_up_only!: bool\", \nvalid_until as \"valid_until!: Option < UtcDateTime >\", \ncollabs_gathered_at as \"collabs_gathered_at!: Option < UtcDateTime >\", \nrewards_assigned_at as \"rewards_assigned_at!: Option < UtcDateTime >\", \nreport_hash as \"report_hash!: Option < String >\", \ncreated_at as \"created_at!: UtcDateTime\", \nforce_hydrate as \"force_hydrate!: bool\", \ntotal_collabs as \"total_collabs!: i32\", \ntotal_spent as \"total_spent!: String\", \ntotal_budget as \"total_budget!: String\", \nimpression_count as \"impression_count!: i32\", \nreply_count as \"reply_count!: i32\", \nrepost_count as \"repost_count!: i32\", \nlike_count as \"like_count!: i32\", \nx_announcement_id_es as \"x_announcement_id_es!: Option < String >\", \nx_announcement_id_en as \"x_announcement_id_en!: Option < String >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "advertiser_addr!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "status!: CampaignStatus",
+        "type_info": {
+          "Custom": {
+            "name": "campaign_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "awaiting_payment",
+                "paid",
+                "submitted",
+                "published",
+                "failed"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "briefing_hash!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "briefing_json!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "budget!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "kind!: CampaignKind",
+        "type_info": {
+          "Custom": {
+            "name": "campaign_kind",
+            "kind": {
+              "Enum": [
+                "x_repost",
+                "ig_clone_post",
+                "community_giveaway"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "max_individual_reward!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "thumbs_up_only!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "valid_until!: Option < UtcDateTime >",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 11,
+        "name": "collabs_gathered_at!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "rewards_assigned_at!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 13,
+        "name": "report_hash!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 14,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 15,
+        "name": "force_hydrate!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 16,
+        "name": "total_collabs!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 17,
+        "name": "total_spent!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 18,
+        "name": "total_budget!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 19,
+        "name": "impression_count!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 20,
+        "name": "reply_count!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 21,
+        "name": "repost_count!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 22,
+        "name": "like_count!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 23,
+        "name": "x_announcement_id_es!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 24,
+        "name": "x_announcement_id_en!: Option < String >",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "campaign_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "awaiting_payment",
+                "paid",
+                "submitted",
+                "published",
+                "failed"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Text",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "campaign_kind",
+            "kind": {
+              "Enum": [
+                "x_repost",
+                "ig_clone_post",
+                "community_giveaway"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Timestamp",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "1171060cd5c581b6a2555f5436956f1348b13075ad841cc7f74adbe69eeac1b8"
+}

@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM weekly_score_picks WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR id <> ALL(CAST($6 as int4[])) ) AND (NOT $7::boolean OR target_account_id = $8::varchar) AND (NOT $9::boolean OR created_by_account_id = $10::varchar) AND ($11::boolean IS NULL OR (($11::boolean AND created_by_account_id IS NOT NULL) OR (NOT $11::boolean AND created_by_account_id IS NULL))) AND (NOT $12::boolean OR starts_at = $13::timestamptz) AND (NOT $14::boolean OR ends_at = $15::timestamptz) AND (NOT $16::boolean OR created_at = $17::timestamptz)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "415ba132ced9bcac34369bfab49f1f53cb5e98435e9e833c500db60df6e23c77"
+}

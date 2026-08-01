@@ -23,7 +23,7 @@
     "CommunityMember": {
       "fields": {
         "memberId": "Miembro",
-        "accountId": "Anunciante",
+        "accountId": "Creador de campaña",
         "rewards": "DOC total recibido",
         "collabs": "Colaboraciones",
         "firstCollabDate": "Primera vez",
@@ -40,6 +40,7 @@
     "Campaign": {
       "fields": {
         "briefingJson": "ID en X",
+        "kind": "Tipo de campaña",
         "status": "Estado",
         "totalCollabs": "Colaboraciones",
         "collabs": "Colaboraciones",
@@ -57,6 +58,10 @@
         "statusEq": "estado es",
         "statusNe": "estado no es"
       },
+      "kinds": {
+        "X_REPOST": "Repost en X",
+        "COMMUNITY_GIVEAWAY": "Giveaway comunitario"
+      },
       "statuses": {
         "DRAFT": "Borrador",
         "AWAITING_PAYMENT": "Pendiente de pago",
@@ -70,7 +75,7 @@
       "fields": {
         "username": "Usuario en X",
         "userId": "ID en X",
-        "score": "Nivel de influencia",
+        "score": "Puntaje de reputación",
         "status": "Estado",
         "totalCollabs": "Colaboraciones",
         "totalCollabRewards": "Total cobrado",
@@ -80,7 +85,7 @@
         "usernameLike": "por usuario en X",
         "accountIdEq": "por miembro",
         "topic": "Categorias",
-        "lastScoring": "Última medición"
+        "lastScoreUpdate": "Última actualización de puntaje"
       }
     },
     "Collab": {
@@ -90,15 +95,15 @@
         "reward": "Recompensa",
         "fee": "Comisión",
         "status": "Estado",
-        "advertiserId": "Anunciante",
+        "advertiserId": "Creador de campaña",
         "memberId": "Divulgador",
         "disputeReason": "Detalle adicional",
         "collabTriggerUniqueId": "Disparador en X",
         "idEq": "por ID",
         "campaignIdEq": "por campaña",
         "handleIdEq": "por cuenta",
-        "advertiserIdEq": "por anunciante",
-        "memberIdEq": "por divulgador",
+        "advertiserIdEq": "por creador de campaña",
+        "memberIdEq": "por miembro",
         "collabTriggerUniqueIdLike": "por disparador",
         "statusEq": "estado es",
         "statusNe": "estado no es",
@@ -109,7 +114,7 @@
       "fields": {
         "totalActiveMembers": "Miembros del club",
         "totalSignups": "Total registrados",
-        "advertisers": "Anunciantes",
+        "advertisers": "Creadores de campaña",
         "totalActiveHandles": "Total histórico",
         "currentlyActive": "Actualmente activos",
         "joinedRecently": "Menos de 30 días de antigüedad",
@@ -134,9 +139,9 @@
           "button": "Explorar Miembros"
         },
         "active_handles": {
-          "title": "DIVULGADORES",
+          "title": "PARTICIPANTES",
           "subtitle": "con al menos una colaboración",
-          "button": "Explorar divulgadores"
+          "button": "Explorar participantes"
         },
         "campaigns": {
           "title": "CAMPAÑAS",
@@ -197,7 +202,7 @@
   },
   "campaign_list": {
     "title": "Tus Campañas",
-    "text": "Los divulgadores amplificarán tu contenido hasta que el presupuesto se acabe. Si sobran fondos se devolverán luego de la fecha de fin de campaña.",
+    "text": "Asami reunirá a los participantes y asignará recompensas según el tipo de campaña. Los fondos no usados se devuelven cuando la campaña termina.",
     "see_post": "Ver Post",
     "kind": "Tipo",
     "post": "Post",
@@ -210,29 +215,65 @@
       "stopped": "Detenida."
     }
   },
-  "campaign_request_list": {
-    "title": "Pagos en Stripe",
-    "go_to_stripe": "Pagar"
-  },
   "claim_account": {
     "success": "El administrador the entregará el control de tu cuenta pronto.",
     "error": "Ups, no pudimos recibir tu pedido. Por favor contáctate con el administrador en X."
   },
   "advertiser_help": {
-    "title": "Fondea, Impulsa, Crece.",
-    "text": "Consigue más vistas en tus publicaciones lanzando una campaña. Tú eliges una publicación, defines el presupuesto y llegas a personas reales con reposts auténticos. Los colaboradores que participan reciben un pago según su influencia real y el tamaño de su audiencia, ayudándote a lograr un alcance que realmente vale la pena."
+    "title": "Agradece, activa, crece.",
+    "text": "Asami es el club para comunidades que aprecian a sus miembros. Lanza una campaña para recompensar reposts auténticos hoy, y pronto también otras formas de participación. La idea no es comprar atención de extraños, sino ayudar a las comunidades a reconocer a quienes ya les aportan valor."
   },
   "community": {
     "title": "Tu comunidad",
-    "description": "¡Estos divulgadores ayudaron a amplificar tus campañas! Elige a tus favoritos para invitarlos a campañas exclusivas — o marca a quienes prefieras no volver a incluir.",
-    "rating_success": "Calificación guardada"
+    "description": "Estos miembros forman parte de tu comunidad. Usa esta lista para seguir a quienes colaboran contigo, a quienes confías y a quienes quieres incluir en futuras campañas para la comunidad.",
+    "manage_title": "Haz crecer tu comunidad",
+    "manage_text": "Suma gente que ya está en Asami o invita a alguien nuevo a unirse a tu comunidad.",
+    "add_existing_title": "Agregar un Rootstocker existente",
+    "add_existing_text": "Busca miembros activos y agrégalos a tu comunidad para incluirlos en campañas dirigidas a la comunidad.",
+    "search_members": "Buscar miembros activos",
+    "add_existing_button": "Agregar alguien desde Asami",
+    "add_button": "Aceptar",
+    "member_added": "Miembro agregado a tu comunidad.",
+    "member_add_failed": "No pudimos agregar este miembro a tu comunidad.",
+    "invite_title": "Invitar a un nuevo Rootstocker",
+    "invite_text": "Crea un enlace de invitación y califícalo al mismo tiempo. La cuenta invitada se sumará a tu comunidad en cuanto use la invitación.",
+    "invite_button": "Invitar a un miembro",
+    "invite_page_title": "Invitar a un nuevo Rootstocker",
+    "invite_page_text": "Crea un enlace de invitación y califícalo al mismo tiempo. La cuenta invitada se sumará a tu comunidad en cuanto use la invitación.",
+    "create_invite_button": "Crear invitación",
+    "invitation_created": "Invitación creada.",
+    "copy_invite_button": "Copiar enlace de invitación",
+    "invitation_copied": "Enlace de invitación copiado.",
+    "rating_success": "Calificación guardada",
+    "empty": "Tu comunidad está vacía.",
+    "available_invites": "%{count} invitaciones disponibles en este momento.",
+    "no_invites": "No tienes invitaciones disponibles en este momento.",
+    "invite_fields": {
+      "name": "Nombre",
+      "alignment": "Alineación",
+      "alignment_help": "Qué tan bien encaja esta persona con Rootstock y con la cultura del club.",
+      "trust": "Confianza",
+      "trust_help": "Si es alguien honesto, confiable y seguro de invitar.",
+      "contribution": "Contribución",
+      "contribution_help": "Cuánto valor real le aporta a las comunidades.",
+      "advocacy": "Advocacy",
+      "advocacy_help": "Qué tan bien ayuda a difundir y apoyar a las comunidades.",
+      "judgment": "Criterio",
+      "judgment_help": "Qué tan buen criterio tiene para apoyar lo que realmente vale la pena.",
+      "rootstock_joined_at": "Rootstocker desde",
+      "rootstock_joined_at_help": "Ingresa la fecha en la que se sumó al ecosistema Rootstock.",
+      "comment": "Carta de recomendación",
+      "comment_help": "Explica por qué lo estás invitando y por qué debería estar en el club."
+    }
   },
   "collab_list": {
-    "title": "Tu histórico de colaboraciones",
-    "text": "Estas son tus colaboraciones a la fecha",
+    "title": "Tu actividad de colaboraciones",
+    "text": "Una vista continua de las campañas en las que ayudaste y las recompensas que recibiste.",
     "see_post": "Ver post",
     "reward": "Recompensa",
     "fee": "Comisión de Asami",
+    "campaign": "Campaña",
+    "community": "Comunidad",
     "statuses": {
       "REGISTERED": {
         "title": "Registrada",
@@ -248,19 +289,24 @@
       }
     }
   },
+  "scoring_tasks": {
+    "title": "Personas que puedes puntuar",
+    "description": "Estos son los Rootstockers que el club actualmente te permite puntuar.",
+    "score": "Puntuar",
+    "skip": "Omitir",
+    "submit": "Enviar puntaje",
+    "dialog_title": "Puntuar a %{name}",
+    "until": "Disponible hasta %{date}",
+    "score_success": "Puntaje guardado.",
+    "score_error": "No se pudo guardar este puntaje.",
+    "skip_success": "La puntuación fue omitida por ahora.",
+    "skip_error": "No se pudo omitir esta tarea de puntuación.",
+    "reasons": {
+      "weekly_pick": "Fue seleccionado como uno de los miembros para revisar esta semana.",
+      "campaign_reward": "Ya recompensaste a este miembro con más de 1 DOC en tus campañas."
+    }
+  },
   "make_campaign": {
-    "with_stripe": {
-      "title": "Usar Stripe",
-      "text": "Puedes pagar tu campaña con tarjeta de crédito o débito. Una parte del presupuesto se usará para cubrir comisiones por el procesamiento del pago, y no recibirás tokens Asami — pero los divulgadores igual serán pagados en DOC, igual que en las campañas on-chain.",
-      "create_button": "Pagar con Stripe",
-      "form_title": "Lo que debes saber antes de lanzar",
-      "service_summary": "Tu campaña se activará en cuanto la envíes. Es posible que tu wallet te pida autorización para usar DOC antes de continuar. Las campañas duran 15 días, y cualquier DOC no utilizado se devolverá automáticamente a tu wallet al finalizar.<br/>Los divulgadores reciben pagos en DOC según su nivel de influencia, lo que te ayuda a llegar a las audiencias más relevantes.<br/><strong>Importante: no hay reembolsos — incluso si no estás satisfecho con los resultados.</strong> Te recomendamos empezar con un presupuesto pequeño de 50 DOC para ver cómo funciona Asami según tus objetivos.",
-      "done": {
-        "title": "Solo falto un paso",
-        "text": "Hemos recibido los detalles de tu campaña. Solo falta completar el pago. Una vez recibido, la campaña puede tardar hasta 24 horas en activarse.",
-        "go_to_stripe": "Continuar el pago"
-      }
-    },
     "with_doc": {
       "title": "Usar DOC",
       "claim_to_use": "Pagar tu campaña con DOC cuesta 20% menos y además ganas tokens ASAMI por cada repost. DOC es una stablecoin totalmente descentralizada en la blockchain de Rootstock, así que necesitarás una wallet compatible — como Beexo, MetaMask, Enkrypt o Rabby — para poder usarlo.",
@@ -271,48 +317,18 @@
       "doc_funded": "Aún no tienes DOC en tu wallet. Para comenzar, puedes mintearlo con RBTC o hacer un swap usando protocolos compatibles.",
       "get_doc": "Conseguir DOC ahora",
       "form_title": "Lo que debes saber antes de lanzar",
-      "service_summary": "Tu campaña se activará en cuanto la envíes. Es posible que tu wallet te pida autorización para usar DOC antes de continuar.<br/>Los colaboradores reciben pagos en DOC según su nivel de influencia, lo que te ayuda a llegar a las audiencias más relevantes.<br/><strong>Importante: no hay reembolsos — incluso si no estás satisfecho con los resultados.</strong>. Recomendamos comenzar con un presupuesto pequeño de 30 DOC para ver cómo funciona Asami según tus objetivos.",
+      "service_summary": "Tu campaña se activará en cuanto la envíes. Es posible que tu wallet te pida autorización para usar DOC antes de continuar.<br/>Las campañas de repost duran 20 días fijos y se liquidan durante los últimos 5 días. Los giveaways comunitarios toman a sus destinatarios desde tu comunidad y asignan recompensas según score.<br/><strong>Importante: no hay reembolsos — incluso si no estás satisfecho con los resultados.</strong>. Recomendamos comenzar con un presupuesto pequeño de 30 DOC para ver cómo funciona Asami según tus objetivos.",
       "get_doc_link": "https://moneyonchain.com/es/blog/quiero-mi-doc/",
       "continue": "Continuar",
       "continue_title": "Finaliza tu pago en DOC",
       "continue_warning": "Por favor, asegúrate de no pagar dos veces. Si tu wallet indica que ya has realizado el pago, solo espera a que recibamos la notificación de tu pago desde la blockchain—no es necesario que pagues de nuevo. Si el proceso de publicación de la campaña se interrumpió, por ejemplo, debido a fondos insuficientes o errores en la wallet, es seguro intentar pagar de nuevo. Siempre verifica con tu wallet: si muestra que has pagado, entonces tu pago está confirmado.",
-      "extend": {
-        "title": "Extiende la duración de tu campaña",
-        "description": "Tu campaña dejará de aceptar nuevas colaboraciones cuando llegue la fecha límite. Extiéndela sumando más días para que más personas tengan tiempo de unirse y ganar recompensas. Recuerda: solo puedes extenderla, no acortarla.",
-        "field_label": "Cuantos días quieres extender?",
-        "field_help": "Por ejemplo, si pones 10, serán 10 días a partir de hoy.",
-        "button": "Extender",
-        "errors": {
-          "too_low": "Extiende al menos por un día.",
-          "shorter_than_original": "La campaña ya tiene una duración superior a los días que pusiste."
-        },
-        "waiter_title": "Extendiendo tu campaña…",
-        "waiter_text": "Continúa en tu wallet para aprobar la extensión de la campaña",
-        "done_title": "Campaña extendida.",
-        "done_text": "La fecha de finalización de tu campaña se extendió. Puede tardar unos momentos en reflejarse mientras la transacción se confirma en la cadena. Una vez que se alcance la nueva fecha límite, los fondos no utilizados se reembolsarán automáticamente. Si quieres recompensar más colaboraciones y agradecer a tus divulgadores, también puedes recargar el presupuesto de la campaña.",
-        "see_in_explorer": "Ver transacción en el explorador de bloques"
-      },
-      "top_up": {
-        "title": "Agrega fondos a tu campaña.",
-        "description": "Si se termina el presupuesto, los divulgadores no reciben recompensa, aunque hagan repost.",
-        "field_label": "¿Cuántos DOC quieres agregar?",
-        "field_help": "Las reglas de participación serán las mismas, solo se aumenta el presupuesto.",
-        "button": "Agregar fondos",
-        "approval_waiter_title": "Aprueba el gasto para agregar fondos a tu campaña.",
-        "approval_waiter_text": "Abre tu wallet para aprobar este gasto de DOC desde Asami.",
-        "waiter_title": "Agregando fondos…",
-        "waiter_text": "Finaliza la operación en tu wallet para agregar los fondos.",
-        "done_title": "Fondos agregados.",
-        "done_text": "Ahora tu campaña tiene más fondos para agradecer por la divulgación. Esto puede tardar unos momentos en reflejarse mientras la transacción se confirma en la cadena.",
-        "see_in_explorer": "Ver transacción en el explorador de bloques"
-      },
       "done": {
         "title": "Campaña creada",
         "text": "Tu campaña ha sido creada. Puede tardar unos minutos en aparecer en tu panel de control.",
         "see_in_explorer": "Ver transacción en el explorador de bloques"
       }
     },
-    "pay_members": "Haz que los divulgadores amplifiquen cualquier post de X.",
+    "pay_members": "Reconoce a los miembros alrededor de cualquier post de X.",
     "start_campaign": "Iniciar campaña",
     "close": "Cerrar",
     "i_changed_my_mind": "Cambié de idea",
@@ -321,37 +337,32 @@
     "errors": {
       "budget_too_low": "El presupuesto es demasiado bajo, debe ser al menos 1 DOC",
       "budget_not_a_number": "El presupuesto debe ser un número",
-      "duration_days_too_low": "Duración muy corta, debe ser al menos un día",
-      "duration_days_not_a_number": "Duración debe ser un número de días",
-      "price_per_point_not_a_number": "El precio por impresión no es un número",
-      "price_per_point_too_low": "El precio por impresión es muy bajo",
       "max_too_low": "La recompensa máxima es muy baja",
       "max_not_a_number": "La recompensa máxima no es un número",
-      "min_too_low": "La recompensa mínima es muy baja",
-      "min_not_a_number": "La recompensa mínima no es un número",
       "not_a_post_url": "El enlace que proporcionaste no parece ser un post de X.",
-      "invalid_url": "El enlace debe apuntar a un post y comenzar con https://..."
+      "invalid_url": "El enlace debe apuntar a un post y comenzar con https://...",
+      "select_members": "Elige al menos un miembro o usa toda tu comunidad."
     },
     "form_step": {
       "content_url": "Enlace al post de X que deseas promocionar",
       "content_url_help": "Pega el enlace aquí. Lo encontrarás en el menú “Compartir” de X. <a target='_blank' href='https://help.x.com/es/using-x/post-and-moment-url'>¿Necesitas ayuda?</a>",
       "budget": "Presupuesto total en DOC)",
       "budget_help": "Mínimo 1 DOC, sugerimos entre 30–250 DOC.",
-      "duration_days": "Duración, en días.",
-      "duration_days_help": "El presupuesto que sobre se devolverá a tu wallet.",
+      "fixed_duration": "Duración fija",
+      "fixed_duration_help": "Las campañas de repost duran siempre 20 días. Los miembros dejan de verlas durante los últimos 5 días para poder liquidarlas antes del vencimiento del contrato.",
       "managed_amount": "USD a gastar",
       "managed_amount_help": "Mínimo $10, sugerimos $50–$300.",
       "start_campaign": "Iniciar campaña",
-      "price_per_point": "DOC por punto de influencia.",
-      "price_per_point_help": "Define cuánto deseas pagar por el alcance. Cada punto estima una persona que recibe tu mensaje. 0.01 significa que pagas 10 DOC por aproximadamente 1.000 personas alcanzadas.",
-      "max_individual_reward": "Máximo por divulgador",
-      "max_individual_reward_help": "Nadie recibirá más que este total, sin importar su alcance.",
-      "min_individual_reward": "Mínimo por divulgador",
-      "min_individual_reward_help": "Útil para apoyar a divulgadores con poco alcance con un pago garantizado.",
+      "all_members": "Todos los miembros de mi comunidad",
+      "all_members_help": "Usa toda tu comunidad actual en vez de seleccionar personas manualmente.",
+      "selected_members": "Miembros seleccionados",
+      "selected_members_help": "Solo estos miembros recibirán el giveaway.",
+      "max_individual_reward": "Máximo por miembro",
+      "max_individual_reward_help": "Para campañas de repost, nadie recibirá más que este monto cuando las recompensas se prorrateen cinco días antes del vencimiento.",
       "topics": "¿Quiénes pueden participar?",
       "topics_help": "Déjalo en blanco si todos pueden participar.",
       "thumbs_up_only": "Solo aprobados",
-      "thumbs_up_only_help": "Solo lo verán divulgadores que hayas aprobado."
+      "thumbs_up_only_help": "Solo lo verán miembros que hayas aprobado."
     },
     "tx_waiter": {
       "approving_title": "Aprobación del gasto del presupuesto",
@@ -366,7 +377,7 @@
       "action_rejected": "Parece que cancelaste la creación de la campaña en tu cartera, intenta de nuevo si todavía estás interesado.",
       "wrong_signer": "¿Cambiaste tu cuenta de cartera? Estás usando Asami con %{expected} pero tu cartera está usando %{actual}. Cambia la cuenta conectada de tu cartera a %{expected} e intenta de nuevo.",
       "unexpected_error": "Ocurrió un error inesperado, contáctanos en X y reenvía la información del error.",
-      "campaign_already_exists": "Ese post de X ya es una campaña. Si es tu propia campaña, puedes agregarle presupuesto y extenderla.",
+      "campaign_already_exists": "Ese post de X ya es una campaña.",
       "copy_info": "Copiar detalles del error",
       "info_copied": "Detalles del error copiados al portapapeles",
       "title": "Creación de campaña cancelada"
@@ -379,12 +390,12 @@
       "content": "No volveremos a ofrecerte esta campaña, esta acción no puede deshacerse."
     },
     "header": {
-      "title": "Te paga $%{amount}",
+      "title": "Hasta $%{amount}",
       "subheader": "menos gastos"
     },
     "x": {
-      "main_button": "Repostea y cobra",
-      "attempted": "Ahora solo espera, a Asami le puede tomar hasta una hora registrar tu repost"
+      "main_button": "Repostea para sumarte",
+      "attempted": "Tu intento de repost quedó guardado. Si sigue existiendo cuando la campaña cierre, Asami lo verificará y te incluirá en el reparto final."
     }
   },
   "title_card": {
@@ -400,19 +411,19 @@
       "username": "Nombre de usuario",
       "user_id": "ID de usuario",
       "price_per_repost": "Precio por republicación",
-      "score": "Nivel de influencia",
+      "score": "Puntaje de reputación",
       "locked_until": "Valores vigentes hasta"
     },
     "x": {
       "will_do_it_later": "Lo haré luego",
       "grant_permissions_and_make_posts": {
-        "summary": "Vincula tu cuenta de X para obtener tu puntuación de influencia — es rápido, revelador y te permite participar en campañas de divulgación Web3.",
+        "summary": "Vincula tu cuenta de X para participar en campañas de repost y verificar tus reposts cuando las comunidades los aprecian.",
         "you_will_earn_rewards": "Verás campañas para amplificar. Comparte lo que encaje contigo, salte de lo que no — y recibe un poco de DOC y tokens ASAMI como agradecimiento.",
         "get_started": "Empezar",
-        "dialog_title": "Obtén tu lectura personalizada de influencia",
-        "we_will_check_your_activity": "Vamos a revisar tu actividad en X para medir tu audiencia e influencia según tus interacciones.",
-        "we_will_post_a_poll": "Publicaremos una encuesta en tu nombre para que tu audiencia pueda valorar tu influencia. Puedes eliminarla si no quieres participar, pero eso podría afectar tu puntaje.",
-        "you_can_revoke": "Puedes revocar los permisos en cualquier momento desde X y reiniciar tu influencia.",
+        "dialog_title": "Conecta X para participar en campañas",
+        "we_will_check_your_activity": "Usamos X solo para iniciar sesión y verificar reposts en campañas basadas en repost.",
+        "we_will_post_a_poll": "Tu puntaje de reputación ahora proviene de puntajes enviados por miembros del club, no de analíticas de X ni encuestas de audiencia.",
+        "you_can_revoke": "Puedes revocar los permisos en cualquier momento desde X. Si lo haces, las campañas basadas en repost dejarán de funcionar hasta que reconectes.",
         "help_text": "¿Necesitas ayuda? Pregunta a nuestro <a href=\"https://robot.asami.club\" target=\"_blank\" rel=\"noopener\">chatbot</a> o únete a nuestro <a href=\"https://t.me/asami_club\" target=\"_blank\" rel=\"noopener\">grupo de Telegram</a>.",
         "lets_go": "Hagámoslo ahora"
       },
@@ -431,10 +442,10 @@
         "copy": "Copiar enlace"
       },
       "in_progress": {
-        "summary": "Estamos midiendo tu influencia @%{username}, esto puede tardar hasta 5 horas.",
-        "dialog_title": "Midiendo la influencia de @%{username}",
-        "may_take_up_to_an_hour": "Tu lectura de influencia puede tardar hasta 5 horas en estar listo.",
-        "check_the_poll": "Mientras tanto, revisa tu perfil de X para ver la encuesta que acabamos de publicar por ti — los votos de tu audiencia ayudarán a definir tu puntaje. O si no te gusta, puedes borrarla.",
+        "summary": "Estamos terminando la conexión de X para @%{username}. Esto puede tardar algunas horas.",
+        "dialog_title": "Terminando la conexión de X para @%{username}",
+        "may_take_up_to_an_hour": "Puede tardar hasta 5 horas en quedar habilitadas las campañas basadas en repost.",
+        "check_the_poll": "Tu puntaje del club ahora proviene de puntajes de otros miembros, así que no hay ninguna encuesta de audiencia que completar.",
         "got_it": "Entendido"
       },
       "reconnecting": {
@@ -446,7 +457,7 @@
       "grant_permissions_again": {
         "summary": "Perdimos acceso a tu cuenta de X. Vuelve a conectarla para seguir colaborando.",
         "dialog_title": "Perdimos acceso a tu cuenta de X",
-        "cant_measure": "No podemos medir tu influencia en este momento, así que no podrás participar en campañas hasta que vuelvas a conectar tu cuenta.",
+        "cant_measure": "No podemos verificar tu actividad de repost en este momento, así que no podrás participar en campañas basadas en repost hasta que vuelvas a conectar tu cuenta.",
         "please_reconnect": "Por favor, vuelve a conectar tu cuenta de X para recuperar el acceso y seguir colaborando en campañas.",
         "reconnect": "Reconectar",
         "later": "Lo haré más tarde"
@@ -506,29 +517,30 @@
     "message": "¡Vuelve a fijarte pronto!"
   },
   "your_post_here": {
-    "lead": "Fondea • Impulsa • Crece",
-    "title": "Impulsa tus publicaciones con divulgadores.",
-    "one": "Tu proyecto llega a divulgadores reales y verificados que te ayudan a crecer con reposts — y reciben una pequeña recompensa como agradecimiento.",
-    "two": "Paga con DOC — o con tarjeta de crédito si no hay otra.",
+    "lead": "Agradece • Activa • Crece",
+    "title": "Lanza campañas para tu comunidad.",
+    "one": "Tu comunidad puede reconocer reposts y otras formas de divulgación y participación genuina con recompensas transparentes en DOC.",
+    "two": "Usa DOC para lanzar campañas y agradecer a quienes ya ayudan a mover tu comunidad.",
     "button": "Iniciar una campaña"
   },
   "join_now": {
-    "lead": "Elige • Comparte • Gana",
-    "title": "Obtén tu lectura de influencia única.",
-    "one": "Descubre tu impacto en X con una lectura divertida y única — ¿tienes potencial para divulgar?",
-    "two": "Elige proyectos Web3 que creas que merecen tu ayuda, repostea sus campañas en X y gana un poco de DOC y ASAMI como agradecimiento.",
-    "button": "Únete al club — Es gratis"
+    "lead": "Elige • Comparte • Participa",
+    "title": "Entra al club por invitación o lista de espera.",
+    "one": "Como Rootstocker, puedes apoyar a las comunidades que valoras y recibir reconocimiento cuando tu participación aporta de verdad.",
+    "two": "Vincula tu cuenta de X, participa en campañas elegibles y construye tu reputación dentro del club.",
+    "button": "Aplicar o entrar con invitación"
   },
   "login_form": {
     "title": "¿Vas a entrar?",
-    "read_our_terms": "Lee nuestros términos. Si estás de acuerdo, elige cómo quieres ingresar .",
+    "read_our_terms": "Lee nuestros términos. Si estás de acuerdo, continúa si ya perteneces al club. Los nuevos miembros entran por invitación, o pueden aplicar a la lista de espera por separado.",
     "read_terms_button": "Quiero leer los términos primero",
     "x_login_button": "• aceptar e ingresar",
     "email_login_button": "Email • aceptar e ingresar",
     "rsk_login_button": "RSK Wallet • aceptar e ingresar",
+    "waitlist_button": "Aplicar a la lista de espera",
     "x_mobile_warning": {
       "title": "El inicio de sesión con X a veces falla en el móvil.",
-      "text": "Esto ocurre cuando se abre la app de X en lugar del navegador. Si no funciona, prueba iniciar sesión desde una laptop, usar Email o Web3, o desactiva temporalmente la apertura automática de enlaces en los ajustes de la app de X para que se abra en el navegador."
+      "text": "Esto ocurre cuando se abre la app de X en lugar del navegador. Si no funciona, prueba iniciar sesión desde una laptop, usar tu billetera de Rootstock, o desactiva temporalmente la apertura automática de enlaces en los ajustes de la app de X para que se abra en el navegador."
     },
     "send_email_token": {
       "title": "Escribe tu correo y te enviaremos un enlace para iniciar sesión.",
@@ -547,6 +559,23 @@
     },
     "wallet_connect": "Conectando via Beexo"
   },
+  "waitlist": {
+    "title": "Aplicar a la lista de espera",
+    "text": "Si todavía no tienes una invitación, cuéntanos quién eres y comparte algunos enlaces públicos. Las solicitudes se revisan manualmente y no hay garantía de aceptación.",
+    "submit": "Enviar solicitud",
+    "success": "Solicitud recibida.",
+    "error": "No pudimos guardar tu solicitud.",
+    "review_note": "Aplicar no crea una cuenta ni una sesión. Si te aceptan, recibirás un enlace de invitación.",
+    "admin_review_title": "Revisar solicitud de lista de espera",
+    "fields": {
+      "name": "Nombre",
+      "email": "Email",
+      "link1": "Enlace público 1",
+      "link2": "Enlace público 2",
+      "link3": "Enlace público 3",
+      "note": "¿Por qué quieres unirte?"
+    }
+  },
   "about_us": {
     "go_back_button": "Volver",
     "privacy_statement_title": "Tenemos una importante declaración de privacidad que hacer.",
@@ -564,7 +593,7 @@
       "Este sitio web sirve como una interfaz para interactuar con el contrato inteligente de ASAMI y participar en el club. La información personal que recopilamos de ti es únicamente para estos propósitos.",
       "Dada la naturaleza mundial de la blockchain pública que hace cumplir el contrato inteligente de ASAMI entre los participantes, debes consentir en divulgar y almacenar tus datos de manera permanente a nivel global.",
       "Esto significa que estarás transfiriendo tus datos a jurisdicciones fuera de la unión europea que no tienen garantías de protección de datos.",
-      "Puede que no puedas hacer que tus datos sean enmendados o borrados. Tu historial completo de interacciones con otros participantes como miembros, anunciantes y votos, así como tus recompensas recogidas, estarán disponibles públicamente para cualquiera, para siempre.",
+      "Puede que no puedas hacer que tus datos sean enmendados o borrados. Tu historial completo de interacciones con otros participantes como miembros, creadores de campaña y votos, así como tus recompensas recogidas, estarán disponibles públicamente para cualquiera, para siempre.",
       "Este sitio está desarrollado y gestionado por <b>Constata EU Digital Trust Services S.L.</b>, registrada en España con C.I.F. nº B02983997, con sede en Calle Paseo de la Castellana 40, 8ª planta, Madrid, 28046, España, e inscrita en el Registro Mercantil de Madrid, Tomo 41408, folio 174, Hoja M 733896,",
       "Si tienes alguna pregunta sobre los riesgos asociados con la divulgación global en blockchain, o deseas ejercer tus derechos de protección de datos en aspectos gestionados por este sitio web, puedes contactarnos en <a target=\"_blank\" href=\"mailto:dpo@constata.eu\">dpo@constata.eu</a>."
     ]
@@ -592,7 +621,7 @@
     },
     "campaigns": {
       "title": "Campañas",
-      "description": "Estas son todas las campañas creadas por los miembros anunciantes."
+      "description": "Estas son todas las campañas creadas por los creadores de campaña."
     },
     "handles": {
       "title": "Cuentas",
@@ -600,7 +629,20 @@
     },
     "accounts": {
       "title": "Miembros",
-      "description": "Todos los miembros del club que pueden estar creando campañás, colaborando, o ambas."
+      "description": "Todos los miembros del club que pueden estar creando campañás, colaborando, o ambas.",
+      "acceptance_status": "Estado en el club",
+      "invited_by": "Invitado por",
+      "invites_per_month": "Invites por mes",
+      "available_invites": "Invites disponibles",
+      "admin_only": "Solo las cuentas administradoras pueden revisar y editar miembros.",
+      "review_member": "Revisar a %{name}",
+      "score_member": "Puntuar a este miembro",
+      "score_member_description": "Define el puntaje actual de este Rootstocker usando las categorías de reputación del club.",
+      "priority_override": "Override prioritario",
+      "score_comment": "Comentario",
+      "submit_score": "Guardar puntaje",
+      "score_created": "Puntaje guardado.",
+      "score_failed": "No se pudo guardar este puntaje."
     },
     "collabs": {
       "title": "Colaboraciones",
@@ -618,7 +660,7 @@
     "error_description_title": "Tenemos una descripción del error:",
     "try_again": "Intentar de nuevo",
     "contact_us": "Contáctanos",
-    "x_grant_access_success": "¡Éxito! Ahora estamos verificando tu influencia — pronto podrás unirte a campañas.",
+    "x_grant_access_success": "¡Éxito! Tu cuenta de X ya está vinculada. Ahora puedes sumarte a las campañas elegibles.",
     "x_grant_access_error": "No pudimos vincular tu cuenta de X. Intenta de nuevo o contacta a soporte si el problema continúa.",
     "x_waiting_for_access": "Esperando acceso a X."
   },
@@ -628,47 +670,58 @@
       "member": "miembro"
     },
     "disconnected": "La conexión con X para esta cuenta se ha perdido. Puede reconectarse en cualquier momento y volverá a participar en campañas.",
-    "scoring_in_progress": "Estamos evaluando este usuario",
-    "advertiser_title": "Anunciante",
+    "scoring_in_progress": "Este perfil se está recalculando a partir de puntajes recientes",
+    "advertiser_title": "Creador de campaña",
     "member_info_title": "Información del miembro",
     "score": "Puntaje",
+    "reputation_title": "Perfil reputacional",
+    "scores_title": "Actividad de puntajes",
+    "alignment_card_title": "Alineación",
+    "trust_card_title": "Confianza",
+    "contribution_card_title": "Contribución",
+    "advocacy_card_title": "Advocacy",
+    "judgment_card_title": "Criterio",
+    "longevity_card_title": "Antigüedad en Rootstock",
+    "scores_received": "Recibidos",
+    "scores_issued": "Emitidos",
+    "not_scored_yet": "Todavía sin puntaje",
     "online_engagement": {
-      "title": "Interacción en X",
-      "average": "La interacción en X es aceptable, pero podría mejorar. %{extra}",
-      "high": "La interacción en X es alta, su audiencia está atenta. %{extra}",
-      "none": "No pudimos detectar interacción auténtica en X. %{extra}"
+      "title": "Alineación",
+      "average": "Este miembro parece razonablemente alineado con el club. %{extra}",
+      "high": "Este miembro muestra una fuerte alineación con el club y el ecosistema Rootstock. %{extra}",
+      "none": "Este miembro todavía no muestra mucha señal de alineación. %{extra}"
     },
-    "offline_engagement_title": "Trabajo fuera de X",
+    "offline_engagement_title": "Contribución",
     "audience_poll": {
-      "title": "Encuesta a la audiencia",
-      "high": "Una encuesta indica alta influencia. %{extra}",
-      "average": "Una encuesta indica influencia moderada. %{extra}",
-      "reverse": "Una encuesta indica influencia polémica. %{extra}"
+      "title": "Confianza",
+      "high": "Este miembro es ampliamente considerado confiable. %{extra}",
+      "average": "Este miembro genera un nivel moderado de confianza. %{extra}",
+      "reverse": "Este miembro es visto como polémico o difícil de confiar. %{extra}"
     },
-    "banned_title": "Restringido",
-    "banned_text": "X está limitando el alcance de esta cuenta. %{extra}",
-    "verified_title": "Verificado",
-    "verified_text": "Esta cuenta tiene mejor alcance en X. %{extra}",
-    "referrer_title": "Referidor",
-    "referrer_text": "Este usuario ha invitado a miembros con buen puntaje. %{extra}",
-    "holder_title": "Holder",
-    "holder_text": "Está comprometido con la causa, mantiene tokens ASAMI. %{extra}",
-    "ghost_title": "Fantasma",
-    "ghost_text": "Publica poco o recibe pocas impresiones.",
-    "repost_fatigue_title": "Fatiga de repost",
-    "repost_fatigue_text": "Hace demasiados reposts, la audiencia no puede seguirle el ritmo.",
-    "indeterminate_audience_title": "Audiencia indefinida",
-    "indeterminate_audience_text": "No podemos saber si su audiencia es real o bots.",
-    "followed_title": "Seguido",
-    "followed_text": "Está verificado y tiene una alta proporción de seguidores verificados.",
-    "liked_title": "Con likes",
-    "liked_text": "Recibe muchos likes por impresión en sus publicaciones.",
-    "replied_title": "Con respuestas",
-    "replied_text": "Muchas personas responden a sus publicaciones.",
-    "reposted_title": "Con reposts",
-    "reposted_text": "Su audiencia no puede evitar hacerle repost.",
-    "mentioned_title": "Mencionado",
-    "mentioned_text": "Ha sido mencionado recientemente en publicaciones de alta visibilidad.",
+    "banned_title": "Criterio",
+    "banned_text": "El criterio de este miembro actualmente genera dudas. %{extra}",
+    "verified_title": "Advocacy",
+    "verified_text": "Este miembro es considerado efectivo cuando ayuda a difundir un mensaje. %{extra}",
+    "referrer_title": "Antigüedad en Rootstock",
+    "referrer_text": "Este miembro es considerado relativamente temprano dentro de la línea de tiempo de Rootstock. %{extra}",
+    "holder_title": "Alineación con el token",
+    "holder_text": "Este miembro muestra compromiso manteniendo tokens ASAMI. %{extra}",
+    "ghost_title": "Actividad baja",
+    "ghost_text": "No hay suficiente actividad reciente del club para evaluar fuertemente a este miembro. %{extra}",
+    "repost_fatigue_title": "Sobreexposición",
+    "repost_fatigue_text": "Este miembro puede participar tan seguido que las comunidades descuenten la señal. %{extra}",
+    "indeterminate_audience_title": "Baja confianza",
+    "indeterminate_audience_text": "No hay suficiente conocimiento compartido para puntuar a este miembro con confianza. %{extra}",
+    "followed_title": "Confiado por miembros",
+    "followed_text": "Varios miembros parecen confiar en el criterio de esta persona. %{extra}",
+    "liked_title": "Útil",
+    "liked_text": "Este miembro es percibido como un contribuyente útil. %{extra}",
+    "replied_title": "Conocido",
+    "replied_text": "Este miembro es reconocido y comentado con frecuencia por otros. %{extra}",
+    "reposted_title": "Amplifica",
+    "reposted_text": "Este miembro suele ayudar a que los mensajes se propaguen cuando participa. %{extra}",
+    "mentioned_title": "Conectado",
+    "mentioned_text": "Este miembro es conocido en varios círculos comunitarios. %{extra}",
     "collabs_title": "Colaboraciones realizadas.",
     "campaigns_title": "Campañas creadas."
   },
@@ -685,18 +738,19 @@
     "token": "$ASAMI",
     "login": "Iniciar sesión",
     "logout": "Cerrar sesión",
-    "my_campaigns": "Anuncia",
-    "my_collabs": "Repostea",
+    "my_campaigns": "Comunidad",
+    "my_collabs": "Colaboraciones",
     "whitepaper": "Whitepaper"
   },
   "whitepaper": {
     "robot_url": "robot.asami.club"
   },
   "landing": {
-    "title": "Un club para proyectos y divulgadores WEB3.",
-    "asami_invites": "Asami conecta proyectos con personas reales que creen en ellos.",
-    "boost": "Los divulgadores ayudan a que crezcan compartiendo — y reciben un pequeño agradecimiento acorde a su alcance.",
-    "together": "Todavía es muy temprano. Traigamos mil millones de personas al mundo Web3 — juntos."
+    "title": "Un Club para Comunidades de Rootstock.",
+    "asami_invites": "Asami conecta comunidades con participantes activos que ya se preocupan por ellas.",
+    "boost": "Las comunidades pueden reconocer reposts y otras formas de participación con recompensas transparentes en DOC que reflejan contribuciones reales.",
+    "together": "Ayuda a las comunidades a crecer agradeciendo a las personas que ya las hacen avanzar.",
+    "members_title": "Conoce a los Rootstockers que ya están aquí."
   },
   "about_token": {
     "title": "Obtén $ASAMI",
@@ -707,17 +761,6 @@
   "address_field": {
     "cannot_copy": "No se pudo copiar",
     "copy": "Copiar dirección"
-  },
-  "stripe_landings": {
-    "you_can_close": "Ya puedes cerrar esta ventana.",
-    "success": {
-      "title": "¡Todo listo! La campaña estará disponible pronto.",
-      "text": "Gracias por tu pago. Ya tenemos todo lo necesario para preparar tu campaña. Estará activa en Asami en breve."
-    },
-    "cancel": {
-      "title": "Parece que el pago no se completó.",
-      "text": "No te preocupes, la campaña aún no fue creada. Si cambiaste de opinión o tuviste algún problema, puedes intentarlo de nuevo cuando quieras."
-    }
   },
   "token": {
     "title": "$ASAMI",

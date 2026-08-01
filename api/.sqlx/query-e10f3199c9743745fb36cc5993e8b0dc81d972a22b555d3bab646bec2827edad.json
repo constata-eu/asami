@@ -1,0 +1,48 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO score_card_skips (scorer_account_id, \ntarget_account_id, \nreason) VALUES ($1, $2, $3) RETURNING id as \"id!: i32\", \nscorer_account_id as \"scorer_account_id!: String\", \ntarget_account_id as \"target_account_id!: String\", \nreason as \"reason!: String\", \ncreated_at as \"created_at!: UtcDateTime\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "scorer_account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "target_account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "reason!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e10f3199c9743745fb36cc5993e8b0dc81d972a22b555d3bab646bec2827edad"
+}

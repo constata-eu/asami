@@ -1,0 +1,161 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \ncampaign_id as \"campaign_id!: i32\", \nadvertiser_id as \"advertiser_id!: String\", \nmember_id as \"member_id!: String\", \ncollab_trigger_unique_id as \"collab_trigger_unique_id!: String\", \nhandle_id as \"handle_id!: Option < i32 >\", \nstatus as \"status!: CollabStatus\", \ndispute_reason as \"dispute_reason!: Option < String >\", \nreward as \"reward!: String\", \nfee as \"fee!: Option < String >\", \ncreated_at as \"created_at!: UtcDateTime\" FROM collabs WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR campaign_id = $6::int4) AND (NOT $7::boolean OR campaign_id = ANY(CAST($8 as int4[])) ) AND (NOT $9::boolean OR advertiser_id = $10::varchar) AND (NOT $11::boolean OR advertiser_id = ANY(CAST($12 as varchar[])) ) AND (NOT $13::boolean OR member_id = $14::varchar) AND (NOT $15::boolean OR member_id = ANY(CAST($16 as varchar[])) ) AND (NOT $17::boolean OR collab_trigger_unique_id = $18::varchar) AND (NOT $19::boolean OR handle_id = $20::int4) AND (NOT $21::boolean OR handle_id = ANY(CAST($22 as int4[])) ) AND ($23::boolean IS NULL OR (($23::boolean AND handle_id IS NOT NULL) OR (NOT $23::boolean AND handle_id IS NULL))) AND (NOT $24::boolean OR status = $25::collab_status) AND (NOT $26::boolean OR status != $27::collab_status) AND (NOT $28::boolean OR dispute_reason = $29::varchar) AND (NOT $30::boolean OR reward = $31::varchar) AND (NOT $32::boolean OR fee = $33::varchar) AND (NOT $34::boolean OR created_at = $35::timestamptz) AND (NOT $36::boolean OR created_at > $37::timestamptz) ORDER BY \n      (CASE ($38 = 'Id' AND NOT $39) WHEN true THEN id ELSE NULL END),\n      (CASE ($38 = 'Id' AND $39) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'CampaignId' AND NOT $39) WHEN true THEN campaign_id ELSE NULL END),\n      (CASE ($38 = 'CampaignId' AND $39) WHEN true THEN campaign_id ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'AdvertiserId' AND NOT $39) WHEN true THEN advertiser_id ELSE NULL END),\n      (CASE ($38 = 'AdvertiserId' AND $39) WHEN true THEN advertiser_id ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'MemberId' AND NOT $39) WHEN true THEN member_id ELSE NULL END),\n      (CASE ($38 = 'MemberId' AND $39) WHEN true THEN member_id ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'CollabTriggerUniqueId' AND NOT $39) WHEN true THEN collab_trigger_unique_id ELSE NULL END),\n      (CASE ($38 = 'CollabTriggerUniqueId' AND $39) WHEN true THEN collab_trigger_unique_id ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'HandleId' AND NOT $39) WHEN true THEN handle_id ELSE NULL END),\n      (CASE ($38 = 'HandleId' AND $39) WHEN true THEN handle_id ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'Status' AND NOT $39) WHEN true THEN status ELSE NULL END),\n      (CASE ($38 = 'Status' AND $39) WHEN true THEN status ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'DisputeReason' AND NOT $39) WHEN true THEN dispute_reason ELSE NULL END),\n      (CASE ($38 = 'DisputeReason' AND $39) WHEN true THEN dispute_reason ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'Reward' AND NOT $39) WHEN true THEN reward ELSE NULL END),\n      (CASE ($38 = 'Reward' AND $39) WHEN true THEN reward ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'Fee' AND NOT $39) WHEN true THEN fee ELSE NULL END),\n      (CASE ($38 = 'Fee' AND $39) WHEN true THEN fee ELSE NULL END) DESC\n    ,\n      (CASE ($38 = 'CreatedAt' AND NOT $39) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($38 = 'CreatedAt' AND $39) WHEN true THEN created_at ELSE NULL END) DESC\n     LIMIT $40 OFFSET $41 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "campaign_id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "advertiser_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "member_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "collab_trigger_unique_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "handle_id!: Option < i32 >",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "status!: CollabStatus",
+        "type_info": {
+          "Custom": {
+            "name": "collab_status",
+            "kind": {
+              "Enum": [
+                "registered",
+                "cleared",
+                "failed",
+                "disputed",
+                "pending"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "dispute_reason!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "reward!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "fee!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "VarcharArray",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "VarcharArray",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Bool",
+        {
+          "Custom": {
+            "name": "collab_status",
+            "kind": {
+              "Enum": [
+                "registered",
+                "cleared",
+                "failed",
+                "disputed",
+                "pending"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "collab_status",
+            "kind": {
+              "Enum": [
+                "registered",
+                "cleared",
+                "failed",
+                "disputed",
+                "pending"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "c1938336ddb5379cfaa96a49aa6889c86eddbe9ced2b1c2027a1b39a85ee910c"
+}

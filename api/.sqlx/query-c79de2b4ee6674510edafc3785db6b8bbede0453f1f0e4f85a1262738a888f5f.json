@@ -1,0 +1,136 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE waitlist_applications SET (id, \nname, \nemail, \nlink_1, \nlink_2, \nlink_3, \nnote, \ninvitation_id, \nstatus, \nreview_notes, \ncreated_at, \nreviewed_at) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE name END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE email END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE link_1 END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE link_2 END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE link_3 END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE note END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE invitation_id END), (CASE $18::boolean WHEN TRUE THEN $19 ELSE status END), (CASE $20::boolean WHEN TRUE THEN $21 ELSE review_notes END), (CASE $22::boolean WHEN TRUE THEN $23 ELSE created_at END), (CASE $24::boolean WHEN TRUE THEN $25 ELSE reviewed_at END)) WHERE id = $1 RETURNING id as \"id!: i32\", \nname as \"name!: String\", \nemail as \"email!: String\", \nlink_1 as \"link_1!: String\", \nlink_2 as \"link_2!: String\", \nlink_3 as \"link_3!: Option < String >\", \nnote as \"note!: String\", \ninvitation_id as \"invitation_id!: Option < i32 >\", \nstatus as \"status!: WaitlistApplicationStatus\", \nreview_notes as \"review_notes!: Option < String >\", \ncreated_at as \"created_at!: UtcDateTime\", \nreviewed_at as \"reviewed_at!: Option < UtcDateTime >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "email!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "link_1!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "link_2!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "link_3!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "note!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "invitation_id!: Option < i32 >",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "status!: WaitlistApplicationStatus",
+        "type_info": {
+          "Custom": {
+            "name": "waitlist_application_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "reviewed",
+                "accepted",
+                "rejected"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "review_notes!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "reviewed_at!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Text",
+        "Bool",
+        "Int4",
+        "Bool",
+        {
+          "Custom": {
+            "name": "waitlist_application_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "reviewed",
+                "accepted",
+                "rejected"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Text",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "c79de2b4ee6674510edafc3785db6b8bbede0453f1f0e4f85a1262738a888f5f"
+}

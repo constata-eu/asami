@@ -46,6 +46,7 @@ impl CampaignAnnouncement {
 
         let campaigns = select(self.app.campaign().select())
             .status_eq(CampaignStatus::Published)
+            .kind_eq(CampaignKind::XRepost)
             .budget_gt(u("10").encode_hex())
             .all()
             .await?;
@@ -56,7 +57,7 @@ impl CampaignAnnouncement {
             let post_result = twitter
                 .post_tweet()
                 .text(texts[idx].to_string())
-                .quote_tweet_id(NumericId::from_str(&campaign.content_id()?)?)
+                .quote_tweet_id(NumericId::from_str(&campaign.x_post_id()?)?)
                 .send()
                 .await;
             match post_result {

@@ -1,0 +1,72 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \ntarget_account_id as \"target_account_id!: String\", \ncreated_by_account_id as \"created_by_account_id!: Option < String >\", \nstarts_at as \"starts_at!: UtcDateTime\", \nends_at as \"ends_at!: UtcDateTime\", \ncreated_at as \"created_at!: UtcDateTime\" FROM weekly_score_picks WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR id <> ALL(CAST($6 as int4[])) ) AND (NOT $7::boolean OR target_account_id = $8::varchar) AND (NOT $9::boolean OR created_by_account_id = $10::varchar) AND ($11::boolean IS NULL OR (($11::boolean AND created_by_account_id IS NOT NULL) OR (NOT $11::boolean AND created_by_account_id IS NULL))) AND (NOT $12::boolean OR starts_at = $13::timestamptz) AND (NOT $14::boolean OR ends_at = $15::timestamptz) AND (NOT $16::boolean OR created_at = $17::timestamptz) ORDER BY \n      (CASE ($18 = 'Id' AND NOT $19) WHEN true THEN id ELSE NULL END),\n      (CASE ($18 = 'Id' AND $19) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($18 = 'TargetAccountId' AND NOT $19) WHEN true THEN target_account_id ELSE NULL END),\n      (CASE ($18 = 'TargetAccountId' AND $19) WHEN true THEN target_account_id ELSE NULL END) DESC\n    ,\n      (CASE ($18 = 'CreatedByAccountId' AND NOT $19) WHEN true THEN created_by_account_id ELSE NULL END),\n      (CASE ($18 = 'CreatedByAccountId' AND $19) WHEN true THEN created_by_account_id ELSE NULL END) DESC\n    ,\n      (CASE ($18 = 'StartsAt' AND NOT $19) WHEN true THEN starts_at ELSE NULL END),\n      (CASE ($18 = 'StartsAt' AND $19) WHEN true THEN starts_at ELSE NULL END) DESC\n    ,\n      (CASE ($18 = 'EndsAt' AND NOT $19) WHEN true THEN ends_at ELSE NULL END),\n      (CASE ($18 = 'EndsAt' AND $19) WHEN true THEN ends_at ELSE NULL END) DESC\n    ,\n      (CASE ($18 = 'CreatedAt' AND NOT $19) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($18 = 'CreatedAt' AND $19) WHEN true THEN created_at ELSE NULL END) DESC\n     LIMIT $20 OFFSET $21 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "target_account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "created_by_account_id!: Option < String >",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "starts_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "ends_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d8ff78221d2406ecb4a77a600cdeb2b3f1e37edf3908217847f1f148fa0e49d5"
+}

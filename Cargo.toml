@@ -9,18 +9,12 @@ members = [
 tokio = { version = "1.2.0", features = ["full"] }
 anyhow = "1"
 nix = { version = "0.28", features = ["fs", "process", "signal"]}
-sqlx-cli = { version = "0.8.3", default-features = false, features = [
+sqlx-cli = { version = "0.8.6", default-features = false, features = [
   "postgres",
   "rustls",
 ] }
 
-stripe-rust = { git = "https://github.com/constata-eu/stripe-rs", default-features = false, features = [
-  "full",
-  "rustls-tls",
-  "webhook-events"
-] }
-
-sqlx = { version = "0.8.3", features = [
+sqlx = { version = "0.8.6", features = [
   "rust_decimal",
   "chrono",
   "migrate",

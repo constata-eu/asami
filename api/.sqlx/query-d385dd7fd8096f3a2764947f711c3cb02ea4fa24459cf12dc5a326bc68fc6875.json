@@ -1,0 +1,56 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE score_card_skips SET (id, \nscorer_account_id, \ntarget_account_id, \nreason, \ncreated_at) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE scorer_account_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE target_account_id END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE reason END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE created_at END)) WHERE id = $1 RETURNING id as \"id!: i32\", \nscorer_account_id as \"scorer_account_id!: String\", \ntarget_account_id as \"target_account_id!: String\", \nreason as \"reason!: String\", \ncreated_at as \"created_at!: UtcDateTime\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "scorer_account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "target_account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "reason!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Text",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d385dd7fd8096f3a2764947f711c3cb02ea4fa24459cf12dc5a326bc68fc6875"
+}

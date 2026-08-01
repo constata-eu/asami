@@ -1,0 +1,123 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO handles (account_id, \nusername, \nuser_id, \nstatus, \nx_refresh_token, \nprofile_image_url) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (id) DO UPDATE SET id = handles.id RETURNING id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nusername as \"username!: String\", \nuser_id as \"user_id!: String\", \nstatus as \"status!: HandleStatus\", \ncreated_at as \"created_at!: DateTime < Utc >\", \nforce_hydrate as \"force_hydrate!: bool\", \ntotal_collabs as \"total_collabs!: i32\", \ntotal_collab_rewards as \"total_collab_rewards!: String\", \nx_refresh_token as \"x_refresh_token!: Option < String >\", \ninvalidated_x_refresh_token as \"invalidated_x_refresh_token!: Option < String >\", \nprofile_image_url as \"profile_image_url!: Option < String >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "username!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "user_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "status!: HandleStatus",
+        "type_info": {
+          "Custom": {
+            "name": "handle_status",
+            "kind": {
+              "Enum": [
+                "never_connected",
+                "setting_up",
+                "connecting",
+                "active",
+                "disconnected",
+                "reconnecting",
+                "inactive"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at!: DateTime < Utc >",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "force_hydrate!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 7,
+        "name": "total_collabs!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "total_collab_rewards!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "x_refresh_token!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "invalidated_x_refresh_token!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "profile_image_url!: Option < String >",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        {
+          "Custom": {
+            "name": "handle_status",
+            "kind": {
+              "Enum": [
+                "never_connected",
+                "setting_up",
+                "connecting",
+                "active",
+                "disconnected",
+                "reconnecting",
+                "inactive"
+              ]
+            }
+          }
+        },
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "d6288710c116d1819b861818530f1655e036487646fb85f29f1904225fd2dc57"
+}

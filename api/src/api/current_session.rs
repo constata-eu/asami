@@ -7,6 +7,7 @@ use rocket::{
     request::{FromRequest, Outcome, Request},
 };
 use serde::de::DeserializeOwned;
+use twitter_v2::query::UserField;
 use validators::traits::ValidateString;
 
 use super::{
@@ -77,6 +78,15 @@ struct OauthCodeAndVerifier {
 pub struct CurrentSession(pub Session);
 
 impl CurrentSession {
+    async fn ensure_account_can_access(app: &App, account_id: &str) -> Result<(), ApiAuthError> {
+        let account = auth_try!(app.account().find(account_id.to_string()).await, "account_not_found");
+        auth_assert!(
+            account.acceptance_status() == &AcceptanceStatus::Active,
+            "invitation_required"
+        );
+        Ok(())
+    }
+
     async fn build(req: &Request<'_>, body: Option<&[u8]>) -> Result<Self, ApiAuthError> {
         let app = req
             .rocket()
@@ -101,54 +111,15 @@ impl CurrentSession {
         Self::validate_recaptcha(req, app).await?;
         let pubkey = Self::get_login_pubkey(req)?;
         let nonce = Self::validate_jwt(jwt, &pubkey, req, &body).await?;
-        let (kind, lookup_key, auth_data, x_username, x_refresh_token) = Self::validate_auth_data(app, req).await?;
-        let Outcome::Success(lang) = Lang::from_request(req).await else {
+        let (kind, lookup_key, _auth_data, x_username, x_refresh_token, profile_pic) =
+            Self::validate_auth_data(app, req).await?;
+        let Outcome::Success(_) = Lang::from_request(req).await else {
             return Err(ApiAuthError::Unexpected("could_not_retrieve_lang"));
         };
 
         let maybe_auth_method = app.auth_method().select().kind_eq(kind).lookup_key_eq(&lookup_key).optional().await?;
 
-        let (auth_method, new_account) = match maybe_auth_method {
-            Some(method) => (method, None),
-            None => {
-                let account = auth_try!(
-                    app.account().insert(InsertAccount { addr: None, lang }).save().await,
-                    "could_not_create_account"
-                );
-                let account_id = account.attrs.id.clone();
-
-                let user_id = auth_try!(
-                    app.user()
-                        .insert(InsertUser {
-                            name: "user".to_string()
-                        })
-                        .save()
-                        .await,
-                    "could_not_create_user"
-                )
-                .attrs
-                .id;
-
-                auth_try!(
-                    app.account_user().insert(InsertAccountUser { account_id, user_id }).save().await,
-                    "could_not_bind_user_to_account"
-                );
-
-                let method = auth_try!(
-                    app.auth_method()
-                        .insert(InsertAuthMethod {
-                            user_id,
-                            lookup_key: lookup_key.clone(),
-                            kind
-                        })
-                        .save()
-                        .await,
-                    "could_not_insert_auth_method"
-                );
-
-                (method, Some(account))
-            }
-        };
+        let auth_method = auth_some!(maybe_auth_method, "invitation_required");
 
         let key_id = hasher::hexdigest(pubkey.as_bytes());
 
@@ -159,6 +130,7 @@ impl CurrentSession {
         let user = auth_method.user().await?;
 
         let account_id = user.account_id().await?;
+        Self::ensure_account_can_access(app, &account_id).await?;
 
         let session = auth_try!(
             app.session()
@@ -191,16 +163,11 @@ impl CurrentSession {
                                 user_id.to_string(),
                                 username.to_string(),
                                 account_id,
+                                profile_pic,
                             )
                             .await?;
                     };
                 }
-            }
-        }
-
-        if let Some(account) = new_account {
-            if kind == AuthMethodKind::Eip712 {
-                account.create_claim_account_request(lookup_key, auth_data, session.attrs.id.clone()).await?;
             }
         }
 
@@ -215,6 +182,7 @@ impl CurrentSession {
         let key_id = auth_some!(jwt_meta.key_id(), "no_key_id_in_jwt").to_string();
         let session = auth_try!(app.session().find(key_id).await, "session_for_kid_not_found");
         auth_assert!(session.logged_out_at().is_none(), "session_was_logged_out");
+        Self::ensure_account_can_access(app, session.account_id()).await?;
         let nonce = Self::validate_jwt(jwt, &session.attrs.pubkey, req, &body).await?;
         auth_assert!(nonce > session.attrs.nonce, "invalid_nonce");
         Ok(auth_try!(
@@ -226,7 +194,17 @@ impl CurrentSession {
     async fn validate_auth_data(
         app: &App,
         req: &Request<'_>,
-    ) -> Result<(AuthMethodKind, String, String, Option<String>, Option<String>), ApiAuthError> {
+    ) -> Result<
+        (
+            AuthMethodKind,
+            String,
+            String,
+            Option<String>,
+            Option<String>,
+            Option<String>,
+        ),
+        ApiAuthError,
+    > {
         let auth_method_kind_string = auth_some!(
             req.headers().get_one("Auth-Method-Kind"),
             "no_auth_method_kind_in_headers"
@@ -237,8 +215,9 @@ impl CurrentSession {
         );
         let auth_data = auth_some!(req.headers().get_one("Auth-Data"), "no_auth_data_in_headers");
 
-        let (lookup_key, x_username, x_refresh_token) = match auth_method_kind {
+        let (lookup_key, x_username, x_refresh_token, profile_pic) = match auth_method_kind {
             AuthMethodKind::OneTimeToken => {
+                app.invitation().accept_token(auth_data).await?;
                 let key = auth_try!(
                     app.one_time_token()
                         .select()
@@ -256,7 +235,7 @@ impl CurrentSession {
                 .attrs
                 .lookup_key;
 
-                (key, None, None)
+                (key, None, None, None)
             }
             AuthMethodKind::X => {
                 let client = auth_try!(app.settings.x.oauth_client("/x_login"), "could_not_make_oauth_client");
@@ -274,14 +253,22 @@ impl CurrentSession {
                 );
                 let twitter = twitter_v2::TwitterApi::new(token);
 
-                let x = auth_try!(twitter.get_users_me().send().await, "could_not_find_twitter_me");
+                let x = auth_try!(
+                    twitter.get_users_me().user_fields([UserField::ProfileImageUrl]).send().await,
+                    "could_not_find_twitter_me"
+                );
                 let user = auth_some!(x.into_data(), "no_twitter_payload_data");
 
-                (user.id.to_string(), Some(user.username), Some(refresh_token))
+                (
+                    user.id.to_string(),
+                    Some(user.username),
+                    Some(refresh_token),
+                    user.profile_image_url,
+                )
             }
             AuthMethodKind::Eip712 => {
                 let key = eip_712_sig_to_address(app.settings.rsk.chain_id, auth_data).map_err(ApiAuthError::Fail)?;
-                (key, None, None)
+                (key, None, None, None)
             }
         };
 
@@ -291,6 +278,7 @@ impl CurrentSession {
             auth_data.to_string(),
             x_username,
             x_refresh_token,
+            profile_pic.map(|x| x.to_string()),
         ))
     }
 

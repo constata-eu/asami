@@ -84,9 +84,6 @@ async fn main() {
     }];
 
     every![60000, |s| {
-        run!("Create CC campaigns", s, {
-            s.campaign().create_managed_on_chain_campaigns().await
-        });
         run!("Store ASAMI price", s, {
             s.value_series().store(SeriesName::AsamiDocPrice).await
         });
@@ -102,6 +99,12 @@ async fn main() {
         run!("Force holder hydrations", s, { s.holder().force_hydrate().await });
     }];
 
+    every![21600000, |s| {
+        run!("ensure_weekly_score_picks", s, {
+            s.weekly_score_pick().ensure_current(3).await
+        });
+    }];
+
     every![240000, |s| {
         run!("Attempt account on-chain hydrate", s, {
             s.account().hydrate_on_chain_values_just_in_case().await
@@ -110,8 +113,7 @@ async fn main() {
 
     every![settings.x.crawl_cooldown_minutes * 60 * 1000, |s| {
         run!("setup_pending", s, { s.handle().setup_pending().await });
-        run!("score_pending", s, { s.handle().score_pending().await });
-        run!("sync_x_collabs", s, { s.campaign().sync_x_collabs().await });
+        run!("prepare_campaign_collabs", s, { s.campaign().prepare_collabs().await });
         run!("announce_campaigns", s, {
             s.campaign_announcement().send_pending_announcements().await
         });

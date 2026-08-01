@@ -1,0 +1,84 @@
+mutation CreateSession {
+  createSession {
+    id
+    userId
+    accountId
+    pubkey
+    nonce
+    createdAt
+    updatedAt
+    admin
+    __typename
+  }
+}
+
+mutation CreateClaimAccountRequest($input: CreateClaimAccountRequestInput!) {
+  createClaimAccountRequest(input: $input) {
+    id
+    status
+    addr
+    name
+    unclaimedAsamiBalance
+    unclaimedDocBalance
+    asamiBalance
+    docBalance
+    rbtcBalance
+    allowsGasless
+    createdAt
+    totalCollabs
+    totalCollabRewards
+    totalCampaigns
+    totalCollabsReceived
+    totalSpent
+    confirmedYield
+    __typename
+  }
+}
+
+mutation CreateCampaignFromLink($input: CreateCampaignFromLinkInput!) {
+  createCampaignFromLink(input: $input) {
+    id
+    accountId
+    budget
+    isPublished
+    briefingJson
+    briefingHash
+    validUntil
+    createdAt
+    topicIds
+    youWouldReceive
+    totalCollabs
+    totalSpent
+    totalBudget
+    thumbsUpOnly
+    privateFields {
+      status
+      __typename
+    }
+    __typename
+  }
+}
+
+query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignFilter) {
+  allCampaigns(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    accountId
+    budget
+    isPublished
+    briefingJson
+    briefingHash
+    validUntil
+    createdAt
+    topicIds
+    youWouldReceive
+    totalCollabs
+    totalSpent
+    totalBudget
+    thumbsUpOnly
+    privateFields {
+      status
+      __typename
+    }
+    __typename
+  }
+}

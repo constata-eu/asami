@@ -7,6 +7,7 @@ import {
   Typography,
   Stack,
   Card,
+  Skeleton,
 } from "@mui/material";
 
 import { etherToHex } from "../lib/formatters";
@@ -21,14 +22,13 @@ import {
 } from "react-admin";
 
 import { TwitterTweetEmbed } from "react-twitter-embed";
-import { CardTable, DeckCard } from "./layout";
-import { Head2, Head3, light, green, Head1, Lead } from "../components/theme";
+import { CardTable } from "./layout";
+import { Head2, Head1, Lead } from "../components/theme";
 import { useNavigate } from "react-router-dom";
-import CampaignIcon from "@mui/icons-material/Campaign";
 import CampaignListEmpty from "./campaign_list_empty";
 import StatsCard from "./stats_card";
 import { ResponsiveAppBar } from "./responsive_app_bar";
-import { contentId } from "../lib/campaign";
+import { contentId, isXRepostCampaign } from "../lib/campaign";
 import { useEmbedded } from "../components/embedded_context";
 
 export default () => {
@@ -94,7 +94,7 @@ export default () => {
             i18nProvider={i18nProvider}
             dataProvider={pubDataProvider}
           >
-            <PublicCampaignList loginAs={loginAs} />
+            <LandingMembers />
           </CoreAdminContext>
         )}
       </Box>
@@ -102,11 +102,141 @@ export default () => {
   );
 };
 
+const LandingMembers = () => {
+  const t = useTranslate();
+  const listContext = useListController({
+    disableSyncWithLocation: true,
+    page: 1,
+    perPage: 6,
+    resource: "LandingMember",
+  });
+
+  if (listContext.isLoading) {
+    return (
+      <Stack direction="row" gap="1em" flexWrap="wrap">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i} sx={{ flex: "1 1 320px", minHeight: "320px" }}>
+            <Skeleton variant="rounded" height={320} />
+          </Card>
+        ))}
+      </Stack>
+    );
+  }
+
+  if (!listContext.data?.length) {
+    return <></>;
+  }
+
+  return (
+    <Box>
+      <CardTable>
+        {listContext.data.map((member) => (
+          <MemberProfileCard key={member.id} member={member} />
+        ))}
+      </CardTable>
+    </Box>
+  );
+};
+
+declare global {
+  interface Window {
+    twttr?: {
+      widgets: {
+        load: (element?: HTMLElement | null) => void;
+      };
+    };
+  }
+}
+
+const TWITTER_WIDGET_SCRIPT_ID = "twitter-wjs";
+
+function ensureTwitterWidgetScript() {
+  if (document.getElementById(TWITTER_WIDGET_SCRIPT_ID)) return;
+
+  const script = document.createElement("script");
+  script.id = TWITTER_WIDGET_SCRIPT_ID;
+  script.src = "https://platform.twitter.com/widgets.js";
+  script.async = true;
+  script.charset = "utf-8";
+
+  document.body.appendChild(script);
+}
+
+export function TwitterTimeline() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const loadedRef = useRef(false);
+
+  useEffect(() => {
+    if (loadedRef.current) return;
+    loadedRef.current = true;
+
+    ensureTwitterWidgetScript();
+
+    // If the script was already present, ask it to scan only this component.
+    window.twttr?.widgets.load(containerRef.current);
+  }, []);
+
+  return (
+    <div ref={containerRef}>
+      <a
+        className="twitter-timeline"
+        href="https://twitter.com/nubis_bruno?ref_src=twsrc%5Etfw"
+        data-height="320"
+      >
+        Tweets by nubis_bruno
+      </a>
+    </div>
+  );
+}
+
+const MemberProfileCard = ({ member }) => {
+  if (member.xUsername) {
+    return (
+      <Card
+        sx={{
+          borderRadius: "13px 13px 4px 4px",
+          mb: "1em",
+          overflow: "hidden",
+        }}
+      >
+        <TwitterTimeline />
+      </Card>
+    );
+  }
+
+  return (
+    <Card
+      sx={{
+        minHeight: "320px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        p: "2em",
+        mb: "1em",
+        borderRadius: "13px 13px 4px 4px",
+      }}
+    >
+      <Typography
+        textAlign="center"
+        color="primary.main"
+        fontFamily="'LeagueSpartanBold'"
+        fontSize="2rem"
+      >
+        {member.name}
+      </Typography>
+    </Card>
+  );
+};
+
 const PublicCampaignList = ({ loginAs }) => {
   const listContext = useListController({
     debounce: 500,
     disableSyncWithLocation: true,
-    filter: { budgetGt: etherToHex("1") },
+    filter: {
+      budgetGt: etherToHex("1"),
+      isPublishedEq: true,
+      kindEq: "X_REPOST",
+    },
     sort: { field: "createdAt", order: "DESC" },
     perPage: 20,
     queryOptions: {
@@ -119,14 +249,18 @@ const PublicCampaignList = ({ loginAs }) => {
     return <></>;
   }
 
-  if (listContext.total == 0) {
+  const visibleCampaigns = listContext.data.filter(
+    (item) => isXRepostCampaign(item) && !item.isEnded,
+  );
+
+  if (visibleCampaigns.length == 0) {
     return <CampaignListEmpty />;
   }
 
   return (
     <CardTable>
-      {listContext.data.map((item, index) => (
-        <>
+      {visibleCampaigns.map((item, index) => (
+        <Box key={item.id}>
           <PublicXCampaign key={item.id} item={item} loginAs={loginAs} />
           {index == 0 && (
             <>
@@ -134,7 +268,7 @@ const PublicCampaignList = ({ loginAs }) => {
               <StatsCard />
             </>
           )}
-        </>
+        </Box>
       ))}
     </CardTable>
   );
@@ -180,8 +314,7 @@ const YourPostHere = ({ loginAs }) => {
             size="large"
             variant="outlined"
           >
-            <CampaignIcon sx={{ mr: "5px" }} />
-            {translate("your_post_here.button")}
+            {translate("join_now.button")}
           </Button>
         </Box>
       </CardContent>

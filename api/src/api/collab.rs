@@ -13,8 +13,8 @@ pub struct Collab {
     campaign_id: i32,
     #[graphql(description = "The person that created the campaign.")]
     advertiser_id: i32,
-    #[graphql(description = "The handle that reposted the content.")]
-    handle_id: i32,
+    #[graphql(description = "The handle that triggered the collab, if any.")]
+    handle_id: Option<i32>,
     #[graphql(description = "The member who owns the handle.")]
     member_id: i32,
     #[graphql(description = "Status of this collab.")]

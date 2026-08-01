@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM waitlist_applications WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4ee3f5d4535e0ccd663c3e6832e8f7c2b636d0b8bf25a464d126b297c2ed66bf"
+}

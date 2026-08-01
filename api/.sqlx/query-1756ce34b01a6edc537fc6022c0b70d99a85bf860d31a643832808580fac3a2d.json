@@ -1,0 +1,171 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM accounts WHERE (NOT $1::boolean OR id = $2::varchar) AND (NOT $3::boolean OR id = ANY(CAST($4 as varchar[])) ) AND (NOT $5::boolean OR id <> ALL(CAST($6 as varchar[])) ) AND (NOT $7::boolean OR name = $8::varchar) AND (NOT $9::boolean OR name LIKE $10::varchar) AND (NOT $11::boolean OR name ILIKE $12::varchar) AND (NOT $13::boolean OR name_is_locked = $14::boolean) AND (NOT $15::boolean OR status = $16::account_status) AND (NOT $17::boolean OR status = ANY(CAST($18 as account_status[])) ) AND (NOT $19::boolean OR addr = $20::varchar) AND (NOT $21::boolean OR addr LIKE $22::varchar) AND (NOT $23::boolean OR addr ILIKE $24::varchar) AND ($25::boolean IS NULL OR (($25::boolean AND addr IS NOT NULL) OR (NOT $25::boolean AND addr IS NULL))) AND (NOT $26::boolean OR created_at = $27::timestamptz) AND (NOT $28::boolean OR updated_at = $29::timestamptz) AND (NOT $30::boolean OR claim_signature = $31::varchar) AND (NOT $32::boolean OR claim_session_id = $33::varchar) AND (NOT $34::boolean OR processed_for_legacy_claim = $35::boolean) AND (NOT $36::boolean OR allows_gasless = $37::boolean) AND (NOT $38::boolean OR acceptance_status = $39::acceptance_status) AND (NOT $40::boolean OR acceptance_status = ANY(CAST($41 as acceptance_status[])) ) AND (NOT $42::boolean OR invited_by_account_id = $43::varchar) AND ($44::boolean IS NULL OR (($44::boolean AND invited_by_account_id IS NOT NULL) OR (NOT $44::boolean AND invited_by_account_id IS NULL))) AND (NOT $45::boolean OR invites_per_month = $46::int4) AND (NOT $47::boolean OR available_invites = $48::int4) AND (NOT $49::boolean OR invite_quota_last_replenished_at = $50::timestamptz) AND (NOT $51::boolean OR lang = $52::language) AND (NOT $53::boolean OR profile_pic = $54::text) AND (NOT $55::boolean OR unclaimed_asami_balance = $56::varchar) AND (NOT $57::boolean OR unclaimed_doc_balance = $58::varchar) AND (NOT $59::boolean OR asami_balance = $60::varchar) AND (NOT $61::boolean OR doc_balance = $62::varchar) AND (NOT $63::boolean OR rbtc_balance = $64::varchar) AND (NOT $65::boolean OR last_on_chain_sync = $66::timestamptz) AND (NOT $67::boolean OR last_on_chain_sync < $68::timestamptz) AND (NOT $69::boolean OR force_hydrate = $70::boolean) AND (NOT $71::boolean OR total_collabs = $72::int4) AND (NOT $73::boolean OR total_collab_rewards = $74::varchar) AND (NOT $75::boolean OR total_campaigns = $76::int4) AND (NOT $77::boolean OR total_collabs_received = $78::int4) AND (NOT $79::boolean OR total_spent = $80::varchar)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Varchar",
+        "Bool",
+        "VarcharArray",
+        "Bool",
+        "VarcharArray",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        {
+          "Custom": {
+            "name": "account_status",
+            "kind": {
+              "Enum": [
+                "managed",
+                "claiming",
+                "claimed",
+                "banned"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "account_status[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "account_status",
+                  "kind": {
+                    "Enum": [
+                      "managed",
+                      "claiming",
+                      "claimed",
+                      "banned"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        {
+          "Custom": {
+            "name": "acceptance_status",
+            "kind": {
+              "Enum": [
+                "guestlist",
+                "active",
+                "inactive"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "acceptance_status[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "acceptance_status",
+                  "kind": {
+                    "Enum": [
+                      "guestlist",
+                      "active",
+                      "inactive"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        {
+          "Custom": {
+            "name": "language",
+            "kind": {
+              "Enum": [
+                "en",
+                "es"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Text",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "1756ce34b01a6edc537fc6022c0b70d99a85bf860d31a643832808580fac3a2d"
+}

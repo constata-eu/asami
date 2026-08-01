@@ -1,8 +1,3 @@
-use rocket::{
-    data::{self, FromData, ToByteUnit},
-    Data, Request,
-};
-
 use super::{
     models::{self, *},
     *,
@@ -18,12 +13,13 @@ pub struct Campaign {
     account_id: i32,
     #[graphql(description = "The total budget for this campaign to be collected by users.")]
     budget: String,
+    kind: CampaignKind,
     max_individual_reward: String,
-    min_individual_reward: String,
-    price_per_point: String,
     advertiser_name: String,
     #[graphql(description = "If the campaign is published and ready to receive collaborations.")]
     is_published: bool,
+    #[graphql(description = "Whether members should treat the campaign as already closed for participation.")]
+    is_ended: bool,
     #[graphql(description = "Auxiliary data related to this campaign's briefing")]
     briefing_json: String,
     #[graphql(description = "Auxiliary data related to this campaign's briefing")]
@@ -52,10 +48,6 @@ pub struct Campaign {
 #[serde(rename_all = "camelCase")]
 #[graphql(description = "Private fields for the campaign owner only")]
 pub struct PrivateFields {
-    managed_by_admin: bool,
-    managed_unit_amount: Option<i32>,
-    stripe_session_url: Option<String>,
-    stripe_session_id: Option<String>,
     status: CampaignStatus,
 }
 
@@ -72,8 +64,8 @@ pub struct CampaignFilter {
     briefing_json_like: Option<String>,
     status_ne: Option<CampaignStatus>,
     status_eq: Option<CampaignStatus>,
+    kind_eq: Option<CampaignKind>,
     available_to_account_id: Option<i32>,
-    managed_by_admin_eq: Option<bool>,
     is_published_eq: Option<bool>,
 }
 
@@ -138,7 +130,7 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
         if let Some(f) = filter {
             // Managed by admin filter requires a logged in user, and implicitly filters
             // only the current user campaigns.
-            let private_filters = f.managed_by_admin_eq.is_some() || f.status_eq.is_some() || f.status_ne.is_some();
+            let private_filters = f.status_eq.is_some() || f.status_ne.is_some();
 
             let account_id_eq = if private_filters {
                 Some(context.account_id()?)
@@ -161,9 +153,9 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
                 budget_eq: f.budget_eq,
                 status_eq,
                 status_ne,
+                kind_eq: f.kind_eq,
                 briefing_json_like: into_like_search(f.briefing_json_like),
                 briefing_hash_like: into_like_search(f.briefing_hash_like),
-                managed_by_admin_eq: f.managed_by_admin_eq,
                 ..Default::default()
             })
         } else {
@@ -187,13 +179,10 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
         let budget = d.available_budget().await.unwrap_or(d.budget_u256()).encode_hex();
 
         let is_published = d.attrs.status == CampaignStatus::Published;
+        let is_ended = d.attrs.collabs_gathered_at.is_some() || !d.is_visible_to_members();
 
         let private_fields = if context.maybe_account_id().map(|i| i == d.account_id()).unwrap_or(false) {
             Some(PrivateFields {
-                managed_by_admin: d.attrs.managed_by_admin,
-                managed_unit_amount: d.attrs.managed_unit_amount,
-                stripe_session_url: d.attrs.stripe_session_url,
-                stripe_session_id: d.attrs.stripe_session_id,
                 status: d.attrs.status,
             })
         } else {
@@ -204,9 +193,8 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
             id: d.attrs.id,
             account_id: hex_to_i32(&d.attrs.account_id)?,
             budget,
+            kind: d.attrs.kind,
             max_individual_reward: d.attrs.max_individual_reward,
-            min_individual_reward: d.attrs.min_individual_reward,
-            price_per_point: d.attrs.price_per_point,
             advertiser_name,
             valid_until: d.attrs.valid_until,
             briefing_json: d.attrs.briefing_json,
@@ -219,56 +207,8 @@ impl Showable<models::Campaign, CampaignFilter> for Campaign {
             total_budget: d.attrs.total_budget,
             thumbs_up_only: d.attrs.thumbs_up_only,
             is_published,
+            is_ended,
             private_fields,
         })
-    }
-}
-
-#[rocket::post("/handle_stripe_events", data = "<webhook>")]
-pub async fn handle_stripe_events(webhook: StripeWebhook, app: &State<App>) -> AsamiResult<serde_json::Value> {
-    app.campaign().set_status_from_stripe_event(&webhook.event).await?;
-    Ok(serde_json::json!("OK"))
-}
-
-pub struct StripeWebhook {
-    event: stripe::Event,
-}
-
-#[rocket::async_trait]
-impl<'r> FromData<'r> for StripeWebhook {
-    type Error = Error;
-
-    async fn from_data(req: &'r Request<'_>, data: Data<'r>) -> data::Outcome<'r, Self> {
-        use rocket::data::Outcome;
-
-        let secret = req.rocket().state::<App>().expect("App not configured").settings.stripe.events_secret.clone();
-
-        let Some(sig) = req.headers().get_one("stripe-signature") else {
-            return Outcome::Error((Status::BadRequest, Error::validation("body", "missing event signature")));
-        };
-
-        let bytes = match data.open(512000.bytes()).into_string().await {
-            Ok(read) if read.is_complete() => read.into_inner(),
-            Ok(_) => {
-                return Outcome::Error((
-                    Status::PayloadTooLarge,
-                    Error::validation("payload", "payload too large"),
-                ))
-            }
-            Err(_) => {
-                return Outcome::Error((
-                    Status::BadRequest,
-                    Error::validation("body", "Bad request, can't read body."),
-                ))
-            }
-        };
-
-        match stripe::Webhook::construct_event(&bytes, sig, &secret) {
-            Ok(event) => Outcome::Success(StripeWebhook { event }),
-            Err(_) => Outcome::Error((
-                Status::BadRequest,
-                Error::validation("body", "could not construct event"),
-            )),
-        }
     }
 }

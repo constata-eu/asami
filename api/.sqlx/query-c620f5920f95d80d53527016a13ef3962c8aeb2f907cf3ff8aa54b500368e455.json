@@ -1,0 +1,61 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id as \"id!: i32\", \nscorer_account_id as \"scorer_account_id!: String\", \ntarget_account_id as \"target_account_id!: String\", \nreason as \"reason!: String\", \ncreated_at as \"created_at!: UtcDateTime\" FROM score_card_skips WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR scorer_account_id = $6::varchar) AND (NOT $7::boolean OR target_account_id = $8::varchar) AND (NOT $9::boolean OR reason = $10::text) AND (NOT $11::boolean OR created_at = $12::timestamptz) ORDER BY \n      (CASE ($13 = 'Id' AND NOT $14) WHEN true THEN id ELSE NULL END),\n      (CASE ($13 = 'Id' AND $14) WHEN true THEN id ELSE NULL END) DESC\n    ,\n      (CASE ($13 = 'ScorerAccountId' AND NOT $14) WHEN true THEN scorer_account_id ELSE NULL END),\n      (CASE ($13 = 'ScorerAccountId' AND $14) WHEN true THEN scorer_account_id ELSE NULL END) DESC\n    ,\n      (CASE ($13 = 'TargetAccountId' AND NOT $14) WHEN true THEN target_account_id ELSE NULL END),\n      (CASE ($13 = 'TargetAccountId' AND $14) WHEN true THEN target_account_id ELSE NULL END) DESC\n    ,\n      (CASE ($13 = 'Reason' AND NOT $14) WHEN true THEN reason ELSE NULL END),\n      (CASE ($13 = 'Reason' AND $14) WHEN true THEN reason ELSE NULL END) DESC\n    ,\n      (CASE ($13 = 'CreatedAt' AND NOT $14) WHEN true THEN created_at ELSE NULL END),\n      (CASE ($13 = 'CreatedAt' AND $14) WHEN true THEN created_at ELSE NULL END) DESC\n     LIMIT $15 OFFSET $16 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "scorer_account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "target_account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "reason!: String",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Text",
+        "Bool",
+        "Timestamptz",
+        "Text",
+        "Bool",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c620f5920f95d80d53527016a13ef3962c8aeb2f907cf3ff8aa54b500368e455"
+}

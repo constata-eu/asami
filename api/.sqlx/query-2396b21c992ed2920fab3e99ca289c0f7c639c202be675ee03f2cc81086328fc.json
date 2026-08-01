@@ -1,0 +1,33 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM score_card_skips WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR scorer_account_id = $6::varchar) AND (NOT $7::boolean OR target_account_id = $8::varchar) AND (NOT $9::boolean OR reason = $10::text) AND (NOT $11::boolean OR created_at = $12::timestamptz)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Text",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "2396b21c992ed2920fab3e99ca289c0f7c639c202be675ee03f2cc81086328fc"
+}

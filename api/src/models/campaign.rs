@@ -1,7 +1,4 @@
-use std::collections::HashSet;
-
 use juniper::GraphQLInputObject;
-use twitter_v2::query::TweetField;
 
 /* Campaigns are created locally, then paid in the smart contract.
  * Campaigns could be paid on-chain without being reported in the contract, but it would not
@@ -18,23 +15,6 @@ model! {
     #[sqlx_model_hints(varchar)]
     account_id: String,
 
-    #[sqlx_model_hints(boolean)]
-    managed_by_admin: bool,
-
-    // The amount charged to the user by the admin
-    // via stripe, to manage this campaign.
-    // This is before fees so it will be more than the
-    // campaign on-chain budget.
-    // The managed unit amount is what the user
-    // entered in the form on the website.
-    #[sqlx_model_hints(int4, op_lt, op_gt)]
-    managed_unit_amount: Option<i32>,
-    #[sqlx_model_hints(varchar, default)]
-    stripe_session_url: Option<String>,
-    #[sqlx_model_hints(varchar, default)]
-    stripe_session_id: Option<String>,
-
-
     // We may allow an asami account to change their address
     // this should not affect any existing campaigns.
     #[sqlx_model_hints(varchar, op_like)]
@@ -50,16 +30,18 @@ model! {
     // for this campaign.
     #[sqlx_model_hints(varchar, op_lt, op_gt)]
     budget: String,
-    #[sqlx_model_hints(varchar)]
-    price_per_point: String,
+    #[sqlx_model_hints(campaign_kind, op_in)]
+    kind: CampaignKind,
     #[sqlx_model_hints(varchar)]
     max_individual_reward: String,
-    #[sqlx_model_hints(varchar)]
-    min_individual_reward: String,
     #[sqlx_model_hints(boolean)]
     thumbs_up_only: bool,
     #[sqlx_model_hints(timestamptz, default)]
     valid_until: Option<UtcDateTime>,
+    #[sqlx_model_hints(timestamptz, default, op_is_set)]
+    collabs_gathered_at: Option<UtcDateTime>,
+    #[sqlx_model_hints(timestamptz, default, op_is_set)]
+    rewards_assigned_at: Option<UtcDateTime>,
     #[sqlx_model_hints(varchar, default)]
     report_hash: Option<String>,
     #[sqlx_model_hints(timestamptz, default, op_gt)]
@@ -100,6 +82,7 @@ model! {
   has_many {
     CampaignTopic(campaign_id),
     Collab(campaign_id),
+    CampaignPreference(campaign_id),
   },
   belongs_to {
     Account(account_id),
@@ -123,14 +106,31 @@ make_sql_enum![
     "campaign_status",
     pub enum CampaignStatus {
         Draft,
-        // These are skipped for self-managed campaigns.
-        AwaitingPayment, // A stripe payment session was created.
-        Paid,            // Stripe told us this was paid.
         Submitted,       // Campaign was apparently submitted on-chain by the user.
         Published,       // Campaign has been seen on-chain.
         Failed,          // Something went wrong, a refund may or may not be needed.
     }
 ];
+
+make_sql_enum![
+    "campaign_kind",
+    pub enum CampaignKind {
+        XRepost,
+        CommunityGiveaway,
+    }
+];
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum CampaignBriefing {
+    XRepost {
+        tweet_id: String,
+    },
+    CommunityGiveaway {
+        all_members: bool,
+        member_ids: Vec<String>,
+    },
+}
 
 impl CampaignHub {
     pub async fn force_hydrate(&self) -> AsamiResult<()> {
@@ -178,186 +178,82 @@ impl CampaignHub {
         Ok(())
     }
 
-    pub async fn sync_x_collabs(&self) -> anyhow::Result<Vec<Collab>> {
-        let result = self.sync_x_collabs_inner().await;
-        if let Err(e) = result.as_ref() {
-            self.state.fail("sync_x_collabs", "error", &format!("{e:?}")).await;
-        }
-        result
+    pub async fn prepare_collabs(&self) -> anyhow::Result<Vec<Collab>> {
+        let mut collabs = vec![];
+        collabs.extend(self.gather_community_giveaway_collabs().await?);
+        collabs.extend(self.gather_x_repost_collabs().await?);
+        collabs.extend(self.assign_pending_rewards().await?);
+        Ok(collabs)
     }
 
-    pub async fn sync_x_collabs_inner(&self) -> anyhow::Result<Vec<Collab>> {
-        use twitter_v2::{api_result::*, authorization::BearerToken, TwitterApi};
-
-        let mut collabs = vec![];
-        let conf = &self.state.settings.x;
-        let auth = BearerToken::new(&conf.bearer_token);
-        let api = TwitterApi::new(auth);
-
+    async fn gather_community_giveaway_collabs(&self) -> anyhow::Result<Vec<Collab>> {
+        let mut created = vec![];
         let mut campaigns = self
             .select()
-            .budget_gt(milli("50").encode_hex())
-            .order_by(CampaignOrderBy::Id)
-            .desc(true)
+            .status_eq(CampaignStatus::Published)
+            .kind_eq(CampaignKind::CommunityGiveaway)
+            .collabs_gathered_at_is_set(false)
             .all()
             .await?;
 
         for campaign in campaigns.iter_mut() {
-            let post_id = campaign
-                .content_id()?
-                .parse::<u64>()
-                .map_err(|_| Error::Validation("content_id".into(), "was stored in the db not as u64".into()))?;
-
-            self.state.info("sync_x_collabs", "fetching_retweets", &post_id).await;
-            if let Some(metrics) =
-                api.get_tweet(post_id).send().await?.data.as_ref().and_then(|o| o.public_metrics.as_ref())
-            {
-                campaign
-                    .clone()
-                    .update()
-                    .reply_count(metrics.reply_count as i32)
-                    .repost_count(metrics.retweet_count as i32)
-                    .like_count(metrics.like_count as i32)
-                    .save()
-                    .await?;
-            } else {
-                self.state.info("sync_x_collabs", "no_organic_metrics_for", &post_id).await;
-            }
-            self.x_cooldown().await; // The metrics take up space too.
-
-            let mut user_ids = HashSet::new();
-
-            let reposts = api.get_tweet_retweeted_by(post_id).send().await?;
-            self.state.info("sync_x_collabs", "got_retweeted_by", ()).await;
-            let mut reposts_page = Some(reposts);
-            while let Some(reposts) = reposts_page {
-                self.state.info("sync_x_collabs", "getting_payload", ()).await;
-                let payload = reposts.payload();
-                self.state.info("sync_x_collabs", "got_payload", ()).await;
-                let Some(data) = payload.data() else {
-                    self.state.info("sync_x_collabs", "no_payload_data", ()).await;
-                    break;
-                };
-
-                for user in data {
-                    self.state.info("sync_x_collabs", "got_retweet_user", &user.id).await;
-                    user_ids.insert(user.id.to_string());
-                }
-
-                if data.len() < 100 {
-                    reposts_page = None;
-                } else {
-                    self.state.info("sync_x_collabs", "fetching_next_page", ()).await;
-                    reposts_page = reposts.next_page().await?;
-                    self.state.info("sync_x_collabs", "got_next_page", ()).await;
-                    self.x_cooldown().await; // After fetching a page.
-                }
-            }
-
-            let quotes = api.get_tweet_quote_tweets(post_id).tweet_fields([TweetField::AuthorId]).send().await?;
-            self.state.info("sync_x_collabs", "got_quotes", ()).await;
-            let mut quotes_page = Some(quotes);
-            while let Some(quotes) = quotes_page {
-                self.state.info("sync_x_collabs", "getting_payload", ()).await;
-                let payload = quotes.payload();
-                self.state.info("sync_x_collabs", "got_payload", ()).await;
-                let Some(data) = payload.data() else {
-                    self.state.info("sync_x_collabs", "no_payload_data", ()).await;
-                    break;
-                };
-
-                for post in data {
-                    let Some(user_id) = post.author_id else {
-                        continue;
-                    };
-                    self.state.info("sync_x_collabs", "got_quote_user", &user_id).await;
-                    user_ids.insert(user_id.to_string());
-                }
-
-                if data.len() < 100 {
-                    quotes_page = None;
-                } else {
-                    self.state.info("sync_x_collabs", "fetching_next_page", ()).await;
-                    quotes_page = quotes.next_page().await?;
-                    self.state.info("sync_x_collabs", "got_next_page", ()).await;
-                    self.x_cooldown().await; // After fetching a page.
-                }
-            }
-
-            self.state.info("sync_x_collabs", "next_campaign", ()).await;
-
-            for user_id in user_ids {
-                self.state.info("sync_x_collabs", "processing_user", &user_id).await;
-                if let Some(collab) = campaign.make_x_collab_with_user_id(&user_id).await? {
-                    collabs.push(collab);
-                };
-            }
-
-            self.x_cooldown().await; // Always between campaigns, even if reposts was None.
+            created.extend(campaign.gather_community_giveaway_collabs().await?);
         }
-        Ok(collabs)
+
+        Ok(created)
     }
 
-    async fn x_cooldown(&self) {
-        // The basic plan allows 5 requests ever 15 minutes, that is, a 3 minute cooldown
-        // between api calls.
-        tokio::time::sleep(tokio::time::Duration::from_millis(3 * 60 * 1000)).await;
-    }
-
-    pub async fn set_status_from_stripe_event(&self, e: &stripe::Event) -> AsamiResult<Option<Campaign>> {
-        use stripe::{EventObject, EventType};
-
-        let status = match e.event_type {
-            EventType::PaymentIntentSucceeded => CampaignStatus::Paid,
-            EventType::PaymentIntentCanceled | EventType::PaymentIntentPaymentFailed => CampaignStatus::Failed,
-            _ => return Ok(None),
-        };
-
-        let EventObject::PaymentIntent(i) = &e.data.object else {
-            return Ok(None);
-        };
-
-        let customer_id =
-            i.customer.as_ref().map(|c| c.id().to_string()).ok_or(Error::validation("customer", "missing"))?;
-        let Some(account) = self.state.account().select().stripe_customer_id_eq(customer_id).optional().await? else {
-            return Ok(None);
-        };
-
-        let Some(campaign_id) = i.metadata.get("campaign_id").and_then(|i| i.parse::<i32>().ok()) else {
-            return Err(Error::validation("campaign_id", "no_request_id_on_stripe_event"));
-        };
-
-        let Some(campaign) = self
-            .state
-            .campaign()
+    async fn gather_x_repost_collabs(&self) -> anyhow::Result<Vec<Collab>> {
+        let mut created = vec![];
+        let now = Utc::now();
+        let mut campaigns = self
             .select()
-            .status_eq(CampaignStatus::AwaitingPayment)
-            .account_id_eq(account.id())
-            .id_eq(campaign_id)
-            .optional()
-            .await?
-        else {
-            return Err(Error::validation("campaign", "campaign_not_found"));
-        };
+            .status_eq(CampaignStatus::Published)
+            .kind_eq(CampaignKind::XRepost)
+            .collabs_gathered_at_is_set(false)
+            .all()
+            .await?;
 
-        Ok(Some(campaign.update().status(status).save().await?))
-    }
+        for campaign in campaigns.iter_mut() {
+            let Some(valid_until) = campaign.valid_until().clone() else {
+                continue;
+            };
 
-    pub async fn create_managed_on_chain_campaigns(&self) -> AsamiResult<()> {
-        for campaign in self.select().status_eq(CampaignStatus::Paid).all().await? {
-            let on_chain_balance =
-                self.state.on_chain.doc_contract.balance_of(self.state.on_chain.client.address()).call().await?;
-
-            if campaign.budget_from_unit_amount()? > on_chain_balance {
+            if now < campaign.repost_registration_opens_at()? {
                 continue;
             }
 
-            let tx = self.state.transactional().await?;
-            tx.campaign().find(campaign.id()).await?.create_managed_on_chain_campaign().await?;
-            tx.commit().await?;
+            if valid_until <= now {
+                campaign
+                    .clone()
+                    .update()
+                    .collabs_gathered_at(Some(now))
+                    .save()
+                    .await?;
+                continue;
+            }
+
+            created.extend(campaign.gather_x_repost_collabs().await?);
         }
 
-        Ok(())
+        Ok(created)
+    }
+
+    async fn assign_pending_rewards(&self) -> anyhow::Result<Vec<Collab>> {
+        let mut updated = vec![];
+        let mut campaigns = self
+            .select()
+            .status_eq(CampaignStatus::Published)
+            .collabs_gathered_at_is_set(true)
+            .rewards_assigned_at_is_set(false)
+            .all()
+            .await?;
+
+        for campaign in campaigns.iter_mut() {
+            updated.extend(campaign.assign_rewards_to_pending_collabs().await?);
+        }
+
+        Ok(updated)
     }
 }
 
@@ -381,16 +277,26 @@ impl Campaign {
         u256(self.budget())
     }
 
+    async fn mark_collabs_gathered_at(&mut self, when: UtcDateTime) -> AsamiResult<()> {
+        self.clone()
+            .update()
+            .collabs_gathered_at(Some(when))
+            .save()
+            .await?;
+        Ok(())
+    }
+
+    async fn mark_rewards_assigned_at(&mut self, when: UtcDateTime) -> AsamiResult<()> {
+        self.clone()
+            .update()
+            .rewards_assigned_at(Some(when))
+            .save()
+            .await?;
+        Ok(())
+    }
+
     pub fn max_individual_reward_u256(&self) -> U256 {
         u256(self.max_individual_reward())
-    }
-
-    pub fn min_individual_reward_u256(&self) -> U256 {
-        u256(self.min_individual_reward())
-    }
-
-    pub fn price_per_point_u256(&self) -> U256 {
-        u256(self.price_per_point())
     }
 
     pub async fn available_budget(&self) -> anyhow::Result<U256> {
@@ -407,118 +313,45 @@ impl Campaign {
         Ok(self.budget_u256().checked_sub(from_registered).unwrap_or(U256::zero()))
     }
 
-    pub async fn make_collab(&mut self, handle: &Handle, reward: U256, trigger: &str) -> AsamiResult<Collab> {
-        handle.validate_collaboration(self, reward, trigger).await?;
+    async fn create_pending_collab_for_account(
+        &mut self,
+        account: &Account,
+        handle: Option<&Handle>,
+        trigger: &str,
+    ) -> AsamiResult<Option<Collab>> {
+        if self
+            .state
+            .collab()
+            .select()
+            .campaign_id_eq(self.attrs.id)
+            .collab_trigger_unique_id_eq(trigger.to_string())
+            .count()
+            .await?
+            > 0
+        {
+            return Ok(None);
+        }
 
         let collab = self
             .state
             .collab()
             .insert(InsertCollab {
                 campaign_id: self.attrs.id,
-                handle_id: handle.attrs.id,
+                handle_id: handle.map(|h| *h.id()),
                 advertiser_id: self.attrs.account_id.clone(),
-                member_id: handle.account_id().clone(),
+                member_id: account.id().clone(),
                 collab_trigger_unique_id: trigger.to_string(),
-                reward: reward.encode_hex(),
+                reward: weihex("0"),
                 fee: None,
-                status: CollabStatus::Registered,
+                status: CollabStatus::Pending,
                 dispute_reason: None,
             })
             .save()
             .await?;
 
         self.state.community_member().create_or_update_from_collab(&collab).await?;
-
         self.reload().await?;
-
-        Ok(collab)
-    }
-
-    pub async fn make_failed_collab(
-        &self,
-        handle: &Handle,
-        reward: U256,
-        trigger: &str,
-        reason: &str,
-    ) -> AsamiResult<Collab> {
-        Ok(self
-            .state
-            .collab()
-            .insert(InsertCollab {
-                campaign_id: self.attrs.id,
-                handle_id: handle.attrs.id,
-                advertiser_id: self.attrs.account_id.clone(),
-                member_id: handle.account_id().clone(),
-                collab_trigger_unique_id: trigger.to_string(),
-                reward: reward.encode_hex(),
-                fee: None,
-                status: CollabStatus::Failed,
-                dispute_reason: Some(reason.to_string()),
-            })
-            .save()
-            .await?)
-    }
-
-    pub async fn make_x_collab_with_user_id(&mut self, user_id: &str) -> AsamiResult<Option<Collab>> {
-        let Some(handle) = self
-            .state
-            .handle()
-            .select()
-            .user_id_eq(user_id.to_string())
-            .order_by(HandleOrderBy::Id)
-            .status_eq(HandleStatus::Active)
-            .desc(true)
-            .optional()
-            .await?
-        else {
-            self.state
-                .info(
-                    "sync_x_collabs",
-                    "make_x_collab_no_active_handle_found",
-                    (self.id(), user_id),
-                )
-                .await;
-            return Ok(None);
-        };
-
-        let log_pointer = (self.id(), handle.id());
-
-        let trigger = handle.user_id();
-
-        let Some(reward) = handle.reward_for(self) else {
-            self.state.info("sync_x_collabs", "make_x_collab_no_reward", log_pointer).await;
-            return Ok(None);
-        };
-
-        match self.make_collab(&handle, reward, trigger).await {
-            Ok(req) => Ok(Some(req)),
-            Err(Error::Validation(_, reason)) => {
-                self.state
-                    .info(
-                        "sync_x_collabs",
-                        "make_x_collab_invalid",
-                        &(self.id(), handle.id(), &reason),
-                    )
-                    .await;
-
-                if reason != "collab_exists" {
-                    let collab = self.make_failed_collab(&handle, reward, trigger, &reason).await?;
-                    Ok(Some(collab))
-                } else {
-                    Ok(None)
-                }
-            }
-            Err(e) => {
-                self.state
-                    .info(
-                        "sync_x_collabs",
-                        "make_x_collab_error",
-                        &(self.id(), handle.id(), e.to_string()),
-                    )
-                    .await;
-                Err(e)
-            }
-        }
+        Ok(Some(collab))
     }
 
     pub fn decoded_advertiser_addr(&self) -> AsamiResult<Address> {
@@ -540,15 +373,78 @@ impl Campaign {
         u256(self.briefing_hash())
     }
 
-    pub fn content_id(&self) -> AsamiResult<String> {
-        serde_json::from_str::<serde_json::Value>(self.briefing_json())
-            .map_err(|_| Error::precondition(&format!("parse_error_in_briefing_json: {}", self.id())))?
-            .as_str()
-            .map(|x| x.to_string())
-            .ok_or(Error::precondition(&format!(
-                "no_content_id_in_briefing_json {}",
-                self.id()
-            )))
+    pub fn briefing(&self) -> AsamiResult<CampaignBriefing> {
+        serde_json::from_str::<CampaignBriefing>(self.briefing_json())
+            .map_err(|_| Error::precondition(&format!("parse_error_in_briefing_json: {}", self.id())))
+    }
+
+    pub fn x_post_id(&self) -> AsamiResult<String> {
+        match self.briefing()? {
+            CampaignBriefing::XRepost { tweet_id } => Ok(tweet_id),
+            CampaignBriefing::CommunityGiveaway { .. } => {
+                Err(Error::validation("campaign", "campaign_kind_has_no_x_post"))
+            }
+        }
+    }
+
+    pub fn repost_registration_opens_at(&self) -> AsamiResult<UtcDateTime> {
+        self.valid_until()
+            .map(|valid_until| valid_until - Duration::days(5))
+            .ok_or(Error::precondition("x_repost_campaign_has_no_valid_until"))
+    }
+
+    pub fn is_visible_to_members(&self) -> bool {
+        self.kind() == &CampaignKind::XRepost
+            && self.status() == &CampaignStatus::Published
+            && self.collabs_gathered_at().is_none()
+            && self
+                .valid_until()
+                .map(|valid_until| {
+                    valid_until > (Utc::now() + Duration::days(5))
+                        && valid_until <= (Utc::now() + Duration::days(15))
+                })
+                .unwrap_or(false)
+    }
+
+    pub async fn giveaway_target_account_ids(&self) -> AsamiResult<Vec<String>> {
+        let community_member_ids: std::collections::HashSet<String> = self
+            .state
+            .community_member()
+            .select()
+            .account_id_eq(self.account_id())
+            .all()
+            .await?
+            .into_iter()
+            .map(|member| member.attrs.member_id)
+            .collect();
+
+        let mut target_ids = match self.briefing()? {
+            CampaignBriefing::CommunityGiveaway { all_members, member_ids: _ } if all_members => {
+                community_member_ids.into_iter().collect::<Vec<_>>()
+            }
+            CampaignBriefing::CommunityGiveaway { member_ids, .. } => member_ids
+                .into_iter()
+                .filter(|member_id| community_member_ids.contains(member_id))
+                .collect::<Vec<_>>(),
+            CampaignBriefing::XRepost { .. } => {
+                return Err(Error::validation("campaign", "campaign_kind_has_no_giveaway_targets"))
+            }
+        };
+
+        target_ids.sort();
+        target_ids.dedup();
+
+        Ok(self
+            .state
+            .account()
+            .select()
+            .id_in(target_ids)
+            .acceptance_status_eq(AcceptanceStatus::Active)
+            .all()
+            .await?
+            .into_iter()
+            .map(|account| account.attrs.id)
+            .collect())
     }
 
     pub async fn find_on_chain(&self) -> anyhow::Result<crate::on_chain::asami_contract_code::Campaign> {
@@ -562,11 +458,7 @@ impl Campaign {
     }
 
     pub async fn mark_submitted(self) -> AsamiResult<Self> {
-        if *self.managed_by_admin() {
-            if *self.status() != CampaignStatus::Paid {
-                return Ok(self);
-            }
-        } else if *self.status() != CampaignStatus::Draft {
+        if *self.status() != CampaignStatus::Draft {
             return Ok(self);
         }
 
@@ -575,119 +467,158 @@ impl Campaign {
 
     // Find out how much this campaign would pay an account.
     pub async fn reward_for_account(&self, account: &Account) -> AsamiResult<Option<U256>> {
-        if let Some(handle) = account.handle_scope().optional().await? {
-            Ok(handle.reward_for(self))
+        if self.kind() != &CampaignKind::XRepost || !self.is_visible_to_members() {
+            return Ok(None);
+        }
+
+        let Some(handle) = account.handle_scope().optional().await? else {
+            return Ok(None);
+        };
+
+        if handle.validate_collaboration(self, handle.user_id()).await.is_ok() {
+            Ok(Some(self.max_individual_reward_u256()))
         } else {
             Ok(None)
         }
     }
 
-    pub async fn create_stripe_checkout_session(self) -> AsamiResult<Self> {
-        use serde_json::json;
-        use stripe::CheckoutSession;
-
-        if !self.managed_by_admin() {
-            return Err(Error::precondition(
-                "cannot_create_checkout_session_if_not_managed_by_admin",
-            ));
-        }
-        if *self.status() != CampaignStatus::Draft {
-            return Err(Error::precondition("cannot_create_checkout_session_if_not_draft"));
+    pub async fn gather_community_giveaway_collabs(&mut self) -> AsamiResult<Vec<Collab>> {
+        let target_ids = self.giveaway_target_account_ids().await?;
+        if target_ids.is_empty() {
+            self.clone()
+                .update()
+                .collabs_gathered_at(Some(Utc::now()))
+                .save()
+                .await?;
+            return Ok(vec![]);
         }
 
-        let Some(unit_amount) = self.managed_unit_amount().as_ref() else {
-            return Err(Error::precondition(
-                "cannot_create_checkout_session_with_no_unit_amount",
-            ));
-        };
+        let accounts = self.state.account().select().id_in(target_ids).all().await?;
+        let mut collabs = vec![];
 
-        let client = &self.state.stripe_client;
-        let settings = &self.state.settings.stripe;
-        let customer_id = self.account().await?.get_or_create_stripe_customer_id().await?;
+        for account in accounts {
+            let handle = account.handle_scope().status_eq(HandleStatus::Active).optional().await?;
+            let trigger = format!("community_giveaway:{}:{}", self.id(), account.id());
+            if let Some(collab) = self
+                .create_pending_collab_for_account(&account, handle.as_ref(), &trigger)
+                .await?
+            {
+                collabs.push(collab);
+            }
+        }
 
-        let stripe_session: CheckoutSession = client
-            .post_form(
-                "/checkout/sessions",
-                json![{
-                  "success_url": settings.success_url,
-                  "cancel_url": settings.cancel_url,
-                  "customer": customer_id,
-                  "payment_method_types": ["card"],
-                  "mode": "payment",
-                  "payment_intent_data": {
-                    "metadata": {
-                      "campaign_id": self.id(),
-                    }
-                  },
-                  "line_items": [
-                    {
-                      "quantity": 1,
-                      "price_data": {
-                        "currency": "USD",
-                        "unit_amount": i64::from(*unit_amount), // This amount is expressed in cents.
-                        "product_data": {
-                          "name": "Managed Asami Campaign",
-                          "description": format!("Boost for post: https://x.com/user/status/{}", self.content_id()?),
-                        }
-                      }
-                    }
-                  ]
-                }],
-            )
-            .await?;
-
-        Ok(self
+        self.clone()
             .update()
-            .status(CampaignStatus::AwaitingPayment)
-            .stripe_session_url(Some(stripe_session.url))
-            .stripe_session_id(Some(stripe_session.id.to_string()))
+            .collabs_gathered_at(Some(Utc::now()))
             .save()
-            .await?)
+            .await?;
+        Ok(collabs)
     }
 
-    // Transitions from "paid" to "submitted"
-    pub async fn create_managed_on_chain_campaign(self) -> AsamiResult<Self> {
-        if *self.status() != CampaignStatus::Paid {
-            return Err(Error::precondition(
-                "cannot_create_managed_campaign_when_not_in_paid_status",
-            ));
-        }
-
-        let chain = &self.state.on_chain;
-        // TODO: Configuring the admin in the contract is important.
-        // But we should do this elsewhere.
-        let _ = self.state.get_admin_own_account().await?;
-        let budget = self.budget_from_unit_amount()?;
-
-        let allowance = chain.doc_contract.allowance(chain.client.address(), chain.asami_address).call().await?;
-
-        if budget > allowance {
-            chain.doc_contract.approve(chain.asami_address, budget * 2).send().await?.await?;
-        }
-
-        chain
-            .asami_contract
-            .make_campaigns(vec![on_chain::MakeCampaignsParam {
-                budget: self.budget_from_unit_amount()?,
-                briefing_hash: self.decoded_briefing_hash(),
-                valid_until: models::utc_to_i(Utc::now() + chrono::Duration::days(15)),
-            }])
-            .send()
+    pub async fn gather_x_repost_collabs(&mut self) -> AsamiResult<Vec<Collab>> {
+        let tweet_id = self.x_post_id()?;
+        let preferences = self
+            .campaign_preference_scope()
+            .attempted_on_is_set(true)
+            .all()
             .await?;
 
-        self.mark_submitted().await
+        let mut verified = vec![];
+        for preference in preferences {
+            let Some(account) = self
+                .state
+                .account()
+                .select()
+                .id_eq(preference.account_id())
+                .acceptance_status_eq(AcceptanceStatus::Active)
+                .optional()
+                .await?
+            else {
+                continue;
+            };
+
+            let Some(handle) = account.handle_scope().status_eq(HandleStatus::Active).optional().await? else {
+                continue;
+            };
+
+            if handle.has_reposted_x_campaign(&tweet_id).await.unwrap_or(false) {
+                verified.push((account, handle));
+            }
+        }
+
+        let mut collabs = vec![];
+        for (account, handle) in verified {
+            if let Some(collab) = self
+                .create_pending_collab_for_account(&account, Some(&handle), handle.user_id())
+                .await?
+            {
+                collabs.push(collab);
+            }
+        }
+
+        self.mark_collabs_gathered_at(Utc::now()).await?;
+        Ok(collabs)
     }
 
-    // For managed campaigns, there's a dinosaur tax of 20%.
-    // So only 80% of the funds received on stripe become campaign rewards.
-    pub fn budget_from_unit_amount(&self) -> AsamiResult<U256> {
-        let Some(unit_amount) = self.managed_unit_amount().as_ref() else {
-            return Err(Error::precondition("no_unit_amount_on_non_managed_campaigns"));
-        };
+    pub async fn assign_rewards_to_pending_collabs(&mut self) -> AsamiResult<Vec<Collab>> {
+        let pending = self
+            .collab_scope()
+            .status_eq(CollabStatus::Pending)
+            .all()
+            .await?;
 
-        let processing_fee_percent = U256::from(20);
-        let amount_as_wei = U256::from(*unit_amount) * U256::from(10).pow(U256::from(16));
-        Ok(amount_as_wei * (U256::from(100) - processing_fee_percent) / U256::from(100))
+        if pending.is_empty() {
+            self.mark_rewards_assigned_at(Utc::now()).await?;
+            return Ok(vec![]);
+        }
+
+        let member_ids = pending
+            .iter()
+            .map(|collab| collab.member_id().clone())
+            .collect::<Vec<_>>();
+        let scores = self
+            .state
+            .community_member()
+            .creator_scores_for_targets(self.account_id(), &member_ids)
+            .await?;
+        let rewards = prorated_rewards(
+            self.budget_u256(),
+            pending
+                .iter()
+                .map(|collab| {
+                    let weight = scores
+                        .get(collab.member_id())
+                        .map(|score| ((score.total_score() * 1000.0).round() as u64).max(1))
+                        .unwrap_or(30_000);
+                    (collab.member_id().clone(), weight)
+                })
+                .collect(),
+            Some(self.max_individual_reward_u256()),
+        );
+
+        let mut updated = vec![];
+        for collab in pending {
+            let reward = rewards
+                .get(collab.member_id())
+                .copied()
+                .unwrap_or_else(U256::zero);
+
+            let saved = collab
+                .update()
+                .reward(reward.encode_hex())
+                .status(if reward.is_zero() {
+                    CollabStatus::Failed
+                } else {
+                    CollabStatus::Registered
+                })
+                .save()
+                .await?;
+            updated.push(saved);
+        }
+
+        self.mark_rewards_assigned_at(Utc::now()).await?;
+        self.reload().await?;
+        Ok(updated)
     }
 }
 
@@ -695,53 +626,48 @@ impl Campaign {
 #[graphql(description = "The input for creating a new Campaign.")]
 #[serde(rename_all = "camelCase")]
 pub struct CreateCampaignFromLinkInput {
-    pub link: String,
-    pub managed_unit_amount: Option<i32>,
+    pub kind: CampaignKind,
+    pub link: Option<String>,
     pub topic_ids: Vec<i32>,
-    pub price_per_point: String,
     pub max_individual_reward: String,
-    pub min_individual_reward: String,
     pub thumbs_up_only: bool,
+    pub all_members: bool,
+    pub member_ids: Vec<i32>,
 }
 
 impl CreateCampaignFromLinkInput {
     pub async fn process(self, app: &App, account: &Account) -> AsamiResult<Campaign> {
         let topics = app.topic().select().id_in(&self.topic_ids).all().await?;
+        let advertiser_addr =
+            account.addr().clone().ok_or(Error::validation("account", "need_an_address_to_create_campaigns"))?;
 
-        let advertiser_addr = if self.managed_unit_amount.is_some() {
-            app.on_chain.client.address().encode_hex()
-        } else {
-            account.addr().clone().ok_or(Error::validation("account", "need_an_address_to_create_campaigns"))?
-        };
+        let briefing = self.build_briefing()?;
 
-        let briefing = Self::validate_x_link_and_get_briefing(&self.link)?;
+        let briefing_json =
+            serde_json::to_string(&briefing).map_err(|_| Error::precondition("briefing_is_always_json_encodeable"))?;
 
-        let Ok(briefing_hash) = models::hasher::u256digest(briefing.as_bytes()) else {
+        let Ok(briefing_hash) = models::hasher::u256digest(briefing_json.as_bytes()) else {
             return Err(Error::precondition(
                 "conversion_from_briefing_hash_to_u256_should_never_fail",
             ));
         };
 
-        let briefing_json =
-            serde_json::to_string(&briefing).map_err(|_| Error::precondition("briefing_is_always_json_encodeable"))?;
-
-        if app.campaign().select().briefing_hash_eq(briefing_hash.encode_hex()).count().await? > 0 {
-            return Err(Error::validation("link", "campaign_already_exists"));
+        if self.kind == CampaignKind::XRepost
+            && app.campaign().select().briefing_hash_eq(briefing_hash.encode_hex()).count().await? > 0
+        {
+            return Err(Error::validation("campaign", "campaign_already_exists"));
         }
 
-        let mut campaign = app
+        let campaign = app
             .campaign()
             .insert(InsertCampaign {
-                managed_by_admin: self.managed_unit_amount.is_some(),
-                managed_unit_amount: self.managed_unit_amount,
                 account_id: account.attrs.id.clone(),
                 advertiser_addr,
                 budget: weihex("0"),
+                kind: self.kind,
                 briefing_hash: briefing_hash.encode_hex(),
                 briefing_json,
-                price_per_point: parse_u256("price_per_point", &self.price_per_point)?.encode_hex(),
                 max_individual_reward: parse_u256("max_individual_reward", &self.max_individual_reward)?.encode_hex(),
-                min_individual_reward: parse_u256("min_individual_reward", &self.min_individual_reward)?.encode_hex(),
                 thumbs_up_only: self.thumbs_up_only,
             })
             .save()
@@ -757,14 +683,32 @@ impl CreateCampaignFromLinkInput {
                 .await?;
         }
 
-        if *campaign.managed_by_admin() {
-            campaign = campaign.create_stripe_checkout_session().await?;
-        }
-
         Ok(campaign)
     }
 
-    pub fn validate_x_link_and_get_briefing(link: &str) -> AsamiResult<String> {
+    fn build_briefing(&self) -> AsamiResult<CampaignBriefing> {
+        match self.kind {
+            CampaignKind::XRepost => Ok(CampaignBriefing::XRepost {
+                tweet_id: Self::validate_x_link_and_get_tweet_id(
+                    self.link
+                        .as_deref()
+                        .ok_or(Error::validation("link", "campaign_link_required"))?,
+                )?,
+            }),
+            CampaignKind::CommunityGiveaway => Ok(CampaignBriefing::CommunityGiveaway {
+                all_members: self.all_members,
+                member_ids: if self.all_members {
+                    vec![]
+                } else if self.member_ids.is_empty() {
+                    return Err(Error::validation("member_ids", "at_least_one_member_required"));
+                } else {
+                    self.member_ids.iter().map(|id| i32_to_hex(*id)).collect()
+                },
+            }),
+        }
+    }
+
+    pub fn validate_x_link_and_get_tweet_id(link: &str) -> AsamiResult<String> {
         use regex::Regex;
         use url::Url;
         let u = Url::parse(link).map_err(|_| Error::validation("link", "invalid_url"))?;
@@ -794,4 +738,37 @@ impl CreateCampaignFromLinkInput {
 fn parse_u256(fieldname: &str, value: &str) -> AsamiResult<U256> {
     use ethers::abi::AbiDecode;
     U256::decode_hex(value).map_err(|_e| Error::validation(fieldname, "invalid_hex_encoded_u256_value"))
+}
+
+fn prorated_rewards(
+    budget: U256,
+    weights: Vec<(String, u64)>,
+    cap: Option<U256>,
+) -> std::collections::HashMap<String, U256> {
+    let mut rewards = std::collections::HashMap::new();
+    if budget.is_zero() || weights.is_empty() {
+        return rewards;
+    }
+
+    let total_weight: u64 = weights.iter().map(|(_, weight)| *weight).sum();
+    if total_weight == 0 {
+        return rewards;
+    }
+
+    let mut spent = U256::zero();
+    let last_index = weights.len().saturating_sub(1);
+
+    for (index, (account_id, weight)) in weights.into_iter().enumerate() {
+        let raw_reward = if index == last_index {
+            budget.checked_sub(spent).unwrap_or_else(U256::zero)
+        } else {
+            (budget * U256::from(weight)) / U256::from(total_weight)
+        };
+
+        let reward = cap.map(|max| raw_reward.min(max)).unwrap_or(raw_reward);
+        spent += reward;
+        rewards.insert(account_id, reward);
+    }
+
+    rewards
 }

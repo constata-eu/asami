@@ -111,7 +111,9 @@ impl OnChainJob {
                 let collab = link.collab().await?;
                 account_ids.insert(collab.attrs.member_id.clone());
                 account_ids.insert(collab.attrs.advertiser_id.clone());
-                handle_ids.insert(collab.attrs.handle_id);
+                if let Some(handle_id) = collab.attrs.handle_id {
+                    handle_ids.insert(handle_id);
+                }
 
                 // We do this exactly as it's done in the contract to have the same
                 // precision loss the contract may have.

@@ -1,4 +1,9 @@
 import {
+  Form,
+  NumberInput,
+  SaveButton,
+  TextInput as RaTextInput,
+  useDataProvider,
   useUpdate,
   useNotify,
   useRefresh,
@@ -13,34 +18,40 @@ import {
   ReferenceField,
   useRecordContext,
 } from "react-admin";
+import { useState } from "react";
 import {
+  Card,
+  CardContent,
   Box,
   Button,
   Container,
+  Divider,
   IconButton,
   Skeleton,
   Stack,
+  TextField as MuiTextField,
   Typography,
 } from "@mui/material";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import { ColumnsContainer } from "../layout";
 import { Head1, Head2, Lead } from "../../components/theme";
-import { contentId } from "../../lib/campaign";
+import { campaignLabel } from "../../lib/campaign";
 import { Datagrid, TextField, FunctionField } from "react-admin";
 import { useListController, useTranslate } from "react-admin";
 import { getAuthKeys } from "../../lib/auth_provider";
 import {
   ContinueCampaignButton,
-  ExtendCampaignButton,
   MakeCampaignWithDocCard,
-  TopUpCampaignButton,
 } from "./make_campaign_card";
-import { MakeCampaignStripe } from "./make_campaign_stripe";
 import BalanceCard from "../balance_card";
 import { ResponsiveAppBar } from "../responsive_app_bar";
 import { AmountField } from "../../components/custom_fields";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import ThumbDownIcon from "@mui/icons-material/ThumbDown";
 import { GrantPermissionsAgainDialog } from "../member/handle_settings";
+import { useNavigate } from "react-router-dom";
+import { normalizeRootstockJoinedAt } from "../../lib/rootstock_joined_at";
 
 const Dashboard = () => {
   useAuthenticated();
@@ -112,13 +123,10 @@ const Dashboard = () => {
             />
           </Box>
           <Box display="flex" flex="1 1 270px">
-            <MakeCampaignStripe
-              account={data}
-              onCreate={() => listContext.refetch()}
-            />
+            <CommunityTools account={data} />
           </Box>
           {data.status == "CLAIMED" && (
-            <Box display="flex" flex="1 1 270px" display="flex">
+            <Box display="flex" flex="1 1 270px">
               <BalanceCard />
             </Box>
           )}
@@ -171,7 +179,7 @@ const CampaignList = ({ listContext, account }) => {
             resource="Campaign"
             bulkActionButtons={false}
           >
-            <FunctionField source="briefingJson" render={contentId} />
+            <FunctionField source="briefingJson" render={campaignLabel} />
             <FunctionField
               source="status"
               render={(r) =>
@@ -190,47 +198,16 @@ const CampaignList = ({ listContext, account }) => {
               render={(r) => (
                 <Stack>
                   {r.privateFields.status == "PUBLISHED" && <ShowButton />}
-                  {!r.privateFields.managedByAdmin &&
-                    r.privateFields.status == "PUBLISHED" && (
-                      <ExtendCampaignButton
-                        account={account}
-                        onSuccess={() => listContext.refetch()}
-                      />
-                    )}
-                  {!r.privateFields.managedByAdmin &&
-                    r.privateFields.status == "PUBLISHED" &&
-                    new Date(r.validUntil) > new Date() && (
-                      <TopUpCampaignButton
-                        account={account}
-                        onSuccess={() => listContext.refetch()}
-                      />
-                    )}
-                  {!r.privateFields.managedByAdmin &&
-                    r.privateFields.status == "DRAFT" && (
-                      <FunctionField
-                        source="id"
-                        render={(r) => (
-                          <ContinueCampaignButton
-                            account={account}
-                            campaign={r}
-                            onCreate={() => listContext.refetch()}
-                            id={`btn-resume-doc-payment-for-${r.id}`}
-                          />
-                        )}
-                      />
-                    )}
-                  {r.privateFields.status == "AWAITING_PAYMENT" && (
+                  {r.privateFields.status == "DRAFT" && (
                     <FunctionField
-                      source="stripeSessionUrl"
+                      source="id"
                       render={(r) => (
-                        <Button
-                          id={`btn-go-to-checkout-for-${r.id}`}
-                          onClick={false}
-                          href={r.privateFields.stripeSessionUrl}
-                          target="_blank"
-                        >
-                          {t("campaign_request_list.go_to_stripe")}
-                        </Button>
+                        <ContinueCampaignButton
+                          account={account}
+                          campaign={r}
+                          onCreate={() => listContext.refetch()}
+                          id={`btn-resume-doc-payment-for-${r.id}`}
+                        />
                       )}
                     />
                   )}
@@ -256,58 +233,247 @@ const Community = () => {
     perPage: 30,
   });
 
-  if (listContext.isPending || listContext.total == 0) {
+  if (listContext.isPending) {
     return <></>;
   }
 
   return (
     <Box my="0.5em">
-      <ListBase disableAuthentication disableSyncWithLocation {...listContext}>
+      {listContext.total === 0 ? (
         <Stack gap="1em" mb="1em" alignItems="baseline" direction="row">
           <Head2>{t("community.title")}</Head2>
-          <ExportButton
-            disabled={listContext.total === 0}
-            resource="CommunityMember"
-          />
+          <Card>
+            <CardContent>
+              <Typography fontFamily="'LeagueSpartanBold'" fontSize="1.2em">
+                {t("community.empty")}
+              </Typography>
+            </CardContent>
+          </Card>
         </Stack>
-        <Typography my="1em">{t("community.description")}</Typography>
-
-        <ListView filters={false} actions={false}>
-          <Datagrid bulkActionButtons={false}>
-            <ReferenceField
-              source="memberId"
-              reference="Account"
-              sortable={false}
-            >
-              <TextField source="name" />
-            </ReferenceField>
-            <AmountField currency="" textAlign="right" source="rewards" />
-            <NumberField textAlign="right" source="collabs" />
-            <DateField source="firstCollabDate" />
-            <DateField source="lastCollabDate" />
-            <FunctionField
-              source="rating"
-              render={() => {
-                return (
-                  <>
-                    <ToggleRatingButton value="GOOD" icon={ThumbUpIcon} />
-                    <ToggleRatingButton value="BAD" icon={ThumbDownIcon} />
-                  </>
-                );
-              }}
+      ) : (
+        <ListBase
+          disableAuthentication
+          disableSyncWithLocation
+          {...listContext}
+        >
+          <Stack gap="1em" mb="1em" alignItems="baseline" direction="row">
+            <Head2>{t("community.title")}</Head2>
+            <ExportButton
+              disabled={listContext.total === 0}
+              resource="CommunityMember"
             />
-            <Box label={false}>
+          </Stack>
+          <Typography my="1em">{t("community.description")}</Typography>
+          <ListView filters={false} actions={false}>
+            <Datagrid bulkActionButtons={false}>
               <ReferenceField
                 source="memberId"
                 reference="Account"
                 sortable={false}
               >
-                <ShowButton />
+                <TextField source="name" />
               </ReferenceField>
-            </Box>
-          </Datagrid>
-        </ListView>
-      </ListBase>
+              <AmountField currency="" textAlign="right" source="rewards" />
+              <NumberField textAlign="right" source="collabs" />
+              <DateField source="firstCollabDate" />
+              <DateField source="lastCollabDate" />
+              <FunctionField
+                source="rating"
+                render={() => {
+                  return (
+                    <>
+                      <ToggleRatingButton value="GOOD" icon={ThumbUpIcon} />
+                      <ToggleRatingButton value="BAD" icon={ThumbDownIcon} />
+                    </>
+                  );
+                }}
+              />
+              <Box label={false}>
+                <ReferenceField
+                  source="memberId"
+                  reference="Account"
+                  sortable={false}
+                >
+                  <ShowButton />
+                </ReferenceField>
+              </Box>
+            </Datagrid>
+          </ListView>
+        </ListBase>
+      )}
+    </Box>
+  );
+};
+
+const CommunityTools = ({ account }) => {
+  const t = useTranslate();
+  const navigate = useNavigate();
+
+  return (
+    <Card sx={{ maxWidth: "720px" }}>
+      <CardContent
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        <Head2>{t("community.manage_title")}</Head2>
+        <Typography my="0.75em">{t("community.manage_text")}</Typography>
+        <Button
+          variant="outlined"
+          startIcon={<GroupAddIcon />}
+          onClick={() => navigate("/Account")}
+        >
+          {t("community.add_existing_button")}
+        </Button>
+        <Divider sx={{ my: "1em" }} />
+        <Button
+          variant="contained"
+          startIcon={<PersonAddAlt1Icon />}
+          disabled={account.availableInvites <= 0}
+          onClick={() => navigate("/community/invite")}
+        >
+          {t("community.invite_button")}
+        </Button>
+        <Typography variant="body2">
+          {account.availableInvites > 0
+            ? t("community.available_invites", {
+                count: account.availableInvites,
+              })
+            : t("community.no_invites")}
+        </Typography>
+      </CardContent>
+    </Card>
+  );
+};
+
+export const InviteRootstockerPage = () => {
+  useAuthenticated();
+  const t = useTranslate();
+  const notify = useNotify();
+  const dataProvider = useDataProvider();
+  const navigate = useNavigate();
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const search = new URLSearchParams(window.location.hash.split("?")[1] || "");
+  const { data, isLoading } = useGetOne(
+    "Account",
+    { id: getAuthKeys().session.accountId },
+    { refetchInterval: 10000 },
+  );
+
+  if (isLoading || !data) {
+    return (
+      <Container maxWidth="md">
+        <Skeleton animation="wave" />
+      </Container>
+    );
+  }
+
+  const onSubmit = async (values: Record<string, any>) => {
+    try {
+      const response = await dataProvider.create("Invitation", {
+        data: {
+          accountName: values.accountName,
+          alignment: Number(values.alignment),
+          trust: Number(values.trust),
+          contribution: Number(values.contribution),
+          advocacy: Number(values.advocacy),
+          judgment: Number(values.judgment),
+          rootstockJoinedAt: normalizeRootstockJoinedAt(values.rootstockJoinedAt),
+          comment: values.comment || null,
+          priority: false,
+        },
+      });
+      setInviteUrl(response.data.inviteUrl);
+      notify(t("community.invitation_created"), { type: "success" });
+    } catch (error: any) {
+      notify(error?.message, { type: "error" });
+    }
+  };
+
+  const copy = async () => {
+    if (!inviteUrl) return;
+    await navigator.clipboard.writeText(inviteUrl);
+    notify(t("community.invitation_copied"), { type: "success" });
+  };
+
+  return (
+    <Box id="advertiser-dashboard">
+      <ResponsiveAppBar />
+      <Stack gap="1em" maxWidth="820px">
+        <Head1>{t("community.invite_page_title")}</Head1>
+        <Lead>{t("community.invite_page_text")}</Lead>
+        <Typography variant="body2" sx={{ opacity: 0.75 }}>
+          {data.availableInvites > 0
+            ? t("community.available_invites", { count: data.availableInvites })
+            : t("community.no_invites")}
+        </Typography>
+        <Card>
+          <CardContent>
+            <Form
+              sanitizeEmptyValues
+              onSubmit={onSubmit}
+              defaultValues={{
+                accountName: search.get("name") || "",
+                alignment: 5,
+                trust: 5,
+                contribution: 5,
+                advocacy: 5,
+                judgment: 5,
+                comment: search.get("comment") || "",
+              }}
+            >
+              <Stack gap="0.75em">
+                <RaTextInput source="accountName" label={t("community.invite_fields.name")} fullWidth />
+                <NumberInput source="alignment" label={t("community.invite_fields.alignment")} helperText={t("community.invite_fields.alignment_help")} />
+                <NumberInput source="trust" label={t("community.invite_fields.trust")} helperText={t("community.invite_fields.trust_help")} />
+                <NumberInput source="contribution" label={t("community.invite_fields.contribution")} helperText={t("community.invite_fields.contribution_help")} />
+                <NumberInput source="advocacy" label={t("community.invite_fields.advocacy")} helperText={t("community.invite_fields.advocacy_help")} />
+                <NumberInput source="judgment" label={t("community.invite_fields.judgment")} helperText={t("community.invite_fields.judgment_help")} />
+                <RaTextInput
+                  source="rootstockJoinedAt"
+                  type="date"
+                  label={t("community.invite_fields.rootstock_joined_at")}
+                  helperText={t("community.invite_fields.rootstock_joined_at_help")}
+                  fullWidth
+                />
+                <RaTextInput
+                  source="comment"
+                  label={t("community.invite_fields.comment")}
+                  helperText={t("community.invite_fields.comment_help")}
+                  multiline
+                  minRows={3}
+                  fullWidth
+                />
+                <Stack direction={{ xs: "column", md: "row" }} gap="0.75em">
+                  <SaveButton
+                    disabled={data.availableInvites <= 0}
+                    label={t("community.create_invite_button")}
+                  />
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate("/dashboard?role=advertiser")}
+                  >
+                    {t("make_campaign.cancel")}
+                  </Button>
+                </Stack>
+              </Stack>
+            </Form>
+            {inviteUrl && (
+              <Stack mt="1em" gap="0.5em">
+                <Typography sx={{ wordBreak: "break-all" }}>
+                  {inviteUrl}
+                </Typography>
+                <Button onClick={copy}>
+                  {t("community.copy_invite_button")}
+                </Button>
+              </Stack>
+            )}
+          </CardContent>
+        </Card>
+      </Stack>
     </Box>
   );
 };

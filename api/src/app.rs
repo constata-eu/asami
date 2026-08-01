@@ -22,7 +22,6 @@ pub struct App {
     pub settings: Box<AppConfig>,
     pub db: Db,
     pub on_chain: Box<OnChain>,
-    pub stripe_client: Box<stripe::Client>,
 }
 
 impl App {
@@ -39,13 +38,11 @@ impl App {
     pub async fn new(password: String, config: AppConfig) -> AsamiResult<Self> {
         let db = config.db().await?;
         let on_chain = Box::new(OnChain::new(&config, &password).await?);
-        let stripe_client = stripe::Client::new(&config.stripe.secret_key);
 
         Ok(Self {
             db,
             on_chain,
             settings: Box::new(config),
-            stripe_client: Box::new(stripe_client),
         })
     }
 
@@ -62,7 +59,6 @@ impl App {
             db: self.db.transaction().await?,
             settings: self.settings.clone(),
             on_chain: self.on_chain.clone(),
-            stripe_client: self.stripe_client.clone(),
         })
     }
 
@@ -113,6 +109,7 @@ impl App {
             .insert(InsertAccount {
                 addr: Some(addr),
                 lang: Lang::En,
+                profile_pic: None,
             })
             .save()
             .await?;
@@ -140,7 +137,6 @@ pub struct AppConfig {
     pub x: XConfig,
     pub sendgrid_api_key: String,
     pub internal_alerts_email: String,
-    pub stripe: StripeSettings,
 }
 
 impl AppConfig {
@@ -203,13 +199,4 @@ pub struct Rsk {
     pub readonly_mainnet_rpc_url: Option<String>,
     pub rpc_polling_interval_milli: u64,
     pub mainnet_rpc_polling_interval_milli: Option<u64>,
-}
-
-#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
-pub struct StripeSettings {
-    pub secret_key: String,
-    pub public_key: String,
-    pub events_secret: String,
-    pub success_url: String,
-    pub cancel_url: String,
 }

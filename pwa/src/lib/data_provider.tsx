@@ -6,6 +6,7 @@ import gql from "graphql-tag";
 import { getAuthKeys } from "./auth_provider";
 import { SignJWT, importPKCS8 } from "jose";
 import { Buffer } from "buffer";
+import { normalizeRootstockJoinedAt } from "./rootstock_joined_at";
 
 import { Settings } from "../settings";
 export const apiUrl = `${Settings.apiDomain || ""}/graphql/`;
@@ -23,7 +24,11 @@ export const publicDataProvider = async () => {
     cache: new InMemoryCache(),
   });
   const introspection = await schema();
-  return await buildGraphQLProvider({ client, introspection });
+  return await buildGraphQLProvider({
+    client,
+    introspection,
+    buildQuery: makeBuildQuery(client),
+  });
 };
 
 export const defaultDataProvider = async () => {
@@ -49,7 +54,16 @@ export const defaultDataProvider = async () => {
     link: from([httpLink]),
     cache: new InMemoryCache(),
   });
-  const myBuildQuery = (introspection) => (fetchType, resource, params) => {
+  const introspection = await schema();
+  return await buildGraphQLProvider({
+    client,
+    buildQuery: makeBuildQuery(client),
+    introspection,
+  });
+};
+
+const makeBuildQuery =
+  (client) => (introspection) => (fetchType, resource, params) => {
     if (resource === "CreateCampaignFromLink") {
       const parser = function (data) {
         return buildQuery(introspection)(
@@ -69,17 +83,15 @@ export const defaultDataProvider = async () => {
               id
               accountId
               budget
+              kind
               briefingJson
               briefingHash
               validUntil
+              isEnded
               createdAt
               topicIds
               thumbsUpOnly
               privateFields {
-                managedByAdmin
-                managedUnitAmount
-                stripeSessionUrl
-                stripeSessionId
                 status
               }
             }
@@ -160,7 +172,6 @@ export const defaultDataProvider = async () => {
               accountId
               username
               userId
-              score
               topicIds
               status
               totalCollabs
@@ -178,23 +189,7 @@ export const defaultDataProvider = async () => {
         ).parseResponse(data);
       };
 
-      const keys = [
-        "topicIds",
-        "onlineEngagementOverride",
-        "onlineEngagementOverrideReason",
-        "offlineEngagementScore",
-        "offlineEngagementDescription",
-        "pollOverride",
-        "pollOverrideReason",
-        "operationalStatusOverride",
-        "operationalStatusOverrideReason",
-        "referrerScoreOverride",
-        "referrerScoreOverrideReason",
-        "holderScoreOverride",
-        "holderScoreOverrideReason",
-        "audienceSizeOverride",
-        "audienceSizeOverrideReason",
-      ];
+      const keys = ["topicIds"];
 
       let data = {};
 
@@ -212,7 +207,6 @@ export const defaultDataProvider = async () => {
               accountId
               username
               userId
-              score
               topicIds
               status
               totalCollabs
@@ -248,6 +242,304 @@ export const defaultDataProvider = async () => {
           }
         `,
       };
+    } else if (resource === "Account" && fetchType == "UPDATE") {
+      const parser = function (data) {
+        return buildQuery(introspection)(
+          "GET_ONE",
+          "Account",
+          params,
+        ).parseResponse(data);
+      };
+
+      return {
+        parseResponse: parser,
+        variables: { id: params.id, data: params.data },
+        query: gql`
+          mutation ($id: String!, $data: AdminEditAccountInput!) {
+            data: updateAccount(id: $id, data: $data) {
+              id
+              status
+              acceptanceStatus
+              name
+              invitedByAccountId
+              invitedByName
+              invitesPerMonth
+              availableInvites
+              alignmentScore
+              trustScore
+              contributionScore
+              advocacyScore
+              judgmentScore
+              rootstockLongevityScore
+              rootstockJoinedAt
+              scoresReceivedCount
+              scoresIssuedCount
+            }
+          }
+        `,
+      };
+    } else if (resource === "CommunityMember" && fetchType == "CREATE") {
+      const parser = function (data) {
+        return buildQuery(introspection)(
+          "GET_ONE",
+          "CommunityMember",
+          params,
+        ).parseResponse(data);
+      };
+
+      return {
+        parseResponse: parser,
+        variables: { input: params.data },
+        query: gql`
+          mutation ($input: CreateCommunityMemberInput!) {
+            data: createCommunityMember(input: $input) {
+              id
+              accountId
+              memberId
+              priority
+              alignment
+              trust
+              contribution
+              advocacy
+              judgment
+              rootstockJoinedAt
+              comment
+              collabs
+              rewards
+              firstCollabDate
+              lastCollabDate
+            }
+          }
+        `,
+      };
+    } else if (
+      resource === "CommunityMemberMembership" &&
+      fetchType == "CREATE"
+    ) {
+      const parser = function (data) {
+        return buildQuery(introspection)(
+          "GET_ONE",
+          "CommunityMember",
+          params,
+        ).parseResponse(data);
+      };
+
+      return {
+        parseResponse: parser,
+        variables: { input: params.data },
+        query: gql`
+          mutation ($input: CreateCommunityMemberMembershipInput!) {
+            data: createCommunityMemberMembership(input: $input) {
+              id
+              accountId
+              memberId
+              rating
+              priority
+              alignment
+              trust
+              contribution
+              advocacy
+              judgment
+              rootstockJoinedAt
+              comment
+              collabs
+              rewards
+              firstCollabDate
+              lastCollabDate
+            }
+          }
+        `,
+      };
+    } else if (resource === "Invitation" && fetchType == "CREATE") {
+      const parser = function (data) {
+        return { data: { ...data.data, id: data.data.id } };
+      };
+
+      return {
+        parseResponse: parser,
+        variables: { input: params.data },
+        query: gql`
+          mutation ($input: CreateInvitationInput!) {
+            data: createInvitation(input: $input) {
+              id
+              inviterAccountId
+              accountId
+              token
+              inviteUrl
+              createdAt
+              expiresAt
+              acceptedAt
+            }
+          }
+        `,
+      };
+    } else if (resource === "WaitlistApplication" && fetchType == "CREATE") {
+      return {
+        parseResponse: (data) => ({ data: { ...data.data, id: data.data.id } }),
+        variables: {
+          input: {
+            name: params.data.name,
+            email: params.data.email,
+            link1: params.data.link1,
+            link2: params.data.link2,
+            link3: params.data.link3,
+            note: params.data.note,
+          },
+        },
+        query: gql`
+          mutation ($input: CreateWaitlistApplicationInput!) {
+            data: createWaitlistApplication(input: $input) {
+              id
+              name
+              email
+              link1
+              link2
+              link3
+              note
+              status
+              reviewNotes
+              createdAt
+              reviewedAt
+            }
+          }
+        `,
+      };
+    } else if (resource === "WaitlistApplication" && fetchType == "GET_ONE") {
+      return {
+        parseResponse: (data) => ({ data: { ...data.data, id: data.data.id } }),
+        variables: { id: Number(params.id) },
+        query: gql`
+          query ($id: Int!) {
+            data: WaitlistApplication(id: $id) {
+              id
+              name
+              email
+              link1
+              link2
+              link3
+              note
+              invitationId
+              inviteUrl
+              status
+              reviewNotes
+              createdAt
+              reviewedAt
+            }
+          }
+        `,
+      };
+    } else if (resource === "WaitlistApplication" && fetchType == "UPDATE") {
+      const acceptWithInvitation =
+        params.data.status === "ACCEPTED"
+          ? {
+              accountName: params.data.accountName,
+              alignment: Number(params.data.alignment),
+              trust: Number(params.data.trust),
+              contribution: Number(params.data.contribution),
+              advocacy: Number(params.data.advocacy),
+              judgment: Number(params.data.judgment),
+              rootstockJoinedAt: normalizeRootstockJoinedAt(
+                params.data.rootstockJoinedAt,
+              ),
+              comment: params.data.comment || null,
+              priority: !!params.data.priority,
+            }
+          : null;
+
+      return {
+        parseResponse: (data) => ({ data: { ...data.data, id: data.data.id } }),
+        variables: {
+          id: params.id,
+          data: {
+            status: params.data.status,
+            reviewNotes: params.data.reviewNotes || null,
+            acceptWithInvitation,
+          },
+        },
+        query: gql`
+          mutation ($id: Int!, $data: EditWaitlistApplicationInput!) {
+            data: updateWaitlistApplication(id: $id, data: $data) {
+              id
+              name
+              email
+              link1
+              link2
+              link3
+              note
+              invitationId
+              inviteUrl
+              status
+              reviewNotes
+              createdAt
+              reviewedAt
+            }
+          }
+        `,
+      };
+    } else if (resource === "CommunityMemberSkip" && fetchType == "CREATE") {
+      const parser = function (data) {
+        return { data: { ...data.data, id: data.data.id } };
+      };
+
+      return {
+        parseResponse: parser,
+        variables: { input: params.data },
+        query: gql`
+          mutation ($input: CreateCommunityMemberSkipInput!) {
+            data: createCommunityMemberSkip(input: $input) {
+              id
+              scorerAccountId
+              targetAccountId
+              reason
+              createdAt
+            }
+          }
+        `,
+      };
+    } else if (resource === "ScorableAccount" && fetchType == "GET_LIST") {
+      return {
+        parseResponse: (response) => ({
+          data: response.data.data.map((item) => ({
+            ...item,
+            id: item.accountId,
+          })),
+          total: response.data.data.length,
+        }),
+        variables: {},
+        query: gql`
+          query {
+            data: scorableAccounts {
+              accountId
+              name
+              reason
+              windowStart
+              scorableUntil
+            }
+          }
+        `,
+      };
+    } else if (resource === "LandingMember" && fetchType == "GET_LIST") {
+      return {
+        parseResponse: (response) => ({
+          data: response.data.data.map((item) => ({
+            ...item,
+            id: item.accountId,
+          })),
+          total: response.data.data.length,
+        }),
+        variables: { limit: params.pagination?.perPage || 6 },
+        query: gql`
+          query ($limit: Int!) {
+            data: topRootstockers(limit: $limit) {
+              accountId
+              name
+              xUsername
+              score
+              image
+            }
+          }
+        `,
+      };
     } else if (resource === "AccountMerge" && fetchType == "UPDATE") {
       const parser = function (data) {
         return { data: { id: params.id } };
@@ -266,13 +558,6 @@ export const defaultDataProvider = async () => {
       return buildQuery(introspection)(fetchType, resource, params);
     }
   };
-  const introspection = await schema();
-  return await buildGraphQLProvider({
-    client,
-    buildQuery: myBuildQuery,
-    introspection,
-  });
-};
 
 export const createSessionDataProvider = async (
   keys,

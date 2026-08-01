@@ -12,7 +12,7 @@ model! {
     campaign_id: i32,
     #[sqlx_model_hints(timestamptz, op_is_set)]
     not_interested_on: Option<UtcDateTime>,
-    #[sqlx_model_hints(timestamptz)]
+    #[sqlx_model_hints(timestamptz, op_is_set)]
     attempted_on: Option<UtcDateTime>,
   },
   belongs_to {

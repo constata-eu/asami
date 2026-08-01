@@ -28,7 +28,6 @@ const ConfirmHideCampaign = ({ campaignId, setPreference }) => {
         id={`open-hide-campaign-${campaignId}`}
         size="small"
         color="secondary"
-        fullWidth
         onClick={() => setOpen(true)}
       >
         {translate("member_campaigns.hide_campaign.button")}

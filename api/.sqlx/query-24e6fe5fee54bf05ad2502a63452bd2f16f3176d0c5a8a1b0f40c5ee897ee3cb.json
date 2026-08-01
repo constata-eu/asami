@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM weekly_score_picks WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "24e6fe5fee54bf05ad2502a63452bd2f16f3176d0c5a8a1b0f40c5ee897ee3cb"
+}

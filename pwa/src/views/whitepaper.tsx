@@ -15,14 +15,6 @@ const Whitepaper = () => {
     <>
       <ResponsiveAppBar />
       <Stack id="whitepaper" alignItems="flex-end">
-        <Button
-          size="large"
-          variant="contained"
-          href={`https://${t("whitepaper.robot_url")}`}
-          startIcon={<AutoAwesomeIcon />}
-        >
-          Have ChatGPT explain it to you
-        </Button>
         <Box
           sx={{
             "& hr": {

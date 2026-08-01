@@ -86,7 +86,7 @@ pub fn custom_server(app: App, fig: figment::Figment) -> rocket::Rocket<rocket::
         .attach(cors)
         .mount(
             "/",
-            routes![x_login, x_grant_access, config, api::campaign::handle_stripe_events],
+            routes![x_login, x_grant_access, config],
         )
         .mount("/graphql", routes![graphiql, post_handler, introspect, options])
 }

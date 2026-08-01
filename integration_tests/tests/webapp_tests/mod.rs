@@ -7,6 +7,7 @@ pub mod full_flow_to_reward;
 pub mod grant_x_access;
 pub mod landing;
 pub mod login_flows;
+pub mod manual_invitation_and_giveaway;
 pub mod makes_campaigns;
 pub mod member_campaign_preferences;
 pub mod member_profile;

@@ -5,10 +5,6 @@ import { useEffect, useContext, useState } from "react";
 import { publicDataProvider } from "../lib/data_provider";
 import { ResponsiveAppBar } from "./responsive_app_bar";
 import RootstockLogo from "../assets/rootstock.svg?react";
-import ConstataLogo from "../assets/constata.svg?react";
-import RootstockLabsLogo from "../assets/rootstock_labs.svg?react";
-import RootstockCollectiveLogo from "../assets/rootstock_collective.svg?react";
-import FpBlockLogo from "../assets/fpblock.svg?react";
 
 export const DeckCard = ({
   id,
@@ -41,6 +37,7 @@ export const DeckCard = ({
 
 export const BareLayout = ({ sponsors = true, children }) => {
   const translate = useTranslate();
+  console.log("sponsors", sponsors);
 
   return (
     <Box
@@ -65,11 +62,7 @@ export const BareLayout = ({ sponsors = true, children }) => {
             flexWrap="wrap"
             my="2em"
           >
-            <Button
-              href="https://explorer.rootstock.io/address/0x16039ab4e9b0bf3b79f9a221898d152151026034"
-              target="_blank"
-              sx={{ textDecoration: "none" }}
-            >
+            <Box sx={{ color: "primary.main" }}>
               <Box display="flex" flexDirection="column">
                 <Typography
                   fontSize="1em"
@@ -80,71 +73,7 @@ export const BareLayout = ({ sponsors = true, children }) => {
                 </Typography>
                 <RootstockLogo />
               </Box>
-            </Button>
-            <Button
-              href="https://constata.eu"
-              target="_blank"
-              sx={{ textDecoration: "none" }}
-            >
-              <Box display="flex" flexDirection="column">
-                <Typography
-                  fontSize="1em"
-                  textTransform="uppercase"
-                  fontFamily="LeagueSpartanBold"
-                >
-                  {translate("footer.campaign_manager")}
-                </Typography>
-                <ConstataLogo />
-              </Box>
-            </Button>
-            <Button
-              href="https://rootstockcollective.xyz"
-              target="_blank"
-              sx={{ textDecoration: "none" }}
-            >
-              <Box display="flex" flexDirection="column">
-                <Typography
-                  fontSize="1em"
-                  textTransform="uppercase"
-                  fontFamily="LeagueSpartanBold"
-                >
-                  {translate("footer.funds_sponsor")}
-                </Typography>
-                <RootstockCollectiveLogo />
-              </Box>
-            </Button>
-            <Button
-              href="https://www.rootstocklabs.com"
-              target="_blank"
-              sx={{ textDecoration: "none" }}
-            >
-              <Box display="flex" flexDirection="column">
-                <Typography
-                  fontSize="1em"
-                  textTransform="uppercase"
-                  fontFamily="LeagueSpartanBold"
-                >
-                  {translate("footer.with_support_from")}
-                </Typography>
-                <RootstockLabsLogo />
-              </Box>
-            </Button>
-            <Button
-              href="https://fpblock.com"
-              target="_blank"
-              sx={{ textDecoration: "none" }}
-            >
-              <Box display="flex" flexDirection="column">
-                <Typography
-                  fontSize="1em"
-                  textTransform="uppercase"
-                  fontFamily="LeagueSpartanBold"
-                >
-                  {translate("footer.tech_sponsor")}
-                </Typography>
-                <FpBlockLogo />
-              </Box>
-            </Button>
+            </Box>
           </Box>
         )}
       </Container>

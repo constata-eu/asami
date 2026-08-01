@@ -26,16 +26,19 @@ pub const DATA_DIR: &str = "/tmp/asami-browser-datadir";
 pub const ARTIFACTS: &str = "/tmp/test-artifacts";
 pub const METAMASK: &str = "/tmp/asami-test-metamask";
 pub const EXTENSION_ID: &str = "nkbihfbeogaeaoehlefnkodbefgpgknn";
+pub const FIXED_CHROME_URL: &str = "https://asami.ams3.digitaloceanspaces.com/chrome";
 //pub const SEED: &str = "clay useful lion spawn drift census subway require small matrix guess away";
 //pub const MEMBER_ADDR: "0xbe992ec27E90c07caDE70c6C3CD26eECC8CadCfE"
 
 impl Selenium {
     pub async fn start(app: App) -> Selenium {
+        println!("run-dev: selenium preparing browser bundle");
         let dir = std::fs::canonicalize(format!(
             "{}/../integration_tests/chromedrivers",
             env!("CARGO_MANIFEST_DIR")
         ))
         .unwrap();
+        Self::ensure_checked_in_chrome(&dir);
 
         Command::new("rm").args(["-r", "-f", DATA_DIR]).output().unwrap();
         Command::new("cp").args(["-r", &format!("{}/profile", dir.display()), DATA_DIR]).output().unwrap();
@@ -101,15 +104,52 @@ impl Selenium {
                 break;
             }
         }
+        println!("run-dev: chromedriver is up");
 
         let driver = WebDriver::new("http://localhost:4444", caps).await.expect("Webdriver init");
+        println!("run-dev: webdriver session created");
         driver.maximize_window().await.expect("to maximize window");
         let selenium = Selenium { child, driver, app };
 
         selenium.go_to_extension_window("home.html").await;
+        println!("run-dev: extension window opened");
         selenium.driver.close_window().await.unwrap();
         selenium.go_to_window("chrome://new-tab-page").await;
+        println!("run-dev: selenium browser ready");
         selenium
+    }
+
+    fn ensure_checked_in_chrome(dir: &Path) {
+        let chrome = dir.join("chrome-linux/chrome");
+        let looks_truncated = std::fs::metadata(&chrome)
+            .map(|meta| meta.len() < 300_000_000)
+            .unwrap_or(true);
+
+        let version_ok = Command::new(&chrome)
+            .arg("--version")
+            .output()
+            .map(|output| output.status.success())
+            .unwrap_or(false);
+
+        if !looks_truncated && version_ok {
+            return;
+        }
+
+        let status = Command::new("curl")
+            .args(["-L", FIXED_CHROME_URL, "-o"])
+            .arg(&chrome)
+            .status()
+            .expect("could not download fixed chrome bundle");
+
+        assert!(status.success(), "downloading fixed chrome bundle failed");
+
+        let status = Command::new("chmod")
+            .args(["+x"])
+            .arg(&chrome)
+            .status()
+            .expect("could not chmod fixed chrome bundle");
+
+        assert!(status.success(), "chmod for fixed chrome bundle failed");
     }
 
     pub async fn wait_for(&self, selector: &str) -> WebElement {
@@ -264,8 +304,7 @@ impl Selenium {
         self.click("button[data-testid=edit]").await;
         self.click("input[title='Select all']").await;
         self.click("button[data-testid=connect-more-accounts-button]").await;
-        self.goto("http://127.0.0.1:5173/").await;
-        self.click("#menu-login").await;
+        self.goto("http://127.0.0.1:5173/#/login").await;
         self.click("#wallet-login-button").await;
         self.click(".rlogin-provider-icon img[alt=MetaMask]").await;
         self.click("button.rlogin-button.confirm").await;

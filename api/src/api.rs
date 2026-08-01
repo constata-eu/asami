@@ -14,6 +14,10 @@ mod current_session;
 use current_session::*;
 mod account;
 use account::*;
+mod invitation;
+use invitation::*;
+mod waitlist_application;
+use waitlist_application::*;
 pub mod campaign;
 use campaign::*;
 mod session;
@@ -36,8 +40,6 @@ mod token_stats;
 use token_stats::*;
 mod topic;
 use topic::*;
-mod handle_scoring;
-use handle_scoring::*;
 mod community_member;
 use community_member::*;
 mod holder;
@@ -179,6 +181,13 @@ trait Showable<Model: SqlxModel<State = App>, Filter: Send>: Sized {
     async fn db_to_graphql(context: &Context, d: Model) -> AsamiResult<Self>;
 
     async fn resource(context: &Context, id: <Model as SqlxModel>::Id) -> FieldResult<Self>
+    where
+        <Model as SqlxModel>::Id: 'async_trait,
+    {
+        Self::base_resource(context, id).await
+    }
+
+    async fn base_resource(context: &Context, id: <Model as SqlxModel>::Id) -> FieldResult<Self>
     where
         <Model as SqlxModel>::Id: 'async_trait,
     {
@@ -325,7 +334,7 @@ make_graphql_query! {
     [Account, allAccounts, allAccountsMeta, "_allAccountsMeta", AccountFilter, String],
     [Campaign, allCampaigns, allCampaignsMeta, "_allCampaignsMeta", CampaignFilter, i32],
     [Handle, allHandles, allHandlesMeta, "_allHandlesMeta", HandleFilter, i32],
-    [HandleScoring, allHandleScorings, allHandleScoringsMeta, "_allHandleScoringsMeta", HandleScoringFilter, i32],
+    [Invitation, allInvitations, allInvitationsMeta, "_allInvitationsMeta", InvitationFilter, i32],
     [Collab, allCollabs, allCollabsMeta, "_allCollabsMeta", CollabFilter, i32],
     [CampaignPreference, allCampaignPreferences, allCampaignPreferencesMeta, "_allCampaignPreferencesMeta", CampaignPreferenceFilter, i32],
     [OnChainJob, allOnChainJobs, allOnChainJobsMeta, "_allOnChainJobsMeta", OnChainJobFilter, i32],
@@ -334,6 +343,7 @@ make_graphql_query! {
     [CommunityMember, allCommunityMembers, allCommunityMembersMeta, "_allCommunityMembersMeta", CommunityMemberFilter, i32],
     [Holder, allHolders, allHoldersMeta, "_allHoldersMeta", HolderFilter, i32],
     [AccountMerge, allAccountMerges, allAccountMergesMeta, "_allAccountMergesMeta", AccountMergeFilter, i32],
+    [WaitlistApplication, allWaitlistApplications, allWaitlistApplicationsMeta, "_allWaitlistApplicationsMeta", WaitlistApplicationFilter, i32],
   }
 
   #[graphql(name="Stats")]
@@ -344,6 +354,14 @@ make_graphql_query! {
   #[graphql(name="TokenStats")]
   async fn token_stats(context: &Context, _id: i32) -> FieldResult<TokenStats> {
       TokenStats::build(&context.app).await
+  }
+
+  async fn scorable_accounts(context: &Context) -> FieldResult<Vec<ScorableAccount>> {
+      scorable_accounts_for_current_account(context).await
+  }
+
+  async fn top_rootstockers(context: &Context, limit: i32) -> FieldResult<Vec<LandingMember>> {
+      account::top_rootstockers(context, limit).await
   }
 }
 
@@ -396,17 +414,11 @@ impl Mutation {
         input.process(context).await.map_err(|e| e.into_field_error())
     }
 
-    pub async fn create_email_login_link(context: &Context, email: String) -> FieldResult<EmailLoginLink> {
-        Ok(EmailLoginLink {
-            id: context
-                .app
-                .one_time_token()
-                .create_for_email(email.to_lowercase(), context.lang, None)
-                .await
-                .map_err(|e| e.into_field_error())?
-                .attrs
-                .id,
-        })
+    pub async fn create_email_login_link(_context: &Context, email: String) -> FieldResult<EmailLoginLink> {
+        Err(FieldError::new(
+            "invitation_required",
+            graphql_value!({ "internal_error": format!("email_login_is_disabled_for_{}", email) }),
+        ))
     }
 
     pub async fn create_one_time_token(context: &Context) -> FieldResult<models::OneTimeTokenAttrs> {
@@ -417,6 +429,21 @@ impl Mutation {
             .await
             .map_err(|e| e.into_field_error())?
             .attrs)
+    }
+
+    pub async fn create_invitation(context: &Context, input: CreateInvitationInput) -> FieldResult<Invitation> {
+        input.process(context).await
+    }
+
+    pub async fn update_invitation(context: &Context, id: i32) -> FieldResult<Invitation> {
+        invitation::revoke_invitation(context, id).await
+    }
+
+    pub async fn create_waitlist_application(
+        context: &Context,
+        input: CreateWaitlistApplicationInput,
+    ) -> FieldResult<WaitlistApplication> {
+        input.process(context).await
     }
 
     pub async fn create_account_merge(context: &Context) -> FieldResult<AccountMerge> {
@@ -465,6 +492,43 @@ impl Mutation {
     ) -> FieldResult<CommunityMember> {
         data.process(context, id).await.map_err(|e| e.into_field_error())
     }
+
+    pub async fn update_account(context: &Context, id: String, data: AdminEditAccountInput) -> FieldResult<Account> {
+        data.process(context, models::wei(id).encode_hex()).await
+    }
+
+    pub async fn update_waitlist_application(
+        context: &Context,
+        id: i32,
+        data: EditWaitlistApplicationInput,
+    ) -> FieldResult<WaitlistApplication> {
+        if !context.current_session()?.0.admin() {
+            return Err(Error::service("authentication", "asami_authentication_needed").into_field_error());
+        }
+
+        data.process(context, id).await
+    }
+
+    pub async fn create_community_member(
+        context: &Context,
+        input: CreateCommunityMemberInput,
+    ) -> FieldResult<CommunityMember> {
+        input.process(context).await
+    }
+
+    pub async fn create_community_member_membership(
+        context: &Context,
+        input: CreateCommunityMemberMembershipInput,
+    ) -> FieldResult<CommunityMember> {
+        input.process(context).await
+    }
+
+    pub async fn create_community_member_skip(
+        context: &Context,
+        input: CreateCommunityMemberSkipInput,
+    ) -> FieldResult<CommunityMemberSkip> {
+        input.process(context).await
+    }
 }
 
 #[derive(Debug, GraphQLObject, serde::Deserialize, serde::Serialize)]
@@ -477,7 +541,7 @@ pub struct EmailLoginLink {
 
 // A root schema consists of a query and a mutation.
 // Request queries can be executed against a RootNode.
-pub type Schema = juniper::RootNode<'static, Query, Mutation, EmptySubscription<Context>>;
+pub type Schema = juniper::RootNode<Query, Mutation, EmptySubscription<Context>>;
 
 pub fn new_graphql_schema() -> Schema {
     Schema::new_with_scalar_value(Query, Mutation, EmptySubscription::<Context>::new())

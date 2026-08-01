@@ -9,7 +9,7 @@ model! {
   state: App,
   table: accounts,
   struct Account {
-    #[sqlx_model_hints(varchar, default, op_in)]
+    #[sqlx_model_hints(varchar, default, op_in, op_not_in)]
     id: String,
     #[sqlx_model_hints(varchar, op_like, op_ilike, default)]
     name: String,
@@ -31,10 +31,20 @@ model! {
     processed_for_legacy_claim: bool,
     #[sqlx_model_hints(boolean, default)]
     allows_gasless: bool,
-    #[sqlx_model_hints(varchar, default)]
-    stripe_customer_id: Option<String>,
+    #[sqlx_model_hints(acceptance_status, default, op_in)]
+    acceptance_status: AcceptanceStatus,
+    #[sqlx_model_hints(varchar, default, op_is_set)]
+    invited_by_account_id: Option<String>,
+    #[sqlx_model_hints(int4, default)]
+    invites_per_month: i32,
+    #[sqlx_model_hints(int4, default)]
+    available_invites: i32,
+    #[sqlx_model_hints(timestamptz, default)]
+    invite_quota_last_replenished_at: UtcDateTime,
     #[sqlx_model_hints(language)]
     lang: super::Lang,
+    #[sqlx_model_hints(text)]
+    profile_pic: Option<String>,
 
     // These columns contain on-chain values that can be updated in a time based fashion.
     // They should at least be updated when a DOC transfer is done
@@ -267,18 +277,18 @@ impl Account {
         let mut campaigns = vec![];
 
         for c in self.state.campaign().select().budget_gt(weihex("0")).all().await?.into_iter() {
-            if c.valid_until().map(|end| end <= Utc::now()).unwrap_or(true) {
+            if !c.is_visible_to_members() {
                 continue;
-            };
+            }
             if ignored.contains(c.id()) {
                 continue;
-            };
+            }
             if done.contains(c.id()) {
                 continue;
-            };
+            }
 
             for h in &handles {
-                if h.validate_collaboration(&c, h.reward_for(&c).unwrap_or_default(), h.user_id()).await.is_ok() {
+                if h.validate_collaboration(&c, h.user_id()).await.is_ok() {
                     campaigns.push(c);
                     break;
                 }
@@ -345,33 +355,6 @@ impl Account {
     pub async fn disallow_gasless(self) -> AsamiResult<Self> {
         Ok(self.update().allows_gasless(false).save().await?)
     }
-
-    pub async fn get_or_create_stripe_customer_id(&self) -> AsamiResult<stripe::CustomerId> {
-        use std::collections::HashMap;
-        use stripe::{CreateCustomer, Customer};
-
-        if let Some(id) = self.stripe_customer_id() {
-            return Ok(id.parse::<stripe::CustomerId>()?);
-        }
-
-        let mut metadata = HashMap::new();
-        metadata.insert("account_id".to_string(), self.attrs.id.to_string());
-        metadata.insert("account_id_as_number".to_string(), hex_to_i32(self.id())?.to_string());
-        let customer_id = Customer::create(
-            &self.state.stripe_client,
-            CreateCustomer {
-                name: Some(self.name()),
-                metadata: Some(metadata),
-                ..Default::default()
-            },
-        )
-        .await?
-        .id;
-
-        self.clone().update().stripe_customer_id(Some(customer_id.to_string())).save().await?;
-
-        Ok(customer_id)
-    }
 }
 
 make_sql_enum![
@@ -380,6 +363,15 @@ make_sql_enum![
         Managed,
         Claiming,
         Claimed,
-        Banned,
+        Banned, // Not used anymore, managed through acceptance status.
+    }
+];
+
+make_sql_enum![
+    "acceptance_status",
+    pub enum AcceptanceStatus {
+        Guestlist,
+        Active,
+        Inactive,
     }
 ];

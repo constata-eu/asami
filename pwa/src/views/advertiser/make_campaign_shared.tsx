@@ -3,6 +3,8 @@ import {
   ReferenceArrayInput,
   AutocompleteArrayInput,
   BooleanInput,
+  FormDataConsumer,
+  SelectInput,
 } from "react-admin";
 
 import { Alert, Box, Button, Typography } from "@mui/material";
@@ -26,27 +28,39 @@ export const CampaignForm = ({
   onSubmit,
   handleClose,
   minAmount,
-  askDuration,
 }) => {
   const translate = useTranslate();
   const defaultValues = {
-    pricePerPoint: "0.01",
+    kind: "X_REPOST",
     maxIndividualReward: "5",
-    minIndividualReward: "0.1",
-    durationDays: 15,
+    allMembers: true,
   };
 
   const validate = (values) => {
     let input = {};
 
-    const error = validateCampaignLink(values.contentUrl);
-    if (error) {
-      return { contentUrl: translate(`make_campaign.errors.${error}`) };
-    }
-    input.link = values.contentUrl;
-    input.topicIds = values.topic_ids;
-    input.pricePerPoint = values.pricePerPoint;
+    input.kind = values.kind;
     input.thumbsUpOnly = !!values.thumbsUpOnly;
+    input.allMembers = !!values.allMembers;
+    input.topicIds = values.topic_ids || [];
+    input.memberIds = values.member_ids || [];
+
+    if (values.kind === "X_REPOST") {
+      const error = validateCampaignLink(values.contentUrl);
+      if (error) {
+        return { contentUrl: translate(`make_campaign.errors.${error}`) };
+      }
+      input.link = values.contentUrl;
+    } else {
+      input.link = null;
+      input.topicIds = [];
+      input.thumbsUpOnly = false;
+      if (!input.allMembers && input.memberIds.length < 1) {
+        return {
+          member_ids: translate("make_campaign.errors.select_members"),
+        };
+      }
+    }
 
     const budget = parseNumber(
       values.budget,
@@ -58,40 +72,10 @@ export const CampaignForm = ({
       return { budget: budget.error };
     }
     input.budget = budget.ok;
-
-    if (askDuration) {
-      try {
-        const parsed = parseInt(values.durationDays);
-        if (parsed < 2) {
-          return {
-            durationDays: translate(
-              "make_campaign.errors.duration_days_too_low",
-            ),
-          };
-        }
-        input.durationDays = parsed;
-      } catch {
-        return {
-          durationDays: translate(
-            "make_campaign.errors.duration_days_not_a_number",
-          ),
-        };
-      }
-    }
-
-    const ppp = parseNumber(
-      values.pricePerPoint,
-      "0.001",
-      "price_per_point_too_low",
-      "price_per_point_not_a_number",
-    );
-    if (ppp.error) {
-      return { pricePerPoint: ppp.error };
-    }
-    input.pricePerPoint = ppp.ok;
+    input.durationDays = 20;
 
     const max = parseNumber(
-      values.maxIndividualReward,
+      values.kind === "X_REPOST" ? values.maxIndividualReward : values.budget,
       "0",
       "max_too_low",
       "max_not_a_number",
@@ -100,17 +84,6 @@ export const CampaignForm = ({
       return { maxIndividualReward: max.error };
     }
     input.maxIndividualReward = max.ok;
-
-    const min = parseNumber(
-      values.minIndividualReward,
-      "0",
-      "min_too_low",
-      "min_not_a_number",
-    );
-    if (min.error) {
-      return { minIndividualReward: min.error };
-    }
-    input.minIndividualReward = min.ok;
 
     values.makeCampaignInput = input;
   };
@@ -125,23 +98,45 @@ export const CampaignForm = ({
       >
         <Stack direction="row" gap="1em" flexWrap="wrap">
           <Stack flex="1 1 450px" gap="0.5em">
-            <TextInput
+            <SelectInput
               fullWidth
-              required={true}
               size="small"
               variant="filled"
-              source="contentUrl"
-              label={translate("make_campaign.form_step.content_url")}
-              helperText={
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: translate(
-                      "make_campaign.form_step.content_url_help",
-                    ),
-                  }}
-                />
-              }
+              source="kind"
+              choices={[
+                {
+                  id: "X_REPOST",
+                  name: translate("resources.Campaign.kinds.X_REPOST"),
+                },
+                {
+                  id: "COMMUNITY_GIVEAWAY",
+                  name: translate("resources.Campaign.kinds.COMMUNITY_GIVEAWAY"),
+                },
+              ]}
             />
+            <FormDataConsumer>
+              {({ formData }) =>
+                formData.kind === "X_REPOST" ? (
+                  <TextInput
+                    fullWidth
+                    required={true}
+                    size="small"
+                    variant="filled"
+                    source="contentUrl"
+                    label={translate("make_campaign.form_step.content_url")}
+                    helperText={
+                      <span
+                        dangerouslySetInnerHTML={{
+                          __html: translate(
+                            "make_campaign.form_step.content_url_help",
+                          ),
+                        }}
+                      />
+                    }
+                  />
+                ) : null
+              }
+            </FormDataConsumer>
             <Stack flexWrap="wrap" direction="row" gap="1em" mb="0.5em">
               <TextInput
                 fullWidth
@@ -153,103 +148,111 @@ export const CampaignForm = ({
                 helperText={amountHelp ? translate(amountHelp) : false}
                 sx={{ flex: "1 1 200px" }}
               />
-              {askDuration && (
-                <TextInput
-                  fullWidth
-                  required={true}
-                  size="small"
-                  variant="filled"
-                  source="durationDays"
-                  helperText={translate(
-                    "make_campaign.form_step.duration_days_help",
-                  )}
-                  sx={{ flex: "1 1 200px" }}
-                  label={translate("make_campaign.form_step.duration_days")}
-                />
-              )}
-            </Stack>
-
-            <TextInput
-              fullWidth
-              required={true}
-              value="0.005"
-              size="small"
-              variant="filled"
-              source="pricePerPoint"
-              helperText={translate(
-                "make_campaign.form_step.price_per_point_help",
-              )}
-              sx={{ mb: "0.5em" }}
-              label={translate("make_campaign.form_step.price_per_point")}
-            />
-            <Stack flexWrap="wrap" direction="row" gap="1em" mb="0.5em">
               <TextInput
-                required={true}
+                fullWidth
+                disabled
                 size="small"
                 variant="filled"
-                source="maxIndividualReward"
+                source="durationDaysFixed"
                 helperText={translate(
-                  "make_campaign.form_step.max_individual_reward_help",
-                )}
-                label={translate(
-                  "make_campaign.form_step.max_individual_reward",
+                  "make_campaign.form_step.fixed_duration_help",
                 )}
                 sx={{ flex: "1 1 200px" }}
-              />
-              <TextInput
-                required={true}
-                size="small"
-                variant="filled"
-                source="minIndividualReward"
-                helperText={translate(
-                  "make_campaign.form_step.min_individual_reward_help",
-                )}
-                label={translate(
-                  "make_campaign.form_step.min_individual_reward",
-                )}
-                sx={{ flex: "1 1 200px" }}
+                defaultValue="20"
+                label={translate("make_campaign.form_step.fixed_duration")}
               />
             </Stack>
-            <Stack
-              flexWrap="wrap"
-              direction="row"
-              gap="1em"
-              mb="0.5em"
-              alignItems="flex-end"
-            >
-              <Box flex="0 1 50%">
-                <ReferenceArrayInput
-                  size="large"
-                  variant="filled"
-                  source="topic_ids"
-                  reference="Topic"
-                >
-                  <AutocompleteArrayInput
-                    label={translate("make_campaign.form_step.topics")}
-                    helperText={translate(
-                      "make_campaign.form_step.topics_help",
+            <FormDataConsumer>
+              {({ formData }) =>
+                formData.kind === "X_REPOST" ? (
+                  <>
+                    <TextInput
+                      fullWidth
+                      required={true}
+                      size="small"
+                      variant="filled"
+                      source="maxIndividualReward"
+                      helperText={translate(
+                        "make_campaign.form_step.max_individual_reward_help",
+                      )}
+                      sx={{ mb: "0.5em" }}
+                      label={translate(
+                        "make_campaign.form_step.max_individual_reward",
+                      )}
+                    />
+                    <Stack
+                      flexWrap="wrap"
+                      direction="row"
+                      gap="1em"
+                      mb="0.5em"
+                      alignItems="flex-end"
+                    >
+                      <Box flex="0 1 50%">
+                        <ReferenceArrayInput
+                          size="large"
+                          variant="filled"
+                          source="topic_ids"
+                          reference="Topic"
+                        >
+                          <AutocompleteArrayInput
+                            label={translate("make_campaign.form_step.topics")}
+                            helperText={translate(
+                              "make_campaign.form_step.topics_help",
+                            )}
+                            size="small"
+                            variant="filled"
+                            optionText={(x) =>
+                              translate(`resources.Topic.names.${x.name}`)
+                            }
+                          />
+                        </ReferenceArrayInput>
+                      </Box>
+                      <BooleanInput
+                        source="thumbsUpOnly"
+                        label={
+                          <Stack direction="row" gap="0.5em">
+                            {translate("make_campaign.form_step.thumbs_up_only")}
+                            <ThumbUpIcon color="primary" fontSize="small" />
+                          </Stack>
+                        }
+                        helperText={translate(
+                          "make_campaign.form_step.thumbs_up_only_help",
+                        )}
+                      />
+                    </Stack>
+                  </>
+                ) : (
+                  <Stack gap="0.5em">
+                    <BooleanInput
+                      source="allMembers"
+                      label={translate("make_campaign.form_step.all_members")}
+                      helperText={translate(
+                        "make_campaign.form_step.all_members_help",
+                      )}
+                    />
+                    {!formData.allMembers && (
+                      <ReferenceArrayInput
+                        source="member_ids"
+                        reference="Account"
+                        filter={{ acceptanceStatusEq: "ACTIVE" }}
+                      >
+                        <AutocompleteArrayInput
+                          label={translate(
+                            "make_campaign.form_step.selected_members",
+                          )}
+                          helperText={translate(
+                            "make_campaign.form_step.selected_members_help",
+                          )}
+                          optionText="name"
+                          size="small"
+                          variant="filled"
+                        />
+                      </ReferenceArrayInput>
                     )}
-                    size="small"
-                    variant="filled"
-                    optionText={(x) =>
-                      translate(`resources.Topic.names.${x.name}`)
-                    }
-                  />
-                </ReferenceArrayInput>
-              </Box>
-              <BooleanInput
-                source="thumbsUpOnly"
-                label={
-                  <Stack direction="row" gap="0.5em">
-                    {translate("make_campaign.form_step.thumbs_up_only")}
-                    <ThumbUpIcon color="primary" fontSize="small" />
                   </Stack>
-                }
-                helperText={translate(
-                  "make_campaign.form_step.thumbs_up_only_help",
-                )}
-              />
-            </Stack>
+                )
+              }
+            </FormDataConsumer>
           </Stack>
           <Stack gap="0.5em" flex="1 1 250px">
             <Head3 sx={{ color: "primary.main", mb: "0.5em" }}>

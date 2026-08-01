@@ -1,0 +1,96 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM handles WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR username = $8::varchar) AND (NOT $9::boolean OR username LIKE $10::varchar) AND (NOT $11::boolean OR username ILIKE $12::varchar) AND (NOT $13::boolean OR user_id = $14::varchar) AND (NOT $15::boolean OR user_id LIKE $16::varchar) AND (NOT $17::boolean OR status = $18::handle_status) AND (NOT $19::boolean OR status = ANY(CAST($20 as handle_status[])) ) AND (NOT $21::boolean OR created_at = $22::timestamptz) AND (NOT $23::boolean OR created_at > $24::timestamptz) AND (NOT $25::boolean OR force_hydrate = $26::boolean) AND (NOT $27::boolean OR total_collabs = $28::int4) AND (NOT $29::boolean OR total_collab_rewards = $30::varchar) AND (NOT $31::boolean OR x_refresh_token = $32::text) AND ($33::boolean IS NULL OR (($33::boolean AND x_refresh_token IS NOT NULL) OR (NOT $33::boolean AND x_refresh_token IS NULL))) AND (NOT $34::boolean OR invalidated_x_refresh_token = $35::text) AND ($36::boolean IS NULL OR (($36::boolean AND invalidated_x_refresh_token IS NOT NULL) OR (NOT $36::boolean AND invalidated_x_refresh_token IS NULL))) AND (NOT $37::boolean OR profile_image_url = $38::text)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "handle_status",
+            "kind": {
+              "Enum": [
+                "never_connected",
+                "setting_up",
+                "connecting",
+                "active",
+                "disconnected",
+                "reconnecting",
+                "inactive"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "handle_status[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "handle_status",
+                  "kind": {
+                    "Enum": [
+                      "never_connected",
+                      "setting_up",
+                      "connecting",
+                      "active",
+                      "disconnected",
+                      "reconnecting",
+                      "inactive"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Text",
+        "Bool",
+        "Bool",
+        "Text",
+        "Bool",
+        "Bool",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "d1d62e4c94c357ee010d5502e794bb581f3f6f145215b95382e0c088fb71b5d0"
+}

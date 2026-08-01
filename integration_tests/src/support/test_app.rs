@@ -16,11 +16,14 @@ use rocket::{config::LogLevel, local::asynchronous::Client as RocketClient, Conf
 pub use selenium::Selenium;
 
 use super::*;
-use crate::support::Truffle;
+use crate::support::Blockchain;
+
+const LOCAL_HARDHAT_MNEMONIC: &str = "test test test test test test test test test test test junk";
+const LOCAL_HARDHAT_ADMIN: &str = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
 pub struct TestApp {
     pub app: App,
-    pub truffle: Truffle,
+    pub blockchain: Blockchain,
     pub provider: Provider<Http>,
     pub rocket_client: RocketClient,
     pub api_server: Option<JoinHandle<()>>,
@@ -38,7 +41,10 @@ use sqlx_cli::*;
 
 impl TestApp {
     pub async fn init() -> Self {
+        println!("run-dev: resetting database");
         let mut config = AppConfig::default_figment().expect("config to exist");
+        config.rsk.wallet_mnemonic = LOCAL_HARDHAT_MNEMONIC.to_string();
+        config.rsk.admin_address = LOCAL_HARDHAT_ADMIN.parse().unwrap();
 
         run(Opt::parse_from(vec![
             "sqlx",
@@ -53,25 +59,37 @@ impl TestApp {
         .await
         .unwrap();
 
-        let truffle = Truffle::start();
-        config.rsk.legacy_contract_address.clone_from(&truffle.addresses.legacy);
-        config.rsk.doc_contract_address.clone_from(&truffle.addresses.doc);
-        config.rsk.asami_contract_address.clone_from(&truffle.addresses.asami);
+        println!("run-dev: starting blockchain harness");
+        let blockchain = Blockchain::start();
+        println!("run-dev: blockchain harness ready");
+        config.rsk.legacy_contract_address.clone_from(&blockchain.addresses.legacy);
+        config.rsk.doc_contract_address.clone_from(&blockchain.addresses.doc);
+        config.rsk.asami_contract_address.clone_from(&blockchain.addresses.asami);
 
+        println!("run-dev: building provider");
         let provider = Provider::<Http>::try_from(&config.rsk.rpc_url)
             .unwrap()
             .interval(std::time::Duration::from_millis(10));
-        provider.request::<_, bool>("evm_setAutomine", vec![false]).await.unwrap();
-        provider.request::<_, bool>("evm_setIntervalMining", vec![0]).await.unwrap();
-        let app = App::new("password".to_string(), config).await.unwrap();
+        provider
+            .request::<_, serde_json::Value>("evm_setAutomine", vec![false])
+            .await
+            .unwrap();
+        provider
+            .request::<_, serde_json::Value>("evm_setIntervalMining", vec![0])
+            .await
+            .unwrap();
+        println!("run-dev: creating app");
+        let app = App::new("".to_string(), config).await.unwrap();
 
         let fig = Config::figment().merge((Config::LOG_LEVEL, LogLevel::Off));
+        println!("run-dev: creating rocket test client");
         let rocket_client = RocketClient::tracked(api::custom_server(app.clone(), fig)).await.unwrap();
+        println!("run-dev: test app ready");
 
         Self {
             rocket_client,
             provider,
-            truffle,
+            blockchain,
             app,
             api_server: None,
             vite_preview: None,
@@ -80,9 +98,13 @@ impl TestApp {
     }
 
     pub async fn with_web(mut self) -> Self {
+        println!("run-dev: starting API server");
         self.api_server = Some(TestApiServer::start(self.app.clone()).await);
+        println!("run-dev: starting Vite preview");
         self.vite_preview = Some(VitePreview::start());
+        println!("run-dev: starting Selenium");
         self.web = Some(Selenium::start(self.app.clone()).await);
+        println!("run-dev: web stack ready");
         self
     }
 
@@ -119,17 +141,32 @@ impl TestApp {
 
     pub async fn evm_mine(&self) {
         self.provider.request::<Vec<()>, U256>("evm_mine", vec![]).await.unwrap();
-        self.provider.request::<_, bool>("evm_setAutomine", vec![false]).await.unwrap();
+        self.provider
+            .request::<_, serde_json::Value>("evm_setAutomine", vec![false])
+            .await
+            .unwrap();
     }
 
     pub async fn stop_mining(&self) {
-        self.provider.request::<_, bool>("evm_setIntervalMining", vec![0]).await.unwrap();
-        self.provider.request::<_, bool>("evm_setAutomine", vec![false]).await.unwrap();
+        self.provider
+            .request::<_, serde_json::Value>("evm_setIntervalMining", vec![0])
+            .await
+            .unwrap();
+        self.provider
+            .request::<_, serde_json::Value>("evm_setAutomine", vec![false])
+            .await
+            .unwrap();
     }
 
     pub async fn start_mining(&self) {
-        self.provider.request::<_, bool>("evm_setIntervalMining", vec![1]).await.unwrap();
-        self.provider.request::<_, bool>("evm_setAutomine", vec![false]).await.unwrap();
+        self.provider
+            .request::<_, serde_json::Value>("evm_setIntervalMining", vec![1])
+            .await
+            .unwrap();
+        self.provider
+            .request::<_, serde_json::Value>("evm_setAutomine", vec![false])
+            .await
+            .unwrap();
     }
 
     pub async fn admin_nonce(&self) -> U256 {
@@ -441,7 +478,7 @@ impl TestApp {
         .await;
     }
 
-    pub async fn batch_collabs(&self, mut campaign: models::Campaign, test_users: &[&TestUser]) -> models::Campaign {
+    pub async fn batch_collabs(&self, campaign: models::Campaign, test_users: &[&TestUser]) -> models::Campaign {
         use api::models::{OnChainJobKind, OnChainJobStatus};
 
         let mut claimed_ids = vec![];
@@ -474,11 +511,32 @@ impl TestApp {
             .await;
 
             for id in group {
+                let handle = self
+                    .app
+                    .handle()
+                    .select()
+                    .user_id_eq(id.to_string())
+                    .one()
+                    .await
+                    .expect("handle to exist for collab batch");
+                let account = handle.account().await.expect("account to exist for collab batch");
                 collabs.push(
                     campaign
-                        .make_x_collab_with_user_id(id)
+                        .state
+                        .collab()
+                        .insert(models::InsertCollab {
+                            campaign_id: *campaign.id(),
+                            handle_id: Some(*handle.id()),
+                            advertiser_id: campaign.account_id().clone(),
+                            member_id: account.id().clone(),
+                            collab_trigger_unique_id: id.to_string(),
+                            reward: campaign.max_individual_reward().clone(),
+                            fee: None,
+                            status: models::CollabStatus::Registered,
+                            dispute_reason: None,
+                        })
+                        .save()
                         .await
-                        .expect("collab to execute correctly")
                         .expect("collab creation to succeed"),
                 );
             }
@@ -524,8 +582,21 @@ impl TestApp {
         )
         .await;
 
-        let collab = campaign
-            .make_collab(handle, reward, trigger)
+        let collab = self
+            .app
+            .collab()
+            .insert(models::InsertCollab {
+                campaign_id: *campaign.id(),
+                handle_id: Some(*handle.id()),
+                advertiser_id: campaign.account_id().clone(),
+                member_id: handle.account_id().clone(),
+                collab_trigger_unique_id: trigger.to_string(),
+                reward: reward.encode_hex(),
+                fee: None,
+                status: models::CollabStatus::Registered,
+                dispute_reason: None,
+            })
+            .save()
             .await
             .unwrap_or_else(|_| panic!("Collab to be created in context '{context}'"));
 

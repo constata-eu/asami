@@ -42,7 +42,6 @@ import LockResetIcon from "@mui/icons-material/LockReset";
 
 import {
   backgroundGradientRules,
-  BigText,
   Head2,
   Head3,
   paperBackground,
@@ -126,19 +125,6 @@ export const HandleStats = ({ handle, id }) => {
 
   return (
     <Box id={id} flexGrow={1} display="flex" flexDirection="column">
-      <Typography
-        color="secondary"
-        fontSize="1em"
-        letterSpacing="0em"
-        margin="auto"
-        padding="0"
-        fontWeight="100"
-        fontFamily="'LeagueSpartanLight'"
-        lineHeight="0.5em"
-        textTransform="uppercase"
-      >
-        {translate("account_show.score")}
-      </Typography>
       <Stack direction="row" justifyContent="center" alignItems="center">
         <XIcon
           sx={{
@@ -146,19 +132,9 @@ export const HandleStats = ({ handle, id }) => {
             fontSize: 50,
           }}
         />
-        <BigText
-          sx={{
-            fontSize: "4em",
-            lineHeight: "1em",
-            color: "secondary.main",
-            textAlign: "center",
-          }}
-        >
-          {BigInt(handle.score)}
-        </BigText>
       </Stack>
       <Typography
-        margin="0 0 1em 0"
+        margin="0 0 1.2em 0"
         fontSize="1.4em"
         fontFamily="'LeagueSpartanBold'"
         lineHeight="1.1em"

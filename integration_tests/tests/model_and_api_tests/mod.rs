@@ -11,3 +11,4 @@ pub mod distribute_fees_job;
 pub mod gasless_claims;
 pub mod making_collabs;
 pub mod on_chain_jobs;
+pub mod reputation_scoring;

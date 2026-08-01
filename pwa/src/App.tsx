@@ -19,8 +19,8 @@ import About from "./views/about";
 import asamiTheme from "./components/theme";
 import { BareLayout } from "./views/layout";
 import AdvertiserDashboard from "./views/advertiser/dashboard";
+import { InviteRootstockerPage } from "./views/advertiser/dashboard";
 import MemberDashboard from "./views/member/dashboard";
-import { StripeSuccess, StripeCancel } from "./views/stripe";
 import { Container, Skeleton } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import {
@@ -34,13 +34,15 @@ import polyglotI18nProvider from "ra-i18n-polyglot";
 import { messages, browserLocale } from "./i18n";
 import { HandleEdit, HandleList } from "./views/explorer/handles";
 import { CampaignList, CampaignShow } from "./views/explorer/campaigns";
-import { AccountList, AccountShow } from "./views/explorer/accounts";
+import { AccountList, AccountShow, AccountEdit } from "./views/explorer/accounts";
 import { CollabList } from "./views/explorer/collabs";
 import { StatsShow } from "./views/explorer/stats";
 import Whitepaper from "./views/whitepaper";
 import Token from "./views/explorer/token";
 import { EmbeddedProvider } from "./components/embedded_context";
 import { MergeAccounts, AcceptMergeFromSource } from "./views/merge_accounts";
+import WaitlistPage from "./views/waitlist";
+import { WaitlistApplicationEdit, WaitlistApplicationList } from "./views/explorer/waitlist_applications";
 
 const Dashboard = () => {
   const [searchParams] = useSearchParams();
@@ -130,21 +132,37 @@ export const App = () => {
 
             <Resource name="Campaign" list={CampaignList} show={CampaignShow} />
 
-            <Resource name="Account" list={AccountList} show={AccountShow} />
+            <Resource
+              name="Account"
+              list={AccountList}
+              show={AccountShow}
+              edit={AccountEdit}
+              recordRepresentation={(record) => record?.name || record?.id}
+            />
 
             <Resource name="Collab" list={CollabList} />
+            <Resource name="ScorableAccount" />
 
             <Resource name="Stats" show={StatsShow} />
             <Resource name="TokenStats" />
 
             <Resource name="Topic" />
             <Resource name="CommunityMember" />
+            <Resource name="LandingMember" />
+            <Resource
+              name="WaitlistApplication"
+              list={WaitlistApplicationList}
+              edit={WaitlistApplicationEdit}
+              recordRepresentation={(record) => record?.name || record?.email}
+            />
 
             <CustomRoutes>
               <Route path="/embedded" element={<Embedded />} />
               <Route path="/un-embedded" element={<UnEmbedded />} />
               <Route path="/" element={<Landing />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/community/invite" element={<InviteRootstockerPage />} />
+              <Route path="/waitlist" element={<WaitlistPage />} />
               <Route path="/about" element={<About />} />
               <Route path="/whitepaper" element={<Whitepaper />} />
               <Route path="/token" element={<Token />} />
@@ -152,8 +170,6 @@ export const App = () => {
 
             <CustomRoutes noLayout>
               <Route path="/merge-accounts" element={<MergeAccounts />} />
-              <Route path="/stripe-success" element={<StripeSuccess />} />
-              <Route path="/stripe-cancel" element={<StripeCancel />} />
               <Route path="/s/:token" element={<SessionMigrationForX />} />
               <Route path="/m/:code" element={<AcceptMergeFromSource />} />
               <Route

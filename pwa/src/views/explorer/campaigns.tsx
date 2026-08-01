@@ -21,7 +21,12 @@ import {
 } from "react-admin";
 import { Link } from "react-router-dom";
 import { ExplorerLayout } from "../layout";
-import { contentId, viewPostUrl } from "../../lib/campaign";
+import {
+  campaignLabel,
+  contentId,
+  isXRepostCampaign,
+  viewPostUrl,
+} from "../../lib/campaign";
 import { AmountField, AmountInput } from "../../components/custom_fields";
 import { Head1, Head2, Lead } from "../../components/theme";
 import { Box, Card, Stack } from "@mui/material";
@@ -54,7 +59,7 @@ export const CampaignList = () => {
         sort={{ field: "createdAt", order: "DESC" }}
       >
         <Datagrid bulkActionButtons={false} expand={<ExpandCampaign />}>
-          <FunctionField source="briefingJson" render={contentId} />
+          <FunctionField source="briefingJson" render={campaignLabel} />
           <ReferenceField source="accountId" reference="Account" link="show" />
           <NumberField source="totalCollabs" />
           <AmountField textAlign="right" currency="" source="budget" />
@@ -84,6 +89,7 @@ export const CampaignShow = () => (
 
 export const CampaignShowInner = () => {
   const show = useShowController({ disableAuthentication: true });
+  const t = useTranslate();
 
   if (show.isPending || !show.record) {
     return <></>;
@@ -92,15 +98,21 @@ export const CampaignShowInner = () => {
   return (
     <Stack direction="row" gap="1em" mt="1em" flexWrap="wrap">
       <Box flex="0 1 500px">
-        <TwitterTweetEmbed
-          tweetId={contentId(show.record)}
-          options={{
-            align: "center",
-            width: "100%",
-            conversation: "none",
-            margin: 0,
-          }}
-        />
+        {isXRepostCampaign(show.record) ? (
+          <TwitterTweetEmbed
+            tweetId={contentId(show.record)}
+            options={{
+              align: "center",
+              width: "100%",
+              conversation: "none",
+              margin: 0,
+            }}
+          />
+        ) : (
+          <Card sx={{ p: "2em" }}>
+            {t("resources.Campaign.kinds.COMMUNITY_GIVEAWAY")}
+          </Card>
+        )}
         <Card sx={{ mt: "1em", justifySelf: "left" }} elevation={1}>
           <SimpleShowLayout record={show.record} direction="row">
             <TextField source="id" />
@@ -116,9 +128,13 @@ export const CampaignShowInner = () => {
               source="briefingJson"
               sortable={false}
               render={(record) => (
-                <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">
-                  {contentId(record)}
-                </a>
+                isXRepostCampaign(record) ? (
+                  <a target="_blank" href={viewPostUrl(record)} rel="noreferrer">
+                    {contentId(record)}
+                  </a>
+                ) : (
+                  campaignLabel(record)
+                )
               )}
             />
           </SimpleShowLayout>

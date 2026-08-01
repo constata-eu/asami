@@ -1,0 +1,150 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT count(*) as \"count!\" FROM campaigns WHERE (NOT $1::boolean OR id = $2::int4) AND (NOT $3::boolean OR id = ANY(CAST($4 as int4[])) ) AND (NOT $5::boolean OR account_id = $6::varchar) AND (NOT $7::boolean OR advertiser_addr = $8::varchar) AND (NOT $9::boolean OR advertiser_addr LIKE $10::varchar) AND (NOT $11::boolean OR status = $12::campaign_status) AND (NOT $13::boolean OR status != $14::campaign_status) AND (NOT $15::boolean OR briefing_hash = $16::varchar) AND (NOT $17::boolean OR briefing_hash LIKE $18::varchar) AND (NOT $19::boolean OR briefing_json = $20::varchar) AND (NOT $21::boolean OR briefing_json LIKE $22::varchar) AND (NOT $23::boolean OR budget = $24::varchar) AND (NOT $25::boolean OR budget > $26::varchar) AND (NOT $27::boolean OR budget < $28::varchar) AND (NOT $29::boolean OR kind = $30::campaign_kind) AND (NOT $31::boolean OR kind = ANY(CAST($32 as campaign_kind[])) ) AND (NOT $33::boolean OR max_individual_reward = $34::varchar) AND (NOT $35::boolean OR thumbs_up_only = $36::boolean) AND (NOT $37::boolean OR valid_until = $38::timestamptz) AND (NOT $39::boolean OR collabs_gathered_at = $40::timestamptz) AND ($41::boolean IS NULL OR (($41::boolean AND collabs_gathered_at IS NOT NULL) OR (NOT $41::boolean AND collabs_gathered_at IS NULL))) AND (NOT $42::boolean OR rewards_assigned_at = $43::timestamptz) AND ($44::boolean IS NULL OR (($44::boolean AND rewards_assigned_at IS NOT NULL) OR (NOT $44::boolean AND rewards_assigned_at IS NULL))) AND (NOT $45::boolean OR report_hash = $46::varchar) AND (NOT $47::boolean OR created_at = $48::timestamptz) AND (NOT $49::boolean OR created_at > $50::timestamptz) AND (NOT $51::boolean OR force_hydrate = $52::boolean) AND (NOT $53::boolean OR total_collabs = $54::int4) AND (NOT $55::boolean OR total_spent = $56::varchar) AND (NOT $57::boolean OR total_budget = $58::varchar) AND (NOT $59::boolean OR impression_count = $60::int4) AND (NOT $61::boolean OR reply_count = $62::int4) AND (NOT $63::boolean OR repost_count = $64::int4) AND (NOT $65::boolean OR like_count = $66::int4) AND (NOT $67::boolean OR x_announcement_id_es = $68::varchar) AND ($69::boolean IS NULL OR (($69::boolean AND x_announcement_id_es IS NOT NULL) OR (NOT $69::boolean AND x_announcement_id_es IS NULL))) AND (NOT $70::boolean OR x_announcement_id_en = $71::varchar) AND ($72::boolean IS NULL OR (($72::boolean AND x_announcement_id_en IS NOT NULL) OR (NOT $72::boolean AND x_announcement_id_en IS NULL)))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4Array",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "campaign_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "awaiting_payment",
+                "paid",
+                "submitted",
+                "published",
+                "failed"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "campaign_status",
+            "kind": {
+              "Enum": [
+                "draft",
+                "awaiting_payment",
+                "paid",
+                "submitted",
+                "published",
+                "failed"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "campaign_kind",
+            "kind": {
+              "Enum": [
+                "x_repost",
+                "ig_clone_post",
+                "community_giveaway"
+              ]
+            }
+          }
+        },
+        "Bool",
+        {
+          "Custom": {
+            "name": "campaign_kind[]",
+            "kind": {
+              "Array": {
+                "Custom": {
+                  "name": "campaign_kind",
+                  "kind": {
+                    "Enum": [
+                      "x_repost",
+                      "ig_clone_post",
+                      "community_giveaway"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Bool",
+        "Varchar",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "0da7dba88756eb63389effd35820fccbe03014a96e4fdca6083b3fcd4123ab5a"
+}

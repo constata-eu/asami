@@ -1,0 +1,796 @@
+mutation CreateSession {
+  createSession {
+    id
+    userId
+    accountId
+    pubkey
+    nonce
+    createdAt
+    updatedAt
+    admin
+    __typename
+  }
+}
+mutation CreateCampaignFromLink($input: CreateCampaignFromLinkInput!) {
+  createCampaignFromLink(input: $input) {
+    id
+    accountId
+    budget
+    kind
+    maxIndividualReward
+    advertiserName
+    isPublished
+    isEnded
+    briefingJson
+    briefingHash
+    validUntil
+    createdAt
+    topicIds
+    youWouldReceive
+    totalCollabs
+    totalSpent
+    totalBudget
+    thumbsUpOnly
+    privateFields {
+      status
+      __typename
+    }
+    __typename
+  }
+}
+mutation UpdateCampaign($id: Int!) {
+  updateCampaign(id: $id) {
+    id
+    accountId
+    budget
+    kind
+    maxIndividualReward
+    advertiserName
+    isPublished
+    isEnded
+    briefingJson
+    briefingHash
+    validUntil
+    createdAt
+    topicIds
+    youWouldReceive
+    totalCollabs
+    totalSpent
+    totalBudget
+    thumbsUpOnly
+    privateFields {
+      status
+      __typename
+    }
+    __typename
+  }
+}
+mutation CreateGaslessAllowance {
+  createGaslessAllowance {
+    id
+    status
+    acceptanceStatus
+    addr
+    name
+    invitedByAccountId
+    invitedByName
+    invitesPerMonth
+    availableInvites
+    unclaimedAsamiBalance
+    unclaimedDocBalance
+    asamiBalance
+    docBalance
+    rbtcBalance
+    allowsGasless
+    createdAt
+    totalCollabs
+    totalCollabRewards
+    totalCampaigns
+    totalCollabsReceived
+    totalSpent
+    confirmedYield
+    alignmentScore
+    trustScore
+    contributionScore
+    advocacyScore
+    judgmentScore
+    rootstockLongevityScore
+    rootstockJoinedAt
+    scoresReceivedCount
+    scoresIssuedCount
+    __typename
+  }
+}
+mutation CreateClaimAccountRequest($input: CreateClaimAccountRequestInput!) {
+  createClaimAccountRequest(input: $input) {
+    id
+    status
+    acceptanceStatus
+    addr
+    name
+    invitedByAccountId
+    invitedByName
+    invitesPerMonth
+    availableInvites
+    unclaimedAsamiBalance
+    unclaimedDocBalance
+    asamiBalance
+    docBalance
+    rbtcBalance
+    allowsGasless
+    createdAt
+    totalCollabs
+    totalCollabRewards
+    totalCampaigns
+    totalCollabsReceived
+    totalSpent
+    confirmedYield
+    alignmentScore
+    trustScore
+    contributionScore
+    advocacyScore
+    judgmentScore
+    rootstockLongevityScore
+    rootstockJoinedAt
+    scoresReceivedCount
+    scoresIssuedCount
+    __typename
+  }
+}
+mutation CreateCampaignPreference($input: CreateCampaignPreferenceInput!) {
+  createCampaignPreference(input: $input) {
+    id
+    campaignId
+    notInterestedOn
+    attemptedOn
+    __typename
+  }
+}
+mutation CreateEmailLoginLink($email: String!) {
+  createEmailLoginLink(email: $email) {
+    id
+    __typename
+  }
+}
+mutation CreateOneTimeToken {
+  createOneTimeToken {
+    id
+    value
+    lookupKey
+    used
+    userId
+    expiresAt
+    sentAt
+    email
+    lang
+    __typename
+  }
+}
+mutation CreateInvitation($input: CreateInvitationInput!) {
+  createInvitation(input: $input) {
+    id
+    inviterAccountId
+    accountId
+    token
+    inviteUrl
+    createdAt
+    expiresAt
+    acceptedAt
+    __typename
+  }
+}
+mutation CreateAccountMerge {
+  createAccountMerge {
+    id
+    code
+    destination
+    source
+    createdAt
+    status
+    __typename
+  }
+}
+mutation CreateXRefreshToken($token: String!, $verifier: String!) {
+  createXRefreshToken(token: $token, verifier: $verifier) {
+    id
+    accountId
+    username
+    userId
+    topicIds
+    status
+    totalCollabs
+    totalCollabRewards
+    __typename
+  }
+}
+mutation UpdateHandle($id: Int!, $data: AdminEditHandleInput!) {
+  updateHandle(id: $id, data: $data) {
+    id
+    accountId
+    username
+    userId
+    topicIds
+    status
+    totalCollabs
+    totalCollabRewards
+    __typename
+  }
+}
+mutation UpdateCommunityMember($id: Int!, $data: EditCommunityMemberInput!) {
+  updateCommunityMember(id: $id, data: $data) {
+    id
+    accountId
+    memberId
+    rating
+    priority
+    alignment
+    trust
+    contribution
+    advocacy
+    judgment
+    rootstockJoinedAt
+    comment
+    collabs
+    rewards
+    firstCollabDate
+    lastCollabDate
+    __typename
+  }
+}
+mutation UpdateAccount($id: String!, $data: AdminEditAccountInput!) {
+  updateAccount(id: $id, data: $data) {
+    id
+    status
+    acceptanceStatus
+    addr
+    name
+    invitedByAccountId
+    invitedByName
+    invitesPerMonth
+    availableInvites
+    unclaimedAsamiBalance
+    unclaimedDocBalance
+    asamiBalance
+    docBalance
+    rbtcBalance
+    allowsGasless
+    createdAt
+    totalCollabs
+    totalCollabRewards
+    totalCampaigns
+    totalCollabsReceived
+    totalSpent
+    confirmedYield
+    alignmentScore
+    trustScore
+    contributionScore
+    advocacyScore
+    judgmentScore
+    rootstockLongevityScore
+    rootstockJoinedAt
+    scoresReceivedCount
+    scoresIssuedCount
+    __typename
+  }
+}
+mutation CreateCommunityMember($input: CreateCommunityMemberInput!) {
+  createCommunityMember(input: $input) {
+    id
+    accountId
+    memberId
+    rating
+    priority
+    alignment
+    trust
+    contribution
+    advocacy
+    judgment
+    rootstockJoinedAt
+    comment
+    collabs
+    rewards
+    firstCollabDate
+    lastCollabDate
+    __typename
+  }
+}
+mutation CreateCommunityMemberMembership($input: CreateCommunityMemberMembershipInput!) {
+  createCommunityMemberMembership(input: $input) {
+    id
+    accountId
+    memberId
+    rating
+    priority
+    alignment
+    trust
+    contribution
+    advocacy
+    judgment
+    rootstockJoinedAt
+    comment
+    collabs
+    rewards
+    firstCollabDate
+    lastCollabDate
+    __typename
+  }
+}
+mutation CreateCommunityMemberSkip($input: CreateCommunityMemberSkipInput!) {
+  createCommunityMemberSkip(input: $input) {
+    id
+    scorerAccountId
+    targetAccountId
+    reason
+    createdAt
+    __typename
+  }
+}
+query Account($id: String!) {
+  Account(id: $id) {
+    id
+    status
+    acceptanceStatus
+    addr
+    name
+    invitedByAccountId
+    invitedByName
+    invitesPerMonth
+    availableInvites
+    unclaimedAsamiBalance
+    unclaimedDocBalance
+    asamiBalance
+    docBalance
+    rbtcBalance
+    allowsGasless
+    createdAt
+    totalCollabs
+    totalCollabRewards
+    totalCampaigns
+    totalCollabsReceived
+    totalSpent
+    confirmedYield
+    alignmentScore
+    trustScore
+    contributionScore
+    advocacyScore
+    judgmentScore
+    rootstockLongevityScore
+    rootstockJoinedAt
+    scoresReceivedCount
+    scoresIssuedCount
+    __typename
+  }
+}
+query AllAccounts($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: AccountFilter) {
+  allAccounts(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    status
+    acceptanceStatus
+    addr
+    name
+    invitedByAccountId
+    invitedByName
+    invitesPerMonth
+    availableInvites
+    unclaimedAsamiBalance
+    unclaimedDocBalance
+    asamiBalance
+    docBalance
+    rbtcBalance
+    allowsGasless
+    createdAt
+    totalCollabs
+    totalCollabRewards
+    totalCampaigns
+    totalCollabsReceived
+    totalSpent
+    confirmedYield
+    alignmentScore
+    trustScore
+    contributionScore
+    advocacyScore
+    judgmentScore
+    rootstockLongevityScore
+    rootstockJoinedAt
+    scoresReceivedCount
+    scoresIssuedCount
+    __typename
+  }
+}
+query AllAccountsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: AccountFilter) {
+  _allAccountsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query Campaign($id: Int!) {
+  Campaign(id: $id) {
+    id
+    accountId
+    budget
+    kind
+    maxIndividualReward
+    advertiserName
+    isPublished
+    isEnded
+    briefingJson
+    briefingHash
+    validUntil
+    createdAt
+    topicIds
+    youWouldReceive
+    totalCollabs
+    totalSpent
+    totalBudget
+    thumbsUpOnly
+    privateFields {
+      status
+      __typename
+    }
+    __typename
+  }
+}
+query AllCampaigns($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignFilter) {
+  allCampaigns(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    accountId
+    budget
+    kind
+    maxIndividualReward
+    advertiserName
+    isPublished
+    isEnded
+    briefingJson
+    briefingHash
+    validUntil
+    createdAt
+    topicIds
+    youWouldReceive
+    totalCollabs
+    totalSpent
+    totalBudget
+    thumbsUpOnly
+    privateFields {
+      status
+      __typename
+    }
+    __typename
+  }
+}
+query AllCampaignsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignFilter) {
+  _allCampaignsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query Handle($id: Int!) {
+  Handle(id: $id) {
+    id
+    accountId
+    username
+    userId
+    topicIds
+    status
+    totalCollabs
+    totalCollabRewards
+    __typename
+  }
+}
+query AllHandles($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HandleFilter) {
+  allHandles(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    accountId
+    username
+    userId
+    topicIds
+    status
+    totalCollabs
+    totalCollabRewards
+    __typename
+  }
+}
+query AllHandlesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HandleFilter) {
+  _allHandlesMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query Collab($id: Int!) {
+  Collab(id: $id) {
+    id
+    campaignId
+    advertiserId
+    handleId
+    memberId
+    status
+    disputeReason
+    reward
+    createdAt
+    fee
+    collabTriggerUniqueId
+    __typename
+  }
+}
+query AllCollabs($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CollabFilter) {
+  allCollabs(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    campaignId
+    advertiserId
+    handleId
+    memberId
+    status
+    disputeReason
+    reward
+    createdAt
+    fee
+    collabTriggerUniqueId
+    __typename
+  }
+}
+query AllCollabsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CollabFilter) {
+  _allCollabsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query CampaignPreference($id: Int!) {
+  CampaignPreference(id: $id) {
+    id
+    campaignId
+    notInterestedOn
+    attemptedOn
+    __typename
+  }
+}
+query AllCampaignPreferences($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignPreferenceFilter) {
+  allCampaignPreferences(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    campaignId
+    notInterestedOn
+    attemptedOn
+    __typename
+  }
+}
+query AllCampaignPreferencesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CampaignPreferenceFilter) {
+  _allCampaignPreferencesMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query OnChainJob($id: Int!) {
+  OnChainJob(id: $id) {
+    id
+    status
+    kind
+    txHash
+    gasUsed
+    nonce
+    block
+    statusLine
+    sleepUntil
+    createdAt
+    __typename
+  }
+}
+query AllOnChainJobs($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: OnChainJobFilter) {
+  allOnChainJobs(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    status
+    kind
+    txHash
+    gasUsed
+    nonce
+    block
+    statusLine
+    sleepUntil
+    createdAt
+    __typename
+  }
+}
+query AllOnChainJobsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: OnChainJobFilter) {
+  _allOnChainJobsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query Topic($id: Int!) {
+  Topic(id: $id) {
+    id
+    name
+    __typename
+  }
+}
+query AllTopics($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: TopicFilter) {
+  allTopics(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    name
+    __typename
+  }
+}
+query AllTopicsMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: TopicFilter) {
+  _allTopicsMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query AuditLogEntry($id: Int!) {
+  AuditLogEntry(id: $id) {
+    id
+    severity
+    createdAt
+    kind
+    subkind
+    context
+    loggableType
+    loggableId
+    __typename
+  }
+}
+query AllAuditLogEntries($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: AuditLogEntryFilter) {
+  allAuditLogEntries(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    severity
+    createdAt
+    kind
+    subkind
+    context
+    loggableType
+    loggableId
+    __typename
+  }
+}
+query AllAuditLogEntriesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: AuditLogEntryFilter) {
+  _allAuditLogEntriesMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query CommunityMember($id: Int!) {
+  CommunityMember(id: $id) {
+    id
+    accountId
+    memberId
+    rating
+    priority
+    alignment
+    trust
+    contribution
+    advocacy
+    judgment
+    rootstockJoinedAt
+    comment
+    collabs
+    rewards
+    firstCollabDate
+    lastCollabDate
+    __typename
+  }
+}
+query AllCommunityMembers($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CommunityMemberFilter) {
+  allCommunityMembers(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    accountId
+    memberId
+    rating
+    priority
+    alignment
+    trust
+    contribution
+    advocacy
+    judgment
+    rootstockJoinedAt
+    comment
+    collabs
+    rewards
+    firstCollabDate
+    lastCollabDate
+    __typename
+  }
+}
+query AllCommunityMembersMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: CommunityMemberFilter) {
+  _allCommunityMembersMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query Holder($id: Int!) {
+  Holder(id: $id) {
+    id
+    address
+    balance
+    isContract
+    estimatedTotalDocClaimed
+    __typename
+  }
+}
+query AllHolders($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HolderFilter) {
+  allHolders(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    address
+    balance
+    isContract
+    estimatedTotalDocClaimed
+    __typename
+  }
+}
+query AllHoldersMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: HolderFilter) {
+  _allHoldersMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query AccountMerge($id: Int!) {
+  AccountMerge(id: $id) {
+    id
+    code
+    destination
+    source
+    createdAt
+    status
+    __typename
+  }
+}
+query AllAccountMerges($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: AccountMergeFilter) {
+  allAccountMerges(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    id
+    code
+    destination
+    source
+    createdAt
+    status
+    __typename
+  }
+}
+query AllAccountMergesMeta($page: Int, $perPage: Int, $sortField: String, $sortOrder: String, $filter: AccountMergeFilter) {
+  _allAccountMergesMeta(page: $page, perPage: $perPage, sortField: $sortField, sortOrder: $sortOrder, filter: $filter) {
+    count
+    __typename
+  }
+}
+query Stats($id: Int!) {
+  Stats(id: $id) {
+    id
+    totalActiveMembers
+    totalSignups
+    totalAdvertisers
+    totalActiveHandles
+    currentlyActive
+    joinedRecently
+    totalCampaigns
+    recentCampaigns
+    thirtyDayAverageCampaigns
+    totalCollabs
+    recentCollabs
+    thirtyDayAverageCollabs
+    totalRewardsPaid
+    recentRewardsPaid
+    thirtyDayAverageRewardsPaid
+    date
+    __typename
+  }
+}
+query TokenStats($id: Int!) {
+  TokenStats(id: $id) {
+    id
+    tokenYield
+    price
+    payback
+    supply
+    unclaimed
+    issuanceRate
+    feePool
+    cycleStart
+    cycleEnd
+    __typename
+  }
+}
+query ScorableAccounts {
+  scorableAccounts {
+    accountId
+    name
+    reason
+    windowStart
+    scorableUntil
+    __typename
+  }
+}

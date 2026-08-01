@@ -3,11 +3,10 @@
 // It also contains all the shortcuts for easily establishing
 // test scenarios without repetition.
 
-pub mod handle_scoring_builder;
 pub mod selenium;
 pub mod test_api_server;
 pub mod test_app;
-pub mod truffle;
+pub mod blockchain;
 pub mod vite_preview;
 
 use std::{
@@ -23,7 +22,7 @@ pub use test_api_server::*;
 pub use test_app::*;
 pub use test_user::{ApiError, TestUser};
 use tokio::task::{self, JoinHandle};
-pub use truffle::*;
+pub use blockchain::*;
 pub use vite_preview::*;
 
 pub mod test_user;

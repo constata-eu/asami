@@ -56,9 +56,8 @@ pub struct Email {
 
 impl OneTimeTokenHub {
     pub fn rand_value() -> String {
-        use rand::distributions::Alphanumeric;
-        use rand::{thread_rng, Rng};
-        thread_rng().sample_iter(&Alphanumeric).take(6).collect::<String>().to_uppercase()
+        use rand::{distr::Alphanumeric, rng, RngExt};
+        rng().sample_iter(&Alphanumeric).take(6).map(char::from).collect::<String>().to_uppercase()
     }
 
     pub fn default_expiration() -> DateTime<Utc> {

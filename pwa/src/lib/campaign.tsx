@@ -1,12 +1,20 @@
-export const contentId = (campaign) => JSON.parse(campaign.briefingJson)
+export const campaignBriefing = (campaign) => JSON.parse(campaign.briefingJson);
+
+export const contentId = (campaign) => {
+  const briefing = campaignBriefing(campaign);
+  return briefing.kind === "x_repost" ? briefing.tweet_id : null;
+};
+
+export const isXRepostCampaign = (campaign) => campaign.kind === "X_REPOST";
+export const isCommunityGiveawayCampaign = (campaign) =>
+  campaign.kind === "COMMUNITY_GIVEAWAY";
+
+export const campaignLabel = (campaign) =>
+  isXRepostCampaign(campaign) ? contentId(campaign) : "Community giveaway";
 
 export const viewPostUrl = (campaign) => {
-  if(campaign.site == "INSTAGRAM"){
-    return `https://instagram.com/p/${contentId(campaign)}`;
-  } else {
-    return `https://x.com/user/status/${contentId(campaign)}`;
-  }
-}
+  return `https://x.com/user/status/${contentId(campaign)}`;
+};
 
 export const validateCampaignLink = (url) => {
   let error = null;
@@ -26,5 +34,5 @@ export const validateCampaignLink = (url) => {
 		return "invalid_url";
   }
 	
-	return null;
-}
+  return null;
+};

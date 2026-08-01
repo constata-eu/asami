@@ -1,5 +1,12 @@
 use rocket::serde::json;
-use twitter_v2::{authorization::Oauth2Token, oauth2::*, TwitterApi};
+use twitter_v2::{
+    api_result::PaginableApiResponse,
+    authorization::Oauth2Token,
+    data::ReferencedTweetKind,
+    oauth2::*,
+    query::{TweetField, UserField},
+    TwitterApi,
+};
 
 use super::*;
 
@@ -36,72 +43,15 @@ model! {
     #[sqlx_model_hints(text, default, op_is_set)]
     invalidated_x_refresh_token: Option<String>,
 
-    #[sqlx_model_hints(timestamptz, default)]
-    next_scoring: Option<UtcDateTime>,
-    #[sqlx_model_hints(varchar, default)]
-    score: Option<String>,
-    #[sqlx_model_hints(timestamptz, default)]
-    last_scoring: Option<UtcDateTime>,
-    #[sqlx_model_hints(int4, default)]
-    current_scoring_id: Option<i32>,
-
-    // These are overrides for all the areas of the algorithm
-    // where issues may arise.
-    #[sqlx_model_hints(engagement_score, default)]
-    online_engagement_override: Option<EngagementScore>,
-    #[sqlx_model_hints(text, default)]
-    online_engagement_override_reason: Option<String>,
-
-    #[sqlx_model_hints(engagement_score, default)]
-    offline_engagement_score: EngagementScore,
-    #[sqlx_model_hints(text, default)]
-    offline_engagement_description: Option<String>,
-
-    #[sqlx_model_hints(varchar, default)]
-    poll_id: Option<String>,
-    #[sqlx_model_hints(timestamptz, default)]
-    poll_ends_at: Option<DateTime<Utc>>,
-    #[sqlx_model_hints(poll_score, default)]
-    poll_override: Option<PollScore>,
-    #[sqlx_model_hints(varchar, default)]
-    poll_override_reason: Option<String>,
-
-    #[sqlx_model_hints(operational_status, default)]
-    operational_status_override: Option<OperationalStatus>,
-    #[sqlx_model_hints(text, default)]
-    operational_status_override_reason: Option<String>,
-
-    #[sqlx_model_hints(boolean, default)]
-    referrer_score_override: Option<bool>,
-    #[sqlx_model_hints(text, default)]
-    referrer_score_override_reason: Option<String>,
-
-    #[sqlx_model_hints(boolean, default)]
-    holder_score_override: Option<bool>,
-    #[sqlx_model_hints(text, default)]
-    holder_score_override_reason: Option<String>,
-
-    #[sqlx_model_hints(int4, default)]
-    audience_size_override: Option<i32>,
-    #[sqlx_model_hints(text, default)]
-    audience_size_override_reason: Option<String>,
-  },
-  queries {
-      // We don't expect next_scoring to be null for active handles,
-      // but just in case, we force scoring on them.
-      // next_scoring should never be null for active handles.
-      need_scoring("
-          status IN ('connecting', 'reconnecting') OR
-              (status = 'active' AND (next_scoring < now() OR next_scoring IS NULL))")
+    #[sqlx_model_hints(text)]
+    profile_image_url: Option<String>,
   },
   has_many {
     HandleTopic(handle_id),
     Collab(handle_id),
-    HandleScoring(handle_id),
   },
   belongs_to {
     Account(account_id),
-    HandleScoring(current_scoring_id),
   }
 }
 
@@ -200,26 +150,27 @@ impl HandleHub {
 
         let twitter = TwitterApi::new(token);
 
-        let me = match twitter.get_users_me().send().await {
-            Ok(x) => x,
-            Err(e) => {
-                self.state
-                    .fail(
-                        "private",
-                        "no_response_for_users_me",
-                        json::json!({
-                            "code": "no_re",
-                            "account": &account_id,
-                            "raw_auth_code": &raw_auth_code,
-                            "raw_verifier": &raw_verifier,
-                            "description": e.to_string(),
-                        }),
-                    )
-                    .await;
+        let me =
+            match twitter.get_users_me().user_fields([UserField::Username, UserField::ProfileImageUrl]).send().await {
+                Ok(x) => x,
+                Err(e) => {
+                    self.state
+                        .fail(
+                            "private",
+                            "no_response_for_users_me",
+                            json::json!({
+                                "code": "no_re",
+                                "account": &account_id,
+                                "raw_auth_code": &raw_auth_code,
+                                "raw_verifier": &raw_verifier,
+                                "description": e.to_string(),
+                            }),
+                        )
+                        .await;
 
-                return Err(Error::service("x", "no_response_for_users_me"));
-            }
-        };
+                    return Err(Error::service("x", "no_response_for_users_me"));
+                }
+            };
 
         let Some(user_details) = me.payload().data.as_ref() else {
             return Err(Error::service("x", "no_details_from_x"));
@@ -237,6 +188,7 @@ impl HandleHub {
                 user_details.id.to_string(),
                 user_details.username.to_string(),
                 account_id,
+                user_details.profile_image_url.as_ref().map(|x| x.to_string()),
             )
             .await?
         };
@@ -252,6 +204,7 @@ impl HandleHub {
         user_id: String,
         username: String,
         account_id: String,
+        profile_image_url: Option<String>,
     ) -> AsamiResult<Handle> {
         if self.select().account_id_eq(&account_id).optional().await?.is_some() {
             return Err(Error::validation("account_id", "account_has_another_x_handle"));
@@ -262,6 +215,7 @@ impl HandleHub {
                 account_id,
                 username,
                 user_id,
+                profile_image_url,
                 x_refresh_token: Some(refresh_token),
                 status: HandleStatus::SettingUp,
             })
@@ -270,96 +224,30 @@ impl HandleHub {
     }
 
     pub async fn setup_pending(&self) -> AsamiResult<Vec<Handle>> {
-        let result = self.setup_pending_inner().await;
+        let result = self.connect_pending_inner().await;
         if let Err(e) = result.as_ref() {
             self.state.fail("setup_pending", "error", &format!("{e:?}")).await;
         }
         result
     }
 
-    pub async fn setup_pending_inner(&self) -> AsamiResult<Vec<Handle>> {
-        let scope = self.select().status_eq(HandleStatus::SettingUp);
+    pub async fn connect_pending_inner(&self) -> AsamiResult<Vec<Handle>> {
+        let pending = self.select().status_in(vec![HandleStatus::SettingUp, HandleStatus::Reconnecting]).all().await?;
 
-        if scope.count().await? == 0 {
+        if pending.is_empty() {
             self.state.info("setup_pending", "no_handles_to_setup_skipping", ()).await;
         }
 
         let mut handles = vec![];
 
-        for handle in scope.all().await? {
-            if handle.poll_id().is_some() {
-                handle.skip_setup().await?;
-                continue;
+        for handle in pending {
+            match handle.clone().x_api_client().await {
+                Ok(_) => handles.push(handle.finish_connection().await?),
+                Err(_) => continue,
             }
-
-            let Ok(twitter) = handle.clone().x_api_client().await else {
-                continue;
-            };
-
-            let idx = usize::try_from(*handle.id()).unwrap_or(0) % 20;
-            let texts = match handle.account().await?.lang() {
-                Lang::Es => &super::poll_texts::POLL_TEXTS_ES[idx],
-                Lang::En => &super::poll_texts::POLL_TEXTS_EN[idx],
-            };
-            let post_result = twitter
-                .post_tweet()
-                .text(texts.text.to_string())
-                .poll(texts.options.to_vec(), std::time::Duration::from_secs(60 * 60 * 24 * 7))
-                .send()
-                .await;
-
-            match post_result {
-                Ok(post) => {
-                    self.state.fail("setup_pending", "post_returned", &post).await;
-                    if let Some(poll_id) = post.into_data().map(|t| t.id.to_string()) {
-                        handles.push(handle.setup_with_poll(poll_id).await?);
-                    } else {
-                        self.state.fail("setup_pending", "no_poll_id_returned", ()).await;
-                    }
-                }
-                Err(e) => {
-                    self.state.fail("setup_pending", "creating_poll", format!("{e:?}")).await;
-                }
-            }
-            // We need to sleep here too.
-            tokio::time::sleep(tokio::time::Duration::from_millis(
-                self.state.settings.x.score_cooldown_seconds * 1000,
-            ))
-            .await;
         }
 
         Ok(handles)
-    }
-
-    pub async fn score_pending(&self) -> AsamiResult<Vec<Handle>> {
-        let result = self.score_pending_inner().await;
-        if let Err(e) = result.as_ref() {
-            self.state.fail("score_pending", "error", &format!("{e:?}")).await;
-        }
-        result
-    }
-
-    pub async fn score_pending_inner(&self) -> AsamiResult<Vec<Handle>> {
-        let pending = self.need_scoring().all().await?;
-
-        if pending.is_empty() {
-            self.state.info("score_pending", "no_handles_pending_scoring", ()).await;
-            return Ok(vec![]);
-        }
-
-        self.state.info("score_pending", "start_scoring_handles", ()).await;
-        for handle in pending.clone() {
-            self.state.info("score_pending", "starting_handle", &handle).await;
-
-            handle.state.handle_scoring().create_and_apply(handle).await?;
-            self.state.info("score_pending", "scored_handle", ()).await;
-            self.state.info("score_pending", "sleeping", ()).await;
-            let cooldown = tokio::time::Duration::from_secs(self.state.settings.x.score_cooldown_seconds);
-            tokio::time::sleep(cooldown).await;
-        }
-        self.state.info("score_pending", "done_scoring_handles", ()).await;
-
-        Ok(pending)
     }
 }
 
@@ -426,10 +314,7 @@ impl Handle {
             .await?)
     }
 
-    pub async fn skip_setup(self) -> sqlx::Result<Self> {
-        self.update().status(HandleStatus::Connecting).save().await
-    }
-    pub async fn setup_with_poll(self, poll_id: String) -> sqlx::Result<Self> {
+    pub async fn finish_connection(self) -> sqlx::Result<Self> {
         let existing = self
             .state
             .auth_method()
@@ -461,12 +346,12 @@ impl Handle {
                 .await?;
         }
 
-        self.update().poll_id(Some(poll_id)).status(HandleStatus::Connecting).save().await
+        self.update().status(HandleStatus::Active).save().await
     }
 
     // NOTE: If collab exists the error should be collab_exists.
     // Do not return any other errors earlier.
-    pub async fn validate_collaboration(&self, campaign: &Campaign, reward: U256, trigger: &str) -> AsamiResult<()> {
+    pub async fn validate_collaboration(&self, campaign: &Campaign, trigger: &str) -> AsamiResult<()> {
         // The funds calculation is always made with a fresh copy of the campaign as it could have been updated.
         let available_funds = campaign
             .reloaded()
@@ -503,24 +388,28 @@ impl Handle {
             return Err(Error::validation("all", "user_already_collaborated"));
         }
 
-        let Some(score) = self.score() else {
-            return Err(Error::validation("all", "handle_is_not_scored"));
+        let Some(score) = self.member_score_for_campaign(campaign).await? else {
+            return Err(Error::validation("all", "member_has_no_reputation_score"));
         };
 
-        if u256(score) <= wei("5") {
-            return Err(Error::validation("all", "score_is_too_low"));
-        }
-
-        if reward < milli("50") {
-            return Err(Error::validation("all", "reward_would_bee_too_small"));
-        }
-
-        if available_funds < reward {
-            return Err(Error::validation("all", "campaign_has_not_enough_funds"));
+        if score <= 0.0 {
+            return Err(Error::validation("all", "member_score_is_too_low"));
         }
 
         if campaign.valid_until().map(|end| end <= Utc::now()).unwrap_or(true) {
             return Err(Error::validation("all", "campaign_has_expired"));
+        }
+
+        if campaign.kind() != &CampaignKind::XRepost {
+            return Err(Error::validation("all", "campaign_kind_is_not_member_actionable"));
+        }
+
+        if !campaign.is_visible_to_members() {
+            return Err(Error::validation("all", "campaign_is_not_open_for_new_reposts"));
+        }
+
+        if available_funds.is_zero() {
+            return Err(Error::validation("all", "campaign_has_not_enough_funds"));
         }
 
         let handle_topics = self.topic_ids().await?;
@@ -550,14 +439,66 @@ impl Handle {
         Ok(())
     }
 
-    // Returning None means the account cannot receive rewards.
-    // Most likely because it has not been scored yet.
-    pub fn reward_for(&self, campaign: &Campaign) -> Option<U256> {
-        let high = campaign.max_individual_reward_u256();
-        let low = campaign.min_individual_reward_u256();
-        let score = u256(self.score().as_ref()?);
-        let base = campaign.price_per_point_u256() * score;
-        Some(base.clamp(low, high))
+    async fn member_score_for_campaign(&self, campaign: &Campaign) -> AsamiResult<Option<f64>> {
+        Ok(self
+            .state
+            .community_member()
+            .creator_scores_for_targets(campaign.account_id(), &[self.account_id().clone()])
+            .await?
+            .remove(self.account_id())
+            .map(|score| score.total_score()))
+    }
+
+    pub async fn has_reposted_x_campaign(&self, tweet_id: &str) -> AsamiResult<bool> {
+        let user_ctx = self.clone().x_api_client().await?.with_user_ctx().await.map_err(|e| {
+            Error::service(
+                "x",
+                &format!("could_not_build_user_context_for_repost_verification:{e}"),
+            )
+        })?;
+
+        let mut tweets = Some(
+            user_ctx
+                .get_my_tweets()
+                .tweet_fields([TweetField::ReferencedTweets])
+                .max_results(100)
+                .send()
+                .await
+                .map_err(|e| Error::service("x", &format!("could_not_fetch_user_tweets:{e}")))?,
+        );
+
+        while let Some(page) = tweets {
+            let payload = page.payload();
+            if let Some(items) = payload.data() {
+                for tweet in items {
+                    if tweet.referenced_tweets.as_ref().map(|refs| {
+                        refs.iter().any(|reference| {
+                            reference.id.to_string() == tweet_id
+                                && matches!(
+                                    reference.kind,
+                                    ReferencedTweetKind::Retweeted | ReferencedTweetKind::Quoted
+                                )
+                        })
+                    }) == Some(true)
+                    {
+                        return Ok(true);
+                    }
+                }
+
+                if items.len() < 100 {
+                    break;
+                }
+            } else {
+                break;
+            }
+
+            tweets = page
+                .next_page()
+                .await
+                .map_err(|e| Error::service("x", &format!("could_not_fetch_next_user_tweets:{e}")))?;
+        }
+
+        Ok(false)
     }
 
     pub async fn add_topic(&self, topic: &Topic) -> anyhow::Result<HandleTopic> {
@@ -620,11 +561,11 @@ make_sql_enum![
     "handle_status",
     pub enum HandleStatus {
         NeverConnected, // New account with no valid access token. Setup -> adds refresh token to it.
-        SettingUp,      // Has first refresh token. Connect -> Creates poll and moves to connecting..
-        Connecting,     // Has token. Score -> Makes it Active or SettingUp.
+        SettingUp,      // Has first refresh token. Setup activates it once the token is usable.
+        Connecting,     // Legacy transitional state.
         Active,         // Account is usable.
         Disconnected,   // Existing account, with no valid access token. Reconnect -> adds new token to it.
-        Reconnecting,   // Has renewed token. Score -> Makes it Active or Disconnected.
-        Inactive,       // Account was banned or made inactive. Will never be re-scored and cannot be reconnected.
+        Reconnecting,   // Has renewed token. Setup activates it again.
+        Inactive,       // Account was banned or made inactive and cannot be reconnected.
     }
 ];

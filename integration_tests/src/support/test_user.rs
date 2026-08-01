@@ -155,45 +155,16 @@ impl TestUser {
         self
     }
 
-    pub async fn active(mut self, score: i32) -> Self {
-        use super::handle_scoring_builder::*;
-        let poll = poll_json(1, 3, 4, 5);
-
-        let verified = self
+    pub async fn active(mut self, _score: i32) -> Self {
+        let active = self
             .handle
+            .take()
             .unwrap()
-            .update()
-            .audience_size_override(Some(score))
-            .save()
+            .finish_connection()
             .await
-            .expect("save audience size override")
-            .setup_with_poll(poll["data"]["id"].as_str().unwrap().to_string())
-            .await
-            .expect("could not verify handle");
+            .expect("could not activate handle");
 
-        pre_ingested_handle_scoring(
-            &verified,
-            me_json("347", true),
-            &[
-                reply_to_own_tweet(500, 0, 2, 11, 1),
-                quoting_someone_elses_tweet(300, 0, 2, 11, 1),
-                tweet_hello_world(300, 0, 0, 11, 0),
-                tweet_goodbye_world(550, 0, 1, 11, 0),
-                tweet_foo_bar(50, 0, 0, 0, 1),
-                tweet_poll(300, 0, 0, 3, 0),
-            ],
-            mentions_json(10, 16),
-            Some(poll),
-            reposts_json(),
-        )
-        .await
-        .apply()
-        .await
-        .unwrap();
-
-        let scored = verified.reloaded().await.unwrap();
-
-        self.handle = Some(scored);
+        self.handle = Some(active);
 
         self
     }
@@ -609,7 +580,7 @@ macro_rules! make_graphql_queries {
       #[derive(graphql_client::GraphQLQuery)]
       #[graphql(
           schema_path = "public_api_schema.graphql",
-          query_path = "public_api_queries.graphql",
+          query_path = "public_api_queries_min.graphql",
           response_derives = "Debug,Serialize,Deserialize,PartialEq",
           normalization = "Normalization::Rust",
       )]
@@ -625,19 +596,6 @@ pub mod gql {
         CreateSession,
         CreateClaimAccountRequest,
         CreateCampaignFromLink,
-        CreateEmailLoginLink,
-        Campaign,
         AllCampaigns,
-        AllCampaignsMeta,
-        CampaignPreference,
-        AllCampaignPreferences,
-        AllCampaignPreferencesMeta,
-        CreateCampaignPreference,
-        AllHandles,
-        AllHandlesMeta,
-        AllCollabs,
-        AllCollabsMeta,
-        CreateXRefreshToken,
-        UpdateHandle,
     ];
 }

@@ -16,14 +16,8 @@ import {
 import { makeXLogin } from "../lib/auth_provider";
 import {
   useTranslate,
-  useDataProvider,
   useAuthProvider,
   useRedirect,
-  Form,
-  TextInput,
-  SaveButton,
-  email,
-  required,
   useNotify,
   CoreAdminContext,
   I18nContext,
@@ -35,7 +29,6 @@ import { BareLayout } from "./layout";
 import { useContracts } from "../components/contracts_context";
 import XIcon from "@mui/icons-material/X";
 import { isMobile } from "react-device-detect";
-import SendIcon from "@mui/icons-material/Send";
 import AsamiLogo from "../assets/logo.svg?react";
 import { Head1Primary, Head2, Head3 } from "../components/theme";
 import { useContext, useEffect, useRef, useState } from "react";
@@ -162,7 +155,6 @@ const LoginSelector = ({ open, setOpen }) => {
               </Button>
 
               <LoginWithX />
-              <LoginWithEmail />
               <Button
                 id="wallet-login-button"
                 variant="contained"
@@ -170,6 +162,13 @@ const LoginSelector = ({ open, setOpen }) => {
                 onClick={startEip712Login}
               >
                 {t("login_form.rsk_login_button")}
+              </Button>
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={() => navigate("/waitlist")}
+              >
+                {t("login_form.waitlist_button")}
               </Button>
             </Box>
           </CardContent>
@@ -241,81 +240,6 @@ const LoginWithX = () => {
             {t("login_form.x_login_button")}
           </Button>
         </DialogContent>
-      </Dialog>
-    </>
-  );
-};
-
-const LoginWithEmail = ({ onClick }) => {
-  const t = useTranslate();
-  const notify = useNotify();
-  const [open, setOpen] = useState(false);
-  const [sent, setSent] = useState(false);
-  const dataProvider = useDataProvider();
-
-  const onSubmit = async (values) => {
-    try {
-      await dataProvider.create("EmailLoginLink", {
-        data: { email: values.email },
-      });
-      setSent(true);
-    } catch {
-      notify("login_form.send_email_token.error", { type: "error" });
-    }
-  };
-
-  const handleClose = () => {
-    setSent(false);
-    setOpen(false);
-  };
-
-  return (
-    <>
-      <Button
-        id="email-login-button"
-        variant="contained"
-        onClick={() => setOpen(true)}
-      >
-        {t("login_form.email_login_button")}
-      </Button>
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-        {!sent ? (
-          <>
-            <DialogTitle>
-              <Head3 sx={{ color: (t) => t.palette.primary.main }}>
-                {t("login_form.send_email_token.title")}
-              </Head3>
-            </DialogTitle>
-            <DialogContent>
-              <Form sanitizeEmptyValues onSubmit={onSubmit}>
-                <TextInput
-                  fullWidth
-                  validate={[required(), email()]}
-                  size="large"
-                  variant="filled"
-                  source="email"
-                  label="Email"
-                />
-                <SaveButton
-                  fullWidth
-                  id="submit-email-for-login-link"
-                  size="large"
-                  label={t("login_form.send_email_token.submit")}
-                  icon={<SendIcon />}
-                />
-              </Form>
-            </DialogContent>
-          </>
-        ) : (
-          <Alert variant="filled" severity="success" icon={false}>
-            <Head3 sx={{ color: "inverted.main", mb: "0.5em" }}>
-              {t("login_form.send_email_token.done")}
-            </Head3>
-            <Typography sx={{ color: "inherit" }}>
-              {t("login_form.send_email_token.done_contact_us")}
-            </Typography>
-          </Alert>
-        )}
       </Dialog>
     </>
   );

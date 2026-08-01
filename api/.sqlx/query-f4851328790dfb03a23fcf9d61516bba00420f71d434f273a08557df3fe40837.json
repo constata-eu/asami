@@ -1,0 +1,190 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE community_members SET (id, \naccount_id, \nmember_id, \nrating, \ncollabs, \nrewards, \nfirst_collab_date, \nlast_collab_date, \nforce_hydrate, \npriority, \nalignment, \ntrust, \ncontribution, \nadvocacy, \njudgment, \nrootstock_joined_at, \ncomment, \ncreated_at, \nupdated_at) = ((CASE $2::boolean WHEN TRUE THEN $3 ELSE id END), (CASE $4::boolean WHEN TRUE THEN $5 ELSE account_id END), (CASE $6::boolean WHEN TRUE THEN $7 ELSE member_id END), (CASE $8::boolean WHEN TRUE THEN $9 ELSE rating END), (CASE $10::boolean WHEN TRUE THEN $11 ELSE collabs END), (CASE $12::boolean WHEN TRUE THEN $13 ELSE rewards END), (CASE $14::boolean WHEN TRUE THEN $15 ELSE first_collab_date END), (CASE $16::boolean WHEN TRUE THEN $17 ELSE last_collab_date END), (CASE $18::boolean WHEN TRUE THEN $19 ELSE force_hydrate END), (CASE $20::boolean WHEN TRUE THEN $21 ELSE priority END), (CASE $22::boolean WHEN TRUE THEN $23 ELSE alignment END), (CASE $24::boolean WHEN TRUE THEN $25 ELSE trust END), (CASE $26::boolean WHEN TRUE THEN $27 ELSE contribution END), (CASE $28::boolean WHEN TRUE THEN $29 ELSE advocacy END), (CASE $30::boolean WHEN TRUE THEN $31 ELSE judgment END), (CASE $32::boolean WHEN TRUE THEN $33 ELSE rootstock_joined_at END), (CASE $34::boolean WHEN TRUE THEN $35 ELSE comment END), (CASE $36::boolean WHEN TRUE THEN $37 ELSE created_at END), (CASE $38::boolean WHEN TRUE THEN $39 ELSE updated_at END)) WHERE id = $1 RETURNING id as \"id!: i32\", \naccount_id as \"account_id!: String\", \nmember_id as \"member_id!: String\", \nrating as \"rating!: CommunityMemberRating\", \ncollabs as \"collabs!: i32\", \nrewards as \"rewards!: String\", \nfirst_collab_date as \"first_collab_date!: Option < UtcDateTime >\", \nlast_collab_date as \"last_collab_date!: Option < UtcDateTime >\", \nforce_hydrate as \"force_hydrate!: bool\", \npriority as \"priority!: bool\", \nalignment as \"alignment!: Option < i32 >\", \ntrust as \"trust!: Option < i32 >\", \ncontribution as \"contribution!: Option < i32 >\", \nadvocacy as \"advocacy!: Option < i32 >\", \njudgment as \"judgment!: Option < i32 >\", \nrootstock_joined_at as \"rootstock_joined_at!: Option < UtcDateTime >\", \ncomment as \"comment!: Option < String >\", \ncreated_at as \"created_at!: UtcDateTime\", \nupdated_at as \"updated_at!: Option < UtcDateTime >\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "member_id!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "rating!: CommunityMemberRating",
+        "type_info": {
+          "Custom": {
+            "name": "community_member_rating",
+            "kind": {
+              "Enum": [
+                "good",
+                "normal",
+                "bad"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "collabs!: i32",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "rewards!: String",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "first_collab_date!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "last_collab_date!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "force_hydrate!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "priority!: bool",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 10,
+        "name": "alignment!: Option < i32 >",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 11,
+        "name": "trust!: Option < i32 >",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 12,
+        "name": "contribution!: Option < i32 >",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "advocacy!: Option < i32 >",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 14,
+        "name": "judgment!: Option < i32 >",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "rootstock_joined_at!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 16,
+        "name": "comment!: Option < String >",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 17,
+        "name": "created_at!: UtcDateTime",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 18,
+        "name": "updated_at!: Option < UtcDateTime >",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Varchar",
+        "Bool",
+        {
+          "Custom": {
+            "name": "community_member_rating",
+            "kind": {
+              "Enum": [
+                "good",
+                "normal",
+                "bad"
+              ]
+            }
+          }
+        },
+        "Bool",
+        "Int4",
+        "Bool",
+        "Varchar",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Int4",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Text",
+        "Bool",
+        "Timestamptz",
+        "Bool",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "f4851328790dfb03a23fcf9d61516bba00420f71d434f273a08557df3fe40837"
+}
