@@ -16,7 +16,7 @@ use ethers::{
     middleware::SignerMiddleware,
     providers::{Http, Middleware, Provider},
     signers::{LocalWallet, Signer},
-    types::{Address, Bytes, TransactionRequest, U256},
+    types::{Address, Bytes, TransactionRequest, H256, U256},
 };
 use serde_json::Value;
 use sqlx::{PgPool, Row};
@@ -239,6 +239,25 @@ impl TestEnvironment {
 
     pub async fn count(&self, query: &str) -> anyhow::Result<i64> {
         Ok(sqlx::query(query).fetch_one(&self.app.db).await?.try_get(0)?)
+    }
+
+    pub async fn count_legacy_payout_transactions(&self) -> anyhow::Result<usize> {
+        let rows = sqlx::query(
+            "SELECT transaction_hash FROM payout_attempts
+             WHERE receipt_status = 1 ORDER BY id",
+        )
+        .fetch_all(&self.app.db)
+        .await?;
+        let mut legacy = 0;
+        for row in rows {
+            let hash: H256 = row.get::<String, _>(0).parse()?;
+            let transaction =
+                self.app.provider.get_transaction(hash).await?.context("confirmed payout transaction disappeared")?;
+            if transaction.transaction_type.unwrap_or_default().is_zero() {
+                legacy += 1;
+            }
+        }
+        Ok(legacy)
     }
 
     pub async fn start_web(&mut self, headless: bool) -> anyhow::Result<()> {

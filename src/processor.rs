@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use anyhow::Context;
 use ethers::{
-    providers::Middleware,
+    providers::{Middleware, ProviderError, RpcError},
     signers::{LocalWallet, Signer},
     types::{Address, Bytes, H256, U256, U512},
     utils::keccak256,
@@ -261,7 +261,8 @@ async fn mark_ineligible(pool: &PgPool, id: i64, reason: &str) -> anyhow::Result
 
 pub async fn reconcile_submitted(app: &App) -> anyhow::Result<usize> {
     let rows = sqlx::query(
-        "SELECT attempts.id, attempts.payout_id, attempts.transaction_hash
+        "SELECT attempts.id, attempts.payout_id, attempts.transaction_hash,
+                attempts.raw_transaction
          FROM payout_attempts attempts
          JOIN payouts ON payouts.id = attempts.payout_id
          WHERE payouts.status IN ('submitting', 'submitted')
@@ -274,12 +275,126 @@ pub async fn reconcile_submitted(app: &App) -> anyhow::Result<usize> {
         let attempt_id: i64 = row.get(0);
         let payout_id: i64 = row.get(1);
         let hash = H256::from_str(row.get::<String, _>(2).as_str())?;
+        let raw_transaction: Option<Vec<u8>> = row.get(3);
         if let Some(receipt) = app.provider.get_transaction_receipt(hash).await? {
             store_receipt(app, attempt_id, payout_id, receipt).await?;
             resolved += 1;
+            continue;
+        }
+        if app.provider.get_transaction(hash).await?.is_some() {
+            continue;
+        }
+
+        // Attempts created by older binaries have no raw transaction and
+        // require explicit operator recovery. Never guess and advance a nonce.
+        let Some(raw_transaction) = raw_transaction else {
+            continue;
+        };
+        match app.provider.send_raw_transaction(Bytes::from(raw_transaction)).await {
+            Ok(_) => {
+                sqlx::query(
+                    "UPDATE payout_attempts SET submitted_at = now(), error_type = NULL,
+                     error_message = NULL WHERE id = $1",
+                )
+                .bind(attempt_id)
+                .execute(&app.db)
+                .await?;
+            }
+            Err(error) if is_ambiguous_submission_error(&error) => {}
+            Err(error) if error.as_error_response().is_some() => {
+                record_submission_rejection(app, attempt_id, payout_id, &error).await?;
+                resolved += 1;
+            }
+            Err(error) => {
+                record_submission_unknown(app, attempt_id, payout_id, &error).await?;
+            }
         }
     }
     Ok(resolved)
+}
+
+pub async fn recover_unsent_attempts(app: &App, hashes: &[String]) -> anyhow::Result<usize> {
+    if hashes.is_empty() {
+        anyhow::bail!("at least one --transaction-hash is required");
+    }
+
+    let mut verified = Vec::with_capacity(hashes.len());
+    for value in hashes {
+        let hash = H256::from_str(value).context("invalid transaction hash")?;
+        if app.provider.get_transaction_receipt(hash).await?.is_some() {
+            anyhow::bail!("{hash:#x} has a receipt; let the worker reconcile it");
+        }
+        if app.provider.get_transaction(hash).await?.is_some() {
+            anyhow::bail!("{hash:#x} exists in the node and cannot be marked unsent");
+        }
+
+        let row = sqlx::query(
+            "SELECT attempts.id, attempts.payout_id, attempts.from_address,
+                    attempts.nonce::text
+             FROM payout_attempts attempts
+             JOIN payouts ON payouts.id = attempts.payout_id
+             WHERE attempts.transaction_hash = $1
+               AND attempts.receipt_status IS NULL
+               AND payouts.status IN ('submitting', 'submitted')",
+        )
+        .bind(format!("{hash:#x}"))
+        .fetch_optional(&app.db)
+        .await?
+        .with_context(|| format!("no unresolved payout attempt found for {hash:#x}"))?;
+        let attempt_id: i64 = row.get(0);
+        let payout_id: i64 = row.get(1);
+        let from: Address = row.get::<String, _>(2).parse()?;
+        let nonce = U256::from_dec_str(row.get::<String, _>(3).as_str())?;
+        let pending_nonce = app
+            .provider
+            .get_transaction_count(
+                from,
+                Some(ethers::types::BlockId::Number(ethers::types::BlockNumber::Pending)),
+            )
+            .await?;
+        if pending_nonce > nonce {
+            anyhow::bail!(
+                "{hash:#x} used nonce {nonce}, but the pending account nonce is {pending_nonce}; manual reconciliation is required"
+            );
+        }
+        verified.push((attempt_id, payout_id, format!("{hash:#x}")));
+    }
+
+    let mut tx = app.db.begin().await?;
+    for (attempt_id, payout_id, _) in &verified {
+        sqlx::query(
+            "UPDATE payout_attempts SET resolved_at = now(),
+             error_type = 'operator_confirmed_unsent',
+             error_message = 'Operator verified transaction absent from RPC'
+             WHERE id = $1",
+        )
+        .bind(attempt_id)
+        .execute(&mut *tx)
+        .await?;
+        sqlx::query(
+            "UPDATE payouts SET status = 'retryable',
+             last_error = 'operator_confirmed_unsent', updated_at = now()
+             WHERE id = $1 AND status IN ('submitting', 'submitted')",
+        )
+        .bind(payout_id)
+        .execute(&mut *tx)
+        .await?;
+    }
+    tx.commit().await?;
+
+    for (_, payout_id, hash) in &verified {
+        db::log(
+            &app.db,
+            "warn",
+            "payout",
+            "operator_confirmed_unsent",
+            &format!("Operator verified that payout transaction {hash} was not submitted."),
+            Some(app.settings.chain_id),
+            Some(("payout", payout_id.to_string())),
+        )
+        .await;
+    }
+    Ok(verified.len())
 }
 
 pub async fn process_one_payout(app: &App) -> anyhow::Result<bool> {
@@ -287,6 +402,16 @@ pub async fn process_one_payout(app: &App) -> anyhow::Result<bool> {
         Some(value) => value,
         None => return Ok(false),
     };
+    // Never allocate the next nonce while an earlier submission is unresolved.
+    // Reconciliation must resolve or safely rebroadcast it first.
+    let unresolved: i64 = sqlx::query("SELECT COUNT(*) FROM payouts WHERE status IN ('submitting', 'submitted')")
+        .fetch_one(&app.db)
+        .await?
+        .get(0);
+    if unresolved != 0 {
+        return Ok(false);
+    }
+
     let row = match sqlx::query(
         "SELECT payouts.id, payouts.disbursement_id, payouts.recipient,
                 payouts.asset_address, payouts.amount::text, payouts.attempt_count
@@ -324,10 +449,10 @@ pub async fn process_one_payout(app: &App) -> anyhow::Result<bool> {
     let automator = wallet.address();
     let contract = AsamiContract::new(app.settings.contract_address, app.provider.clone());
     let mut transaction = if asset == ZERO_ADDRESS {
-        contract.disburse_native(recipient, amount).tx
+        contract.disburse_native(recipient, amount).legacy().tx
     } else {
         let token: Address = asset.parse()?;
-        contract.disburse_token(token, recipient, amount).tx
+        contract.disburse_token(token, recipient, amount).legacy().tx
     };
     transaction.set_from(automator);
     transaction.set_chain_id(app.settings.chain_id);
@@ -383,8 +508,8 @@ pub async fn process_one_payout(app: &App) -> anyhow::Result<bool> {
     let attempt_id: i64 = sqlx::query(
         "INSERT INTO payout_attempts
          (payout_id, attempt_number, from_address, nonce, transaction_hash,
-          gas_limit, effective_gas_price)
-         VALUES ($1, $2, $3, $4::numeric, $5, $6::numeric, $7::numeric)
+          gas_limit, effective_gas_price, raw_transaction)
+         VALUES ($1, $2, $3, $4::numeric, $5, $6::numeric, $7::numeric, $8)
          RETURNING id",
     )
     .bind(payout_id)
@@ -394,6 +519,7 @@ pub async fn process_one_payout(app: &App) -> anyhow::Result<bool> {
     .bind(format!("{transaction_hash:#x}"))
     .bind(gas.to_string())
     .bind(gas_price.to_string())
+    .bind(encoded.to_vec())
     .fetch_one(&mut *db_tx)
     .await?
     .get(0);
@@ -440,39 +566,113 @@ pub async fn process_one_payout(app: &App) -> anyhow::Result<bool> {
                 store_receipt(app, attempt_id, payout_id, receipt).await?;
             }
         }
-        Err(_) => {
-            let mut unknown_tx = app.db.begin().await?;
-            sqlx::query(
-                "UPDATE payout_attempts
-                 SET submitted_at = now(), error_type = 'submission_result_unknown',
-                     error_message = 'RPC submission result unknown'
-                 WHERE id = $1",
-            )
-            .bind(attempt_id)
-            .execute(&mut *unknown_tx)
-            .await?;
-            sqlx::query(
-                "UPDATE payouts
-                 SET status = 'submitted', last_error = 'submission_result_unknown',
-                     updated_at = now() WHERE id = $1",
-            )
-            .bind(payout_id)
-            .execute(&mut *unknown_tx)
-            .await?;
-            unknown_tx.commit().await?;
-            db::log(
-                &app.db,
-                "warn",
-                "payout",
-                "submission_unknown",
-                "RPC did not confirm submission; the persisted transaction hash will be reconciled before retry.",
-                Some(app.settings.chain_id),
-                Some(("payout", payout_id.to_string())),
-            )
-            .await;
+        Err(error) if is_ambiguous_submission_error(&error) => {
+            record_submission_unknown(app, attempt_id, payout_id, &error).await?;
         }
+        Err(error) if error.as_error_response().is_some() => {
+            record_submission_rejection(app, attempt_id, payout_id, &error).await?;
+        }
+        Err(error) => record_submission_unknown(app, attempt_id, payout_id, &error).await?,
     }
     Ok(true)
+}
+
+fn is_ambiguous_submission_error(error: &ProviderError) -> bool {
+    error
+        .as_error_response()
+        .map(|error| is_ambiguous_submission_message(&error.message))
+        .unwrap_or(false)
+}
+
+fn is_ambiguous_submission_message(message: &str) -> bool {
+    let message = message.to_ascii_lowercase();
+    [
+        "already known",
+        "known transaction",
+        "nonce too low",
+        "replacement transaction underpriced",
+    ]
+    .iter()
+    .any(|needle| message.contains(needle))
+}
+
+async fn record_submission_rejection(
+    app: &App,
+    attempt_id: i64,
+    payout_id: i64,
+    error: &ProviderError,
+) -> anyhow::Result<()> {
+    let message = db::sanitize_log_message(&error.to_string());
+    let mut tx = app.db.begin().await?;
+    sqlx::query(
+        "UPDATE payout_attempts
+         SET submitted_at = now(), resolved_at = now(),
+             error_type = 'submission_rejected', error_message = $2
+         WHERE id = $1",
+    )
+    .bind(attempt_id)
+    .bind(&message)
+    .execute(&mut *tx)
+    .await?;
+    sqlx::query(
+        "UPDATE payouts SET status = 'retryable', last_error = $2,
+         updated_at = now() WHERE id = $1",
+    )
+    .bind(payout_id)
+    .bind(&message)
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    db::log(
+        &app.db,
+        "fail",
+        "payout",
+        "submission_rejected",
+        &message,
+        Some(app.settings.chain_id),
+        Some(("payout", payout_id.to_string())),
+    )
+    .await;
+    Ok(())
+}
+
+async fn record_submission_unknown(
+    app: &App,
+    attempt_id: i64,
+    payout_id: i64,
+    error: &ProviderError,
+) -> anyhow::Result<()> {
+    let message = db::sanitize_log_message(&error.to_string());
+    let mut tx = app.db.begin().await?;
+    sqlx::query(
+        "UPDATE payout_attempts
+         SET submitted_at = now(), error_type = 'submission_result_unknown',
+             error_message = $2 WHERE id = $1",
+    )
+    .bind(attempt_id)
+    .bind(&message)
+    .execute(&mut *tx)
+    .await?;
+    sqlx::query(
+        "UPDATE payouts SET status = 'submitted', last_error = $2,
+         updated_at = now() WHERE id = $1",
+    )
+    .bind(payout_id)
+    .bind(&message)
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    db::log(
+        &app.db,
+        "warn",
+        "payout",
+        "submission_unknown",
+        "RPC did not confirm submission; the exact signed transaction will be reconciled and safely rebroadcast.",
+        Some(app.settings.chain_id),
+        Some(("payout", payout_id.to_string())),
+    )
+    .await;
+    Ok(())
 }
 
 async fn store_receipt(
@@ -597,7 +797,7 @@ async fn maybe_complete(app: &App, payout_id: i64) -> anyhow::Result<()> {
         "info",
         "disbursement",
         "completed",
-        "All individual member payouts are confirmed; bilingual thanks queued.",
+        "All individual member payouts are confirmed; English thanks queued.",
         Some(app.settings.chain_id),
         Some(("disbursement", disbursement_id.to_string())),
     )
@@ -688,5 +888,13 @@ mod tests {
             mul_div(U256::from(10), U256::from(1), U256::from(3)).unwrap(),
             U256::from(3)
         );
+    }
+
+    #[test]
+    fn identifies_rpc_responses_that_do_not_prove_rejection() {
+        assert!(is_ambiguous_submission_message("already known"));
+        assert!(is_ambiguous_submission_message("nonce too low"));
+        assert!(is_ambiguous_submission_message("replacement transaction underpriced"));
+        assert!(!is_ambiguous_submission_message("transaction type not supported"));
     }
 }

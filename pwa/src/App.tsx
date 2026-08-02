@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import logo from "./assets/logo.svg";
-import collective from "./assets/rootstock_collective.svg";
 
 type Member = { id: string; name: string; address: string; score: string };
 type Asset = { address: string; minimumAmount: string };
@@ -119,71 +118,75 @@ export function App() {
         </div>
       </section>
 
-      <section className="gift-panel">
-        <div>
-          <p className="eyebrow">{text.gift}</p>
-          <h2>{text.contract}</h2>
-          <p>{text.giftText}</p>
-        </div>
-        {config ? (
-          <div className="contract-details">
+      <div className="community-panels">
+        <section className="gift-panel">
+          <div>
+            <p className="eyebrow">{text.gift}</p>
+            <h2>{text.contract}</h2>
+            <p>{text.giftText}</p>
+          </div>
+          {config ? (
+            <div className="contract-details">
+              <a
+                className="address"
+                href={config.contractUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {config.contractAddress}
+              </a>
+              <button onClick={copyAddress}>
+                {copied ? text.copied : text.copy}
+              </button>
+            </div>
+          ) : null}
+          {config ? (
+            <>
+              <p className="registration">
+                <a
+                  href={config.senderRegistrationUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {text.registerText}
+                </a>{" "}
+              </p>
+              <p className="registration">
+                {text.contactUsText}{" "}
+                <a
+                  href="https://x.com/asami_club"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {config.xEnglish}
+                </a>
+              </p>
+            </>
+          ) : null}
+        </section>
+
+        <aside className="gratitude-panel">
+          <p className="eyebrow">{text.credits}</p>
+          <div className="gratitude-links">
             <a
-              className="address"
-              href={config.contractUrl}
+              className="gratitude-title"
+              href="https://rootstockcollective.xyz/"
               target="_blank"
               rel="noreferrer"
             >
-              {config.contractAddress}
+              Rootstock Collective
             </a>
-            <button onClick={copyAddress}>
-              {copied ? text.copied : text.copy}
-            </button>
+            <a
+              className="gratitude-title"
+              href="https://moneyonchain.com/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Money on Chain
+            </a>
           </div>
-        ) : null}
-        {config ? (
-          <>
-            <p className="registration">
-              <a
-                href={config.senderRegistrationUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {text.registerText}
-              </a>{" "}
-            </p>
-            <p className="registration">
-              {text.contactUsText}{" "}
-              <a
-                href="https://x.com/asami_club"
-                target="_blank"
-                rel="noreferrer"
-              >
-                {config.xEnglish}
-              </a>
-            </p>
-          </>
-        ) : null}
-      </section>
-
-      <footer>
-        <span>{text.credits}</span>
-        <a
-          className="sponsor sponsor-moc"
-          href="https://moneyonchain.com/"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Money on Chain
-        </a>
-        <a
-          className="sponsor"
-          href="https://rootstockcollective.xyz/"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <img src={collective} alt="Rootstock Collective" />
-        </a>
-      </footer>
+        </aside>
+      </div>
     </main>
   );
 }
@@ -198,18 +201,33 @@ function MemberCard({
   const name = member.name.trim() || member.address;
   const isHandle = handlePattern.test(name);
   const isAddress = addressPattern.test(name);
-  const href = isHandle
-    ? "https://x.com/" + name.slice(1)
+  const handle = isHandle ? name.slice(1) : null;
+  const href = handle
+    ? "https://x.com/" + handle
     : isAddress && explorer
       ? explorer + "/address/" + name
       : null;
 
   return (
     <article className="member-card">
-      <div
-        className="avatar"
-        dangerouslySetInnerHTML={{ __html: identicon(member.address) }}
-      />
+      <div className="avatar">
+        <div
+          className="avatar-identicon"
+          dangerouslySetInnerHTML={{ __html: identicon(member.address) }}
+        />
+        {handle ? (
+          <img
+            className="avatar-photo"
+            src={"https://unavatar.io/x/" + encodeURIComponent(handle) + "?fallback=false"}
+            alt={name + " profile picture"}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={(event) => {
+              event.currentTarget.style.display = "none";
+            }}
+          />
+        ) : null}
+      </div>
       <h3 className="member-name">
         {href ? (
           <a href={href} target="_blank" rel="noreferrer">

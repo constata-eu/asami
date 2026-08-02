@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+DEST_HOST="${1:-}"
+REMOTE_DIR="${ASAMI_REMOTE_DIR:-/home/asami}"
+REMOTE_NEXT="$REMOTE_DIR/asami.next"
+API_SERVICE="${ASAMI_API_SERVICE:-asami_public_api.service}"
+WORKER_SERVICE="${ASAMI_WORKER_SERVICE:-asami_worker.service}"
+BINARY_PATH="$ROOT_DIR/release/asami"
+CONTROL_PATH="/tmp/asami-ssh-$$-%C"
+
+usage() {
+  echo "usage: scripts/build-and-deploy-to <destination-host>" >&2
+  echo "example: scripts/build-and-deploy-to root@167.99.18.108" >&2
+}
+
+ssh_session_cleanup() {
+  echo "Ending SSH session."
+  ssh -S "$CONTROL_PATH" -O exit "$DEST_HOST" >/dev/null 2>&1 || true
+}
+
+if [ -z "$DEST_HOST" ]; then
+  usage
+  exit 1
+fi
+
+if ! [[ "$API_SERVICE" =~ ^[A-Za-z0-9_.@-]+$ && "$WORKER_SERVICE" =~ ^[A-Za-z0-9_.@-]+$ ]]; then
+  echo "invalid systemd unit name" >&2
+  exit 1
+fi
+
+trap ssh_session_cleanup EXIT
+
+echo "Starting shared SSH session. Authenticate once now."
+ssh \
+  -M \
+  -S "$CONTROL_PATH" \
+  -o ServerAliveInterval=15 \
+  -o ServerAliveCountMax=8 \
+  -fnNT \
+  "$DEST_HOST"
+
+echo "Building the embedded frontend and Ubuntu 22.04-compatible Asami binary."
+"$ROOT_DIR/scripts/release-builder"
+
+if [ ! -x "$BINARY_PATH" ]; then
+  echo "expected built binary at $BINARY_PATH" >&2
+  exit 1
+fi
+
+echo "Uploading binary."
+scp -o ControlPath="$CONTROL_PATH" "$BINARY_PATH" "$DEST_HOST:$REMOTE_NEXT"
+
+LOCAL_SHA256="$(sha256sum "$BINARY_PATH" | awk '{print $1}')"
+REMOTE_SHA256="$(ssh -S "$CONTROL_PATH" "$DEST_HOST" sha256sum "$REMOTE_NEXT" | awk '{print $1}')"
+if [ "$LOCAL_SHA256" != "$REMOTE_SHA256" ]; then
+  echo "uploaded binary checksum does not match the local build" >&2
+  exit 1
+fi
+
+echo "Running migrations and replacing the binary."
+ssh -S "$CONTROL_PATH" "$DEST_HOST" bash -s -- \
+  "$REMOTE_DIR" "$API_SERVICE" "$WORKER_SERVICE" <<'REMOTE_DEPLOY'
+set -euo pipefail
+
+REMOTE_DIR="$1"
+API_SERVICE="$2"
+WORKER_SERVICE="$3"
+CURRENT="$REMOTE_DIR/asami"
+NEXT="$REMOTE_DIR/asami.next"
+PREVIOUS="$REMOTE_DIR/asami.previous"
+
+if [ "$(id -u)" -ne 0 ]; then
+  echo "deployment must connect as root" >&2
+  exit 1
+fi
+test -f "$REMOTE_DIR/asami.env"
+test -f "$REMOTE_DIR/asami-worker.env"
+chmod 0755 "$NEXT"
+
+set -a
+. "$REMOTE_DIR/asami.env"
+set +a
+"$NEXT" migrate
+
+systemctl stop "$WORKER_SERVICE" "$API_SERVICE"
+if [ -f "$CURRENT" ]; then
+  cp -p "$CURRENT" "$PREVIOUS"
+fi
+mv -f "$NEXT" "$CURRENT"
+
+systemctl start "$API_SERVICE"
+systemctl start --no-block "$WORKER_SERVICE"
+REMOTE_DEPLOY
+
+echo "Enter the automator wallet passphrase when systemd asks for it."
+ssh -tt -S "$CONTROL_PATH" "$DEST_HOST" \
+  "sleep 2; systemd-tty-ask-password-agent --query; sleep 2; systemctl is-active --quiet '$WORKER_SERVICE'"
+
+echo "Checking services and API health."
+ssh -S "$CONTROL_PATH" "$DEST_HOST" bash -s -- "$API_SERVICE" "$WORKER_SERVICE" <<'REMOTE_CHECK'
+set -euo pipefail
+
+API_SERVICE="$1"
+WORKER_SERVICE="$2"
+systemctl is-active --quiet "$API_SERVICE"
+systemctl is-active --quiet "$WORKER_SERVICE"
+
+for _attempt in $(seq 1 30); do
+  if curl --fail --silent --show-error http://127.0.0.1:9001/health >/dev/null; then
+    echo "API health check passed."
+    exit 0
+  fi
+  sleep 1
+done
+
+echo "API health check did not pass" >&2
+systemctl --no-pager --full status "$API_SERVICE" >&2 || true
+exit 1
+REMOTE_CHECK
+
+echo "Deploy finished successfully."
+echo "Installed SHA-256: $LOCAL_SHA256"

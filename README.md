@@ -79,6 +79,7 @@ Commands:
 - asami config
 - asami x-auth-url --account asami_english
 - asami x-auth-complete --account asami_english --redirected-url URL
+- asami recover-unsent --transaction-hash 0x...
 - asami demo
 
 The API process serves the frontend and these public read-only endpoints:
@@ -146,6 +147,18 @@ Production deployment uses the Trezor account at `m/44'/137'/0'/0/1`. Pass that 
     ROOTSTOCK_RPC_URL=https://public-node.rsk.co \
     scripts/deploy
 
+For routine application deployments after the contracts are already deployed, run:
+
+    scripts/build-and-deploy-to root@167.99.18.108
+
+This opens one persistent SSH control session, builds the frontend and compatible
+single binary through `scripts/release-builder`, uploads it with a checksum check,
+runs migrations, atomically replaces `/home/asami/asami`, and restarts both systemd
+services. It then asks for the automator wallet passphrase through systemd remote
+TTY prompt. SSH authentication is requested only once. Override the remote directory
+or unit names with `ASAMI_REMOTE_DIR`, `ASAMI_API_SERVICE`, and
+`ASAMI_WORKER_SERVICE` when necessary.
+
 Set `DEPLOY_TARGET` as well to copy the single release binary. The deployment JSON records the proxy, implementation, ProxyAdmin, owner, automator, chain ID, and deployment block. Foundry records every deployment transaction hash in:
 
     broadcast/Deploy.s.sol/<chain-id>/run-latest.json
@@ -163,7 +176,22 @@ Each eligible incoming transfer creates one database disbursement and one immuta
 
 The contract has no batch concept, payout identifier, completed-payout mapping, or off-chain disbursement reference. PostgreSQL attempt and receipt records are the only logical payout ledger.
 
-A payout is complete only after a successful receipt is stored. Ambiguous submissions retain their precomputed transaction hash and are reconciled before any retry.
+A payout is complete only after a successful receipt is stored. Rootstock payouts
+are explicitly signed as legacy transactions. Ambiguous submissions retain the
+exact signed transaction and are reconciled or safely rebroadcast before any
+later payout can allocate a nonce.
+
+Attempts made by an older binary may lack those signed bytes. After stopping the
+worker and independently confirming that each transaction hash is absent from
+the node and explorer, recover them explicitly (repeat the option for multiple
+hashes):
+
+    asami recover-unsent \
+      --transaction-hash 0xFIRST \
+      --transaction-hash 0xSECOND
+
+The command checks the receipt, transaction, and pending account nonce before it
+marks the corresponding payout retryable. It refuses ambiguous recovery.
 
 If contract funds are unavailable when a transfer is reconsidered, the disbursement and calculated intents are retained as a terminal funds_not_available failure. It is logged and never announced as successful.
 

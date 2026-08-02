@@ -39,6 +39,11 @@ enum Command {
         #[arg(long)]
         redirected_url: String,
     },
+    /// Mark explicitly verified, absent legacy attempts retryable.
+    RecoverUnsent {
+        #[arg(long = "transaction-hash", required = true)]
+        transaction_hashes: Vec<String>,
+    },
     Demo,
 }
 
@@ -70,6 +75,10 @@ async fn main() -> anyhow::Result<()> {
         } => {
             x::complete_authorization(&app, &account, &redirected_url).await?;
             println!("X account authorization stored.");
+        }
+        Command::RecoverUnsent { transaction_hashes } => {
+            let recovered = processor::recover_unsent_attempts(&app, &transaction_hashes).await?;
+            println!("Marked {recovered} verified absent payout attempt(s) retryable.");
         }
         Command::Demo => {
             let status = tokio::process::Command::new("scripts/run-dev").status().await?;

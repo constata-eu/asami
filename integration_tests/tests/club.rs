@@ -91,6 +91,10 @@ async fn club_distributes_gifts_and_serves_members() -> Result<()> {
     // repository's pinned Chromium/ChromeDriver fixture.
     club.start_web(true).await?;
     assert_eq!(club.browser().count(".member-card").await?, 3);
+    assert_eq!(club.browser().count(".avatar-photo").await?, 1);
+    assert_eq!(club.browser().count(".avatar-identicon").await?, 3);
+    assert_eq!(club.browser().count(".gratitude-title").await?, 2);
+    assert_eq!(club.browser().count(".gratitude-panel img").await?, 0);
     assert_eq!(club.browser().text(".member-name").await?, MEMBER_THREE);
     assert_eq!(
         club.browser().attribute("a[href='https://x.com/rootstock']", "href").await?,
@@ -115,6 +119,9 @@ async fn club_distributes_gifts_and_serves_members() -> Result<()> {
         club.count("SELECT count(*) FROM payout_attempts WHERE receipt_status = 1").await?,
         9
     );
+    // Rootstock rejects EIP-1559 submissions. All automator payouts must be
+    // signed as legacy transactions even when the development node supports both.
+    assert_eq!(club.count_legacy_payout_transactions().await?, 9);
 
     club.stop().await;
     Ok(())
