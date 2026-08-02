@@ -1,3 +1,0 @@
-2026-05-12T22:47:34.189 helix_lsp::transport [ERROR] rust-analyzer err <- "error: Unknown binary 'rust-analyzer' in official toolchain '1.95.0-x86_64-unknown-linux-gnu'.\n"
-2026-05-12T22:47:34.189 helix_lsp [ERROR] failed to initialize language server: server closed the stream
-2026-05-12T22:47:34.189 helix_lsp::transport [ERROR] rust-analyzer err: <- StreamClosed

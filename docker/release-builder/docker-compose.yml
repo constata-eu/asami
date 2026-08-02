@@ -1,27 +1,20 @@
 services:
-  db_container:
-    image: postgres
-    restart: always
-    environment:
-      POSTGRES_USER: asami
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: asami_development
-    networks:
-      - release-builder
-
   builder:
     build:
-      dockerfile: docker/release-builder/Dockerfile
       context: .
+      dockerfile: docker/release-builder/Dockerfile
+      args:
+        RUST_VERSION: "1.95.0"
     environment:
-      - HOST_UID
-    depends_on:
-      - db_container
+      HOST_UID: "${HOST_UID}"
+      HOST_GID: "${HOST_GID}"
     volumes:
       - ".:/host_workspace"
-    networks:
-      - release-builder
+      - "cargo-registry:/root/.cargo/registry"
+      - "cargo-git:/root/.cargo/git"
+      - "cargo-target:/work/target"
 
-networks:
-  release-builder:
-    driver: bridge
+volumes:
+  cargo-registry:
+  cargo-git:
+  cargo-target:

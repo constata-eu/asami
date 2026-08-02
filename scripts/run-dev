@@ -1,11 +1,7 @@
-#!/bin/bash
-set -a
-[ -f .env_local ] && . .env_local
-set +a
+#!/usr/bin/env bash
+set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-"$SCRIPT_DIR/run-local-db"
-
-pgrep -f "hardhat node" | xargs -r kill -9
-pgrep -f "integration_tests/target/debug/deps" | xargs -r kill -9
-SQLX_OFFLINE=true RUST_BACKTRACE=1 cargo run --bin run-dev
+cd "$(dirname "$0")/.."
+npm --prefix pwa run build
+forge build
+exec cargo run -p integration_tests --bin run-dev

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+npm --prefix pwa ci
+npm --prefix pwa run build
+forge build
+cargo test -p integration_tests --test club -- --nocapture

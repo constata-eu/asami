@@ -7,128 +7,75 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-    env:
-      CI: 1
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      ROCKET_RECAPTCHA: ${{ secrets.ROCKET_RECAPTCHA }}
-
-    services:
-      postgres:
-        image: postgres:17
-        env:
-          POSTGRES_USER: asami
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: asami_development
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U asami"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     steps:
-      - name: Check out
-        uses: actions/checkout@v3
-
-      - name: Download fixed chrome version for tests
-        run: |
-          curl -L https://asami.ams3.digitaloceanspaces.com/chrome -o integration_tests/chromedrivers/chrome-linux/chrome
-          chmod +x integration_tests/chromedrivers/chrome-linux/chrome
-          integration_tests/chromedrivers/chrome-linux/chrome --version
-
-      - name: Install xvfb
-        run: sudo apt-get install -y xvfb
+      - name: Check out with contract dependencies
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: 1.81.0
-          target: x86_64-unknown-linux-gnu
           components: rustfmt, clippy
-          override: true
 
-      - name: Install Node and Yarn
-        uses: actions/setup-node@v3
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'yarn'
-          cache-dependency-path: pwa/yarn.lock
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pwa/package-lock.json
 
-      - name: Cache PWA dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            pwa/node_modules
-          key: pwa-deps-${{ runner.os }}-${{ hashFiles('pwa/yarn.lock') }}
-          restore-keys: |
-            pwa-deps-${{ runner.os }}-
+      - name: Set up Foundry
+        uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Install PWA deps
-        working-directory: ./pwa
-        run: yarn install --frozen-lockfile
+      - name: Check Rust formatting
+        run: cargo fmt --check
 
-      - name: Cache contract dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            contract/node_modules
-          key: contract-deps-${{ runner.os }}-${{ hashFiles('contract/yarn.lock') }}
-          restore-keys: |
-            contract-deps-${{ runner.os }}-
+      - name: Lint Rust
+        run: cargo clippy --all-targets -- -D warnings
 
-      - name: Install contract deps
-        working-directory: ./contract
-        run: yarn install --frozen-lockfile
+      - name: Test Rust
+        run: cargo test
 
-      - name: Cache Rust
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
-            target
-          key: rust-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: rust-${{ runner.os }}-
+      - name: Check Solidity formatting
+        run: forge fmt --check
 
-      - name: Install sqlx-cli 
+      - name: Test contract
+        run: forge test
+
+      - name: Build landing page
         run: |
-          if ! command -v sqlx >/dev/null; then
-            cargo install sqlx-cli \
-              --version 0.8.3 \
-              --no-default-features \
-              --features postgres,rustls
-          fi
+          npm --prefix pwa ci
+          npm --prefix pwa run build
 
-      - name: Prepare database
-        run: |
-          sudo apt-get install -y libpq-dev
-          cd api
-          sqlx database reset -y
-
-      - name: Build all targets
-        run: cargo build --workspace --all-targets
-
-      #- name: Run cargo fmt
-      #  run: cargo fmt -- --check
-
-      #- name: Run cargo clippy
-      #  run: cargo clippy --workspace --all-targets --no-deps -- -D warnings
-
-      #- name: Set up tmate for SSH debugging
-      #  uses: mxschmitt/action-tmate@v3
-
-      - name: Run tests
-        run: |
-          cd integration_tests
-          xvfb-run -a ./run webapp adds_tokens_to_wallet
-
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
+  end-to-end:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out with contract dependencies
+        uses: actions/checkout@v4
         with:
-          name: test-artifacts
-          path: /tmp/test-artifacts/
+          submodules: recursive
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: pwa/package-lock.json
+
+      - name: Set up Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      - name: Run the complete scenario
+        run: scripts/e2e

@@ -1,0 +1,20 @@
+services:
+  builder:
+    build:
+      context: ../..
+      dockerfile: docker/release-builder/Dockerfile
+      args:
+        RUST_VERSION: "1.95.0"
+    environment:
+      HOST_UID: "${HOST_UID}"
+      HOST_GID: "${HOST_GID}"
+    volumes:
+      - "../..:/host_workspace"
+      - "cargo-registry:/root/.cargo/registry"
+      - "cargo-git:/root/.cargo/git"
+      - "cargo-target:/work/target"
+
+volumes:
+  cargo-registry:
+  cargo-git:
+  cargo-target:

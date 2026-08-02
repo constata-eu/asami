@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
+COMPOSE_FILE="$ROOT_DIR/docker/release-builder/docker-compose.yml"
+export HOST_UID=$(id -u)
+export HOST_GID=$(id -g)
+
+cleanup() {
+  docker compose \
+    --project-directory "$ROOT_DIR" \
+    -f "$COMPOSE_FILE" \
+    down --remove-orphans
+}
+trap cleanup EXIT
+
+mkdir -p "$ROOT_DIR/release"
+cleanup
+
+echo "Building the production binary inside Ubuntu 22.04..."
+docker compose \
+  --project-directory "$ROOT_DIR" \
+  -f "$COMPOSE_FILE" \
+  up --build --remove-orphans --abort-on-container-exit --exit-code-from builder
+
+echo "Checking that the binary runs on Ubuntu 22.04 / glibc 2.35..."
+docker run --rm \
+  --volume "$ROOT_DIR/release:/release:ro" \
+  ubuntu:22.04 \
+  /release/asami --help >/dev/null
+
+echo "Release binary created successfully:"
+file "$ROOT_DIR/release/asami"
+echo "$ROOT_DIR/release/asami"
